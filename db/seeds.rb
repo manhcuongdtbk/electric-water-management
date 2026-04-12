@@ -3,7 +3,7 @@
 # The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
 
 # ============================================================
-# Organizations
+# Master data — all environments
 # ============================================================
 
 division = Organization.find_or_create_by!(code: "SD") do |org|
@@ -39,18 +39,15 @@ end
 
 puts "Organizations: #{Organization.count} records"
 
-# ============================================================
-# Rank quotas (7 groups, effective from 2024-01-01)
-# ============================================================
-
+# Rank quotas — names per XAC_NHAN_NGHIEP_VU_v5
 rank_names = {
-  1 => "Sĩ quan cao cấp",
-  2 => "Sĩ quan trung cấp",
-  3 => "Sĩ quan cơ sở",
-  4 => "Hạ sĩ quan - Binh sĩ",
-  5 => "Quân nhân chuyên nghiệp",
-  6 => "Công nhân viên quốc phòng",
-  7 => "Học viên"
+  1 => "Chỉ huy sư đoàn và tương đương; quân hàm cao nhất là Đại tá",
+  2 => "Chỉ huy lữ đoàn, trung đoàn và tương đương; quân hàm cao nhất là Thượng tá",
+  3 => "Chỉ huy tiểu đoàn và tương đương; quân hàm cao nhất là Trung tá, Thiếu tá",
+  4 => "Chỉ huy đại đội, trung đội và tương đương; quân hàm là cấp Úy",
+  5 => "Cơ quan sư đoàn, lữ đoàn, trung đoàn và tương đương",
+  6 => "Tiểu đoàn, đại đội và tương đương",
+  7 => "Hạ sĩ quan, binh sĩ; thiếu sinh quân; học sinh năng khiếu"
 }
 
 effective_from = Date.new(2024, 1, 1)
@@ -65,17 +62,20 @@ end
 puts "RankQuotas: #{RankQuota.count} records"
 
 # ============================================================
-# Admin level 1 user
+# Development-only data — NOT for production
 # ============================================================
 
-User.find_or_create_by!(email: "admin@example.com") do |u|
-  u.full_name             = "Quản trị viên"
-  u.password              = "admin123"
-  u.password_confirmation = "admin123"
-  u.role                  = :admin_level1
-  u.organization          = division
-  u.force_password_change = false
+if Rails.env.development?
+  User.find_or_create_by!(email: "admin@example.com") do |u|
+    u.full_name             = "Quản trị viên"
+    u.password              = "admin123"
+    u.password_confirmation = "admin123"
+    u.role                  = :admin_level1
+    u.organization          = division
+    u.force_password_change = false
+  end
+
+  puts "Users: #{User.count} records (development only)"
 end
 
-puts "Users: #{User.count} records"
 puts "Seed completed successfully."
