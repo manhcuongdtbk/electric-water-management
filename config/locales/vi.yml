@@ -1,0 +1,68 @@
+vi:
+  app_name: "Phần mềm Quản lý Điện Nước"
+
+  activerecord:
+    errors:
+      messages:
+        record_invalid: "Dữ liệu không hợp lệ: %{errors}"
+        restrict_dependent_destroy:
+          has_one: "Không thể xóa bản ghi vì đang có %{record} liên quan"
+          has_many: "Không thể xóa bản ghi vì đang có nhiều %{record} liên quan"
+
+  errors:
+    messages:
+      blank: "không được để trống"
+      taken: "đã được sử dụng"
+      invalid: "không hợp lệ"
+      too_long:
+        one: "quá dài (tối đa 1 ký tự)"
+        other: "quá dài (tối đa %{count} ký tự)"
+      too_short:
+        one: "quá ngắn (tối thiểu 1 ký tự)"
+        other: "quá ngắn (tối thiểu %{count} ký tự)"
+      greater_than: "phải lớn hơn %{count}"
+      greater_than_or_equal_to: "phải lớn hơn hoặc bằng %{count}"
+      less_than: "phải nhỏ hơn %{count}"
+      less_than_or_equal_to: "phải nhỏ hơn hoặc bằng %{count}"
+      not_a_number: "không phải là số"
+      inclusion: "không nằm trong danh sách cho phép"
+
+  devise:
+    sessions:
+      new:
+        sign_in: "Đăng nhập"
+      signed_in: "Đăng nhập thành công."
+      signed_out: "Đã đăng xuất."
+      already_signed_out: "Bạn chưa đăng nhập."
+      invalid: "Email hoặc mật khẩu không đúng."
+    registrations:
+      signed_up: "Tài khoản đã được tạo thành công."
+      updated: "Thông tin tài khoản đã được cập nhật."
+    passwords:
+      send_instructions: "Hướng dẫn đặt lại mật khẩu đã được gửi vào email của bạn."
+      updated: "Mật khẩu đã được cập nhật thành công."
+    confirmations:
+      send_instructions: "Email xác nhận đã được gửi."
+      confirmed: "Tài khoản đã được xác nhận. Bạn đã đăng nhập."
+
+  flash:
+    actions:
+      create:
+        notice: "Tạo %{resource_name} thành công."
+        alert: "Không thể tạo %{resource_name}."
+      update:
+        notice: "Cập nhật %{resource_name} thành công."
+        alert: "Không thể cập nhật %{resource_name}."
+      destroy:
+        notice: "Xóa %{resource_name} thành công."
+        alert: "Không thể xóa %{resource_name}."
+
+  helpers:
+    page_entries_info:
+      more_pages:
+        display_entries: "Hiển thị %{first}–%{last} trong tổng số <b>%{total}</b> %{entry_name}"
+      one_page:
+        display_entries:
+          one: "<b>1</b> %{entry_name}"
+          other: "<b>Tất cả %{count}</b> %{entry_name}"
+          zero: "Không có %{entry_name}"
