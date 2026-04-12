@@ -1,0 +1,27 @@
+<% content_for :title, t("meters.new.title") %>
+
+<%# Breadcrumb %>
+<nav class="flex items-center gap-1.5 text-sm text-gray-500 mb-4">
+  <%= link_to @contact_point.organization.name, contact_points_path, class: "hover:text-gray-700 transition-colors" %>
+  <span>/</span>
+  <%= link_to @contact_point.name, contact_point_path(@contact_point), class: "hover:text-gray-700 transition-colors" %>
+  <span>/</span>
+  <%= link_to t("meters.index.title"), contact_point_meters_path(@contact_point), class: "hover:text-gray-700 transition-colors" %>
+  <span>/</span>
+  <span class="text-gray-900 font-medium"><%= t("meters.new.title") %></span>
+</nav>
+
+<div class="max-w-lg">
+  <div class="flex items-center gap-2 mb-6">
+    <%= link_to contact_point_meters_path(@contact_point), class: "text-gray-400 hover:text-gray-600 transition-colors" do %>
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+    <% end %>
+    <h1 class="text-xl font-semibold text-gray-900"><%= t("meters.new.title") %></h1>
+  </div>
+
+  <div class="bg-white rounded-lg border border-gray-200 p-6">
+    <%= render "form", contact_point: @contact_point, meter: @meter %>
+  </div>
+</div>

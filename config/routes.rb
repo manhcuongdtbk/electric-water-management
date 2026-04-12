@@ -1,7 +1,9 @@
 Rails.application.routes.draw do
   devise_for :users
 
-  resources :contact_points
+  resources :contact_points do
+    resources :meters, except: [ :show ]
+  end
 
   root "contact_points#index"
 

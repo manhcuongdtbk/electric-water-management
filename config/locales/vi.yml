@@ -15,6 +15,14 @@ vi:
         position: "Thứ tự hiển thị"
         organization: "Đơn vị"
         organization_id: "Đơn vị"
+      meter:
+        name: "Tên công tơ"
+        meter_type: "Loại công tơ"
+        serial_number: "Số hiệu"
+        position: "Thứ tự hiển thị"
+        notes: "Ghi chú"
+        contact_point: "Đầu mối"
+        organization: "Đơn vị"
 
   errors:
     messages:
@@ -69,6 +77,10 @@ vi:
       created: "Thêm đầu mối thành công."
       updated: "Cập nhật đầu mối thành công."
       destroyed: "Xóa đầu mối thành công."
+    meters:
+      created: "Thêm công tơ thành công."
+      updated: "Cập nhật công tơ thành công."
+      destroyed: "Xóa công tơ thành công."
 
   contact_points:
     index:
@@ -107,6 +119,42 @@ vi:
       delete_confirm: "Bạn có chắc muốn xóa đầu mối này?"
       back: "Quay lại"
       cancel: "Hủy"
+
+  meters:
+    index:
+      title: "Danh sách công tơ"
+      new_button: "Thêm công tơ"
+      columns:
+        stt: "STT"
+        name: "Tên công tơ"
+        meter_type: "Loại"
+        serial_number: "Số hiệu"
+        actions: "Thao tác"
+      empty: "Chưa có công tơ nào."
+    new:
+      title: "Thêm công tơ mới"
+    edit:
+      title: "Sửa công tơ"
+    form:
+      name: "Tên công tơ"
+      meter_type: "Loại công tơ"
+      meter_type_hint: "Thường: xuất hiện trong bản thu tiền. Công cộng & Trạm bơm: không xuất hiện."
+      serial_number: "Số hiệu (tùy chọn)"
+      notes: "Ghi chú"
+      position: "Thứ tự hiển thị"
+      submit_create: "Thêm công tơ"
+      submit_update: "Lưu thay đổi"
+    meter_types:
+      normal: "Thường"
+      public_meter: "Công cộng"
+      pump_station: "Trạm bơm nước"
+    actions:
+      edit: "Sửa"
+      delete: "Xóa"
+      delete_confirm: "Bạn có chắc muốn xóa công tơ này?"
+      back: "Quay lại danh sách"
+      cancel: "Hủy"
+      manage: "Quản lý công tơ"
 
   nav:
     contact_points: "Đầu mối"

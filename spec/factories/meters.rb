@@ -3,6 +3,7 @@ FactoryBot.define do
     sequence(:name) { |n| "Meter #{n}" }
     sequence(:serial_number) { |n| "SN#{n.to_s.rjust(6, '0')}" }
     meter_type { :normal }
+    notes { nil }
     position { 0 }
     association :organization
 
