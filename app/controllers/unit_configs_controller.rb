@@ -1,4 +1,5 @@
 class UnitConfigsController < ApplicationController
+  before_action :require_config_access!
   before_action :set_period
   before_action :set_division
   before_action :set_configs
@@ -29,6 +30,7 @@ class UnitConfigsController < ApplicationController
 
   def set_division
     @division = Organization.divisions.first
+    redirect_to root_path, alert: t("flash.unauthorized") unless @division
   end
 
   def set_configs
@@ -46,10 +48,12 @@ class UnitConfigsController < ApplicationController
       )
       load_contact_point_deductions
     elsif current_user.admin_level1?
-      # Load all unit configs for overview table
-      unit_orgs = Organization.units.includes(:unit_configs)
+      # Load all unit configs for overview table — one query, no N+1
+      unit_orgs = Organization.units.ordered
+      existing = UnitConfig.where(organization: unit_orgs, monthly_period: @period)
+                           .index_by(&:organization_id)
       @all_unit_configs = unit_orgs.map do |org|
-        cfg = UnitConfig.find_or_initialize_by(organization: org, monthly_period: @period)
+        cfg = existing[org.id] || UnitConfig.new(organization: org, monthly_period: @period)
         [ org, cfg ]
       end
     end
@@ -72,6 +76,12 @@ class UnitConfigsController < ApplicationController
   end
 
   # --- Division config update (admin_level1 only) ---
+  def require_config_access!
+    return if current_user.admin_level1? || current_user.admin_unit? || current_user.commander?
+
+    redirect_to root_path, alert: t("flash.unauthorized")
+  end
+
   def update_division_config
     unless current_user.admin_level1?
       return redirect_to unit_config_path, alert: t("flash.unauthorized")

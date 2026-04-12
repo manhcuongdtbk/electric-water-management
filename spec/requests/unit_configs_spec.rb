@@ -9,6 +9,7 @@ RSpec.describe "UnitConfigs", type: :request do
   let(:admin_unit_a) { create(:user, :admin_unit,   organization: org_a) }
   let(:admin_unit_b) { create(:user, :admin_unit,   organization: org_b) }
   let(:commander)   { create(:user, :commander,     organization: org_a) }
+  let(:tech_user)   { create(:user, :tech,           organization: org_a) }
 
   let!(:period) { create(:monthly_period) }
 
@@ -40,6 +41,14 @@ RSpec.describe "UnitConfigs", type: :request do
         sign_in commander
         get unit_config_path(period_id: period.id)
         expect(response).to have_http_status(:ok)
+      end
+    end
+
+    context "as tech" do
+      it "is redirected — no access" do
+        sign_in tech_user
+        get unit_config_path(period_id: period.id)
+        expect(response).to redirect_to(root_path)
       end
     end
 
