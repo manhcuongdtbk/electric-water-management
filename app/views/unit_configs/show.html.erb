@@ -1,0 +1,307 @@
+<% content_for :title, t("unit_configs.show.title") %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-xl font-semibold text-gray-900"><%= t("unit_configs.show.title") %></h1>
+</div>
+
+<%# Period selector %>
+<% if @periods.any? %>
+  <div class="mb-6">
+    <%= label_tag :period_id, t("unit_configs.period_select"),
+          class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= select_tag :period_id,
+          options_from_collection_for_select(@periods, :id, :label, @period&.id),
+          data: { base_url: unit_config_path },
+          onchange: "window.location.href = this.dataset.baseUrl + '?period_id=' + this.value",
+          class: "border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+  </div>
+<% end %>
+
+<% if @period.nil? %>
+  <div class="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+    <%= t("unit_configs.no_period") %>
+  </div>
+<% else %>
+
+<%# General errors from unit config update %>
+<% if @errors.present? %>
+  <div class="rounded-md bg-red-50 border border-red-200 px-4 py-3 mb-4">
+    <p class="text-sm font-medium text-red-800 mb-1"><%= t("unit_configs.errors_header") %></p>
+    <ul class="list-disc list-inside text-sm text-red-700 space-y-0.5">
+      <% @errors.each do |msg| %>
+        <li><%= msg %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+<%# ============================================================ %>
+<%# SECTION A: Cấu hình Sư đoàn (admin_level1 edits, others view) %>
+<%# ============================================================ %>
+<div class="bg-white rounded-lg border border-gray-200 mb-6">
+  <div class="px-5 py-4 border-b border-gray-100">
+    <h2 class="text-base font-semibold text-gray-900"><%= t("unit_configs.section_division.title") %></h2>
+    <p class="text-xs text-gray-500 mt-0.5"><%= t("unit_configs.section_division.subtitle") %></p>
+  </div>
+
+  <div class="px-5 py-4">
+    <% if current_user.admin_level1? %>
+      <%# Editable form for admin_level1 %>
+      <%= form_with url: unit_config_path, method: :patch, class: "space-y-4" do |f| %>
+        <%= hidden_field_tag :period_id, @period.id %>
+        <%= hidden_field_tag :section, "division" %>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <%= label_tag "division_config_savings_rate",
+                  t("unit_configs.section_division.savings_rate_label"),
+                  class: "block text-sm font-medium text-gray-700 mb-1" %>
+            <div class="flex items-center gap-2">
+              <%= number_field_tag "division_config[savings_rate]",
+                    number_with_precision(@division_config.savings_rate.to_f * 100, precision: 2, strip_insignificant_zeros: true, locale: :en),
+                    min: 0, max: 100, step: "any",
+                    id: "division_config_savings_rate",
+                    class: "w-32 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+                    placeholder: "5.00" %>
+              <span class="text-sm text-gray-500">% <span class="text-xs text-gray-400">(<%= t("unit_configs.section_division.savings_rate_hint") %>)</span></span>
+            </div>
+            <% if @division_config.errors[:savings_rate].any? %>
+              <p class="mt-1 text-xs text-red-600"><%= @division_config.errors[:savings_rate].first %></p>
+            <% end %>
+          </div>
+
+          <div>
+            <%= label_tag "division_config_division_public_rate",
+                  t("unit_configs.section_division.division_public_rate_label"),
+                  class: "block text-sm font-medium text-gray-700 mb-1" %>
+            <div class="flex items-center gap-2">
+              <%= number_field_tag "division_config[division_public_rate]",
+                    number_with_precision(@division_config.division_public_rate.to_f * 100, precision: 2, strip_insignificant_zeros: true, locale: :en),
+                    min: 0, max: 100, step: "any",
+                    id: "division_config_division_public_rate",
+                    class: "w-32 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+                    placeholder: "5.00" %>
+              <span class="text-sm text-gray-500">% <span class="text-xs text-gray-400">(<%= t("unit_configs.section_division.division_public_rate_hint") %>)</span></span>
+            </div>
+            <% if @division_config.errors[:division_public_rate].any? %>
+              <p class="mt-1 text-xs text-red-600"><%= @division_config.errors[:division_public_rate].first %></p>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="pt-2">
+          <%= f.submit t("unit_configs.section_division.submit"),
+                class: "px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 cursor-pointer transition-colors" %>
+        </div>
+      <% end %>
+
+    <% else %>
+      <%# Read-only view for non-admin_level1 %>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="flex items-center justify-between bg-gray-50 rounded-md border border-gray-200 px-4 py-3">
+          <span class="text-sm text-gray-600"><%= t("unit_configs.section_division.savings_rate_label") %></span>
+          <span class="text-sm font-semibold text-gray-900 font-mono">
+            <%= number_to_percentage(@division_config&.savings_rate.to_f * 100, precision: 2, strip_insignificant_zeros: true) %>
+          </span>
+        </div>
+        <div class="flex items-center justify-between bg-gray-50 rounded-md border border-gray-200 px-4 py-3">
+          <span class="text-sm text-gray-600"><%= t("unit_configs.section_division.division_public_rate_label") %></span>
+          <span class="text-sm font-semibold text-gray-900 font-mono">
+            <%= number_to_percentage(@division_config&.division_public_rate.to_f * 100, precision: 2, strip_insignificant_zeros: true) %>
+          </span>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<%# ============================================================ %>
+<%# SECTION B: Cấu hình đơn vị %>
+<%# ============================================================ %>
+<div class="bg-white rounded-lg border border-gray-200">
+  <div class="px-5 py-4 border-b border-gray-100">
+    <h2 class="text-base font-semibold text-gray-900"><%= t("unit_configs.section_unit.title") %></h2>
+    <p class="text-xs text-gray-500 mt-0.5"><%= t("unit_configs.section_unit.subtitle") %></p>
+  </div>
+
+  <div class="px-5 py-4">
+
+    <% if current_user.admin_level1? %>
+      <%# admin_level1: show read-only table of all units %>
+      <table class="min-w-full divide-y divide-gray-200 text-sm">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("unit_configs.section_unit.col_unit") %></th>
+            <th class="px-4 py-3 text-center font-medium text-gray-600"><%= t("unit_configs.section_unit.col_unit_public_rate") %></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <% @all_unit_configs.each do |(org, cfg)| %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-3 text-gray-900"><%= org.name %></td>
+              <td class="px-4 py-3 text-center font-mono text-gray-700">
+                <%= number_to_percentage(cfg.unit_public_rate.to_f * 100, precision: 2, strip_insignificant_zeros: true) %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+
+    <% elsif current_user.admin_unit? %>
+      <%# admin_unit: editable form %>
+      <%# Personnel counts as JSON for Stimulus (keyed by contact_point_id as string) %>
+      <% personnel_json = @personnel_counts.transform_keys(&:to_s).to_json %>
+
+      <div data-controller="unit-config"
+           data-unit-config-personnel-value="<%= personnel_json %>">
+
+        <%= form_with url: unit_config_path, method: :patch, class: "space-y-6" do %>
+          <%= hidden_field_tag :period_id, @period.id %>
+          <%= hidden_field_tag :section, "unit" %>
+
+          <%# Tỷ lệ công cộng đơn vị %>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              <%= t("unit_configs.section_unit.unit_public_rate_label") %>
+            </label>
+            <div class="flex items-center gap-2">
+              <%= number_field_tag "unit_config[unit_public_rate]",
+                    number_with_precision(@unit_config.unit_public_rate.to_f * 100, precision: 2, strip_insignificant_zeros: true, locale: :en),
+                    min: 0, max: 100, step: "any",
+                    class: "w-32 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+                    placeholder: "15.00" %>
+              <span class="text-sm text-gray-500">% <span class="text-xs text-gray-400">(<%= t("unit_configs.section_unit.unit_public_rate_hint") %>)</span></span>
+            </div>
+          </div>
+
+          <%# Bảng cột "Khác" %>
+          <div>
+            <h3 class="text-sm font-semibold text-gray-800 mb-2"><%= t("unit_configs.section_unit.other_table_title") %></h3>
+            <% if @contact_points.any? %>
+              <div class="rounded-lg border border-gray-200 overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="px-4 py-3 text-center font-medium text-gray-600 w-10">STT</th>
+                      <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("unit_configs.section_unit.col_contact_point") %></th>
+                      <th class="px-4 py-3 text-center font-medium text-gray-600 w-52"><%= t("unit_configs.section_unit.col_input_type") %></th>
+                      <th class="px-4 py-3 text-center font-medium text-gray-600 w-36"><%= t("unit_configs.section_unit.col_value") %></th>
+                      <th class="px-4 py-3 text-center font-medium text-gray-600 w-36"><%= t("unit_configs.section_unit.col_result_kw") %></th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100">
+                    <% @contact_points.each_with_index do |cp, idx| %>
+                      <% deduction = @deductions[cp.id] %>
+                      <% current_type = deduction&.other_type || "fixed_kw" %>
+                      <% current_value = deduction&.other_value || 0 %>
+                      <% personnel_count = @personnel_counts[cp.id] || 0 %>
+                      <tr class="hover:bg-gray-50" data-cp-id="<%= cp.id %>">
+                        <td class="px-4 py-3 text-center text-gray-500"><%= idx + 1 %></td>
+                        <td class="px-4 py-3 text-gray-900">
+                          <%= cp.name %>
+                          <% if cp.group_name.present? %>
+                            <span class="text-xs text-gray-400 ml-1">(<%= cp.group_name %>)</span>
+                          <% end %>
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                          <%= select_tag "khac[#{cp.id}][other_type]",
+                                options_for_select([
+                                  [ t("unit_configs.other_types.fixed_kw"), "fixed_kw" ],
+                                  [ t("unit_configs.other_types.factor_per_person"), "factor_per_person" ]
+                                ], current_type),
+                                data: {
+                                  role: "other-type",
+                                  action: "change->unit-config#calculateRow"
+                                },
+                                class: "border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full" %>
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                          <%= number_field_tag "khac[#{cp.id}][other_value]",
+                                current_value,
+                                min: 0, step: "any",
+                                data: {
+                                  role: "other-value",
+                                  action: "input->unit-config#calculateRow"
+                                },
+                                class: "w-28 border border-gray-300 rounded-md px-3 py-1.5 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+                        </td>
+                        <td class="px-4 py-3 text-center font-mono text-gray-700">
+                          <span data-role="other-result">
+                            <%# Precompute initial result %>
+                            <% initial_kw = current_type == "factor_per_person" ? current_value.to_f * personnel_count : current_value.to_f %>
+                            <%= number_with_precision(initial_kw, precision: 2, delimiter: ",") %>
+                          </span>
+                          <span class="text-xs text-gray-400 ml-0.5">kW</span>
+                        </td>
+                      </tr>
+                    <% end %>
+                  </tbody>
+                </table>
+              </div>
+            <% else %>
+              <p class="text-sm text-gray-500 italic"><%= t("unit_configs.section_unit.no_contact_points") %></p>
+            <% end %>
+          </div>
+
+          <div class="flex items-center gap-3 pt-2">
+            <button type="submit"
+                    class="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 cursor-pointer transition-colors">
+              <%= t("unit_configs.section_unit.submit") %>
+            </button>
+          </div>
+        <% end %>
+      </div>
+
+    <% else %>
+      <%# commander: read-only unit config %>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4">
+        <div class="flex items-center justify-between bg-gray-50 rounded-md border border-gray-200 px-4 py-3">
+          <span class="text-sm text-gray-600"><%= t("unit_configs.section_unit.unit_public_rate_label") %></span>
+          <span class="text-sm font-semibold text-gray-900 font-mono">
+            <%= number_to_percentage(@unit_config&.unit_public_rate.to_f * 100, precision: 2, strip_insignificant_zeros: true) %>
+          </span>
+        </div>
+      </div>
+
+      <% if @contact_points.any? %>
+        <h3 class="text-sm font-semibold text-gray-800 mb-2"><%= t("unit_configs.section_unit.other_table_title") %></h3>
+        <div class="rounded-lg border border-gray-200 overflow-hidden">
+          <table class="min-w-full divide-y divide-gray-200 text-sm">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-3 text-center font-medium text-gray-600 w-10">STT</th>
+                <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("unit_configs.section_unit.col_contact_point") %></th>
+                <th class="px-4 py-3 text-center font-medium text-gray-600 w-52"><%= t("unit_configs.section_unit.col_input_type") %></th>
+                <th class="px-4 py-3 text-center font-medium text-gray-600 w-36"><%= t("unit_configs.section_unit.col_value") %></th>
+                <th class="px-4 py-3 text-center font-medium text-gray-600 w-36"><%= t("unit_configs.section_unit.col_result_kw") %></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <% @contact_points.each_with_index do |cp, idx| %>
+                <% deduction = @deductions[cp.id] %>
+                <% current_type = deduction&.other_type || "fixed_kw" %>
+                <% current_value = deduction&.other_value || 0 %>
+                <% personnel_count = @personnel_counts[cp.id] || 0 %>
+                <tr class="hover:bg-gray-50">
+                  <td class="px-4 py-3 text-center text-gray-500"><%= idx + 1 %></td>
+                  <td class="px-4 py-3 text-gray-900"><%= cp.name %></td>
+                  <td class="px-4 py-3 text-center text-gray-700">
+                    <%= t("unit_configs.other_types.#{current_type}") %>
+                  </td>
+                  <td class="px-4 py-3 text-center font-mono text-gray-700"><%= current_value %></td>
+                  <td class="px-4 py-3 text-center font-mono text-gray-700">
+                    <% result_kw = current_type == "factor_per_person" ? current_value.to_f * personnel_count : current_value.to_f %>
+                    <%= number_with_precision(result_kw, precision: 2, delimiter: ",") %> kW
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% end %>
+    <% end %>
+
+  </div>
+</div>
+
+<% end %>

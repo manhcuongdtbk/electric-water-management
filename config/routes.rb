@@ -6,6 +6,8 @@ Rails.application.routes.draw do
     resources :meters, except: [ :show ]
   end
 
+  resource :unit_config, only: [ :show, :update ]
+
   root "contact_points#index"
 
   get "up" => "rails/health#show", as: :rails_health_check

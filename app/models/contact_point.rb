@@ -6,6 +6,7 @@ class ContactPoint < ApplicationRecord
   has_many :meters, dependent: :restrict_with_error
   has_many :personnel_records, class_name: "Personnel", dependent: :destroy
   has_many :monthly_calculations, dependent: :destroy
+  has_many :other_deductions, class_name: "ContactPointOtherDeduction", dependent: :destroy
 
   # Validations
   validates :name, presence: true, length: { maximum: 100 },

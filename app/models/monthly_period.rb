@@ -6,6 +6,7 @@ class MonthlyPeriod < ApplicationRecord
   has_many :meter_readings, dependent: :destroy
   has_many :personnel_records, class_name: "Personnel", dependent: :destroy
   has_many :unit_configs, dependent: :destroy
+  has_many :contact_point_other_deductions, dependent: :destroy
   has_many :monthly_calculations, dependent: :destroy
 
   # Validations
