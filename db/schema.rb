@@ -21,8 +21,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_010012) do
     t.bigint "organization_id", null: false
     t.integer "position", default: 0
     t.datetime "updated_at", null: false
-    t.index ["organization_id", "name"], name: "index_contact_points_on_organization_id_and_name", unique: true
-    t.index ["organization_id"], name: "index_contact_points_on_organization_id"
+    t.index [ "organization_id", "name" ], name: "index_contact_points_on_organization_id_and_name", unique: true
+    t.index [ "organization_id" ], name: "index_contact_points_on_organization_id"
   end
 
   create_table "meter_readings", force: :cascade do |t|
@@ -33,9 +33,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_010012) do
     t.decimal "reading_end", precision: 12, scale: 2
     t.decimal "reading_start", precision: 12, scale: 2
     t.datetime "updated_at", null: false
-    t.index ["meter_id", "monthly_period_id"], name: "idx_meter_readings_on_meter_and_period", unique: true
-    t.index ["meter_id"], name: "index_meter_readings_on_meter_id"
-    t.index ["monthly_period_id"], name: "index_meter_readings_on_monthly_period_id"
+    t.index [ "meter_id", "monthly_period_id" ], name: "idx_meter_readings_on_meter_and_period", unique: true
+    t.index [ "meter_id" ], name: "index_meter_readings_on_meter_id"
+    t.index [ "monthly_period_id" ], name: "index_meter_readings_on_monthly_period_id"
   end
 
   create_table "meters", force: :cascade do |t|
@@ -47,10 +47,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_010012) do
     t.integer "position", default: 0
     t.string "serial_number"
     t.datetime "updated_at", null: false
-    t.index ["contact_point_id"], name: "index_meters_on_contact_point_id"
-    t.index ["meter_type"], name: "index_meters_on_meter_type"
-    t.index ["organization_id"], name: "index_meters_on_organization_id"
-    t.index ["serial_number"], name: "index_meters_on_serial_number"
+    t.index [ "contact_point_id" ], name: "index_meters_on_contact_point_id"
+    t.index [ "meter_type" ], name: "index_meters_on_meter_type"
+    t.index [ "organization_id" ], name: "index_meters_on_organization_id"
+    t.index [ "serial_number" ], name: "index_meters_on_serial_number"
   end
 
   create_table "monthly_calculations", force: :cascade do |t|
@@ -82,9 +82,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_010012) do
     t.datetime "updated_at", null: false
     t.decimal "water_pump_actual_kw", precision: 12, scale: 2, default: "0.0"
     t.decimal "water_pump_standard_kw", precision: 12, scale: 2, default: "0.0"
-    t.index ["contact_point_id", "monthly_period_id"], name: "idx_monthly_calcs_on_contact_point_and_period", unique: true
-    t.index ["contact_point_id"], name: "index_monthly_calculations_on_contact_point_id"
-    t.index ["monthly_period_id"], name: "index_monthly_calculations_on_monthly_period_id"
+    t.index [ "contact_point_id", "monthly_period_id" ], name: "idx_monthly_calcs_on_contact_point_and_period", unique: true
+    t.index [ "contact_point_id" ], name: "index_monthly_calculations_on_contact_point_id"
+    t.index [ "monthly_period_id" ], name: "index_monthly_calculations_on_monthly_period_id"
   end
 
   create_table "monthly_periods", force: :cascade do |t|
@@ -96,8 +96,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_010012) do
     t.decimal "unit_price", precision: 12, scale: 2
     t.datetime "updated_at", null: false
     t.integer "year", null: false
-    t.index ["locked_by_id"], name: "index_monthly_periods_on_locked_by_id"
-    t.index ["year", "month"], name: "index_monthly_periods_on_year_and_month", unique: true
+    t.index [ "locked_by_id" ], name: "index_monthly_periods_on_locked_by_id"
+    t.index [ "year", "month" ], name: "index_monthly_periods_on_year_and_month", unique: true
   end
 
   create_table "organizations", force: :cascade do |t|
@@ -108,9 +108,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_010012) do
     t.bigint "parent_id"
     t.integer "position", default: 0
     t.datetime "updated_at", null: false
-    t.index ["code"], name: "index_organizations_on_code", unique: true
-    t.index ["level"], name: "index_organizations_on_level"
-    t.index ["parent_id"], name: "index_organizations_on_parent_id"
+    t.index [ "code" ], name: "index_organizations_on_code", unique: true
+    t.index [ "level" ], name: "index_organizations_on_level"
+    t.index [ "parent_id" ], name: "index_organizations_on_parent_id"
   end
 
   create_table "personnel", force: :cascade do |t|
@@ -125,9 +125,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_010012) do
     t.integer "rank6_count", default: 0, null: false
     t.integer "rank7_count", default: 0, null: false
     t.datetime "updated_at", null: false
-    t.index ["contact_point_id", "monthly_period_id"], name: "idx_personnel_on_contact_point_and_period", unique: true
-    t.index ["contact_point_id"], name: "index_personnel_on_contact_point_id"
-    t.index ["monthly_period_id"], name: "index_personnel_on_monthly_period_id"
+    t.index [ "contact_point_id", "monthly_period_id" ], name: "idx_personnel_on_contact_point_and_period", unique: true
+    t.index [ "contact_point_id" ], name: "index_personnel_on_contact_point_id"
+    t.index [ "monthly_period_id" ], name: "index_personnel_on_monthly_period_id"
   end
 
   create_table "pump_station_assignments", force: :cascade do |t|
@@ -135,9 +135,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_010012) do
     t.bigint "organization_id", null: false
     t.bigint "pump_station_id", null: false
     t.datetime "updated_at", null: false
-    t.index ["organization_id"], name: "index_pump_station_assignments_on_organization_id"
-    t.index ["pump_station_id", "organization_id"], name: "idx_pump_assignments_on_station_and_org", unique: true
-    t.index ["pump_station_id"], name: "index_pump_station_assignments_on_pump_station_id"
+    t.index [ "organization_id" ], name: "index_pump_station_assignments_on_organization_id"
+    t.index [ "pump_station_id", "organization_id" ], name: "idx_pump_assignments_on_station_and_org", unique: true
+    t.index [ "pump_station_id" ], name: "index_pump_station_assignments_on_pump_station_id"
   end
 
   create_table "pump_stations", force: :cascade do |t|
@@ -146,8 +146,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_010012) do
     t.string "name", null: false
     t.bigint "organization_id", null: false
     t.datetime "updated_at", null: false
-    t.index ["meter_id"], name: "index_pump_stations_on_meter_id"
-    t.index ["organization_id"], name: "index_pump_stations_on_organization_id"
+    t.index [ "meter_id" ], name: "index_pump_stations_on_meter_id"
+    t.index [ "organization_id" ], name: "index_pump_stations_on_organization_id"
   end
 
   create_table "rank_quotas", force: :cascade do |t|
@@ -157,7 +157,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_010012) do
     t.integer "rank_group", null: false
     t.string "rank_name", null: false
     t.datetime "updated_at", null: false
-    t.index ["rank_group", "effective_from"], name: "index_rank_quotas_on_rank_group_and_effective_from", unique: true
+    t.index [ "rank_group", "effective_from" ], name: "index_rank_quotas_on_rank_group_and_effective_from", unique: true
   end
 
   create_table "unit_configs", force: :cascade do |t|
@@ -171,9 +171,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_010012) do
     t.decimal "savings_rate", precision: 5, scale: 4
     t.decimal "unit_public_rate", precision: 5, scale: 4
     t.datetime "updated_at", null: false
-    t.index ["monthly_period_id"], name: "index_unit_configs_on_monthly_period_id"
-    t.index ["organization_id", "monthly_period_id"], name: "idx_unit_configs_on_org_and_period", unique: true
-    t.index ["organization_id"], name: "index_unit_configs_on_organization_id"
+    t.index [ "monthly_period_id" ], name: "index_unit_configs_on_monthly_period_id"
+    t.index [ "organization_id", "monthly_period_id" ], name: "idx_unit_configs_on_org_and_period", unique: true
+    t.index [ "organization_id" ], name: "index_unit_configs_on_organization_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -195,11 +195,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_010012) do
     t.integer "sign_in_count", default: 0, null: false
     t.string "unlock_token"
     t.datetime "updated_at", null: false
-    t.index ["email"], name: "index_users_on_email", unique: true
-    t.index ["organization_id"], name: "index_users_on_organization_id"
-    t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
-    t.index ["role"], name: "index_users_on_role"
-    t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
+    t.index [ "email" ], name: "index_users_on_email", unique: true
+    t.index [ "organization_id" ], name: "index_users_on_organization_id"
+    t.index [ "reset_password_token" ], name: "index_users_on_reset_password_token", unique: true
+    t.index [ "role" ], name: "index_users_on_role"
+    t.index [ "unlock_token" ], name: "index_users_on_unlock_token", unique: true
   end
 
   create_table "versions", force: :cascade do |t|
@@ -210,9 +210,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_010012) do
     t.jsonb "object"
     t.jsonb "object_changes"
     t.string "whodunnit"
-    t.index ["created_at"], name: "index_versions_on_created_at"
-    t.index ["item_type", "item_id"], name: "index_versions_on_item_type_and_item_id"
-    t.index ["whodunnit"], name: "index_versions_on_whodunnit"
+    t.index [ "created_at" ], name: "index_versions_on_created_at"
+    t.index [ "item_type", "item_id" ], name: "index_versions_on_item_type_and_item_id"
+    t.index [ "whodunnit" ], name: "index_versions_on_whodunnit"
   end
 
   add_foreign_key "contact_points", "organizations"
