@@ -25,7 +25,7 @@ module ElectricWaterManagement
     config.autoload_lib(ignore: %w[assets tasks])
 
     config.i18n.default_locale = :vi
-    config.i18n.available_locales = [:vi, :en]
+    config.i18n.available_locales = [ :vi, :en ]
 
     config.time_zone = "Asia/Ho_Chi_Minh"
 
