@@ -10,9 +10,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_12_122327) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_12_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "contact_point_other_deductions", force: :cascade do |t|
+    t.bigint "contact_point_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "monthly_period_id", null: false
+    t.integer "other_type", default: 0, null: false
+    t.decimal "other_value", precision: 12, scale: 4, default: "0.0", null: false
+    t.datetime "updated_at", null: false
+    t.index ["contact_point_id", "monthly_period_id"], name: "idx_cp_other_deductions_on_cp_and_period", unique: true
+    t.index ["contact_point_id"], name: "index_contact_point_other_deductions_on_contact_point_id"
+    t.index ["monthly_period_id"], name: "index_contact_point_other_deductions_on_monthly_period_id"
+  end
 
   create_table "contact_points", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -216,6 +228,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_122327) do
     t.index ["whodunnit"], name: "index_versions_on_whodunnit"
   end
 
+  add_foreign_key "contact_point_other_deductions", "contact_points"
+  add_foreign_key "contact_point_other_deductions", "monthly_periods"
   add_foreign_key "contact_points", "organizations"
   add_foreign_key "meter_readings", "meters"
   add_foreign_key "meter_readings", "monthly_periods"

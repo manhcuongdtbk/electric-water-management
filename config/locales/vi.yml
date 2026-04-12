@@ -23,6 +23,15 @@ vi:
         notes: "Ghi chú"
         contact_point: "Đầu mối"
         organization: "Đơn vị"
+      unit_config:
+        savings_rate: "Tỷ lệ tiết kiệm"
+        division_public_rate: "Tỷ lệ công cộng Sư đoàn"
+        unit_public_rate: "Tỷ lệ công cộng đơn vị"
+      contact_point_other_deduction:
+        other_type: "Kiểu nhập"
+        other_value: "Giá trị"
+        contact_point: "Đầu mối"
+        monthly_period: "Kỳ tính toán"
 
   errors:
     messages:
@@ -84,6 +93,9 @@ vi:
     personnel:
       saved: "Lưu quân số thành công."
       no_period: "Chưa có kỳ nào. Vui lòng tạo kỳ tính toán trước."
+    unit_configs:
+      division_updated: "Cập nhật cấu hình Sư đoàn thành công."
+      unit_updated: "Cập nhật cấu hình đơn vị thành công."
 
   contact_points:
     index:
@@ -194,8 +206,41 @@ vi:
     actions:
       manage: "Khai báo quân số"
 
+  unit_configs:
+    show:
+      title: "Cấu hình tỷ lệ và cột Khác"
+    period_select: "Kỳ tính toán"
+    no_period: "Chưa có kỳ nào. Vui lòng tạo kỳ tính toán trước."
+    errors_header: "Có lỗi xảy ra:"
+    section_division:
+      title: "Cấu hình Sư đoàn"
+      subtitle: "Áp dụng chung toàn bộ đơn vị — chỉ Ban Doanh trại Sư đoàn được sửa."
+      savings_rate_label: "Tỷ lệ tiết kiệm"
+      savings_rate_hint: "5–10%"
+      division_public_rate_label: "Tỷ lệ công cộng Sư đoàn"
+      division_public_rate_hint: "5–10%"
+      submit: "Lưu cấu hình Sư đoàn"
+    section_unit:
+      title: "Cấu hình đơn vị"
+      subtitle: "Mỗi đơn vị tự cấu hình cho đơn vị mình."
+      unit_public_rate_label: "Tỷ lệ công cộng đơn vị"
+      unit_public_rate_hint: "10–20%"
+      other_table_title: "Cột Khác — theo đầu mối"
+      col_unit: "Đơn vị"
+      col_unit_public_rate: "Tỷ lệ công cộng"
+      col_contact_point: "Đầu mối"
+      col_input_type: "Kiểu nhập"
+      col_value: "Giá trị"
+      col_result_kw: "Kết quả (kW)"
+      no_contact_points: "Chưa có đầu mối nào."
+      submit: "Lưu cấu hình đơn vị"
+    other_types:
+      fixed_kw: "Số cụ thể (kW)"
+      factor_per_person: "Hệ số × số người"
+
   nav:
     contact_points: "Đầu mối"
+    unit_config: "Cấu hình"
     sign_out: "Đăng xuất"
 
   helpers:
