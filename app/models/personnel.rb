@@ -4,6 +4,7 @@ class Personnel < ApplicationRecord
   has_paper_trail
 
   RANK_COLUMNS = (1..7).map { |i| :"rank#{i}_count" }.freeze
+  WATER_PUMP_RATE = BigDecimal("9.45")
 
   # Associations
   belongs_to :contact_point
