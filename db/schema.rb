@@ -1,0 +1,236 @@
+# This file is auto-generated from the current state of the database. Instead
+# of editing this file, please use the migrations feature of Active Record to
+# incrementally modify your database, and then regenerate this schema definition.
+#
+# This file is the source Rails uses to define your schema when running `bin/rails
+# db:schema:load`. When creating a new database, `bin/rails db:schema:load` tends to
+# be faster and is potentially less error prone than running all of your
+# migrations from scratch. Old migrations may fail to apply correctly if those
+# migrations use external dependencies or application code.
+#
+# It's strongly recommended that you check this file into your version control system.
+
+ActiveRecord::Schema[8.1].define(version: 2026_04_12_010012) do
+  # These are extensions that must be enabled in order to support this database
+  enable_extension "pg_catalog.plpgsql"
+
+  create_table "contact_points", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "group_name"
+    t.string "name", null: false
+    t.bigint "organization_id", null: false
+    t.integer "position", default: 0
+    t.datetime "updated_at", null: false
+    t.index ["organization_id", "name"], name: "index_contact_points_on_organization_id_and_name", unique: true
+    t.index ["organization_id"], name: "index_contact_points_on_organization_id"
+  end
+
+  create_table "meter_readings", force: :cascade do |t|
+    t.decimal "consumption", precision: 12, scale: 2
+    t.datetime "created_at", null: false
+    t.bigint "meter_id", null: false
+    t.bigint "monthly_period_id", null: false
+    t.decimal "reading_end", precision: 12, scale: 2
+    t.decimal "reading_start", precision: 12, scale: 2
+    t.datetime "updated_at", null: false
+    t.index ["meter_id", "monthly_period_id"], name: "idx_meter_readings_on_meter_and_period", unique: true
+    t.index ["meter_id"], name: "index_meter_readings_on_meter_id"
+    t.index ["monthly_period_id"], name: "index_meter_readings_on_monthly_period_id"
+  end
+
+  create_table "meters", force: :cascade do |t|
+    t.bigint "contact_point_id"
+    t.datetime "created_at", null: false
+    t.integer "meter_type", default: 0, null: false
+    t.string "name", null: false
+    t.bigint "organization_id", null: false
+    t.integer "position", default: 0
+    t.string "serial_number"
+    t.datetime "updated_at", null: false
+    t.index ["contact_point_id"], name: "index_meters_on_contact_point_id"
+    t.index ["meter_type"], name: "index_meters_on_meter_type"
+    t.index ["organization_id"], name: "index_meters_on_organization_id"
+    t.index ["serial_number"], name: "index_meters_on_serial_number"
+  end
+
+  create_table "monthly_calculations", force: :cascade do |t|
+    t.bigint "contact_point_id", null: false
+    t.datetime "created_at", null: false
+    t.decimal "division_public_deduction_kw", precision: 12, scale: 2, default: "0.0"
+    t.decimal "loss_deduction_kw", precision: 12, scale: 2, default: "0.0"
+    t.decimal "meter_usage_kw", precision: 12, scale: 2, default: "0.0"
+    t.bigint "monthly_period_id", null: false
+    t.text "notes"
+    t.decimal "other_deduction_kw", precision: 12, scale: 2, default: "0.0"
+    t.decimal "over_under_kw", precision: 12, scale: 2, default: "0.0"
+    t.decimal "rank1_kw", precision: 12, scale: 2, default: "0.0"
+    t.decimal "rank2_kw", precision: 12, scale: 2, default: "0.0"
+    t.decimal "rank3_kw", precision: 12, scale: 2, default: "0.0"
+    t.decimal "rank4_kw", precision: 12, scale: 2, default: "0.0"
+    t.decimal "rank5_kw", precision: 12, scale: 2, default: "0.0"
+    t.decimal "rank6_kw", precision: 12, scale: 2, default: "0.0"
+    t.decimal "rank7_kw", precision: 12, scale: 2, default: "0.0"
+    t.decimal "remaining_standard_kw", precision: 12, scale: 2, default: "0.0"
+    t.decimal "savings_deduction_kw", precision: 12, scale: 2, default: "0.0"
+    t.decimal "total_amount", precision: 12, scale: 2, default: "0.0"
+    t.decimal "total_deduction_kw", precision: 12, scale: 2, default: "0.0"
+    t.integer "total_personnel", default: 0, null: false
+    t.decimal "total_standard_kw", precision: 12, scale: 2, default: "0.0"
+    t.decimal "total_usage_kw", precision: 12, scale: 2, default: "0.0"
+    t.decimal "unit_price", precision: 12, scale: 2, default: "0.0"
+    t.decimal "unit_public_deduction_kw", precision: 12, scale: 2, default: "0.0"
+    t.datetime "updated_at", null: false
+    t.decimal "water_pump_actual_kw", precision: 12, scale: 2, default: "0.0"
+    t.decimal "water_pump_standard_kw", precision: 12, scale: 2, default: "0.0"
+    t.index ["contact_point_id", "monthly_period_id"], name: "idx_monthly_calcs_on_contact_point_and_period", unique: true
+    t.index ["contact_point_id"], name: "index_monthly_calculations_on_contact_point_id"
+    t.index ["monthly_period_id"], name: "index_monthly_calculations_on_monthly_period_id"
+  end
+
+  create_table "monthly_periods", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.boolean "locked", default: false, null: false
+    t.datetime "locked_at"
+    t.bigint "locked_by_id"
+    t.integer "month", null: false
+    t.decimal "unit_price", precision: 12, scale: 2
+    t.datetime "updated_at", null: false
+    t.integer "year", null: false
+    t.index ["locked_by_id"], name: "index_monthly_periods_on_locked_by_id"
+    t.index ["year", "month"], name: "index_monthly_periods_on_year_and_month", unique: true
+  end
+
+  create_table "organizations", force: :cascade do |t|
+    t.string "code", null: false
+    t.datetime "created_at", null: false
+    t.integer "level", default: 2, null: false
+    t.string "name", null: false
+    t.bigint "parent_id"
+    t.integer "position", default: 0
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_organizations_on_code", unique: true
+    t.index ["level"], name: "index_organizations_on_level"
+    t.index ["parent_id"], name: "index_organizations_on_parent_id"
+  end
+
+  create_table "personnel", force: :cascade do |t|
+    t.bigint "contact_point_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "monthly_period_id", null: false
+    t.integer "rank1_count", default: 0, null: false
+    t.integer "rank2_count", default: 0, null: false
+    t.integer "rank3_count", default: 0, null: false
+    t.integer "rank4_count", default: 0, null: false
+    t.integer "rank5_count", default: 0, null: false
+    t.integer "rank6_count", default: 0, null: false
+    t.integer "rank7_count", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["contact_point_id", "monthly_period_id"], name: "idx_personnel_on_contact_point_and_period", unique: true
+    t.index ["contact_point_id"], name: "index_personnel_on_contact_point_id"
+    t.index ["monthly_period_id"], name: "index_personnel_on_monthly_period_id"
+  end
+
+  create_table "pump_station_assignments", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "organization_id", null: false
+    t.bigint "pump_station_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["organization_id"], name: "index_pump_station_assignments_on_organization_id"
+    t.index ["pump_station_id", "organization_id"], name: "idx_pump_assignments_on_station_and_org", unique: true
+    t.index ["pump_station_id"], name: "index_pump_station_assignments_on_pump_station_id"
+  end
+
+  create_table "pump_stations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "meter_id"
+    t.string "name", null: false
+    t.bigint "organization_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["meter_id"], name: "index_pump_stations_on_meter_id"
+    t.index ["organization_id"], name: "index_pump_stations_on_organization_id"
+  end
+
+  create_table "rank_quotas", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "effective_from", null: false
+    t.decimal "quota_kw", precision: 10, scale: 2, null: false
+    t.integer "rank_group", null: false
+    t.string "rank_name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["rank_group", "effective_from"], name: "index_rank_quotas_on_rank_group_and_effective_from", unique: true
+  end
+
+  create_table "unit_configs", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.decimal "division_public_rate", precision: 5, scale: 4
+    t.decimal "electricity_supply_kw", precision: 12, scale: 2
+    t.bigint "monthly_period_id", null: false
+    t.bigint "organization_id", null: false
+    t.integer "other_deduction_type", default: 0
+    t.decimal "other_deduction_value", precision: 12, scale: 4, default: "0.0"
+    t.decimal "savings_rate", precision: 5, scale: 4
+    t.decimal "unit_public_rate", precision: 5, scale: 4
+    t.datetime "updated_at", null: false
+    t.index ["monthly_period_id"], name: "index_unit_configs_on_monthly_period_id"
+    t.index ["organization_id", "monthly_period_id"], name: "idx_unit_configs_on_org_and_period", unique: true
+    t.index ["organization_id"], name: "index_unit_configs_on_organization_id"
+  end
+
+  create_table "users", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "current_sign_in_at"
+    t.string "current_sign_in_ip"
+    t.string "email", default: "", null: false
+    t.string "encrypted_password", default: "", null: false
+    t.integer "failed_attempts", default: 0, null: false
+    t.boolean "force_password_change", default: true, null: false
+    t.string "full_name", null: false
+    t.datetime "last_sign_in_at"
+    t.string "last_sign_in_ip"
+    t.datetime "locked_at"
+    t.bigint "organization_id", null: false
+    t.datetime "reset_password_sent_at"
+    t.string "reset_password_token"
+    t.integer "role", default: 1, null: false
+    t.integer "sign_in_count", default: 0, null: false
+    t.string "unlock_token"
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["organization_id"], name: "index_users_on_organization_id"
+    t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+    t.index ["role"], name: "index_users_on_role"
+    t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
+  end
+
+  create_table "versions", force: :cascade do |t|
+    t.datetime "created_at"
+    t.string "event", null: false
+    t.bigint "item_id", null: false
+    t.string "item_type", null: false
+    t.jsonb "object"
+    t.jsonb "object_changes"
+    t.string "whodunnit"
+    t.index ["created_at"], name: "index_versions_on_created_at"
+    t.index ["item_type", "item_id"], name: "index_versions_on_item_type_and_item_id"
+    t.index ["whodunnit"], name: "index_versions_on_whodunnit"
+  end
+
+  add_foreign_key "contact_points", "organizations"
+  add_foreign_key "meter_readings", "meters"
+  add_foreign_key "meter_readings", "monthly_periods"
+  add_foreign_key "meters", "contact_points"
+  add_foreign_key "meters", "organizations"
+  add_foreign_key "monthly_calculations", "contact_points"
+  add_foreign_key "monthly_calculations", "monthly_periods"
+  add_foreign_key "monthly_periods", "users", column: "locked_by_id"
+  add_foreign_key "organizations", "organizations", column: "parent_id"
+  add_foreign_key "personnel", "contact_points"
+  add_foreign_key "personnel", "monthly_periods"
+  add_foreign_key "pump_station_assignments", "organizations"
+  add_foreign_key "pump_station_assignments", "pump_stations"
+  add_foreign_key "pump_stations", "meters"
+  add_foreign_key "pump_stations", "organizations"
+  add_foreign_key "unit_configs", "monthly_periods"
+  add_foreign_key "unit_configs", "organizations"
+  add_foreign_key "users", "organizations"
+end
