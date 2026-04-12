@@ -8,12 +8,20 @@ vi:
         restrict_dependent_destroy:
           has_one: "Không thể xóa bản ghi vì đang có %{record} liên quan"
           has_many: "Không thể xóa bản ghi vì đang có nhiều %{record} liên quan"
+    attributes:
+      contact_point:
+        name: "Tên đầu mối"
+        group_name: "Nhóm"
+        position: "Thứ tự hiển thị"
+        organization: "Đơn vị"
+        organization_id: "Đơn vị"
 
   errors:
     messages:
       blank: "không được để trống"
       taken: "đã được sử dụng"
       invalid: "không hợp lệ"
+      required: "phải tồn tại"
       too_long:
         one: "quá dài (tối đa 1 ký tự)"
         other: "quá dài (tối đa %{count} ký tự)"
@@ -89,6 +97,7 @@ vi:
       group_name: "Nhóm"
       position: "Thứ tự hiển thị"
       organization: "Đơn vị"
+      organization_prompt: "— Chọn đơn vị —"
       submit_create: "Thêm đầu mối"
       submit_update: "Lưu thay đổi"
     actions:

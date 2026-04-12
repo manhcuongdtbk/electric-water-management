@@ -9,6 +9,7 @@ RSpec.describe "ContactPoints", type: :request do
   let(:admin_unit_a) { create(:user, role: :admin_unit, organization: org_a) }
   let(:admin_unit_b) { create(:user, role: :admin_unit, organization: org_b) }
   let(:commander) { create(:user, role: :commander, organization: org_a) }
+  let(:tech_user) { create(:user, role: :tech, organization: org_a) }
 
   let!(:cp_a) { create(:contact_point, organization: org_a) }
   let!(:cp_b) { create(:contact_point, organization: org_b) }
@@ -36,6 +37,16 @@ RSpec.describe "ContactPoints", type: :request do
     context "as commander" do
       it "shows only own organization's contact points" do
         sign_in commander
+        get contact_points_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include(cp_a.name)
+        expect(response.body).not_to include(cp_b.name)
+      end
+    end
+
+    context "as tech" do
+      it "shows only own organization's contact points (read-only)" do
+        sign_in tech_user
         get contact_points_path
         expect(response).to have_http_status(:ok)
         expect(response.body).to include(cp_a.name)
@@ -91,6 +102,12 @@ RSpec.describe "ContactPoints", type: :request do
 
     it "redirects commander" do
       sign_in commander
+      get new_contact_point_path
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "redirects tech" do
+      sign_in tech_user
       get new_contact_point_path
       expect(response).to redirect_to(root_path)
     end
