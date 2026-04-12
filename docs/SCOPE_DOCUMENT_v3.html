@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tài liệu phạm vi dự án — Phần mềm Quản lý tiêu chuẩn điện nước</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap');
+  :root {
+    --bg: #FAFAF8; --surface: #FFFFFF; --border: #E8E6E1; --border-light: #F0EEE9;
+    --text: #1A1A18; --text2: #6B6A65; --text3: #9C9A92;
+    --blue: #2563EB; --blue-light: #EFF6FF; --blue-border: #BFDBFE;
+    --green: #059669; --green-light: #ECFDF5; --green-border: #A7F3D0;
+    --amber: #D97706; --amber-light: #FFFBEB; --amber-border: #FDE68A;
+    --red: #DC2626; --red-light: #FEF2F2; --red-border: #FECACA;
+    --purple: #7C3AED; --purple-light: #F5F3FF; --purple-border: #DDD6FE;
+    --teal: #0D9488; --teal-light: #F0FDFA; --teal-border: #99F6E4;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Be Vietnam Pro', sans-serif; background: var(--bg); color: var(--text); line-height: 1.8; }
+  .container { max-width: 860px; margin: 0 auto; padding: 40px 32px 80px; }
+  .cover { text-align: center; padding: 56px 0 48px; border-bottom: 2px solid var(--border); margin-bottom: 48px; }
+  .cover-badge { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--blue); background: var(--blue-light); border: 1px solid var(--blue-border); padding: 4px 16px; border-radius: 20px; margin-bottom: 20px; }
+  .cover h1 { font-size: 26px; font-weight: 700; line-height: 1.35; margin-bottom: 8px; }
+  .cover p { font-size: 14px; color: var(--text2); }
+  .cover-meta { display: flex; justify-content: center; gap: 24px; margin-top: 20px; flex-wrap: wrap; }
+  .cover-meta span { font-size: 12px; color: var(--text3); }
+  .cover-meta strong { color: var(--text); font-weight: 500; }
+  .section { margin-bottom: 48px; }
+  .section h2 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+  .section-desc { font-size: 14px; color: var(--text2); margin-bottom: 20px; line-height: 1.7; }
+  .section h3 { font-size: 15px; font-weight: 600; margin: 28px 0 12px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 16px; }
+  .card-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+  .item { display: flex; align-items: flex-start; gap: 10px; padding: 5px 0; font-size: 14px; line-height: 1.6; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 8px; flex-shrink: 0; }
+  .dot-blue { background: var(--blue); } .dot-green { background: var(--green); } .dot-amber { background: var(--amber); } .dot-red { background: var(--red); }
+  .screen-item { display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border-light); font-size: 13.5px; }
+  .screen-item:last-child { border-bottom: none; }
+  .screen-id { font-size: 11px; font-weight: 600; color: var(--text3); min-width: 36px; padding-top: 2px; }
+  .screen-name { font-weight: 500; }
+  .screen-desc { color: var(--text2); font-size: 12.5px; margin-top: 1px; }
+  .scope-row { display: flex; gap: 12px; margin: 8px 0; }
+  .scope-in, .scope-out { flex: 1; padding: 16px; border-radius: 10px; }
+  .scope-in { background: var(--green-light); border: 1px solid var(--green-border); }
+  .scope-out { background: var(--red-light); border: 1px solid var(--red-border); }
+  .scope-label { font-size: 12px; font-weight: 600; margin-bottom: 8px; }
+  .scope-in .scope-label { color: var(--green); } .scope-out .scope-label { color: var(--red); }
+  .scope-list { list-style: none; }
+  .scope-list li { font-size: 13px; padding: 3px 0; line-height: 1.5; }
+  .scope-list li::before { content: '✓ '; font-weight: 600; }
+  .scope-out .scope-list li::before { content: '✗ '; }
+  .tl-row { display: flex; align-items: center; gap: 14px; margin-bottom: 5px; }
+  .tl-label { font-size: 12px; font-weight: 500; color: var(--text2); width: 90px; text-align: right; flex-shrink: 0; }
+  .tl-track { flex: 1; height: 24px; background: var(--border-light); border-radius: 5px; position: relative; }
+  .tl-bar { position: absolute; height: 100%; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 9.5px; font-weight: 600; color: white; }
+  .s-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 8px 0; }
+  .s-table th { text-align: left; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.6px; padding: 8px 12px; border-bottom: 2px solid var(--border); }
+  .s-table td { padding: 10px 12px; border-bottom: 1px solid var(--border-light); vertical-align: top; }
+  .s-table tr:last-child td { border-bottom: none; }
+  .callout { padding: 14px 18px; border-radius: 8px; font-size: 13.5px; margin: 12px 0; line-height: 1.6; }
+  .callout-blue { background: var(--blue-light); border: 1px solid var(--blue-border); color: #1E40AF; }
+  .callout-red { background: var(--red-light); border: 1px solid var(--red-border); color: #991B1B; }
+  .svg-w { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 10px; overflow-x: auto; }
+  .sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 24px; }
+  .sig-box { text-align: center; padding: 20px; border: 1px solid var(--border); border-radius: 10px; }
+  .sig-role { font-size: 12px; color: var(--text3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .sig-name { font-size: 14px; font-weight: 500; margin-bottom: 48px; }
+  .sig-line { border-top: 1px solid var(--border); padding-top: 8px; font-size: 12px; color: var(--text3); }
+  @media print { body { background: white; } .container { padding: 20px; max-width: 100%; } .section { page-break-inside: avoid; } }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="cover">
+    <div class="cover-badge">Tài liệu phạm vi dự án</div>
+    <h1>Phần mềm Quản lý tiêu chuẩn điện nước</h1>
+    <p>Mô tả phạm vi dự án &mdash; làm cơ sở để hai bên thống nhất trước khi triển khai</p>
+    <div class="cover-meta">
+      <span>Phiên bản: <strong>3.0</strong></span>
+      <span>Ngày: <strong>___/04/2026</strong></span>
+    </div>
+    <p style="font-size:12px;color:var(--text3);margin-top:12px;">Cập nhật theo nghiệp vụ đã xác nhận trong &ldquo;Xác nhận nghiệp vụ v5&rdquo; (06/04/2026)</p>
+  </div>
+
+  <div class="section">
+    <h2>Mục tiêu dự án</h2>
+    <p class="section-desc">Xây dựng phần mềm web thay thế phần mềm quản lý điện nước hiện tại (ứng dụng Windows), phục vụ quản lý tiêu chuẩn và tiêu thụ điện cho các đơn vị trực thuộc Sư đoàn. Phần mềm mới cho phép nhiều đơn vị cùng truy cập trên mạng nội bộ, mỗi đơn vị quản lý dữ liệu riêng, phân quyền theo cấp.</p>
+    <div class="card">
+      <div class="card-title">Quy trình nghiệp vụ tổng quan</div>
+      <div style="display:flex;gap:0;margin:8px 0 12px;overflow-x:auto;">
+        <div style="flex:1;min-width:100px;text-align:center;padding:14px 6px;position:relative;"><div style="width:36px;height:36px;border-radius:9px;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:16px;background:var(--purple-light);">⚙️</div><div style="font-size:12px;font-weight:600;">Khai báo</div><div style="font-size:10.5px;color:var(--text2);line-height:1.4;">Đầu mối, công tơ,<br>quân số, tỷ lệ</div><div style="position:absolute;right:-1px;top:50%;transform:translateY(-50%);border-top:7px solid transparent;border-bottom:7px solid transparent;border-left:7px solid var(--border);"></div></div>
+        <div style="flex:1;min-width:100px;text-align:center;padding:14px 6px;position:relative;"><div style="width:36px;height:36px;border-radius:9px;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:16px;background:var(--blue-light);">📋</div><div style="font-size:12px;font-weight:600;">Nhập hàng tháng</div><div style="font-size:10.5px;color:var(--text2);line-height:1.4;">Đồng hồ tổng,<br>chỉ số công tơ</div><div style="position:absolute;right:-1px;top:50%;transform:translateY(-50%);border-top:7px solid transparent;border-bottom:7px solid transparent;border-left:7px solid var(--border);"></div></div>
+        <div style="flex:1;min-width:100px;text-align:center;padding:14px 6px;position:relative;"><div style="width:36px;height:36px;border-radius:9px;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:16px;background:var(--green-light);">🔢</div><div style="font-size:12px;font-weight:600;">Tính toán</div><div style="font-size:10.5px;color:var(--text2);line-height:1.4;">Tiêu chuẩn, trừ,<br>so sánh, thu tiền</div><div style="position:absolute;right:-1px;top:50%;transform:translateY(-50%);border-top:7px solid transparent;border-bottom:7px solid transparent;border-left:7px solid var(--border);"></div></div>
+        <div style="flex:1;min-width:100px;text-align:center;padding:14px 6px;"><div style="width:36px;height:36px;border-radius:9px;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:16px;background:var(--amber-light);">📊</div><div style="font-size:12px;font-weight:600;">Báo cáo</div><div style="font-size:10.5px;color:var(--text2);line-height:1.4;">Xem, xuất file,<br>tra cứu lịch sử</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Cấu trúc tổ chức</h2>
+    <p class="section-desc">Hệ thống phân thành 2 cấp. Mỗi đơn vị cấp 2 có dữ liệu riêng biệt, tài khoản riêng, không xem được dữ liệu đơn vị khác.</p>
+    <div class="svg-w">
+      <svg width="100%" viewBox="0 0 820 480" xmlns="http://www.w3.org/2000/svg" style="font-family:'Be Vietnam Pro',sans-serif">
+        <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+        <rect x="5" y="5" width="810" height="58" rx="12" fill="none" stroke="#DDD6FE" stroke-width="1" stroke-dasharray="6 3"/>
+        <text x="18" y="22" font-size="10" font-weight="600" fill="#7C3AED" letter-spacing="1">CẤP 1</text>
+        <rect x="200" y="14" width="420" height="38" rx="8" fill="#F5F3FF" stroke="#DDD6FE" stroke-width="1"/>
+        <text x="410" y="38" text-anchor="middle" font-size="13" font-weight="600" fill="#3C3489">Sư đoàn (1 tài khoản quản trị toàn hệ thống)</text>
+        <line x1="410" y1="63" x2="410" y2="82" stroke="#DDD6FE" stroke-width="1" marker-end="url(#arr)"/>
+        <rect x="5" y="86" width="810" height="160" rx="12" fill="none" stroke="#99F6E4" stroke-width="1" stroke-dasharray="6 3"/>
+        <text x="18" y="106" font-size="10" font-weight="600" fill="#0D9488" letter-spacing="1">CẤP 2 — 13 ĐƠN VỊ, MỖI ĐƠN VỊ CÓ QUẢN TRỊ VIÊN + CHỈ HUY + DỮ LIỆU RIÊNG</text>
+        <rect x="20" y="118" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/><text x="80" y="136" text-anchor="middle" font-size="11" fill="#085041">Sư đoàn bộ</text>
+        <rect x="148" y="118" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/><text x="208" y="136" text-anchor="middle" font-size="10" fill="#085041">Trung đoàn 101</text>
+        <rect x="276" y="118" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/><text x="336" y="136" text-anchor="middle" font-size="10" fill="#085041">Trung đoàn 18</text>
+        <rect x="404" y="118" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/><text x="464" y="136" text-anchor="middle" font-size="10" fill="#085041">Trung đoàn 95</text>
+        <rect x="532" y="118" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/><text x="592" y="136" text-anchor="middle" font-size="10" fill="#085041">Tiểu đoàn 14</text>
+        <rect x="660" y="118" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/><text x="720" y="136" text-anchor="middle" font-size="10" fill="#085041">Tiểu đoàn 15</text>
+        <rect x="20" y="154" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/><text x="80" y="172" text-anchor="middle" font-size="10" fill="#085041">Tiểu đoàn 16</text>
+        <rect x="148" y="154" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/><text x="208" y="172" text-anchor="middle" font-size="10" fill="#085041">Tiểu đoàn 17</text>
+        <rect x="276" y="154" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/><text x="336" y="172" text-anchor="middle" font-size="10" fill="#085041">Tiểu đoàn 18</text>
+        <rect x="404" y="154" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/><text x="464" y="172" text-anchor="middle" font-size="10" fill="#085041">Tiểu đoàn 24</text>
+        <rect x="532" y="154" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/><text x="592" y="172" text-anchor="middle" font-size="10" fill="#085041">Tiểu đoàn 25</text>
+        <rect x="660" y="154" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/><text x="720" y="172" text-anchor="middle" font-size="10" fill="#085041">Đại đội 26</text>
+        <rect x="20" y="190" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/><text x="80" y="208" text-anchor="middle" font-size="10" fill="#085041">Đại đội 29</text>
+        <text x="160" y="208" font-size="10" fill="#0D9488" font-style="italic">Có thể thêm đơn vị cấp 2 mới</text>
+        <line x1="80" y1="236" x2="80" y2="266" stroke="#F0997B" stroke-width="1" stroke-dasharray="4 3"/>
+        <rect x="5" y="266" width="500" height="180" rx="12" fill="#FAECE7" stroke="#F0997B" stroke-width="1"/>
+        <text x="18" y="288" font-size="10" font-weight="600" fill="#993C1D" letter-spacing="1">BÊN TRONG "SƯ ĐOÀN BỘ" (1 ĐƠN VỊ CẤP 2)</text>
+        <circle cx="24" cy="312" r="2" fill="#993C1D"/><text x="32" y="316" font-size="11" fill="#712B13">46 đầu mối (Chỉ huy Sư đoàn, Ban Tác huấn, Ban Quân lực, Tổ xe...)</text>
+        <circle cx="24" cy="334" r="2" fill="#993C1D"/><text x="32" y="338" font-size="11" fill="#712B13">Mỗi đầu mối có N công tơ (thêm bớt linh động, mỗi công tơ có tên riêng)</text>
+        <circle cx="24" cy="356" r="2" fill="#993C1D"/><text x="32" y="360" font-size="11" fill="#712B13">Quân số theo 7 nhóm cấp bậc (570, 440, 305, 130, 210, 110, 24 kW)</text>
+        <circle cx="24" cy="378" r="2" fill="#993C1D"/><text x="32" y="382" font-size="11" fill="#712B13">Tiêu chuẩn sinh hoạt + tiêu chuẩn điện bơm nước (9,45 kW/người/tháng)</text>
+        <circle cx="24" cy="400" r="2" fill="#993C1D"/><text x="32" y="404" font-size="11" fill="#712B13">Trừ tiết kiệm, tổn hao, công cộng Sư đoàn, công cộng đơn vị, khác</text>
+        <circle cx="24" cy="422" r="2" fill="#993C1D"/><text x="32" y="426" font-size="11" fill="#712B13">Tổng hợp so sánh tiêu chuẩn với sử dụng, thu tiền từng người</text>
+        <rect x="540" y="266" width="260" height="54" rx="10" fill="#FAECE7" stroke="#F0997B" stroke-width="1"/>
+        <text x="670" y="290" text-anchor="middle" font-size="12" font-weight="500" fill="#712B13">Mỗi đơn vị cấp 2 khác</text>
+        <text x="670" y="308" text-anchor="middle" font-size="11" fill="#993C1D">cấu trúc tương tự</text>
+      </svg>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Phân quyền theo vai trò</h2>
+    <p class="section-desc">Hệ thống có 3 vai trò người dùng chính và 1 vai trò vận hành kỹ thuật.</p>
+    <div class="svg-w">
+      <svg width="100%" viewBox="0 0 820 390" xmlns="http://www.w3.org/2000/svg" style="font-family:'Be Vietnam Pro',sans-serif">
+        <rect x="5" y="5" width="810" height="128" rx="12" fill="none" stroke="#DDD6FE" stroke-width="1" stroke-dasharray="6 3"/>
+        <text x="18" y="24" font-size="10" font-weight="600" fill="#7C3AED" letter-spacing="1">CẤP 1 — SƯ ĐOÀN</text>
+        <rect x="24" y="38" width="500" height="84" rx="8" fill="#F5F3FF" stroke="#DDD6FE" stroke-width="1"/>
+        <text x="40" y="58" font-size="13" font-weight="600" fill="#3C3489">Quản trị viên cấp 1 (Ban Doanh trại)</text>
+        <circle cx="44" cy="76" r="2" fill="#534AB7"/><text x="52" y="80" font-size="11" fill="#534AB7">Thêm, bớt đơn vị cấp 2, quản lý tài khoản toàn hệ thống</text>
+        <circle cx="44" cy="94" r="2" fill="#534AB7"/><text x="52" y="98" font-size="11" fill="#534AB7">Mở khoá sửa dữ liệu tháng cũ</text>
+        <circle cx="44" cy="112" r="2" fill="#534AB7"/><text x="52" y="116" font-size="11" fill="#534AB7">Cấu hình bảng định mức kW, tỷ lệ tiết kiệm, tỷ lệ công cộng Sư đoàn</text>
+        <rect x="5" y="148" width="810" height="152" rx="12" fill="none" stroke="#99F6E4" stroke-width="1" stroke-dasharray="6 3"/>
+        <text x="18" y="168" font-size="10" font-weight="600" fill="#0D9488" letter-spacing="1">CẤP 2 — MỖI ĐƠN VỊ TRỰC THUỘC (13 ĐƠN VỊ, MỖI ĐƠN VỊ CÓ 2 VAI TRÒ DƯỚI ĐÂY)</text>
+        <rect x="24" y="184" width="440" height="104" rx="8" fill="#E1F5EE" stroke="#99F6E4" stroke-width="1"/>
+        <text x="40" y="204" font-size="13" font-weight="600" fill="#085041">Quản trị viên đơn vị</text>
+        <circle cx="44" cy="222" r="2" fill="#0F6E56"/><text x="52" y="226" font-size="11" fill="#0F6E56">Khai báo đầu mối, công tơ, quân số</text>
+        <circle cx="44" cy="242" r="2" fill="#0F6E56"/><text x="52" y="246" font-size="11" fill="#0F6E56">Nhập số liệu hàng tháng + số điện lực (đồng hồ tổng)</text>
+        <circle cx="44" cy="262" r="2" fill="#0F6E56"/><text x="52" y="266" font-size="11" fill="#0F6E56">Cấu hình tỷ lệ công cộng đơn vị, cột "Khác"</text>
+        <circle cx="44" cy="282" r="2" fill="#0F6E56"/><text x="52" y="286" font-size="11" fill="#0F6E56">Đẩy số liệu lên hệ thống</text>
+        <rect x="490" y="184" width="300" height="84" rx="8" fill="#F1EFE8" stroke="#D3D1C7" stroke-width="1"/>
+        <text x="506" y="206" font-size="13" font-weight="600" fill="#444441">Chỉ huy đơn vị</text>
+        <circle cx="510" cy="228" r="2" fill="#5F5E5A"/><text x="518" y="232" font-size="11" fill="#5F5E5A">Chỉ xem và kiểm tra số liệu</text>
+        <circle cx="510" cy="250" r="2" fill="#5F5E5A"/><text x="518" y="254" font-size="11" fill="#5F5E5A">Không thao tác, không sửa được gì</text>
+        <rect x="5" y="318" width="810" height="64" rx="12" fill="none" stroke="#BFDBFE" stroke-width="1" stroke-dasharray="6 3"/>
+        <text x="18" y="338" font-size="10" font-weight="600" fill="#2563EB" letter-spacing="1">VẬN HÀNH KỸ THUẬT</text>
+        <rect x="24" y="348" width="500" height="28" rx="6" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="0.5"/>
+        <text x="40" y="367" font-size="12" fill="#1E40AF">Đội kỹ thuật: quản lý tài khoản, xem nhật ký thay đổi, sao lưu, vận hành máy chủ</text>
+      </svg>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Danh sách chức năng</h2>
+    <p class="section-desc">Chức năng phần mềm chia thành 4 nhóm: khai báo ban đầu, nhập liệu hàng tháng, tính toán và báo cáo, quản trị hệ thống.</p>
+    <h3><span style="display:inline-flex;align-items:center;gap:8px;"><span style="width:24px;height:24px;border-radius:6px;background:var(--purple-light);display:inline-flex;align-items:center;justify-content:center;font-size:12px;">⚙️</span>Khai báo ban đầu — quản trị viên đơn vị thực hiện 1 lần, sửa khi cần</span></h3>
+    <div class="card"><div class="screen-group">
+      <div class="screen-item"><div class="screen-id">F01</div><div><div class="screen-name">Khai báo đầu mối trong đơn vị</div><div class="screen-desc">Khai báo các đầu mối sử dụng điện (ví dụ: Ban Tác huấn, Ban Quân lực, Tổ xe...). Thêm, bớt linh động khi có thay đổi tổ chức. Sư đoàn bộ hiện có 46 đầu mối.</div></div></div>
+      <div class="screen-item"><div class="screen-id">F02</div><div><div class="screen-name">Khai báo công tơ trong mỗi đầu mối</div><div class="screen-desc">Mỗi đầu mối có nhiều công tơ (mỗi công tơ có tên riêng). Thêm, bớt linh động. Có đánh dấu công tơ thuộc loại "công cộng" (không xuất hiện trong bản thu tiền) hoặc "trạm bơm nước".</div></div></div>
+      <div class="screen-item"><div class="screen-id">F03</div><div><div class="screen-name">Khai báo quân số theo 7 nhóm cấp bậc</div><div class="screen-desc">Nhập số người theo từng nhóm: Đại tá (570 kW), Thượng tá (440 kW), Trung tá và Thiếu tá (305 kW), cấp Úy (130 kW), cơ quan Sư đoàn và tương đương (210 kW), Tiểu đoàn và Đại đội (110 kW), Hạ sĩ quan và Binh sĩ (24 kW). Phần mềm tự tính tiêu chuẩn = tổng (số người mỗi nhóm × định mức nhóm).</div></div></div>
+      <div class="screen-item"><div class="screen-id">F04</div><div><div class="screen-name">Cấu hình tỷ lệ và cột "Khác"</div><div class="screen-desc">Tiết kiệm (5–10%, cấp 1 cấu hình), công cộng Sư đoàn (5–10%, cấp 1 cấu hình), công cộng đơn vị (10–20%, đơn vị tự cấu hình), cột "Khác" (nhập số cụ thể hoặc hệ số nhân với số người, ví dụ: nhà ăn, nhà bếp). Tổn hao: phần mềm tự tính, không cần khai báo.</div></div></div>
+    </div></div>
+    <h3><span style="display:inline-flex;align-items:center;gap:8px;"><span style="width:24px;height:24px;border-radius:6px;background:var(--blue-light);display:inline-flex;align-items:center;justify-content:center;font-size:12px;">📋</span>Nhập liệu hàng tháng — quản trị viên đơn vị thực hiện mỗi tháng</span></h3>
+    <div class="card"><div class="screen-group">
+      <div class="screen-item"><div class="screen-id">F05</div><div><div class="screen-name">Nhập số điện lực (đồng hồ tổng)</div><div class="screen-desc">Nhập số liệu điện lực cung cấp cho đơn vị trong tháng. Quản trị viên đơn vị tự nhập.</div></div></div>
+      <div class="screen-item"><div class="screen-id">F06</div><div><div class="screen-name">Nhập chỉ số công tơ đầu kỳ, cuối kỳ</div><div class="screen-desc">Nhập chỉ số đầu kỳ và cuối kỳ cho từng công tơ. Phần mềm tự tính lượng sử dụng = cuối kỳ trừ đầu kỳ.</div></div></div>
+      <div class="screen-item"><div class="screen-id">F07</div><div><div class="screen-name">Soát lại quân số</div><div class="screen-desc">Tháng sau tự động kế thừa dữ liệu tháng trước (đầu mối, công tơ, quân số). Chỉ cần sửa chỗ có thay đổi. Dữ liệu tháng cũ bị khoá — chỉ quản trị viên cấp 1 mở khoá khi cần sửa.</div></div></div>
+    </div></div>
+    <h3><span style="display:inline-flex;align-items:center;gap:8px;"><span style="width:24px;height:24px;border-radius:6px;background:var(--green-light);display:inline-flex;align-items:center;justify-content:center;font-size:12px;">📊</span>Tính toán và báo cáo</span></h3>
+    <div class="card"><div class="screen-group">
+      <div class="screen-item"><div class="screen-id">F08</div><div><div class="screen-name">Tính toán tiêu chuẩn theo nghị định 02</div><div class="screen-desc">Phần mềm tự tính tiêu chuẩn = tổng (số người mỗi nhóm nhân định mức) cộng (tổng quân số nhân 9,45 kW bơm nước). Sau đó trừ 4 khoản: tiết kiệm, tổn hao (phân bổ theo tỷ lệ kW), công cộng, khác. Kết quả ra "tiêu chuẩn còn lại".</div></div></div>
+      <div class="screen-item"><div class="screen-id">F09</div><div><div class="screen-name">Tính toán sử dụng và so sánh</div><div class="screen-desc">Tổng sử dụng = sử dụng công tơ (không cộng tổn hao) cộng bơm nước thực tế. So sánh với tiêu chuẩn còn lại, tính thâm điện, nhân đơn giá ra thành tiền. Đơn giá thay đổi hàng tháng.</div></div></div>
+      <div class="screen-item"><div class="screen-id">F10</div><div><div class="screen-name">Phân bổ điện bơm nước thực tế</div><div class="screen-desc">Trạm bơm nước có đồng hồ điện riêng, quản lý như công tơ. Tổng điện bơm chia cho các đơn vị theo quân số. Quản trị viên có thể chỉ định trạm bơm phục vụ nhóm đối tượng cụ thể và chỉnh tỷ lệ phân bổ.</div></div></div>
+      <div class="screen-item"><div class="screen-id">F11</div><div><div class="screen-name">Bảng tổng hợp theo tháng (bảng 22 cột)</div><div class="screen-desc">Hiển thị bảng tính chi tiết từng đầu mối: quân số, tiêu chuẩn, các khoản trừ, còn được hưởng, thành tiền. Đúng cấu trúc bảng mẫu mà đơn vị đang dùng.</div></div></div>
+      <div class="screen-item"><div class="screen-id">F12</div><div><div class="screen-name">Báo cáo tổng hợp</div><div class="screen-desc">Báo cáo theo tháng, quý, năm. Biểu đồ so sánh tiêu chuẩn và sử dụng. Nhận biết đơn vị, đầu mối vượt tiêu chuẩn. Chi tiết báo cáo sẽ được hoàn thiện trong quá trình triển khai dựa trên phản hồi thực tế.</div></div></div>
+      <div class="screen-item"><div class="screen-id">F13</div><div><div class="screen-name">Tra cứu lịch sử và so sánh cùng kỳ</div><div class="screen-desc">Tra cứu dữ liệu tháng bất kỳ của năm trước. So sánh cùng kỳ theo từng đầu mối: hiển thị tổng sử dụng của tất cả công tơ trong đầu mối, so với cùng tháng năm trước.</div></div></div>
+      <div class="screen-item"><div class="screen-id">F14</div><div><div class="screen-name">Xuất báo cáo ra file</div><div class="screen-desc">Xuất báo cáo ra file CSV. Xuất file Excel theo mẫu Cục Doanh trại khi có file mẫu.</div></div></div>
+    </div></div>
+    <h3><span style="display:inline-flex;align-items:center;gap:8px;"><span style="width:24px;height:24px;border-radius:6px;background:var(--red-light);display:inline-flex;align-items:center;justify-content:center;font-size:12px;">🔒</span>Quản trị hệ thống và bảo mật</span></h3>
+    <div class="card"><div class="screen-group">
+      <div class="screen-item"><div class="screen-id">F15</div><div><div class="screen-name">Quản lý tài khoản người dùng</div><div class="screen-desc">Tạo, khoá, mở khoá tài khoản. Gán vai trò và đơn vị. Quản trị viên cấp 1 quản lý tài khoản toàn hệ thống.</div></div></div>
+      <div class="screen-item"><div class="screen-id">F16</div><div><div class="screen-name">Đăng nhập bằng tài khoản, mật khẩu</div><div class="screen-desc">Mỗi người dùng có tài khoản riêng. Bắt buộc đổi mật khẩu lần đầu đăng nhập.</div></div></div>
+      <div class="screen-item"><div class="screen-id">F17</div><div><div class="screen-name">Khoá tài khoản khi nhập sai mật khẩu</div><div class="screen-desc">Sau 5 lần nhập sai liên tiếp, tài khoản bị khoá. Cần quản trị viên mở lại.</div></div></div>
+      <div class="screen-item"><div class="screen-id">F18</div><div><div class="screen-name">Tự động đăng xuất khi không thao tác</div><div class="screen-desc">Sau 30 phút không sử dụng, phiên đăng nhập tự hết hạn.</div></div></div>
+      <div class="screen-item"><div class="screen-id">F19</div><div><div class="screen-name">Nhật ký thay đổi dữ liệu</div><div class="screen-desc">Hệ thống tự động ghi lại mọi thay đổi dữ liệu: ai sửa, sửa gì, lúc nào. Đội kỹ thuật và quản trị viên cấp 1 xem được.</div></div></div>
+      <div class="screen-item"><div class="screen-id">F20</div><div><div class="screen-name">Cấu hình đơn giá điện</div><div class="screen-desc">Quản trị viên cấp 1 nhập đơn giá điện theo tháng. Giá có thể thay đổi hàng tháng theo quy định.</div></div></div>
+      <div class="screen-item"><div class="screen-id">F21</div><div><div class="screen-name">Cấu hình bảng định mức cấp bậc</div><div class="screen-desc">Quản trị viên cấp 1 chỉnh sửa bảng 7 nhóm cấp bậc và định mức kW khi có nghị định mới.</div></div></div>
+    </div></div>
+  </div>
+
+  <div class="section">
+    <h2>Nghiệp vụ tính toán chi tiết</h2>
+    <p class="section-desc">Phần này mô tả chi tiết cách phần mềm tính toán tiêu chuẩn, sử dụng, và thu tiền điện.</p>
+
+    <h3>Quy trình khai báo ban đầu (7 bước)</h3>
+    <div class="svg-w">
+      <svg width="100%" viewBox="0 0 820 570" xmlns="http://www.w3.org/2000/svg" style="font-family:'Be Vietnam Pro',sans-serif">
+        <defs><marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+        <rect x="10" y="10" width="800" height="80" rx="10" fill="#F5F3FF" stroke="#DDD6FE" stroke-width="1"/>
+        <text x="26" y="32" font-size="12" font-weight="600" fill="#3C3489">Bước 1: Khai báo đầu mối trong đơn vị</text>
+        <text x="26" y="52" font-size="11" fill="#534AB7">Ví dụ: Chỉ huy Sư đoàn, Ban Tác huấn, Ban Quân lực, Ban Trinh sát, Tổ xe... (46 đầu mối trong Sư đoàn bộ)</text>
+        <text x="26" y="72" font-size="11" fill="#534AB7">Thêm bớt linh động do thay đổi tổ chức</text>
+        <line x1="410" y1="90" x2="410" y2="114" stroke="#DDD6FE" stroke-width="1" marker-end="url(#a2)"/>
+        <rect x="10" y="118" width="800" height="64" rx="10" fill="#F5F3FF" stroke="#DDD6FE" stroke-width="1"/>
+        <text x="26" y="140" font-size="12" font-weight="600" fill="#3C3489">Bước 2: Khai báo công tơ trong mỗi đầu mối</text>
+        <text x="26" y="160" font-size="11" fill="#534AB7">Mỗi công tơ có tên riêng. Đánh dấu loại: thường, công cộng, hoặc trạm bơm nước. Thêm bớt linh động.</text>
+        <line x1="410" y1="182" x2="410" y2="206" stroke="#DDD6FE" stroke-width="1" marker-end="url(#a2)"/>
+        <rect x="10" y="210" width="800" height="80" rx="10" fill="#ECFDF5" stroke="#A7F3D0" stroke-width="1"/>
+        <text x="26" y="232" font-size="12" font-weight="600" fill="#27500A">Bước 3: Khai báo quân số theo 7 nhóm cấp bậc</text>
+        <text x="26" y="252" font-size="11" fill="#065F46">570 kW (Đại tá) · 440 kW (Thượng tá) · 305 kW (Trung tá, Thiếu tá) · 130 kW (cấp Úy)</text>
+        <text x="26" y="272" font-size="11" fill="#065F46">210 kW (cơ quan Sư đoàn, Lữ đoàn, Trung đoàn) · 110 kW (Tiểu đoàn, Đại đội) · 24 kW (Hạ sĩ quan, Binh sĩ)</text>
+        <line x1="410" y1="290" x2="410" y2="314" stroke="#A7F3D0" stroke-width="1" marker-end="url(#a2)"/>
+        <rect x="10" y="318" width="800" height="210" rx="12" fill="none" stroke="#FDE68A" stroke-width="1" stroke-dasharray="6 3"/>
+        <text x="24" y="338" font-size="10" font-weight="600" fill="#D97706" letter-spacing="1">BƯỚC 4–7: CẤU HÌNH TỶ LỆ (THAY ĐỔI THEO NĂM)</text>
+        <rect x="30" y="354" width="370" height="50" rx="6" fill="#FFFBEB" stroke="#FDE68A" stroke-width="0.5"/>
+        <text x="46" y="374" font-size="12" font-weight="600" fill="#854F0B">Bước 4: Tiết kiệm</text>
+        <text x="46" y="392" font-size="11" fill="#854F0B">Tỷ lệ 5–10%, thay đổi theo năm. Do cấp 1 cấu hình.</text>
+        <rect x="420" y="354" width="370" height="50" rx="6" fill="#FFFBEB" stroke="#FDE68A" stroke-width="0.5"/>
+        <text x="436" y="374" font-size="12" font-weight="600" fill="#854F0B">Bước 5: Công cộng Sư đoàn</text>
+        <text x="436" y="392" font-size="11" fill="#854F0B">Tỷ lệ 5–10%, thay đổi theo năm. Do cấp 1 cấu hình.</text>
+        <rect x="30" y="416" width="370" height="50" rx="6" fill="#FFFBEB" stroke="#FDE68A" stroke-width="0.5"/>
+        <text x="46" y="436" font-size="12" font-weight="600" fill="#854F0B">Bước 6: Công cộng đơn vị</text>
+        <text x="46" y="454" font-size="11" fill="#854F0B">Tỷ lệ 10–20%, thay đổi theo năm. Do đơn vị tự cấu hình.</text>
+        <rect x="420" y="416" width="370" height="66" rx="6" fill="#FFFBEB" stroke="#FDE68A" stroke-width="0.5"/>
+        <text x="436" y="436" font-size="12" font-weight="600" fill="#854F0B">Bước 7: Cột "Khác" (nhà ăn, nhà bếp)</text>
+        <text x="436" y="456" font-size="11" fill="#854F0B">Nhập số cụ thể cho mỗi đầu mối</text>
+        <text x="436" y="472" font-size="11" fill="#854F0B">hoặc nhập hệ số rồi nhân với số người</text>
+        <rect x="10" y="540" width="800" height="28" rx="4" fill="#FEF2F2" stroke="#FECACA" stroke-width="0.5"/>
+        <text x="26" y="558" font-size="11" fill="#991B1B">Tổn hao: phần mềm tự tính hàng tháng, trừ khỏi tiêu chuẩn (nằm trong "Số phải trừ"), không cần khai báo</text>
+      </svg>
+    </div>
+
+    <h3>Bảng định mức 7 nhóm cấp bậc</h3>
+    <div class="card" style="padding:12px 18px">
+      <table class="s-table">
+        <thead><tr><th>Nhóm cấp bậc</th><th style="width:80px">Định mức</th></tr></thead>
+        <tbody>
+          <tr><td>Chỉ huy sư đoàn, bộ chỉ huy quân sự tỉnh (thành phố) và tương đương; sĩ quan có cấp bậc quân hàm cao nhất là Đại tá</td><td>570 kW</td></tr>
+          <tr><td>Chỉ huy lữ đoàn, trung đoàn và tương đương; sĩ quan có cấp bậc quân hàm cao nhất là Thượng tá</td><td>440 kW</td></tr>
+          <tr><td>Chỉ huy tiểu đoàn và tương đương; sĩ quan có cấp bậc quân hàm cao nhất là Trung tá, Thiếu tá</td><td>305 kW</td></tr>
+          <tr><td>Chỉ huy đại đội, trung đội và tương đương; sĩ quan có cấp bậc quân hàm là cấp Úy</td><td>130 kW</td></tr>
+          <tr><td>Cơ quan sư đoàn, lữ đoàn, trung đoàn và tương đương</td><td>210 kW</td></tr>
+          <tr><td>Tiểu đoàn, đại đội và tương đương</td><td>110 kW</td></tr>
+          <tr><td>Hạ sĩ quan, binh sĩ; thiếu sinh quân; học sinh năng khiếu</td><td>24 kW</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Cấu trúc bảng tổng hợp (22 cột)</h3>
+    <div class="card" style="padding:12px 18px">
+      <table class="s-table">
+        <thead><tr><th>Nhóm cột</th><th>Nội dung</th></tr></thead>
+        <tbody>
+          <tr><td>Cột 1–3</td><td>Số thứ tự, Đơn vị, Tổng quân số</td></tr>
+          <tr><td>Cột 5–11</td><td>7 nhóm quân số (570, 440, 305, 130, 210, 110, 24 kW)</td></tr>
+          <tr><td>Cột 12</td><td><strong>Điện bơm nước</strong> — 9,45 kW/người/tháng (tiêu chuẩn cố định)</td></tr>
+          <tr><td>Cột 13</td><td><strong>Quân số</strong> — tổng số người của đầu mối</td></tr>
+          <tr><td>Cột 14</td><td>Cộng được hưởng theo nghị định 02 (kW) — phần mềm tự tính</td></tr>
+          <tr><td>Cột 15–18</td><td>"Số phải trừ": Tiết kiệm, <strong>Tổn hao</strong>, Công cộng, Khác + Cộng</td></tr>
+          <tr><td>Cột 19–21</td><td>"Còn được hưởng": Khối lượng (kW), Giá (đồng), Thành tiền (đồng)</td></tr>
+          <tr><td>Cột 22</td><td>Ghi chú</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Công thức tính toán</h3>
+    <div class="card">
+      <p><strong>Tiêu chuẩn được hưởng (cột 14):</strong></p>
+      <p>Tổng = Σ(số người nhóm i × định mức nhóm i) + (tổng quân số × 9,45 kW bơm nước)</p>
+      <p style="margin-top:8px"><strong>Ví dụ:</strong> Một đầu mối có 02 người cấp Đại tá, 03 người cấp Thượng tá, 05 chiến sĩ:</p>
+      <p>Tổng = (2 × 570) + (3 × 440) + (5 × 24) + ((2 + 3 + 5) × 9,45) = 1.140 + 1.320 + 120 + 94,5 = <strong>2.674,5 kW</strong></p>
+    </div>
+    <div class="card">
+      <p><strong>Tổn hao:</strong> Tổn hao công tơ X = Tổng tổn hao × (kW công tơ X ÷ Tổng kW tất cả công tơ)</p>
+      <p><strong>Tiêu chuẩn còn lại:</strong> Tổng tiêu chuẩn − Tiết kiệm − Tổn hao − Công cộng − Khác</p>
+      <p><strong>Thâm điện:</strong> Tổng sử dụng (công tơ + bơm nước thực tế) − Tiêu chuẩn còn lại</p>
+      <p><strong>Thành tiền:</strong> Thâm điện × Đơn giá (thay đổi hàng tháng)</p>
+    </div>
+
+    <h3>Quy trình nhập liệu hàng tháng (3 bước)</h3>
+    <div class="svg-w">
+      <svg width="100%" viewBox="0 0 820 120" xmlns="http://www.w3.org/2000/svg" style="font-family:'Be Vietnam Pro',sans-serif">
+        <rect x="10" y="10" width="260" height="50" rx="10" fill="#E1F5EE" stroke="#99F6E4" stroke-width="1"/>
+        <text x="140" y="30" text-anchor="middle" font-size="12" font-weight="600" fill="#085041">Bước 1</text>
+        <text x="140" y="48" text-anchor="middle" font-size="11" fill="#0F6E56">Nhập số điện lực (đồng hồ tổng)</text>
+        <text x="278" y="38" font-size="14" fill="#D3D1C7">→</text>
+        <rect x="294" y="10" width="230" height="50" rx="10" fill="#E1F5EE" stroke="#99F6E4" stroke-width="1"/>
+        <text x="409" y="30" text-anchor="middle" font-size="12" font-weight="600" fill="#085041">Bước 2</text>
+        <text x="409" y="48" text-anchor="middle" font-size="11" fill="#0F6E56">Nhập đầu kỳ, cuối kỳ từng công tơ</text>
+        <text x="532" y="38" font-size="14" fill="#D3D1C7">→</text>
+        <rect x="550" y="10" width="260" height="50" rx="10" fill="#E1F5EE" stroke="#99F6E4" stroke-width="1"/>
+        <text x="680" y="30" text-anchor="middle" font-size="12" font-weight="600" fill="#085041">Bước 3</text>
+        <text x="680" y="48" text-anchor="middle" font-size="11" fill="#0F6E56">Soát lại quân số (nếu thay đổi)</text>
+        <rect x="10" y="76" width="400" height="28" rx="6" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="0.5"/>
+        <text x="22" y="94" font-size="11" fill="#1E40AF">Tự động kế thừa tháng trước. Chỉ cần sửa chỗ có thay đổi.</text>
+        <rect x="420" y="76" width="390" height="28" rx="6" fill="#FEF2F2" stroke="#FECACA" stroke-width="0.5"/>
+        <text x="432" y="94" font-size="11" fill="#991B1B">Dữ liệu tháng cũ bị khoá. Chỉ quản trị viên cấp 1 mở khoá.</text>
+      </svg>
+    </div>
+
+    <h3>Điện công cộng</h3>
+    <div class="card">
+      <p>Công cộng Sư đoàn: do cấp 1 (Ban Doanh trại) quy định tỷ lệ, áp dụng chung cho tất cả đơn vị cấp 2.</p>
+      <p>Công cộng đơn vị: do quản trị viên đơn vị tự cấu hình, tỷ lệ riêng cho đơn vị mình.</p>
+      <p>Công cộng chỉ trừ cho đối tượng có tiêu chuẩn. Công tơ được đánh dấu "công cộng" sẽ không xuất hiện trong bản thu tiền.</p>
+    </div>
+
+    <h3>Phân bổ điện bơm nước</h3>
+    <div class="card">
+      <p><strong>Tiêu chuẩn</strong> bơm nước = 9,45 kW/người/tháng (cố định theo nghị định, dùng để tính cột "Cộng được hưởng theo nghị định 02").</p>
+      <p><strong>Sử dụng</strong> bơm nước = phân bổ thực tế từ trạm bơm mỗi tháng, chia theo quân số. Con số này thay đổi hàng tháng tuỳ lượng điện bơm thực tế.</p>
+      <p>Trạm bơm nước quản lý như công tơ thường (thêm, bớt được). Quản trị viên có thể chỉ định trạm bơm phục vụ nhóm đối tượng cụ thể.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Phạm vi dự án</h2>
+    <p class="section-desc">Để tránh hiểu lệch, dưới đây liệt kê rõ những gì nằm trong và ngoài phạm vi dự án này.</p>
+    <div class="scope-row">
+      <div class="scope-in"><div class="scope-label">TRONG PHẠM VI</div><ul class="scope-list">
+        <li>Toàn bộ chức năng F01–F21 ở mục Danh sách chức năng</li>
+        <li>Phân quyền theo cấp đơn vị (3 vai trò + đội kỹ thuật)</li>
+        <li>Tính toán tiêu chuẩn theo nghị định 02, bảng 22 cột</li>
+        <li>Phân bổ điện bơm nước từ trạm bơm</li>
+        <li>Kế thừa dữ liệu tháng sang tháng, khoá dữ liệu tháng cũ</li>
+        <li>Biểu đồ so sánh tiêu chuẩn và sử dụng</li>
+        <li>Tra cứu lịch sử và so sánh cùng kỳ theo đầu mối</li>
+        <li>Xuất báo cáo ra file CSV</li>
+        <li>Nhật ký thay đổi dữ liệu</li>
+        <li>Đóng gói phần mềm, hỗ trợ triển khai trên mạng nội bộ</li>
+        <li>Tài liệu hướng dẫn sử dụng</li>
+        <li>Tài liệu hướng dẫn vận hành cho đội kỹ thuật</li>
+        <li>Đào tạo sử dụng cơ bản</li>
+      </ul></div>
+      <div class="scope-out"><div class="scope-label">NGOÀI PHẠM VI</div><ul class="scope-list">
+        <li>Tính năng xem sơ đồ bản vẽ cấp điện (có trong phần mềm cũ, không đưa vào phiên bản mới)</li>
+        <li>Tải lên hình ảnh hoặc tài liệu</li>
+        <li>Kết nối internet hoặc hệ thống bên ngoài</li>
+        <li>Ứng dụng trên điện thoại</li>
+        <li>Thông báo lịch cắt điện, gửi báo cáo lên trên, tiếp nhận thông tin từ trên xuống</li>
+        <li>Xuất file đúng mẫu Excel của Cục Doanh trại (cần cung cấp file mẫu)</li>
+        <li>Phát triển thêm tính năng mới sau bàn giao</li>
+      </ul></div>
+    </div>
+    <div class="callout callout-blue"><strong>Lưu ý:</strong> Các tính năng ngoài phạm vi trên đã được ghi nhận và có thể triển khai trong giai đoạn tiếp theo (xem mục Định hướng phát triển).</div>
+  </div>
+
+  <div class="section">
+    <h2>Tiến độ dự kiến</h2>
+    <p class="section-desc">Dự án triển khai từ giữa tháng 4/2026, bàn giao trước ngày 25/5/2026.</p>
+    <div class="card">
+      <div style="display:flex;margin-bottom:5px;"><div style="width:90px;"></div><div style="flex:1;display:flex;"><div style="flex:1;font-size:10px;color:var(--text3);text-align:center;font-weight:500;">14/4</div><div style="flex:1;font-size:10px;color:var(--text3);text-align:center;font-weight:500;">21/4</div><div style="flex:1;font-size:10px;color:var(--text3);text-align:center;font-weight:500;">28/4</div><div style="flex:1;font-size:10px;color:var(--text3);text-align:center;font-weight:500;">5/5</div><div style="flex:1;font-size:10px;color:var(--text3);text-align:center;font-weight:500;">12/5</div><div style="flex:0.5;font-size:10px;color:var(--text3);text-align:center;font-weight:500;">19/5</div><div style="flex:0.3;font-size:10px;color:var(--red);text-align:right;font-weight:600;">25/5</div></div></div>
+      <div class="tl-row"><div class="tl-label">Nền tảng</div><div class="tl-track"><div class="tl-bar" style="left:0%;width:22%;background:var(--blue);">Cơ sở dữ liệu + Khai báo</div></div></div>
+      <div class="tl-row"><div class="tl-label">Nghiệp vụ</div><div class="tl-track"><div class="tl-bar" style="left:18%;width:28%;background:var(--green);">Nhập liệu + Tính toán</div></div></div>
+      <div class="tl-row"><div class="tl-label">Phân quyền</div><div class="tl-track"><div class="tl-bar" style="left:40%;width:16%;background:var(--teal);">Tài khoản + Quyền</div></div></div>
+      <div class="tl-row"><div class="tl-label">Báo cáo</div><div class="tl-track"><div class="tl-bar" style="left:52%;width:20%;background:var(--amber);">Báo cáo + Tra cứu</div></div></div>
+      <div class="tl-row"><div class="tl-label">Vận hành</div><div class="tl-track"><div class="tl-bar" style="left:68%;width:14%;background:var(--purple);">Đóng gói + Tài liệu</div></div></div>
+      <div class="tl-row"><div class="tl-label">Bàn giao</div><div class="tl-track"><div class="tl-bar" style="left:80%;width:20%;background:var(--text3);">Kiểm tra + Đào tạo</div></div></div>
+      <div style="display:flex;margin-top:6px;"><div style="width:90px;"></div><div style="flex:1;position:relative;"><div style="position:absolute;right:0;top:0;font-size:10px;color:var(--red);font-weight:600;">▲ Hạn bàn giao</div></div></div>
+    </div>
+    <div class="card" style="margin-top:8px;">
+      <div class="card-title">Các mốc bàn giao</div>
+      <table class="s-table">
+        <thead><tr><th>Giai đoạn</th><th>Thời gian dự kiến</th><th>Sản phẩm bàn giao</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Nền tảng</strong></td><td>14/4 – 23/4</td><td>Phần mềm chạy được, khai báo đầu mối, công tơ, quân số</td></tr>
+          <tr><td><strong>Nghiệp vụ</strong></td><td>21/4 – 5/5</td><td>Nhập liệu hàng tháng, tính toán tiêu chuẩn theo bảng 22 cột, phân bổ bơm nước</td></tr>
+          <tr><td><strong>Phân quyền</strong></td><td>2/5 – 9/5</td><td>Đăng nhập, phân quyền theo 3 vai trò + đội kỹ thuật, mỗi đơn vị chỉ thấy dữ liệu mình</td></tr>
+          <tr><td><strong>Báo cáo</strong></td><td>7/5 – 16/5</td><td>Báo cáo tổng hợp, biểu đồ, tra cứu lịch sử, xuất file CSV</td></tr>
+          <tr><td><strong>Vận hành</strong></td><td>14/5 – 19/5</td><td>Công cụ quản trị, đóng gói phần mềm, tài liệu hướng dẫn</td></tr>
+          <tr><td><strong>Bàn giao</strong></td><td>17/5 – 25/5</td><td>Đơn vị kiểm tra, sửa lỗi, đào tạo, bàn giao chính thức</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout callout-blue"><strong>Cách làm việc:</strong> Phần mềm được bàn giao theo từng giai đoạn để đơn vị xem và phản hồi sớm, không chờ đến cuối mới gửi. Phần báo cáo chi tiết sẽ được hoàn thiện dựa trên phản hồi thực tế khi sử dụng thử các phần trước đó.</div>
+    <div class="callout callout-red"><strong>Điều kiện:</strong> Các mốc thời gian trên có thể thay đổi nếu có yêu cầu bổ sung hoặc thay đổi nghiệp vụ trong quá trình triển khai. Bên thực hiện sẽ thông báo ngay nếu có ảnh hưởng đến tiến độ.</div>
+  </div>
+
+  <div class="section">
+    <h2>Thanh toán</h2>
+    <p class="section-desc">Chọn một trong hai phương án thanh toán dưới đây. Phương án được chọn sẽ ghi vào hợp đồng.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:8px 0;">
+      <div style="padding:24px;border-radius:12px;border:2px solid var(--blue-border);background:var(--blue-light);text-align:center;"><div style="font-size:11px;font-weight:600;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">Phương án A</div><div style="font-size:32px;font-weight:700;color:var(--blue);line-height:1;margin-bottom:4px;">100%</div><div style="font-size:14px;font-weight:600;color:var(--blue);margin-bottom:12px;">Trả trước</div><div style="font-size:13px;color:#1E40AF;line-height:1.6;text-align:left;">Thanh toán toàn bộ sau khi hai bên ký tài liệu phạm vi, trước khi bắt đầu triển khai.</div></div>
+      <div style="padding:24px;border-radius:12px;border:2px solid var(--green-border);background:var(--green-light);text-align:center;"><div style="font-size:11px;font-weight:600;color:var(--green);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">Phương án B</div><div style="font-size:32px;font-weight:700;color:var(--green);line-height:1;margin-bottom:4px;">100%</div><div style="font-size:14px;font-weight:600;color:var(--green);margin-bottom:12px;">Trả sau</div><div style="font-size:13px;color:#065F46;line-height:1.6;text-align:left;">Thanh toán toàn bộ sau khi ký biên bản nghiệm thu, khi bên đặt hàng đã kiểm tra và xác nhận phần mềm hoạt động đúng.</div></div>
+    </div>
+    <div style="margin-top:12px;padding:14px 18px;border-radius:8px;border:1px solid var(--border);background:var(--surface);font-size:13.5px;display:flex;align-items:center;gap:12px;"><span style="font-size:14px;">☐</span><span>Phương án được chọn: <strong>_______________</strong></span></div>
+  </div>
+
+  <div class="section">
+    <h2>Bảo hành và hỗ trợ</h2>
+    <div class="card">
+      <div class="item"><div class="dot dot-green"></div><span><strong>30 ngày sửa lỗi</strong> sau khi ký biên bản nghiệm thu — nếu phần mềm hoạt động không đúng so với mô tả trong tài liệu này, sẽ được sửa miễn phí.</span></div>
+      <div class="item"><div class="dot dot-green"></div><span><strong>Hỗ trợ triển khai</strong> — hỗ trợ đội kỹ thuật trong quá trình cài đặt và vận hành ban đầu.</span></div>
+      <div class="item"><div class="dot dot-red"></div><span><strong>Không bao gồm</strong> phát triển tính năng mới, thay đổi nghiệp vụ, hoặc mở rộng phạm vi.</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Định hướng phát triển tiếp theo</h2>
+    <p class="section-desc">Các tính năng dưới đây đã được ghi nhận trong quá trình trao đổi và có thể triển khai sau khi hoàn thành phần chính của dự án. Phạm vi, thời gian và chi phí sẽ được thỏa thuận riêng cho từng hạng mục.</p>
+    <div class="card">
+      <div class="item"><div class="dot dot-blue"></div><span><strong>Thông báo lịch cắt điện</strong> — Điện lực thông báo lịch cắt điện, hệ thống hiển thị cho các đơn vị đầu mối biết ngày, thời gian cắt.</span></div>
+      <div class="item"><div class="dot dot-blue"></div><span><strong>Gửi báo cáo lên cấp trên</strong> — Đơn vị cấp 2 đẩy báo cáo lên cấp 1 qua hệ thống, thay vì gửi file thủ công.</span></div>
+      <div class="item"><div class="dot dot-blue"></div><span><strong>Tiếp nhận thông tin từ cấp trên</strong> — Cấp 1 gửi thông báo, chỉ đạo xuống các đơn vị cấp 2 qua hệ thống.</span></div>
+      <div class="item"><div class="dot dot-amber"></div><span><strong>Xuất báo cáo đúng mẫu Excel</strong> — Xuất file đúng mẫu quy định của Cục Doanh trại hoặc Tổng cục Hậu cần (cần cung cấp file mẫu).</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Thay đổi so với phiên bản 2.0</h2>
+    <div class="card" style="padding:12px 18px;">
+      <table class="s-table">
+        <thead><tr><th style="width:24px">#</th><th>Trước (phiên bản 2.0)</th><th>Sau (phiên bản 3.0)</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Gọi cấp 1 là "Lữ đoàn 164", 15 đơn vị phẳng</td><td>Cấp 1 là <strong>Sư đoàn</strong>, 13 đơn vị cấp 2 trực thuộc. Cấu trúc 2 cấp rõ ràng.</td></tr>
+          <tr><td>2</td><td>4 vai trò (Kế toán, Chỉ huy, Quản trị viên, Đội kỹ thuật)</td><td><strong>3 vai trò chính</strong> (Quản trị viên cấp 1, Quản trị viên đơn vị, Chỉ huy đơn vị) + Đội kỹ thuật</td></tr>
+          <tr><td>3</td><td>Cách nhập tiêu chuẩn "chờ xác nhận"</td><td>Nhập quân số theo <strong>7 nhóm cấp bậc</strong>, phần mềm tự tính tiêu chuẩn theo nghị định 02. Bao gồm cột bơm nước 9,45 kW/người/tháng.</td></tr>
+          <tr><td>4</td><td>Cách nhập tiêu thụ "chờ xác nhận"</td><td>Nhập <strong>chỉ số đầu kỳ, cuối kỳ</strong> từng công tơ. Phần mềm tự tính sử dụng.</td></tr>
+          <tr><td>5</td><td>Chưa có quy trình khai báo ban đầu</td><td><strong>7 bước khai báo</strong>: đầu mối, công tơ, quân số, tiết kiệm, công cộng Sư đoàn, công cộng đơn vị, "Khác"</td></tr>
+          <tr><td>6</td><td>Nước tính riêng bằng mét khối</td><td>Nước = <strong>điện bơm nước</strong> (kW), nằm trong luồng tính toán điện. Không có đồng hồ nước.</td></tr>
+          <tr><td>7</td><td>Tổn hao chưa rõ cách xử lý</td><td>Tổn hao <strong>trừ khỏi tiêu chuẩn</strong> (nằm trong "Số phải trừ"), phần mềm tự tính phân bổ theo tỷ lệ kW</td></tr>
+          <tr><td>8</td><td>Cấu trúc phân quyền 3 cấp</td><td><strong>2 cấp</strong>: Sư đoàn → Đơn vị. Không có cấp trung gian.</td></tr>
+          <tr><td>9</td><td>27 chức năng, nhiều mục "chờ xác nhận"</td><td><strong>21 chức năng</strong> đã xác nhận cụ thể</td></tr>
+          <tr><td>10</td><td>Chưa có tra cứu lịch sử</td><td>Bổ sung <strong>tra cứu lịch sử và so sánh cùng kỳ</strong> theo từng đầu mối</td></tr>
+          <tr><td>11</td><td>Bàn giao trước 25/4/2026</td><td>Bàn giao trước <strong>25/5/2026</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Xác nhận</h2>
+    <p class="section-desc">Hai bên đã đọc, hiểu và đồng ý với toàn bộ nội dung trong tài liệu này. Tài liệu này là cơ sở để triển khai dự án.</p>
+    <div class="sig-grid">
+      <div class="sig-box"><div class="sig-role">Bên thực hiện</div><div class="sig-name">&nbsp;</div><div class="sig-line">Ký và ghi rõ họ tên</div></div>
+      <div class="sig-box"><div class="sig-role">Bên đặt hàng</div><div class="sig-name">&nbsp;</div><div class="sig-line">Ký và ghi rõ họ tên</div></div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
