@@ -46,6 +46,7 @@ vi:
       confirmed: "Tài khoản đã được xác nhận. Bạn đã đăng nhập."
 
   flash:
+    unauthorized: "Bạn không có quyền thực hiện thao tác này."
     actions:
       create:
         notice: "Tạo %{resource_name} thành công."
@@ -56,6 +57,51 @@ vi:
       destroy:
         notice: "Xóa %{resource_name} thành công."
         alert: "Không thể xóa %{resource_name}."
+    contact_points:
+      created: "Thêm đầu mối thành công."
+      updated: "Cập nhật đầu mối thành công."
+      destroyed: "Xóa đầu mối thành công."
+
+  contact_points:
+    index:
+      title: "Danh sách đầu mối"
+      new_button: "Thêm đầu mối"
+      filter_org: "Lọc theo đơn vị"
+      all_orgs: "Tất cả đơn vị"
+      search_placeholder: "Tìm theo tên..."
+      columns:
+        stt: "STT"
+        name: "Tên đầu mối"
+        group_name: "Nhóm"
+        organization: "Đơn vị"
+        meters_count: "Số công tơ"
+        personnel_total: "Tổng quân số"
+        actions: "Thao tác"
+      empty: "Chưa có đầu mối nào."
+    show:
+      title: "Chi tiết đầu mối"
+    new:
+      title: "Thêm đầu mối mới"
+    edit:
+      title: "Sửa đầu mối"
+    form:
+      name: "Tên đầu mối"
+      group_name: "Nhóm"
+      position: "Thứ tự hiển thị"
+      organization: "Đơn vị"
+      submit_create: "Thêm đầu mối"
+      submit_update: "Lưu thay đổi"
+    actions:
+      show: "Xem"
+      edit: "Sửa"
+      delete: "Xóa"
+      delete_confirm: "Bạn có chắc muốn xóa đầu mối này?"
+      back: "Quay lại"
+      cancel: "Hủy"
+
+  nav:
+    contact_points: "Đầu mối"
+    sign_out: "Đăng xuất"
 
   helpers:
     page_entries_info:

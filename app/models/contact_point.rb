@@ -17,4 +17,12 @@ class ContactPoint < ApplicationRecord
   scope :ordered, -> { order(:position, :name) }
   scope :by_organization, ->(org_id) { where(organization_id: org_id) }
   scope :by_group, ->(group) { where(group_name: group) }
+
+  def self.ransackable_attributes(_auth_object = nil)
+    %w[name group_name organization_id position created_at updated_at]
+  end
+
+  def self.ransackable_associations(_auth_object = nil)
+    %w[organization]
+  end
 end

@@ -1,0 +1,16 @@
+<% content_for :title, t("contact_points.new.title") %>
+
+<div class="max-w-lg">
+  <div class="flex items-center gap-2 mb-6">
+    <%= link_to contact_points_path, class: "text-gray-400 hover:text-gray-600 transition-colors" do %>
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+    <% end %>
+    <h1 class="text-xl font-semibold text-gray-900"><%= t("contact_points.new.title") %></h1>
+  </div>
+
+  <div class="bg-white rounded-lg border border-gray-200 p-6">
+    <%= render "form", contact_point: @contact_point %>
+  </div>
+</div>

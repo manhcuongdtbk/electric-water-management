@@ -1,0 +1,92 @@
+<% content_for :title, t("contact_points.index.title") %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-xl font-semibold text-gray-900"><%= t("contact_points.index.title") %></h1>
+  <% if current_user.admin_level1? || current_user.admin_unit? %>
+    <%= link_to t("contact_points.index.new_button"), new_contact_point_path,
+          class: "inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors" %>
+  <% end %>
+</div>
+
+<%# Search / Filter form %>
+<%= search_form_for @q, url: contact_points_path, html: { class: "mb-4 flex flex-wrap gap-2" } do |f| %>
+  <%= f.search_field :name_cont,
+        placeholder: t("contact_points.index.search_placeholder"),
+        class: "border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-56" %>
+
+  <% if current_user.admin_level1? %>
+    <%= f.select :organization_id_eq,
+          options_from_collection_for_select(@organizations, :id, :name, params.dig(:q, :organization_id_eq)),
+          { include_blank: t("contact_points.index.all_orgs") },
+          class: "border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+  <% end %>
+
+  <%= f.submit "Tìm kiếm", class: "px-4 py-1.5 bg-gray-600 text-white text-sm rounded-md hover:bg-gray-700 cursor-pointer transition-colors" %>
+  <%= link_to "Xóa bộ lọc", contact_points_path, class: "px-4 py-1.5 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50 transition-colors" %>
+<% end %>
+
+<%# Table %>
+<div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+  <table class="min-w-full divide-y divide-gray-200 text-sm">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-4 py-3 text-center font-medium text-gray-600 w-12"><%= t("contact_points.index.columns.stt") %></th>
+        <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("contact_points.index.columns.name") %></th>
+        <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("contact_points.index.columns.group_name") %></th>
+        <% if current_user.admin_level1? %>
+          <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("contact_points.index.columns.organization") %></th>
+        <% end %>
+        <th class="px-4 py-3 text-center font-medium text-gray-600"><%= t("contact_points.index.columns.meters_count") %></th>
+        <th class="px-4 py-3 text-center font-medium text-gray-600"><%= t("contact_points.index.columns.personnel_total") %></th>
+        <th class="px-4 py-3 text-center font-medium text-gray-600"><%= t("contact_points.index.columns.actions") %></th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      <% if @contact_points.empty? %>
+        <tr>
+          <td colspan="<%= current_user.admin_level1? ? 7 : 6 %>" class="px-4 py-8 text-center text-gray-400">
+            <%= t("contact_points.index.empty") %>
+          </td>
+        </tr>
+      <% else %>
+        <% @contact_points.each_with_index do |cp, idx| %>
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="px-4 py-3 text-center text-gray-500"><%= @pagy.offset + idx + 1 %></td>
+            <td class="px-4 py-3 font-medium text-gray-900">
+              <%= link_to cp.name, contact_point_path(cp), class: "hover:text-blue-600 transition-colors" %>
+            </td>
+            <td class="px-4 py-3 text-gray-600"><%= cp.group_name.presence || "—" %></td>
+            <% if current_user.admin_level1? %>
+              <td class="px-4 py-3 text-gray-600"><%= cp.organization.name %></td>
+            <% end %>
+            <td class="px-4 py-3 text-center text-gray-700"><%= cp.meters.size %></td>
+            <td class="px-4 py-3 text-center text-gray-700">
+              <%= cp.personnel_records.sum { |p| p.total_count } %>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <div class="flex items-center justify-center gap-2">
+                <%= link_to t("contact_points.actions.show"), contact_point_path(cp),
+                      class: "text-xs text-blue-600 hover:text-blue-800 font-medium" %>
+                <% if current_user.admin_level1? || current_user.admin_unit? %>
+                  <%= link_to t("contact_points.actions.edit"), edit_contact_point_path(cp),
+                        class: "text-xs text-amber-600 hover:text-amber-800 font-medium" %>
+                  <%= button_to t("contact_points.actions.delete"), contact_point_path(cp),
+                        method: :delete,
+                        data: { turbo_confirm: t("contact_points.actions.delete_confirm") },
+                        class: "text-xs text-red-600 hover:text-red-800 font-medium bg-transparent border-0 cursor-pointer p-0" %>
+                <% end %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<%# Pagination %>
+<% if @pagy.pages > 1 %>
+  <div class="mt-4 flex justify-center">
+    <%== @pagy.series_nav %>
+  </div>
+<% end %>

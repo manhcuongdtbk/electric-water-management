@@ -1,0 +1,48 @@
+<% content_for :title, @contact_point.name %>
+
+<div class="max-w-lg">
+  <div class="flex items-center gap-2 mb-6">
+    <%= link_to contact_points_path, class: "text-gray-400 hover:text-gray-600 transition-colors" do %>
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+    <% end %>
+    <h1 class="text-xl font-semibold text-gray-900"><%= @contact_point.name %></h1>
+  </div>
+
+  <div class="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100">
+    <div class="flex px-5 py-3 text-sm">
+      <span class="w-40 text-gray-500 flex-shrink-0"><%= t("contact_points.form.name") %></span>
+      <span class="text-gray-900 font-medium"><%= @contact_point.name %></span>
+    </div>
+    <div class="flex px-5 py-3 text-sm">
+      <span class="w-40 text-gray-500 flex-shrink-0"><%= t("contact_points.form.group_name") %></span>
+      <span class="text-gray-900"><%= @contact_point.group_name.presence || "—" %></span>
+    </div>
+    <div class="flex px-5 py-3 text-sm">
+      <span class="w-40 text-gray-500 flex-shrink-0"><%= t("contact_points.form.position") %></span>
+      <span class="text-gray-900"><%= @contact_point.position %></span>
+    </div>
+    <div class="flex px-5 py-3 text-sm">
+      <span class="w-40 text-gray-500 flex-shrink-0"><%= t("contact_points.form.organization") %></span>
+      <span class="text-gray-900"><%= @contact_point.organization.name %></span>
+    </div>
+    <div class="flex px-5 py-3 text-sm">
+      <span class="w-40 text-gray-500 flex-shrink-0"><%= t("contact_points.index.columns.meters_count") %></span>
+      <span class="text-gray-900"><%= @contact_point.meters.count %></span>
+    </div>
+  </div>
+
+  <div class="mt-4 flex gap-3">
+    <% if current_user.admin_level1? || current_user.admin_unit? %>
+      <%= link_to t("contact_points.actions.edit"), edit_contact_point_path(@contact_point),
+            class: "px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-md hover:bg-amber-600 transition-colors" %>
+      <%= button_to t("contact_points.actions.delete"), contact_point_path(@contact_point),
+            method: :delete,
+            data: { turbo_confirm: t("contact_points.actions.delete_confirm") },
+            class: "px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 transition-colors cursor-pointer border-0" %>
+    <% end %>
+    <%= link_to t("contact_points.actions.back"), contact_points_path,
+          class: "px-4 py-2 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50 transition-colors" %>
+  </div>
+</div>
