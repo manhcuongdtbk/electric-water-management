@@ -1,0 +1,149 @@
+<% content_for :title, t("personnel.show.title") %>
+
+<%# Breadcrumb %>
+<nav class="flex items-center gap-1.5 text-sm text-gray-500 mb-4">
+  <%= link_to @contact_point.organization.name, contact_points_path, class: "hover:text-gray-700 transition-colors" %>
+  <span>/</span>
+  <%= link_to @contact_point.name, contact_point_path(@contact_point), class: "hover:text-gray-700 transition-colors" %>
+  <span>/</span>
+  <span class="text-gray-900 font-medium"><%= t("personnel.show.title") %></span>
+</nav>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-xl font-semibold text-gray-900">
+    <%= t("personnel.show.title") %>
+    <span class="text-base font-normal text-gray-500">— <%= @contact_point.name %></span>
+  </h1>
+</div>
+
+<%# Period selector %>
+<% if @periods.any? %>
+  <div class="mb-6">
+    <%= label_tag :period_id, t("personnel.period_select"),
+          class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= select_tag :period_id,
+          options_from_collection_for_select(@periods, :id, :label, @period&.id),
+          data: { base_url: contact_point_personnel_path(@contact_point) },
+          onchange: "window.location.href = this.dataset.baseUrl + '?period_id=' + this.value",
+          class: "border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+  </div>
+<% end %>
+
+<% if @period.nil? %>
+  <div class="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+    <%= t("personnel.show.no_period") %>
+  </div>
+<% else %>
+  <%# Quotas as JSON for Stimulus (from DB, not hardcoded) %>
+  <% quotas_json = @rank_quotas.transform_values { |v| v&.to_f || 0 }.to_json %>
+  <% can_edit = current_user.admin_level1? || current_user.admin_unit? %>
+
+  <div data-controller="personnel-calculator"
+       data-personnel-calculator-quotas-value="<%= quotas_json %>"
+       data-personnel-calculator-water-rate-value="<%= Personnel::WATER_PUMP_RATE %>">
+
+    <%# Form errors %>
+    <% if @personnel.errors.any? %>
+      <div class="rounded-md bg-red-50 border border-red-200 px-4 py-3 mb-4">
+        <p class="text-sm font-medium text-red-800 mb-1"><%= t("personnel.form.errors_count", count: @personnel.errors.count) %></p>
+        <ul class="list-disc list-inside text-sm text-red-700 space-y-0.5">
+          <% @personnel.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <%= form_with model: @personnel,
+                  url: contact_point_personnel_path(@contact_point),
+                  method: :patch,
+                  class: "space-y-0" do |f| %>
+
+      <%= hidden_field_tag :period_id, @period.id %>
+
+      <%# Rank count inputs %>
+      <div class="bg-white rounded-lg border border-gray-200 overflow-hidden mb-6">
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-3 text-center font-medium text-gray-600 w-10"><%= t("personnel.table.stt") %></th>
+              <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("personnel.table.rank_group") %></th>
+              <th class="px-4 py-3 text-center font-medium text-gray-600 w-32"><%= t("personnel.table.quota_kw") %></th>
+              <th class="px-4 py-3 text-center font-medium text-gray-600 w-36"><%= t("personnel.table.count") %></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <% (1..7).each do |i| %>
+              <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 text-center text-gray-500"><%= i %></td>
+                <td class="px-4 py-3 text-gray-900">
+                  <%= t("personnel.ranks.rank#{i}") %>
+                </td>
+                <td class="px-4 py-3 text-center text-gray-700 font-mono">
+                  <%= number_with_precision(@rank_quotas[i] || 0, precision: 0, delimiter: ",") %>
+                </td>
+                <td class="px-4 py-3 text-center">
+                  <%= f.number_field :"rank#{i}_count",
+                        min: 0,
+                        value: @personnel.public_send(:"rank#{i}_count"),
+                        disabled: !can_edit,
+                        data: {
+                          "personnel-calculator-target": "rank#{i}",
+                          action: "input->personnel-calculator#calculate"
+                        },
+                        class: "w-24 border border-gray-300 rounded-md px-3 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <%# Results panel (read-only) %>
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <h3 class="text-sm font-semibold text-blue-900 mb-3"><%= t("personnel.results.title") %></h3>
+        <div class="grid grid-cols-2 gap-3 text-sm">
+          <div class="flex justify-between items-center bg-white rounded border border-blue-100 px-3 py-2">
+            <span class="text-gray-600"><%= t("personnel.results.total_count") %></span>
+            <span class="font-semibold text-gray-900" data-personnel-calculator-target="totalCount">0</span>
+          </div>
+          <div class="flex justify-between items-center bg-white rounded border border-blue-100 px-3 py-2">
+            <span class="text-gray-600">
+              <%= t("personnel.results.living_standard") %>
+              <span class="text-xs text-gray-400">(<%= t("personnel.results.unit_kw") %>)</span>
+            </span>
+            <span class="font-semibold text-gray-900 font-mono" data-personnel-calculator-target="livingStandard">0</span>
+          </div>
+          <div class="flex justify-between items-center bg-white rounded border border-blue-100 px-3 py-2">
+            <span class="text-gray-600">
+              <%= t("personnel.results.water_standard") %>
+              <span class="text-xs text-gray-400">(<%= t("personnel.results.unit_kw") %>)</span>
+            </span>
+            <span class="font-semibold text-gray-900 font-mono" data-personnel-calculator-target="waterStandard">0</span>
+          </div>
+          <div class="flex justify-between items-center bg-white rounded border border-blue-100 px-3 py-2">
+            <span class="text-gray-600">
+              <%= t("personnel.results.total_standard") %>
+              <span class="text-xs text-gray-400">(<%= t("personnel.results.unit_kw") %>)</span>
+            </span>
+            <span class="font-bold text-blue-900 font-mono" data-personnel-calculator-target="totalStandard">0</span>
+          </div>
+        </div>
+      </div>
+
+      <% if can_edit %>
+        <div class="flex items-center gap-3">
+          <%= f.submit t("personnel.form.submit"),
+                class: "px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 cursor-pointer transition-colors" %>
+          <%= link_to t("personnel.form.cancel"), contact_point_path(@contact_point),
+                class: "px-5 py-2 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50 transition-colors" %>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>
+
+<div class="mt-4">
+  <%= link_to "← " + @contact_point.name, contact_point_path(@contact_point),
+        class: "text-sm text-gray-500 hover:text-gray-700 transition-colors" %>
+</div>
