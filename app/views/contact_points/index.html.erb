@@ -59,7 +59,10 @@
             <% if current_user.admin_level1? %>
               <td class="px-4 py-3 text-gray-600"><%= cp.organization.name %></td>
             <% end %>
-            <td class="px-4 py-3 text-center text-gray-700"><%= cp.meters.size %></td>
+            <td class="px-4 py-3 text-center">
+              <%= link_to cp.meters.size, contact_point_meters_path(cp),
+                    class: "text-blue-600 hover:text-blue-800 font-medium" %>
+            </td>
             <td class="px-4 py-3 text-center text-gray-700">
               <%= cp.personnel_records.sum { |p| p.total_count } %>
             </td>

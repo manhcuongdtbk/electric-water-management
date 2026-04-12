@@ -1,0 +1,74 @@
+<% content_for :title, t("meters.index.title") %>
+
+<%# Breadcrumb %>
+<nav class="flex items-center gap-1.5 text-sm text-gray-500 mb-4">
+  <%= link_to @contact_point.organization.name, contact_points_path, class: "hover:text-gray-700 transition-colors" %>
+  <span>/</span>
+  <%= link_to @contact_point.name, contact_point_path(@contact_point), class: "hover:text-gray-700 transition-colors" %>
+  <span>/</span>
+  <span class="text-gray-900 font-medium"><%= t("meters.index.title") %></span>
+</nav>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-xl font-semibold text-gray-900">
+    <%= t("meters.index.title") %>
+    <span class="text-base font-normal text-gray-500">— <%= @contact_point.name %></span>
+  </h1>
+  <% if current_user.admin_level1? || current_user.admin_unit? %>
+    <%= link_to t("meters.index.new_button"), new_contact_point_meter_path(@contact_point),
+          class: "inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors" %>
+  <% end %>
+</div>
+
+<div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+  <table class="min-w-full divide-y divide-gray-200 text-sm">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-4 py-3 text-center font-medium text-gray-600 w-12"><%= t("meters.index.columns.stt") %></th>
+        <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("meters.index.columns.name") %></th>
+        <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("meters.index.columns.meter_type") %></th>
+        <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("meters.index.columns.serial_number") %></th>
+        <th class="px-4 py-3 text-center font-medium text-gray-600"><%= t("meters.index.columns.actions") %></th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      <% if @meters.empty? %>
+        <tr>
+          <td colspan="5" class="px-4 py-8 text-center text-gray-400">
+            <%= t("meters.index.empty") %>
+          </td>
+        </tr>
+      <% else %>
+        <% @meters.each_with_index do |meter, idx| %>
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="px-4 py-3 text-center text-gray-500"><%= idx + 1 %></td>
+            <td class="px-4 py-3 font-medium text-gray-900"><%= meter.name %></td>
+            <td class="px-4 py-3">
+              <span class="<%= meter_type_badge_class(meter.meter_type) %>">
+                <%= t("meters.meter_types.#{meter.meter_type}") %>
+              </span>
+            </td>
+            <td class="px-4 py-3 text-gray-600"><%= meter.serial_number.presence || "—" %></td>
+            <td class="px-4 py-3 text-center">
+              <div class="flex items-center justify-center gap-2">
+                <% if current_user.admin_level1? || current_user.admin_unit? %>
+                  <%= link_to t("meters.actions.edit"), edit_contact_point_meter_path(@contact_point, meter),
+                        class: "text-xs text-amber-600 hover:text-amber-800 font-medium" %>
+                  <%= button_to t("meters.actions.delete"), contact_point_meter_path(@contact_point, meter),
+                        method: :delete,
+                        data: { turbo_confirm: t("meters.actions.delete_confirm") },
+                        class: "text-xs text-red-600 hover:text-red-800 font-medium bg-transparent border-0 cursor-pointer p-0" %>
+                <% end %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<div class="mt-4">
+  <%= link_to t("meters.actions.back"), contact_point_path(@contact_point),
+        class: "text-sm text-gray-500 hover:text-gray-700 transition-colors" %>
+</div>

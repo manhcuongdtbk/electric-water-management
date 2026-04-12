@@ -29,7 +29,11 @@
     </div>
     <div class="flex px-5 py-3 text-sm">
       <span class="w-40 text-gray-500 flex-shrink-0"><%= t("contact_points.index.columns.meters_count") %></span>
-      <span class="text-gray-900"><%= @contact_point.meters.count %></span>
+      <span class="text-gray-900">
+        <%= @contact_point.meters.count %>
+        <%= link_to t("meters.actions.manage"), contact_point_meters_path(@contact_point),
+              class: "ml-3 text-xs text-blue-600 hover:text-blue-800 font-medium" %>
+      </span>
     </div>
   </div>
 

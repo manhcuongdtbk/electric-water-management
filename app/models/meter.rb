@@ -14,6 +14,7 @@ class Meter < ApplicationRecord
   validates :name, presence: true, length: { maximum: 100 }
   validates :meter_type, presence: true
   validates :serial_number, uniqueness: true, allow_blank: true, length: { maximum: 50 }
+  validates :notes, length: { maximum: 1000 }, allow_blank: true
   validates :position, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 
   # Scopes
