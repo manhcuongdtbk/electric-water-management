@@ -4,6 +4,7 @@
 # Ignore all environment files (except templates).
 /.env*
 !/.env*.erb
+!/.env.example
 
 # Ignore all logfiles and tempfiles.
 /log/*
@@ -41,3 +42,7 @@ yarn-error.log
 
 # RSpec coverage
 /coverage/
+
+# Claude Code
+/.claude/worktrees/
+/.claude/projects/
