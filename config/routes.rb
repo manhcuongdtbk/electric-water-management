@@ -7,6 +7,7 @@ Rails.application.routes.draw do
   end
 
   resource :unit_config, only: [ :show, :update ]
+  resource :electricity_supply, only: [ :show, :update ]
 
   root "contact_points#index"
 
