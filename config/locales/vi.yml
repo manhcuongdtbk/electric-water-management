@@ -96,6 +96,8 @@ vi:
     unit_configs:
       division_updated: "Cập nhật cấu hình Sư đoàn thành công."
       unit_updated: "Cập nhật cấu hình đơn vị thành công."
+    electricity_supplies:
+      updated: "Lưu số điện lực thành công."
 
   contact_points:
     index:
@@ -237,6 +239,26 @@ vi:
     other_types:
       fixed_kw: "Số cụ thể (kW)"
       factor_per_person: "Hệ số × số người"
+
+  electricity_supplies:
+    show:
+      title: "Nhập số điện lực (đồng hồ tổng)"
+    period_select: "Kỳ tính toán"
+    org_select: "Đơn vị"
+    no_period: "Chưa có kỳ nào. Vui lòng tạo kỳ tính toán trước."
+    no_org: "Không tìm thấy đơn vị."
+    not_entered: "Chưa nhập"
+    section_input:
+      title: "Kỳ %{period} — %{org}"
+      subtitle: "Nhập tổng số kWh điện lực cấp cho đơn vị trong kỳ."
+      field_label: "Số điện lực cấp (kWh)"
+      submit: "Lưu"
+    section_history:
+      title: "Lịch sử đã nhập"
+      col_org: "Đơn vị"
+      col_period: "Kỳ"
+      col_kw: "Số điện lực (kWh)"
+      empty: "Chưa có dữ liệu."
 
   nav:
     contact_points: "Đầu mối"
