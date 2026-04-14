@@ -303,6 +303,8 @@ vi:
     status:
       reviewed: "Đã soát"
       pending: "Chưa soát"
+      not_entered: "Chưa nhập"
+      changed: "▲ thay đổi"
     lock_banner:
       locked: "Kỳ này đã khóa"
       locked_by: "bởi %{user}"
