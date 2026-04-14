@@ -24,4 +24,16 @@ class Personnel < ApplicationRecord
   def total_count
     RANK_COLUMNS.sum { |col| public_send(col) }
   end
+
+  def reviewed?
+    reviewed_at.present?
+  end
+
+  def mark_reviewed!
+    touch(:reviewed_at)
+  end
+
+  def unmark_reviewed!
+    update!(reviewed_at: nil)
+  end
 end

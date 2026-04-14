@@ -1,5 +1,5 @@
 class PersonnelController < ApplicationController
-  before_action :require_write_access!, only: [ :update ]
+  before_action :require_write_access!, only: [ :update, :toggle_review ]
   before_action :set_contact_point
   before_action :set_period
   before_action :set_personnel_and_quotas
@@ -13,12 +13,48 @@ class PersonnelController < ApplicationController
       return
     end
 
+    if @period.locked?
+      redirect_to contact_point_personnel_path(@contact_point, period_id: @period.id),
+                  alert: t("flash.personnel.period_locked")
+      return
+    end
+
     if @personnel.update(personnel_params)
       redirect_to contact_point_personnel_path(@contact_point, period_id: @period.id),
                   notice: t("flash.personnel.saved")
     else
       render :show, status: :unprocessable_entity
     end
+  end
+
+  def toggle_review
+    if @period.nil?
+      redirect_to personnel_review_path, alert: t("flash.personnel.no_period")
+      return
+    end
+
+    if @period.locked?
+      redirect_to personnel_review_path(period_id: @period.id),
+                  alert: t("flash.personnel.period_locked")
+      return
+    end
+
+    record = @contact_point.personnel_records.find_by(monthly_period: @period)
+    if record.nil?
+      redirect_to personnel_review_path(period_id: @period.id),
+                  alert: t("flash.personnel.no_record")
+      return
+    end
+
+    if record.reviewed?
+      record.unmark_reviewed!
+      notice = t("flash.personnel.review_unmarked")
+    else
+      record.mark_reviewed!
+      notice = t("flash.personnel.review_marked")
+    end
+
+    redirect_back_or_to personnel_review_path(period_id: @period.id), notice: notice
   end
 
   private

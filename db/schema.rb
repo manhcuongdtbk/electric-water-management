@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_13_162304) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_14_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -137,6 +137,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_13_162304) do
     t.integer "rank5_count", default: 0, null: false
     t.integer "rank6_count", default: 0, null: false
     t.integer "rank7_count", default: 0, null: false
+    t.boolean "reviewed", default: false, null: false
+    t.datetime "reviewed_at"
     t.datetime "updated_at", null: false
     t.index ["contact_point_id", "monthly_period_id"], name: "idx_personnel_on_contact_point_and_period", unique: true
     t.index ["contact_point_id"], name: "index_personnel_on_contact_point_id"
