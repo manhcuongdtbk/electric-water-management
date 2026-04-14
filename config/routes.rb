@@ -20,6 +20,9 @@ Rails.application.routes.draw do
   resource :unit_config, only: [ :show, :update ]
   resource :electricity_supply, only: [ :show, :update ]
   resource :meter_readings, only: [ :show, :update ]
+  resource :monthly_summary, only: [ :show ] do
+    post :recalculate
+  end
 
   root "contact_points#index"
 
