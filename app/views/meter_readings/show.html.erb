@@ -1,0 +1,170 @@
+<% content_for :title, t("meter_readings.show.title") %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-xl font-semibold text-gray-900"><%= t("meter_readings.show.title") %></h1>
+</div>
+
+<%# Period + Org selectors %>
+<% if @periods.any? %>
+  <div class="mb-6 flex flex-wrap items-end gap-4">
+    <div>
+      <%= label_tag :period_id, t("meter_readings.period_select"),
+            class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= select_tag :period_id,
+            options_from_collection_for_select(@periods, :id, :label, @period&.id),
+            data: { base_url: meter_readings_path, org_id: @target_org&.id },
+            onchange: "var url = this.dataset.baseUrl + '?period_id=' + this.value; if (this.dataset.orgId) url += '&org_id=' + this.dataset.orgId; window.location.href = url;",
+            class: "border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+    </div>
+
+    <% if current_user.admin_level1? && @all_orgs&.any? %>
+      <div>
+        <%= label_tag :org_id, t("meter_readings.org_select"),
+              class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= select_tag :org_id,
+              options_from_collection_for_select(@all_orgs, :id, :name, @target_org&.id),
+              data: { period_id: @period&.id, base_url: meter_readings_path },
+              onchange: "window.location.href = this.dataset.baseUrl + '?period_id=' + this.dataset.periodId + '&org_id=' + this.value",
+              class: "border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<% if @period.nil? %>
+  <div class="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+    <%= t("meter_readings.no_period") %>
+  </div>
+<% elsif @target_org.nil? %>
+  <div class="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+    <%= t("meter_readings.no_org") %>
+  </div>
+<% elsif @grouped_readings.empty? %>
+  <div class="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+    <%= t("meter_readings.no_meters") %>
+  </div>
+<% else %>
+
+<%# Batch save errors summary %>
+<% if @errors_by_meter_id.present? %>
+  <div class="rounded-md bg-red-50 border border-red-200 px-4 py-3 mb-4">
+    <p class="text-sm font-medium text-red-800 mb-1"><%= t("meter_readings.errors_header") %></p>
+    <ul class="list-disc list-inside text-sm text-red-700">
+      <% @errors_by_meter_id.each do |_meter_id, messages| %>
+        <% messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+<% can_write = current_user.admin_level1? || current_user.admin_unit? %>
+
+<%= form_with url: meter_readings_path, method: :patch do %>
+  <%= hidden_field_tag :period_id, @period.id %>
+  <%= hidden_field_tag :org_id, @target_org.id if current_user.admin_level1? %>
+
+  <% @grouped_readings.each do |contact_point, meter_reading_pairs| %>
+    <div class="bg-white rounded-lg border border-gray-200 mb-4">
+      <%# Contact point header %>
+      <div class="px-5 py-3 border-b border-gray-100 bg-gray-50 rounded-t-lg">
+        <h3 class="text-sm font-semibold text-gray-800">
+          <% if contact_point %>
+            <%= contact_point.name %>
+            <% if contact_point.group_name.present? %>
+              <span class="font-normal text-gray-500">&mdash; <%= contact_point.group_name %></span>
+            <% end %>
+          <% else %>
+            <%= t("meter_readings.no_contact_point") %>
+          <% end %>
+        </h3>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+          <thead class="bg-white">
+            <tr>
+              <th class="px-4 py-3 text-left font-medium text-gray-600 w-8">STT</th>
+              <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("meter_readings.table.meter_name") %></th>
+              <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("meter_readings.table.meter_type") %></th>
+              <th class="px-4 py-3 text-right font-medium text-gray-600"><%= t("meter_readings.table.reading_start") %></th>
+              <th class="px-4 py-3 text-right font-medium text-gray-600"><%= t("meter_readings.table.reading_end") %></th>
+              <th class="px-4 py-3 text-right font-medium text-gray-600"><%= t("meter_readings.table.consumption") %></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <% meter_reading_pairs.each_with_index do |(meter, reading), idx| %>
+              <% has_error = @errors_by_meter_id&.key?(meter.id) %>
+              <tr class="<%= has_error ? 'bg-red-50' : 'hover:bg-gray-50' %>"
+                  data-controller="meter-reading">
+                <td class="px-4 py-3 text-gray-500"><%= idx + 1 %></td>
+                <td class="px-4 py-3 font-medium text-gray-900">
+                  <%= meter.name %>
+                  <% if meter.serial_number.present? %>
+                    <span class="text-xs text-gray-400 ml-1">(<%= meter.serial_number %>)</span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3 text-gray-600">
+                  <%= t("meters.meter_types.#{meter.meter_type}") %>
+                </td>
+
+                <% if can_write %>
+                  <td class="px-4 py-3 text-right">
+                    <%= number_field_tag "readings[#{meter.id}][reading_start]",
+                          reading.reading_start,
+                          min: 0, step: "any",
+                          class: "w-32 border border-gray-300 rounded px-2 py-1 text-right text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono",
+                          placeholder: "0.00",
+                          data: { "meter-reading-target": "start", action: "input->meter-reading#calculate" } %>
+                  </td>
+                  <td class="px-4 py-3 text-right">
+                    <%= number_field_tag "readings[#{meter.id}][reading_end]",
+                          reading.reading_end,
+                          min: 0, step: "any",
+                          class: "w-32 border #{has_error ? 'border-red-400' : 'border-gray-300'} rounded px-2 py-1 text-right text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono",
+                          placeholder: "0.00",
+                          data: { "meter-reading-target": "end", action: "input->meter-reading#calculate" } %>
+                  </td>
+                <% else %>
+                  <td class="px-4 py-3 text-right font-mono text-gray-900">
+                    <%= reading.reading_start.present? ? number_with_precision(reading.reading_start, precision: 2, delimiter: ",") : "—" %>
+                  </td>
+                  <td class="px-4 py-3 text-right font-mono text-gray-900">
+                    <%= reading.reading_end.present? ? number_with_precision(reading.reading_end, precision: 2, delimiter: ",") : "—" %>
+                  </td>
+                <% end %>
+
+                <td class="px-4 py-3 text-right">
+                  <% if can_write %>
+                    <span data-meter-reading-target="consumption"
+                          class="font-mono text-gray-900">
+                      <%= reading.consumption.present? ? number_with_precision(reading.consumption, precision: 2, delimiter: ",") : "—" %>
+                    </span>
+                    <span class="text-xs text-gray-400 ml-0.5">kWh</span>
+                  <% else %>
+                    <span class="font-mono text-gray-900">
+                      <%= reading.consumption.present? ? number_with_precision(reading.consumption, precision: 2, delimiter: ",") : "—" %>
+                    </span>
+                    <span class="text-xs text-gray-400 ml-0.5">kWh</span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% end %>
+
+  <% if can_write %>
+    <div class="flex justify-end mt-2 mb-6">
+      <button type="submit"
+              class="px-6 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 cursor-pointer transition-colors">
+        <%= t("meter_readings.save_all") %>
+      </button>
+    </div>
+  <% end %>
+<% end %>
+
+<% end %>

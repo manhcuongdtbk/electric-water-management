@@ -32,6 +32,12 @@ vi:
         other_value: "Giá trị"
         contact_point: "Đầu mối"
         monthly_period: "Kỳ tính toán"
+      meter_reading:
+        reading_start: "Chỉ số đầu kỳ"
+        reading_end: "Chỉ số cuối kỳ"
+        consumption: "Sử dụng"
+        meter: "Công tơ"
+        monthly_period: "Kỳ tính toán"
 
   errors:
     messages:
@@ -98,6 +104,8 @@ vi:
       unit_updated: "Cập nhật cấu hình đơn vị thành công."
     electricity_supplies:
       updated: "Lưu số điện lực thành công."
+    meter_readings:
+      saved: "Lưu chỉ số công tơ thành công."
 
   contact_points:
     index:
@@ -260,9 +268,29 @@ vi:
       col_kw: "Số điện lực (kWh)"
       empty: "Chưa có dữ liệu."
 
+  meter_readings:
+    show:
+      title: "Nhập chỉ số công tơ đầu kỳ / cuối kỳ"
+    period_select: "Kỳ tính toán"
+    org_select: "Đơn vị"
+    no_period: "Chưa có kỳ nào. Vui lòng tạo kỳ tính toán trước."
+    no_org: "Không tìm thấy đơn vị."
+    no_meters: "Đơn vị chưa có công tơ nào. Vui lòng khai báo công tơ trước."
+    no_contact_point: "Chưa phân đầu mối"
+    period_locked: "Kỳ này đã khóa, không thể chỉnh sửa chỉ số."
+    errors_header: "Có lỗi xảy ra, vui lòng kiểm tra lại:"
+    save_all: "Lưu tất cả"
+    table:
+      meter_name: "Tên công tơ"
+      meter_type: "Loại"
+      reading_start: "Đầu kỳ"
+      reading_end: "Cuối kỳ"
+      consumption: "Sử dụng (kWh)"
+
   nav:
     contact_points: "Đầu mối"
     unit_config: "Cấu hình"
+    meter_readings: "Chỉ số công tơ"
     sign_out: "Đăng xuất"
 
   helpers:
