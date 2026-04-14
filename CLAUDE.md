@@ -54,8 +54,8 @@ organizations, users, contact_points, meters, personnel, rank_quotas, monthly_pe
 
 ## Milestones
 - M1 (14/4–23/4): ✅ DONE — DB + CRUD khai báo F01–F04 + Docker dev + RSpec 247 specs
-- M2 (21/4–5/5): Nghiệp vụ — Nhập liệu F05–F07 + Engine tính toán F08–F10 + Bảng 22 cột F11 ⚠ rủi ro cao
-- M3 (2/5–9/5): Phân quyền — Devise F15–F18 + CanCanCan 4 vai trò
+- M2 (21/4–5/5): ✅ DONE — Nhập liệu F05–F07 + Engine F08–F10 + Bảng 22 cột F11 + RSpec 388 specs
+- M3 (2/5–9/5): ← TIẾP THEO — Phân quyền Devise F15–F18 + CanCanCan Ability 4 vai trò
 - M4 (7/5–16/5): Báo cáo — F12 tổng hợp + F13 tra cứu lịch sử + F14 xuất CSV
 - M5 (14/5–19/5): Vận hành — F19 nhật ký + F20 đơn giá + F21 định mức + Docker prod + docs
 - M6 (17/5–25/5): Bàn giao — staging + fix bug + đào tạo + nghiệm thu
