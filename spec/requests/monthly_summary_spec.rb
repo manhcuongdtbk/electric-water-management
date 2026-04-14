@@ -195,11 +195,12 @@ RSpec.describe "MonthlySummary", type: :request do
         expect(response.body).to include("-215.00")
       end
 
-      it "displays total_amount from calculation" do
+      it "displays total_amount without decimal places" do
         sign_in admin_unit_a
         get monthly_summary_path(period_id: period.id)
-        # calc_a.total_amount = -430_000 → formatted as "-430,000"
+        # calc_a.total_amount = -430_000 → formatted as "-430,000" (no .00)
         expect(response.body).to include("-430,000")
+        expect(response.body).not_to include("-430,000.00")
       end
 
       it "totals row sums total_personnel across all contact points" do
@@ -207,6 +208,36 @@ RSpec.describe "MonthlySummary", type: :request do
         get monthly_summary_path(period_id: period.id, org_id: org_a.id)
         # Only org_a calc: 40 people
         expect(response.body).to include("40")
+      end
+    end
+
+    context "CSS color coding for chênh lệch (over_under_kw)" do
+      it "applies text-green-600 when over_under_kw is negative (under standard)" do
+        # calc_a.over_under_kw = -215 (negative = tiết kiệm = green)
+        sign_in admin_unit_a
+        get monthly_summary_path(period_id: period.id)
+        expect(response.body).to include("text-green-600")
+      end
+
+      it "applies text-red-600 when over_under_kw is positive (over standard)" do
+        calc_a.update!(over_under_kw: 100, total_amount: 200_000)
+        sign_in admin_unit_a
+        get monthly_summary_path(period_id: period.id)
+        expect(response.body).to include("text-red-600")
+      end
+
+      it "applies text-green-700 on total_amount cell when total is negative" do
+        sign_in admin_unit_a
+        get monthly_summary_path(period_id: period.id)
+        # calc_a.total_amount = -430_000 → green
+        expect(response.body).to include("text-green-700")
+      end
+
+      it "applies text-red-700 on total_amount cell when total is positive" do
+        calc_a.update!(over_under_kw: 100, total_amount: 200_000)
+        sign_in admin_unit_a
+        get monthly_summary_path(period_id: period.id)
+        expect(response.body).to include("text-red-700")
       end
     end
 
