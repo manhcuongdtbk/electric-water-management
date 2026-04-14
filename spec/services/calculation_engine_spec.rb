@@ -410,4 +410,49 @@ RSpec.describe CalculationEngine do
       end
     end
   end
+
+  # Matches the "Bảng II" scenario from docs/BANG_22_COT_ANALYSIS.md §3.2:
+  # a single pump station serves several units. Each served CP's share is
+  # consumption × cp_people / (Σ people across ALL served orgs).
+  describe "multi-unit pump allocation (real Excel 'Bảng II' case)" do
+    let(:other_unit) { create(:organization, level: :unit, parent: division) }
+
+    let!(:cp_other) { create(:contact_point, organization: other_unit, name: "CP Other") }
+    let!(:p_other) do
+      create(:personnel, contact_point: cp_other, monthly_period: period,
+             rank1_count: 0, rank2_count: 0, rank3_count: 0, rank4_count: 5,
+             rank5_count: 0, rank6_count: 0, rank7_count: 0)
+    end
+
+    # Assign the SAME pump station to the other unit as well.
+    let!(:extra_assignment) { create(:pump_station_assignment, pump_station: pump_station, organization: other_unit) }
+
+    it "distributes a shared pump station proportionally across all served orgs" do
+      # Served total = 5 (organization) + 5 (other_unit) = 10
+      # Pump consumption = 1000
+      # cp_truong (1 person) → 1000 × 1 / 10 = 100
+      # cp_qluc   (2 people) → 1000 × 2 / 10 = 200
+      # cp_tac_huan (2 ppl) → 1000 × 2 / 10 = 200
+      results = engine.compute
+      t    = results.find { |r| r[:contact_point_id] == cp_truong.id }
+      q    = results.find { |r| r[:contact_point_id] == cp_qluc.id }
+      h    = results.find { |r| r[:contact_point_id] == cp_tac_huan.id }
+
+      expect(t[:water_pump_actual_kw]).to eq(bd("100"))
+      expect(q[:water_pump_actual_kw]).to eq(bd("200"))
+      expect(h[:water_pump_actual_kw]).to eq(bd("200"))
+
+      # Sum across our unit = 500; the other 500 kW stays with the other unit.
+      sum_for_unit = results.sum { |r| r[:water_pump_actual_kw] }
+      expect(sum_for_unit).to eq(bd("500"))
+    end
+
+    it "running the engine on the OTHER unit also gets its fair share (500 kW)" do
+      other_engine = described_class.new(organization: other_unit, monthly_period: period)
+      results = other_engine.compute
+      other   = results.find { |r| r[:contact_point_id] == cp_other.id }
+      # cp_other has 5 people; total served = 10; consumption = 1000
+      expect(other[:water_pump_actual_kw]).to eq(bd("500"))
+    end
+  end
 end
