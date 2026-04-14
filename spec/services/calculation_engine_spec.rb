@@ -1,0 +1,458 @@
+require "rails_helper"
+
+# F08 + F09 + F10 — Engine tính toán bảng 22 cột.
+#
+# Test inputs are taken from test/fixtures/files/bang_tinh_thang_02.xlsx
+# (real customer data, Feb 2026). But expected values are RECOMPUTED according
+# to nghiệp vụ v5 (docs/XAC_NHAN_NGHIEP_VU_v5.html + docs/BANG_22_COT_ANALYSIS.md):
+#
+#   * Water pump standard uses 9.45 kW/person/month (NOT Excel's 6.3)
+#   * Loss (tổn hao) is subtracted from standard, NOT added to usage
+#
+# Other inputs (personnel counts, rank quotas, rate %, meter readings, pump
+# station totals) are taken verbatim from the Excel file.
+#
+# All arithmetic is done in BigDecimal with NO rounding in intermediate steps.
+RSpec.describe CalculationEngine do
+  # -----------------------------------------------------------------------
+  # Shorthands
+  # -----------------------------------------------------------------------
+  def bd(value) = BigDecimal(value.to_s)
+
+  # -----------------------------------------------------------------------
+  # Business constants (match the real app)
+  # -----------------------------------------------------------------------
+  let(:water_pump_rate) { bd("9.45") }      # v5: tiêu chuẩn bơm nước
+  let(:savings_rate)    { bd("0.05") }      # 5%
+  let(:div_public_rate) { bd("0.10") }      # 10% — công cộng Sư đoàn
+  let(:unit_public_rate) { bd("0") }        # Excel tháng 02 không có CC đơn vị
+  let(:unit_price)      { bd("2336.4") }    # giá kW tháng 02/2026
+
+  # -----------------------------------------------------------------------
+  # Test fixture — 3 đầu mối từ Excel "Sheet1 (2)"
+  #   TMP Trường: 1 người cấp 3★/4★ (115 kW)
+  #   TB Q.Lực:   1 người cấp 1★/2★ (38 kW) + 1 HSQ-CS (11 kW)
+  #   Ban Tác Huấn: 2 người cấp 1★/2★ (2 × 38 = 76 kW)
+  #
+  #   (Excel dùng 4 nhóm 115/38/28/11; test map sang rank_group 1..4
+  #    với RankQuota seed tương ứng để engine sinh ra đúng số sinh hoạt.)
+  # -----------------------------------------------------------------------
+  let(:division)    { create(:organization, :division) }
+  let(:organization) { create(:organization, level: :unit, parent: division) }
+  let(:period)      { create(:monthly_period, year: 2026, month: 2, unit_price: unit_price) }
+
+  let!(:rank_quota1) { create(:rank_quota, rank_group: 1, rank_name: "3*/4*",   quota_kw: bd("115"), effective_from: Date.new(2024, 1, 1)) }
+  let!(:rank_quota2) { create(:rank_quota, rank_group: 2, rank_name: "1*/2*",   quota_kw: bd("38"),  effective_from: Date.new(2024, 1, 1)) }
+  let!(:rank_quota3) { create(:rank_quota, rank_group: 3, rank_name: "Cap uy",  quota_kw: bd("28"),  effective_from: Date.new(2024, 1, 1)) }
+  let!(:rank_quota4) { create(:rank_quota, rank_group: 4, rank_name: "HSQ-CS",  quota_kw: bd("11"),  effective_from: Date.new(2024, 1, 1)) }
+
+  let!(:cp_truong)    { create(:contact_point, organization: organization, name: "TMP Truong",   position: 1) }
+  let!(:cp_qluc)      { create(:contact_point, organization: organization, name: "TB Q.Luc",     position: 2) }
+  let!(:cp_tac_huan)  { create(:contact_point, organization: organization, name: "Ban Tac Huan", position: 3) }
+
+  # Personnel — Excel columns E/F/G/H mapped to rank 1..4
+  let!(:p_truong)   { create(:personnel, contact_point: cp_truong,   monthly_period: period, rank1_count: 1, rank2_count: 0, rank3_count: 0, rank4_count: 0, rank5_count: 0, rank6_count: 0, rank7_count: 0) }
+  let!(:p_qluc)     { create(:personnel, contact_point: cp_qluc,     monthly_period: period, rank1_count: 0, rank2_count: 1, rank3_count: 0, rank4_count: 1, rank5_count: 0, rank6_count: 0, rank7_count: 0) }
+  let!(:p_tac_huan) { create(:personnel, contact_point: cp_tac_huan, monthly_period: period, rank1_count: 0, rank2_count: 2, rank3_count: 0, rank4_count: 0, rank5_count: 0, rank6_count: 0, rank7_count: 0) }
+
+  # Meter readings (normal) — one per contact point. Arbitrary but realistic.
+  let!(:meter_truong)   { create(:meter, :normal, organization: organization, contact_point: cp_truong,   name: "M-Truong") }
+  let!(:meter_qluc)     { create(:meter, :normal, organization: organization, contact_point: cp_qluc,     name: "M-QLuc") }
+  let!(:meter_tac_huan) { create(:meter, :normal, organization: organization, contact_point: cp_tac_huan, name: "M-TacHuan") }
+
+  let!(:reading_truong)   { create(:meter_reading, meter: meter_truong,   monthly_period: period, reading_start: 0, reading_end: 99,  consumption: 99) }
+  let!(:reading_qluc)     { create(:meter_reading, meter: meter_qluc,     monthly_period: period, reading_start: 0, reading_end: 105, consumption: 105) }
+  let!(:reading_tac_huan) { create(:meter_reading, meter: meter_tac_huan, monthly_period: period, reading_start: 0, reading_end: 500, consumption: 500) }
+
+  # Pump station — 1 trạm bơm phục vụ organization, tổng điện 1000 kW.
+  let!(:pump_meter)  { create(:meter, :pump_station, organization: division, contact_point: nil, name: "M-Pump") }
+  let!(:pump_reading) { create(:meter_reading, meter: pump_meter, monthly_period: period, reading_start: 0, reading_end: 1000, consumption: 1000) }
+  let!(:pump_station) { create(:pump_station, organization: division, meter: pump_meter, name: "TB 1") }
+  let!(:pump_assignment) { create(:pump_station_assignment, pump_station: pump_station, organization: organization) }
+
+  # Unit config — tỷ lệ % + electricity supply.
+  # Điện lực cung cấp: đủ để tạo ra 96 kW tổn hao sau khi trừ công tơ thường (704 kW).
+  let!(:unit_config) do
+    create(:unit_config,
+           organization: organization,
+           monthly_period: period,
+           savings_rate: savings_rate,
+           division_public_rate: div_public_rate,
+           unit_public_rate: unit_public_rate,
+           other_deduction_type: :fixed_kw,
+           other_deduction_value: bd("0"),
+           electricity_supply_kw: bd("800"))
+  end
+
+  # -----------------------------------------------------------------------
+  # Expected values — computed in BigDecimal following nghiệp vụ v5.
+  # -----------------------------------------------------------------------
+  # TMP Truong:   rank1=1 → 115 kW; pump_std = 1 × 9.45 = 9.45; total_std = 124.45
+  # TB Q.Luc:     rank2=1, rank4=1 → 38 + 11 = 49 kW; pump_std = 2 × 9.45 = 18.90; total_std = 67.90
+  # Ban Tac Huan: rank2=2 → 76 kW; pump_std = 2 × 9.45 = 18.90; total_std = 94.90
+  # Sum total_std = 124.45 + 67.90 + 94.90 = 287.25
+  # Total personnel org = 1 + 2 + 2 = 5
+  # Total meter consumption (normal + public) = 99 + 105 + 500 = 704
+  # Total unit loss = 800 − 704 = 96
+  # Total pump energy served = 1000
+  let(:sum_total_std)    { bd("287.25") }
+  let(:total_org_people) { bd("5") }
+  let(:total_unit_loss)  { bd("96") }
+  let(:total_pump)       { bd("1000") }
+
+  def expected_for(rank_total_kw:, personnel_count:, meter_usage:)
+    rank_total = bd(rank_total_kw)
+    people     = bd(personnel_count)
+    meter      = bd(meter_usage)
+
+    water_pump_standard = people * water_pump_rate
+    total_standard      = rank_total + water_pump_standard
+
+    savings       = total_standard * savings_rate
+    loss          = total_unit_loss * total_standard / sum_total_std
+    div_public    = total_standard * div_public_rate
+    unit_public   = total_standard * unit_public_rate
+    other         = bd("0")
+    total_deduct  = savings + loss + div_public + unit_public + other
+    remaining_std = total_standard - total_deduct
+
+    pump_actual = total_pump * people / total_org_people
+    total_usage = meter + pump_actual
+
+    over_under   = total_usage - remaining_std
+    total_amount = over_under * unit_price
+
+    {
+      total_personnel:               personnel_count,
+      water_pump_standard_kw:        water_pump_standard,
+      total_standard_kw:             total_standard,
+      savings_deduction_kw:          savings,
+      loss_deduction_kw:             loss,
+      division_public_deduction_kw:  div_public,
+      unit_public_deduction_kw:      unit_public,
+      other_deduction_kw:            other,
+      total_deduction_kw:            total_deduct,
+      remaining_standard_kw:         remaining_std,
+      meter_usage_kw:                meter,
+      water_pump_actual_kw:          pump_actual,
+      total_usage_kw:                total_usage,
+      over_under_kw:                 over_under,
+      unit_price:                    unit_price,
+      total_amount:                  total_amount
+    }
+  end
+
+  let(:expected_truong)    { expected_for(rank_total_kw: 115, personnel_count: 1, meter_usage: 99) }
+  let(:expected_qluc)      { expected_for(rank_total_kw: 49,  personnel_count: 2, meter_usage: 105) }
+  let(:expected_tac_huan)  { expected_for(rank_total_kw: 76,  personnel_count: 2, meter_usage: 500) }
+
+  # -----------------------------------------------------------------------
+  # Subject
+  # -----------------------------------------------------------------------
+  subject(:engine) { described_class.new(organization: organization, monthly_period: period) }
+
+  describe "#compute (full-precision BigDecimal)" do
+    let(:results) { engine.compute }
+
+    def result_for(cp) = results.find { |r| r[:contact_point_id] == cp.id }
+
+    describe "F08 — Tiêu chuẩn" do
+      it "rank1 kW for TMP Truong = 1 × 115" do
+        expect(result_for(cp_truong)[:rank1_kw]).to eq(bd("115"))
+      end
+
+      it "rank2 kW for Ban Tac Huan = 2 × 38" do
+        expect(result_for(cp_tac_huan)[:rank2_kw]).to eq(bd("76"))
+      end
+
+      it "water pump standard uses 9.45 kW/person (v5, NOT Excel 6.3)" do
+        expect(result_for(cp_truong)[:water_pump_standard_kw]).to eq(expected_truong[:water_pump_standard_kw])
+        expect(result_for(cp_qluc)[:water_pump_standard_kw]).to eq(expected_qluc[:water_pump_standard_kw])
+        expect(result_for(cp_tac_huan)[:water_pump_standard_kw]).to eq(expected_tac_huan[:water_pump_standard_kw])
+      end
+
+      it "total_standard_kw = rank total + water pump standard" do
+        expect(result_for(cp_truong)[:total_standard_kw]).to eq(expected_truong[:total_standard_kw])
+        expect(result_for(cp_qluc)[:total_standard_kw]).to eq(expected_qluc[:total_standard_kw])
+        expect(result_for(cp_tac_huan)[:total_standard_kw]).to eq(expected_tac_huan[:total_standard_kw])
+      end
+    end
+
+    describe "F08 — Số phải trừ" do
+      it "savings = total_standard × 5%" do
+        expect(result_for(cp_truong)[:savings_deduction_kw]).to eq(expected_truong[:savings_deduction_kw])
+        expect(result_for(cp_tac_huan)[:savings_deduction_kw]).to eq(expected_tac_huan[:savings_deduction_kw])
+      end
+
+      it "loss = total_unit_loss × (cp_total_standard / sum_total_standard) — placed inside deductions" do
+        expect(result_for(cp_truong)[:loss_deduction_kw]).to eq(expected_truong[:loss_deduction_kw])
+        expect(result_for(cp_qluc)[:loss_deduction_kw]).to eq(expected_qluc[:loss_deduction_kw])
+        expect(result_for(cp_tac_huan)[:loss_deduction_kw]).to eq(expected_tac_huan[:loss_deduction_kw])
+      end
+
+      it "sum of loss_deduction across contact points equals total_unit_loss" do
+        total_loss_allocated = results.sum { |r| r[:loss_deduction_kw] }
+        expect(total_loss_allocated).to eq(total_unit_loss)
+      end
+
+      it "division public = total_standard × 10%" do
+        expect(result_for(cp_truong)[:division_public_deduction_kw]).to eq(expected_truong[:division_public_deduction_kw])
+        expect(result_for(cp_tac_huan)[:division_public_deduction_kw]).to eq(expected_tac_huan[:division_public_deduction_kw])
+      end
+
+      it "total_deduction_kw = savings + loss + division public + unit public + other" do
+        expect(result_for(cp_truong)[:total_deduction_kw]).to eq(expected_truong[:total_deduction_kw])
+        expect(result_for(cp_tac_huan)[:total_deduction_kw]).to eq(expected_tac_huan[:total_deduction_kw])
+      end
+
+      it "remaining_standard_kw = total_standard − total_deduction" do
+        expect(result_for(cp_truong)[:remaining_standard_kw]).to eq(expected_truong[:remaining_standard_kw])
+        expect(result_for(cp_qluc)[:remaining_standard_kw]).to eq(expected_qluc[:remaining_standard_kw])
+        expect(result_for(cp_tac_huan)[:remaining_standard_kw]).to eq(expected_tac_huan[:remaining_standard_kw])
+      end
+    end
+
+    describe "F09 — Sử dụng và so sánh" do
+      it "meter_usage_kw excludes loss (v5: loss is NOT added to usage)" do
+        expect(result_for(cp_truong)[:meter_usage_kw]).to eq(bd("99"))
+        expect(result_for(cp_qluc)[:meter_usage_kw]).to eq(bd("105"))
+        expect(result_for(cp_tac_huan)[:meter_usage_kw]).to eq(bd("500"))
+      end
+
+      it "water_pump_actual_kw is allocated from pump stations by personnel ratio (F10)" do
+        expect(result_for(cp_truong)[:water_pump_actual_kw]).to eq(expected_truong[:water_pump_actual_kw])
+        expect(result_for(cp_qluc)[:water_pump_actual_kw]).to eq(expected_qluc[:water_pump_actual_kw])
+        expect(result_for(cp_tac_huan)[:water_pump_actual_kw]).to eq(expected_tac_huan[:water_pump_actual_kw])
+      end
+
+      it "total_usage_kw = meter usage + water pump actual" do
+        expect(result_for(cp_truong)[:total_usage_kw]).to eq(expected_truong[:total_usage_kw])
+        expect(result_for(cp_tac_huan)[:total_usage_kw]).to eq(expected_tac_huan[:total_usage_kw])
+      end
+
+      it "over_under_kw = total_usage − remaining_standard (positive = thâm, negative = tiết kiệm)" do
+        expect(result_for(cp_truong)[:over_under_kw]).to eq(expected_truong[:over_under_kw])
+        expect(result_for(cp_qluc)[:over_under_kw]).to eq(expected_qluc[:over_under_kw])
+        expect(result_for(cp_tac_huan)[:over_under_kw]).to eq(expected_tac_huan[:over_under_kw])
+      end
+
+      it "total_amount = over_under × unit_price" do
+        expect(result_for(cp_truong)[:total_amount]).to eq(expected_truong[:total_amount])
+        expect(result_for(cp_tac_huan)[:total_amount]).to eq(expected_tac_huan[:total_amount])
+      end
+
+      it "unit_price is snapshot from monthly_period" do
+        expect(result_for(cp_truong)[:unit_price]).to eq(unit_price)
+      end
+    end
+
+    describe "determinism & precision" do
+      it "returns BigDecimal for all numeric fields" do
+        numeric_fields = %i[
+          rank1_kw rank2_kw rank3_kw rank4_kw rank5_kw rank6_kw rank7_kw
+          water_pump_standard_kw total_standard_kw
+          savings_deduction_kw loss_deduction_kw
+          division_public_deduction_kw unit_public_deduction_kw
+          other_deduction_kw total_deduction_kw remaining_standard_kw
+          meter_usage_kw water_pump_actual_kw total_usage_kw
+          over_under_kw unit_price total_amount
+        ]
+        results.each do |row|
+          numeric_fields.each do |f|
+            expect(row[f]).to be_a(BigDecimal), "expected #{f} to be BigDecimal, got #{row[f].class}"
+          end
+        end
+      end
+
+      it "does NOT round intermediate calculations (e.g. loss allocation has many decimals)" do
+        # 96 × 124.45 / 287.25 is irrational in decimal — many digits.
+        raw = result_for(cp_truong)[:loss_deduction_kw]
+        expected_raw = bd("96") * bd("124.45") / bd("287.25")
+        expect(raw).to eq(expected_raw)
+      end
+    end
+  end
+
+  describe "#call (persists to monthly_calculations)" do
+    it "creates one MonthlyCalculation per contact point" do
+      expect { engine.call }.to change(MonthlyCalculation, :count).by(3)
+    end
+
+    it "stores computed values rounded by decimal(12,2) column scale" do
+      engine.call
+      calc = MonthlyCalculation.find_by!(contact_point: cp_truong, monthly_period: period)
+
+      # Persisted columns have scale=2; compare expected rounded to 2 decimals.
+      expect(calc.rank1_kw).to eq(bd("115"))
+      expect(calc.water_pump_standard_kw).to eq(expected_truong[:water_pump_standard_kw].round(2))
+      expect(calc.total_standard_kw).to eq(expected_truong[:total_standard_kw].round(2))
+      expect(calc.savings_deduction_kw).to eq(expected_truong[:savings_deduction_kw].round(2))
+      expect(calc.loss_deduction_kw).to eq(expected_truong[:loss_deduction_kw].round(2))
+      expect(calc.division_public_deduction_kw).to eq(expected_truong[:division_public_deduction_kw].round(2))
+      expect(calc.remaining_standard_kw).to eq(expected_truong[:remaining_standard_kw].round(2))
+      expect(calc.meter_usage_kw).to eq(bd("99"))
+      expect(calc.water_pump_actual_kw).to eq(expected_truong[:water_pump_actual_kw].round(2))
+      expect(calc.total_usage_kw).to eq(expected_truong[:total_usage_kw].round(2))
+      expect(calc.over_under_kw).to eq(expected_truong[:over_under_kw].round(2))
+      expect(calc.unit_price).to eq(unit_price)
+      expect(calc.total_amount).to eq(expected_truong[:total_amount].round(2))
+      expect(calc.total_personnel).to eq(1)
+    end
+
+    it "updates existing MonthlyCalculation rows when called twice (upsert)" do
+      engine.call
+      expect { engine.call }.not_to change(MonthlyCalculation, :count)
+    end
+
+    it "updates values if personnel changes between calls (fresh engine instance)" do
+      engine.call
+      p_truong.update!(rank1_count: 2)
+      described_class.new(organization: organization, monthly_period: period).call
+
+      calc = MonthlyCalculation.find_by!(contact_point: cp_truong, monthly_period: period)
+      expect(calc.rank1_kw).to eq(bd("230"))   # 2 × 115
+      expect(calc.total_personnel).to eq(2)
+    end
+
+    it "runs inside a transaction (rolls back on failure)" do
+      allow_any_instance_of(MonthlyCalculation).to receive(:save!).and_wrap_original do |m, *args|
+        raise ActiveRecord::RecordInvalid.new(m.receiver) if m.receiver.contact_point_id == cp_tac_huan.id
+
+        m.call(*args)
+      end
+
+      expect { engine.call }.to raise_error(ActiveRecord::RecordInvalid)
+      expect(MonthlyCalculation.where(monthly_period: period).count).to eq(0)
+    end
+  end
+
+  describe "edge cases" do
+    context "contact point with no personnel record" do
+      let!(:cp_empty) { create(:contact_point, organization: organization, name: "Empty CP", position: 4) }
+
+      it "treats all rank counts as zero and still computes" do
+        results = engine.compute
+        empty = results.find { |r| r[:contact_point_id] == cp_empty.id }
+        expect(empty[:total_personnel]).to eq(0)
+        expect(empty[:total_standard_kw]).to eq(bd("0"))
+        expect(empty[:water_pump_standard_kw]).to eq(bd("0"))
+        expect(empty[:loss_deduction_kw]).to eq(bd("0"))     # no standard → no allocation
+        expect(empty[:water_pump_actual_kw]).to eq(bd("0"))  # no people → no allocation
+      end
+    end
+
+    context "contact point with no meter readings" do
+      let!(:cp_no_meter) { create(:contact_point, organization: organization, name: "No Meter CP", position: 5) }
+      let!(:p_no_meter)  { create(:personnel, contact_point: cp_no_meter, monthly_period: period, rank1_count: 1, rank2_count: 0, rank3_count: 0, rank4_count: 0, rank5_count: 0, rank6_count: 0, rank7_count: 0) }
+
+      it "uses 0 for meter_usage_kw" do
+        results = engine.compute
+        row = results.find { |r| r[:contact_point_id] == cp_no_meter.id }
+        expect(row[:meter_usage_kw]).to eq(bd("0"))
+      end
+    end
+
+    context "unit with no electricity_supply_kw configured" do
+      before { unit_config.update!(electricity_supply_kw: nil) }
+
+      it "treats total_unit_loss as zero (loss_deduction = 0 for all)" do
+        results = engine.compute
+        results.each do |row|
+          expect(row[:loss_deduction_kw]).to eq(bd("0"))
+        end
+      end
+    end
+
+    context "unit with no UnitConfig record" do
+      before { unit_config.destroy! }
+
+      it "treats all rates as zero (no savings/public/loss deduction)" do
+        results = engine.compute
+        row = results.find { |r| r[:contact_point_id] == cp_truong.id }
+        expect(row[:savings_deduction_kw]).to eq(bd("0"))
+        expect(row[:division_public_deduction_kw]).to eq(bd("0"))
+        expect(row[:unit_public_deduction_kw]).to eq(bd("0"))
+        expect(row[:loss_deduction_kw]).to eq(bd("0"))
+        expect(row[:other_deduction_kw]).to eq(bd("0"))
+      end
+    end
+
+    context "contact point with 'other' deduction — fixed_kw" do
+      before do
+        create(:contact_point_other_deduction, contact_point: cp_truong, monthly_period: period,
+               other_type: :fixed_kw, other_value: bd("4"))
+      end
+
+      it "adds the fixed value to other_deduction_kw" do
+        row = engine.compute.find { |r| r[:contact_point_id] == cp_truong.id }
+        expect(row[:other_deduction_kw]).to eq(bd("4"))
+      end
+    end
+
+    context "contact point with 'other' deduction — factor_per_person" do
+      before do
+        create(:contact_point_other_deduction, contact_point: cp_qluc, monthly_period: period,
+               other_type: :factor_per_person, other_value: bd("2"))
+      end
+
+      it "multiplies factor by personnel count" do
+        row = engine.compute.find { |r| r[:contact_point_id] == cp_qluc.id }
+        expect(row[:other_deduction_kw]).to eq(bd("4")) # 2 × 2 people
+      end
+    end
+
+    context "pump station not assigned to this organization" do
+      before { pump_assignment.destroy! }
+
+      it "contributes 0 to water_pump_actual_kw" do
+        row = engine.compute.find { |r| r[:contact_point_id] == cp_truong.id }
+        expect(row[:water_pump_actual_kw]).to eq(bd("0"))
+      end
+    end
+  end
+
+  # Matches the "Bảng II" scenario from docs/BANG_22_COT_ANALYSIS.md §3.2:
+  # a single pump station serves several units. Each served CP's share is
+  # consumption × cp_people / (Σ people across ALL served orgs).
+  describe "multi-unit pump allocation (real Excel 'Bảng II' case)" do
+    let(:other_unit) { create(:organization, level: :unit, parent: division) }
+
+    let!(:cp_other) { create(:contact_point, organization: other_unit, name: "CP Other") }
+    let!(:p_other) do
+      create(:personnel, contact_point: cp_other, monthly_period: period,
+             rank1_count: 0, rank2_count: 0, rank3_count: 0, rank4_count: 5,
+             rank5_count: 0, rank6_count: 0, rank7_count: 0)
+    end
+
+    # Assign the SAME pump station to the other unit as well.
+    let!(:extra_assignment) { create(:pump_station_assignment, pump_station: pump_station, organization: other_unit) }
+
+    it "distributes a shared pump station proportionally across all served orgs" do
+      # Served total = 5 (organization) + 5 (other_unit) = 10
+      # Pump consumption = 1000
+      # cp_truong (1 person) → 1000 × 1 / 10 = 100
+      # cp_qluc   (2 people) → 1000 × 2 / 10 = 200
+      # cp_tac_huan (2 ppl) → 1000 × 2 / 10 = 200
+      results = engine.compute
+      t    = results.find { |r| r[:contact_point_id] == cp_truong.id }
+      q    = results.find { |r| r[:contact_point_id] == cp_qluc.id }
+      h    = results.find { |r| r[:contact_point_id] == cp_tac_huan.id }
+
+      expect(t[:water_pump_actual_kw]).to eq(bd("100"))
+      expect(q[:water_pump_actual_kw]).to eq(bd("200"))
+      expect(h[:water_pump_actual_kw]).to eq(bd("200"))
+
+      # Sum across our unit = 500; the other 500 kW stays with the other unit.
+      sum_for_unit = results.sum { |r| r[:water_pump_actual_kw] }
+      expect(sum_for_unit).to eq(bd("500"))
+    end
+
+    it "running the engine on the OTHER unit also gets its fair share (500 kW)" do
+      other_engine = described_class.new(organization: other_unit, monthly_period: period)
+      results = other_engine.compute
+      other   = results.find { |r| r[:contact_point_id] == cp_other.id }
+      # cp_other has 5 people; total served = 10; consumption = 1000
+      expect(other[:water_pump_actual_kw]).to eq(bd("500"))
+    end
+  end
+end
