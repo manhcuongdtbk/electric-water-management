@@ -1,0 +1,283 @@
+<% content_for :title, t("monthly_summary.show.title", period: @period&.label || "—") %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-xl font-semibold text-gray-900"><%= t("monthly_summary.show.title", period: @period&.label || "—") %></h1>
+</div>
+
+<%# Period + Org selectors %>
+<% if @periods.any? %>
+  <div class="mb-6 flex flex-wrap items-end gap-4">
+    <div>
+      <%= label_tag :period_id, t("monthly_summary.period_select"),
+            class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= select_tag :period_id,
+            options_from_collection_for_select(@periods, :id, :label, @period&.id),
+            data: { base_url: monthly_summary_path, org_id: @target_org&.id },
+            onchange: "var url = this.dataset.baseUrl + '?period_id=' + this.value; if (this.dataset.orgId) url += '&org_id=' + this.dataset.orgId; window.location.href = url;",
+            class: "border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+    </div>
+
+    <% if current_user.admin_level1? && @all_orgs&.any? %>
+      <div>
+        <%= label_tag :org_id, t("monthly_summary.org_select"),
+              class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= select_tag :org_id,
+              options_from_collection_for_select(@all_orgs, :id, :name, @target_org&.id),
+              data: { period_id: @period&.id, base_url: monthly_summary_path },
+              onchange: "window.location.href = this.dataset.baseUrl + '?period_id=' + this.dataset.periodId + '&org_id=' + this.value",
+              class: "border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+      </div>
+    <% end %>
+
+    <% if @period && @target_org && (current_user.admin_level1? || current_user.admin_unit?) %>
+      <div class="ml-auto">
+        <%= form_with url: recalculate_monthly_summary_path, method: :post do %>
+          <%= hidden_field_tag :period_id, @period.id %>
+          <%= hidden_field_tag :org_id, @target_org.id if current_user.admin_level1? %>
+          <button type="submit"
+                  class="px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-md hover:bg-amber-600 cursor-pointer transition-colors"
+                  data-confirm="<%= t("monthly_summary.recalculate_confirm") %>">
+            <%= t("monthly_summary.recalculate") %>
+          </button>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<% if @period.nil? %>
+  <div class="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+    <%= t("monthly_summary.no_period") %>
+  </div>
+<% elsif @target_org.nil? %>
+  <div class="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+    <%= t("monthly_summary.no_org") %>
+  </div>
+<% elsif @calculation_error.present? %>
+  <div class="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">
+    <%= t("monthly_summary.calculation_error", error: @calculation_error) %>
+  </div>
+<% elsif @calculations.empty? %>
+  <div class="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+    <%= t("monthly_summary.no_data") %>
+  </div>
+<% else %>
+
+<%# 22-column table with horizontal scroll %>
+<div class="bg-white rounded-lg border border-gray-200 overflow-x-auto">
+  <table class="min-w-full text-xs border-collapse">
+    <thead>
+      <%# Row 1: Group headers %>
+      <tr class="bg-slate-700 text-white">
+        <th class="px-2 py-2 text-center font-medium border border-slate-600 whitespace-nowrap w-8" rowspan="2">
+          <%= t("monthly_summary.columns.stt") %>
+        </th>
+        <th class="px-2 py-2 text-left font-medium border border-slate-600 min-w-[140px]" rowspan="2">
+          <%= t("monthly_summary.columns.contact_point") %>
+        </th>
+        <th class="px-2 py-2 text-center font-medium border border-slate-600 bg-blue-700" colspan="8">
+          <%= t("monthly_summary.groups.personnel") %>
+        </th>
+        <th class="px-2 py-2 text-center font-medium border border-slate-600 bg-green-700" colspan="3">
+          <%= t("monthly_summary.groups.standard") %>
+        </th>
+        <th class="px-2 py-2 text-center font-medium border border-slate-600 bg-red-700" colspan="6">
+          <%= t("monthly_summary.groups.deductions") %>
+        </th>
+        <th class="px-2 py-2 text-center font-medium border border-slate-600 bg-purple-700" colspan="4">
+          <%= t("monthly_summary.groups.result") %>
+        </th>
+      </tr>
+      <%# Row 2: Individual column headers %>
+      <tr class="bg-slate-600 text-white">
+        <%# Quân số group (7 rank kW + total_personnel) %>
+        <% (1..7).each do |i| %>
+          <th class="px-2 py-2 text-right font-medium border border-slate-500 bg-blue-600 whitespace-nowrap min-w-[52px]"
+              title="<%= t("personnel.ranks.rank#{i}") %>">
+            <%= t("monthly_summary.columns.rank#{i}_kw") %>
+          </th>
+        <% end %>
+        <th class="px-2 py-2 text-right font-medium border border-slate-500 bg-blue-600 whitespace-nowrap min-w-[56px]">
+          <%= t("monthly_summary.columns.total_personnel") %>
+        </th>
+        <%# Tiêu chuẩn group %>
+        <th class="px-2 py-2 text-right font-medium border border-slate-500 bg-green-600 whitespace-nowrap min-w-[60px]">
+          <%= t("monthly_summary.columns.living_standard_kw") %>
+        </th>
+        <th class="px-2 py-2 text-right font-medium border border-slate-500 bg-green-600 whitespace-nowrap min-w-[60px]">
+          <%= t("monthly_summary.columns.water_pump_standard_kw") %>
+        </th>
+        <th class="px-2 py-2 text-right font-medium border border-slate-500 bg-green-600 whitespace-nowrap min-w-[60px]">
+          <%= t("monthly_summary.columns.total_standard_kw") %>
+        </th>
+        <%# Số phải trừ group %>
+        <th class="px-2 py-2 text-right font-medium border border-slate-500 bg-red-600 whitespace-nowrap min-w-[60px]">
+          <%= t("monthly_summary.columns.savings_deduction_kw") %>
+        </th>
+        <th class="px-2 py-2 text-right font-medium border border-slate-500 bg-red-600 whitespace-nowrap min-w-[60px]">
+          <%= t("monthly_summary.columns.loss_deduction_kw") %>
+        </th>
+        <th class="px-2 py-2 text-right font-medium border border-slate-500 bg-red-600 whitespace-nowrap min-w-[60px]">
+          <%= t("monthly_summary.columns.division_public_deduction_kw") %>
+        </th>
+        <th class="px-2 py-2 text-right font-medium border border-slate-500 bg-red-600 whitespace-nowrap min-w-[60px]">
+          <%= t("monthly_summary.columns.unit_public_deduction_kw") %>
+        </th>
+        <th class="px-2 py-2 text-right font-medium border border-slate-500 bg-red-600 whitespace-nowrap min-w-[52px]">
+          <%= t("monthly_summary.columns.other_deduction_kw") %>
+        </th>
+        <th class="px-2 py-2 text-right font-medium border border-slate-500 bg-red-600 whitespace-nowrap min-w-[60px]">
+          <%= t("monthly_summary.columns.total_deduction_kw") %>
+        </th>
+        <%# Kết quả group %>
+        <th class="px-2 py-2 text-right font-medium border border-slate-500 bg-purple-600 whitespace-nowrap min-w-[60px]">
+          <%= t("monthly_summary.columns.remaining_standard_kw") %>
+        </th>
+        <th class="px-2 py-2 text-right font-medium border border-slate-500 bg-purple-600 whitespace-nowrap min-w-[60px]">
+          <%= t("monthly_summary.columns.total_usage_kw") %>
+        </th>
+        <th class="px-2 py-2 text-right font-medium border border-slate-500 bg-purple-600 whitespace-nowrap min-w-[60px]">
+          <%= t("monthly_summary.columns.over_under_kw") %>
+        </th>
+        <th class="px-2 py-2 text-right font-medium border border-slate-500 bg-purple-600 whitespace-nowrap min-w-[80px]">
+          <%= t("monthly_summary.columns.total_amount") %>
+        </th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      <% @calculations.each_with_index do |calc, idx| %>
+        <tr class="hover:bg-gray-50">
+          <td class="px-2 py-2 text-center text-gray-500 border-r border-gray-200"><%= idx + 1 %></td>
+          <td class="px-2 py-2 font-medium text-gray-900 border-r border-gray-200 whitespace-nowrap">
+            <%= calc.contact_point.name %>
+          </td>
+          <%# Rank kW columns %>
+          <% (1..7).each do |i| %>
+            <td class="px-2 py-2 text-right font-mono text-gray-800 border-r border-gray-100">
+              <%= number_with_precision(calc.public_send(:"rank#{i}_kw"), precision: 2, delimiter: ",") %>
+            </td>
+          <% end %>
+          <%# Total personnel %>
+          <td class="px-2 py-2 text-right font-mono text-gray-800 border-r border-gray-200">
+            <%= number_with_delimiter(calc.total_personnel) %>
+          </td>
+          <%# Tiêu chuẩn group %>
+          <td class="px-2 py-2 text-right font-mono text-gray-800 border-r border-gray-100">
+            <%= number_with_precision(calc.rank_standard_total_kw, precision: 2, delimiter: ",") %>
+          </td>
+          <td class="px-2 py-2 text-right font-mono text-gray-800 border-r border-gray-100">
+            <%= number_with_precision(calc.water_pump_standard_kw, precision: 2, delimiter: ",") %>
+          </td>
+          <td class="px-2 py-2 text-right font-mono font-semibold text-gray-900 border-r border-gray-200">
+            <%= number_with_precision(calc.total_standard_kw, precision: 2, delimiter: ",") %>
+          </td>
+          <%# Số phải trừ group %>
+          <td class="px-2 py-2 text-right font-mono text-gray-800 border-r border-gray-100">
+            <%= number_with_precision(calc.savings_deduction_kw, precision: 2, delimiter: ",") %>
+          </td>
+          <td class="px-2 py-2 text-right font-mono text-gray-800 border-r border-gray-100">
+            <%= number_with_precision(calc.loss_deduction_kw, precision: 2, delimiter: ",") %>
+          </td>
+          <td class="px-2 py-2 text-right font-mono text-gray-800 border-r border-gray-100">
+            <%= number_with_precision(calc.division_public_deduction_kw, precision: 2, delimiter: ",") %>
+          </td>
+          <td class="px-2 py-2 text-right font-mono text-gray-800 border-r border-gray-100">
+            <%= number_with_precision(calc.unit_public_deduction_kw, precision: 2, delimiter: ",") %>
+          </td>
+          <td class="px-2 py-2 text-right font-mono text-gray-800 border-r border-gray-100">
+            <%= number_with_precision(calc.other_deduction_kw, precision: 2, delimiter: ",") %>
+          </td>
+          <td class="px-2 py-2 text-right font-mono font-semibold text-gray-900 border-r border-gray-200">
+            <%= number_with_precision(calc.total_deduction_kw, precision: 2, delimiter: ",") %>
+          </td>
+          <%# Kết quả group %>
+          <td class="px-2 py-2 text-right font-mono text-gray-800 border-r border-gray-100">
+            <%= number_with_precision(calc.remaining_standard_kw, precision: 2, delimiter: ",") %>
+          </td>
+          <td class="px-2 py-2 text-right font-mono text-gray-800 border-r border-gray-100">
+            <%= number_with_precision(calc.total_usage_kw, precision: 2, delimiter: ",") %>
+          </td>
+          <% over_under_class = calc.over_under_kw > 0 ? "text-red-600" : (calc.over_under_kw < 0 ? "text-green-600" : "text-gray-800") %>
+          <td class="px-2 py-2 text-right font-mono font-semibold border-r border-gray-100 <%= over_under_class %>">
+            <%= number_with_precision(calc.over_under_kw, precision: 2, delimiter: ",") %>
+          </td>
+          <% amount_class = calc.total_amount > 0 ? "text-red-700" : (calc.total_amount < 0 ? "text-green-700" : "text-gray-800") %>
+          <td class="px-2 py-2 text-right font-mono font-semibold <%= amount_class %>">
+            <%= number_with_precision(calc.total_amount, precision: 0, delimiter: ",") %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+
+    <%# Total row %>
+    <% if @totals %>
+      <tfoot>
+        <tr class="bg-slate-100 font-bold border-t-2 border-slate-400">
+          <td class="px-2 py-2 text-center text-gray-700 border-r border-gray-300" colspan="2">
+            <%= t("monthly_summary.total_row") %>
+          </td>
+          <% (1..7).each do |i| %>
+            <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-200">
+              <%= number_with_precision(@totals[:"rank#{i}_kw"], precision: 2, delimiter: ",") %>
+            </td>
+          <% end %>
+          <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-300">
+            <%= number_with_delimiter(@totals[:total_personnel]) %>
+          </td>
+          <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-200">
+            <%= number_with_precision(@totals[:living_standard_kw], precision: 2, delimiter: ",") %>
+          </td>
+          <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-200">
+            <%= number_with_precision(@totals[:water_pump_standard_kw], precision: 2, delimiter: ",") %>
+          </td>
+          <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-300">
+            <%= number_with_precision(@totals[:total_standard_kw], precision: 2, delimiter: ",") %>
+          </td>
+          <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-200">
+            <%= number_with_precision(@totals[:savings_deduction_kw], precision: 2, delimiter: ",") %>
+          </td>
+          <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-200">
+            <%= number_with_precision(@totals[:loss_deduction_kw], precision: 2, delimiter: ",") %>
+          </td>
+          <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-200">
+            <%= number_with_precision(@totals[:division_public_deduction_kw], precision: 2, delimiter: ",") %>
+          </td>
+          <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-200">
+            <%= number_with_precision(@totals[:unit_public_deduction_kw], precision: 2, delimiter: ",") %>
+          </td>
+          <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-200">
+            <%= number_with_precision(@totals[:other_deduction_kw], precision: 2, delimiter: ",") %>
+          </td>
+          <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-300">
+            <%= number_with_precision(@totals[:total_deduction_kw], precision: 2, delimiter: ",") %>
+          </td>
+          <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-200">
+            <%= number_with_precision(@totals[:remaining_standard_kw], precision: 2, delimiter: ",") %>
+          </td>
+          <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-200">
+            <%= number_with_precision(@totals[:total_usage_kw], precision: 2, delimiter: ",") %>
+          </td>
+          <% total_over_under = @totals[:over_under_kw] %>
+          <% total_ou_class = total_over_under > 0 ? "text-red-700" : (total_over_under < 0 ? "text-green-700" : "text-gray-900") %>
+          <td class="px-2 py-2 text-right font-mono border-r border-gray-200 <%= total_ou_class %>">
+            <%= number_with_precision(total_over_under, precision: 2, delimiter: ",") %>
+          </td>
+          <% total_amt = @totals[:total_amount] %>
+          <% total_amt_class = total_amt > 0 ? "text-red-700" : (total_amt < 0 ? "text-green-700" : "text-gray-900") %>
+          <td class="px-2 py-2 text-right font-mono <%= total_amt_class %>">
+            <%= number_with_precision(total_amt, precision: 0, delimiter: ",") %>
+          </td>
+        </tr>
+      </tfoot>
+    <% end %>
+  </table>
+</div>
+
+<%# Unit price note %>
+<% if @period&.unit_price.present? %>
+  <p class="mt-3 text-xs text-gray-500">
+    <%= t("monthly_summary.unit_price_note", price: number_with_precision(@period.unit_price, precision: 0, delimiter: ","), period: @period.label) %>
+  </p>
+<% end %>
+
+<% end %>

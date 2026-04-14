@@ -113,6 +113,9 @@ vi:
       updated: "Lưu số điện lực thành công."
     meter_readings:
       saved: "Lưu chỉ số công tơ thành công."
+    monthly_summary:
+      recalculated: "Đã tính lại bảng tổng hợp thành công."
+      recalculate_failed: "Tính lại thất bại: %{error}"
 
   contact_points:
     index:
@@ -339,11 +342,55 @@ vi:
     new:
       title: "Mở kỳ tính toán mới"
 
+  monthly_summary:
+    show:
+      title: "Bảng tổng hợp tháng %{period}"
+    period_select: "Kỳ tính toán"
+    org_select: "Đơn vị"
+    no_period: "Chưa có kỳ nào. Vui lòng tạo kỳ tính toán trước."
+    no_org: "Không tìm thấy đơn vị."
+    no_data: "Chưa có dữ liệu tính toán cho kỳ này."
+    calculation_error: "Không thể tính toán: %{error}"
+    recalculate: "Tính lại"
+    recalculate_confirm: "Tính lại sẽ ghi đè dữ liệu hiện tại. Tiếp tục?"
+    total_row: "Tổng cộng"
+    unit_price_note: "Đơn giá áp dụng kỳ %{period}: %{price} đ/kWh"
+    groups:
+      personnel: "Quân số"
+      standard: "Tiêu chuẩn"
+      deductions: "Số phải trừ"
+      result: "Kết quả"
+    columns:
+      stt: "STT"
+      contact_point: "Tên đầu mối"
+      rank1_kw: "ĐT"
+      rank2_kw: "TC"
+      rank3_kw: "Tr/Th"
+      rank4_kw: "Úy"
+      rank5_kw: "CQ"
+      rank6_kw: "TĐ"
+      rank7_kw: "HS/BS"
+      total_personnel: "Tổng QS"
+      living_standard_kw: "Sinh hoạt"
+      water_pump_standard_kw: "Bơm nước"
+      total_standard_kw: "Tổng TC"
+      savings_deduction_kw: "Tiết kiệm"
+      loss_deduction_kw: "Tổn hao"
+      division_public_deduction_kw: "CC Sư đoàn"
+      unit_public_deduction_kw: "CC Đơn vị"
+      other_deduction_kw: "Khác"
+      total_deduction_kw: "Tổng trừ"
+      remaining_standard_kw: "TC còn lại"
+      total_usage_kw: "Sử dụng"
+      over_under_kw: "Chênh lệch"
+      total_amount: "Thành tiền (đ)"
+
   nav:
     contact_points: "Đầu mối"
     unit_config: "Cấu hình"
     meter_readings: "Chỉ số công tơ"
     personnel_review: "Soát lại quân số"
+    monthly_summary: "Bảng tổng hợp"
     sign_out: "Đăng xuất"
 
   helpers:

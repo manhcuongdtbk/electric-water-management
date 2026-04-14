@@ -54,6 +54,13 @@
                 </svg>
                 <%= t("nav.personnel_review") %>
               <% end %>
+              <%= link_to monthly_summary_path,
+                    class: "flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-colors #{controller_name == 'monthly_summaries' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}" do %>
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18M10 3v18M6 3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6a3 3 0 013-3z" />
+                </svg>
+                <%= t("nav.monthly_summary") %>
+              <% end %>
             <% end %>
           </nav>
 
