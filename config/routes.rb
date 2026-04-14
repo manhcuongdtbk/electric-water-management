@@ -1,8 +1,19 @@
 Rails.application.routes.draw do
   devise_for :users
 
+  # F07: Soát lại quân số
+  resource :personnel_review, only: [ :show ]
+
+  resources :monthly_periods, only: [ :create ] do
+    member do
+      patch :unlock
+    end
+  end
+
   resources :contact_points do
-    resource :personnel, only: [ :show, :update ], controller: :personnel
+    resource :personnel, only: [ :show, :update ], controller: :personnel do
+      patch :toggle_review
+    end
     resources :meters, except: [ :show ]
   end
 

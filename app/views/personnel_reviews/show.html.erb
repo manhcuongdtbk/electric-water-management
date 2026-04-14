@@ -1,0 +1,230 @@
+<% content_for :title, t("personnel_reviews.show.title") %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-xl font-semibold text-gray-900"><%= t("personnel_reviews.show.title") %></h1>
+</div>
+
+<%# Period + Org selectors %>
+<% if @periods.any? %>
+  <div class="mb-6 flex flex-wrap items-end gap-4">
+    <div>
+      <%= label_tag :period_id, t("personnel.period_select"),
+            class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= select_tag :period_id,
+            options_from_collection_for_select(@periods, :id, :label, @period&.id),
+            data: { base_url: personnel_review_path, org_id: (current_user.admin_level1? ? @target_org&.id : nil) },
+            onchange: "var url = this.dataset.baseUrl + '?period_id=' + this.value; if (this.dataset.orgId) url += '&org_id=' + this.dataset.orgId; window.location.href = url;",
+            class: "border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+    </div>
+
+    <% if current_user.admin_level1? && @all_orgs&.any? %>
+      <div>
+        <%= label_tag :org_id, t("meter_readings.org_select"),
+              class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= select_tag :org_id,
+              options_from_collection_for_select(@all_orgs, :id, :name, @target_org&.id),
+              data: { period_id: @period&.id, base_url: personnel_review_path },
+              onchange: "window.location.href = this.dataset.baseUrl + '?period_id=' + this.dataset.periodId + '&org_id=' + this.value",
+              class: "border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<%# Lock status banner %>
+<% if @period %>
+  <% if @period.locked? %>
+    <div class="flex items-center justify-between rounded-md bg-amber-50 border border-amber-200 px-4 py-3 mb-4">
+      <div class="flex items-center gap-2 text-sm text-amber-800">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+        </svg>
+        <span class="font-medium"><%= t("personnel_reviews.lock_banner.locked") %></span>
+        <% if @period.locked_by %>
+          <span class="text-amber-600"><%= t("personnel_reviews.lock_banner.locked_by", user: @period.locked_by.email) %></span>
+        <% end %>
+        <% if @period.locked_at %>
+          <span class="text-amber-500 text-xs">(<%= l(@period.locked_at, format: :short) %>)</span>
+        <% end %>
+      </div>
+      <% if current_user.admin_level1? %>
+        <%= button_to t("personnel_reviews.actions.unlock"),
+              unlock_monthly_period_path(@period),
+              method: :patch,
+              class: "px-3 py-1.5 bg-amber-600 text-white text-xs font-medium rounded-md hover:bg-amber-700 transition-colors cursor-pointer" %>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="flex items-center justify-between rounded-md bg-green-50 border border-green-200 px-4 py-3 mb-4">
+      <div class="flex items-center gap-2 text-sm text-green-800">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/>
+        </svg>
+        <span class="font-medium"><%= t("personnel_reviews.lock_banner.unlocked") %></span>
+      </div>
+    </div>
+  <% end %>
+<% end %>
+
+<%# Open new period (admin_level1 only) %>
+<% if current_user.admin_level1? %>
+  <details class="mb-6 bg-white border border-gray-200 rounded-lg">
+    <summary class="px-4 py-3 text-sm font-medium text-gray-700 cursor-pointer select-none hover:bg-gray-50 rounded-lg">
+      + <%= t("personnel_reviews.new_period_form.title") %>
+    </summary>
+    <div class="px-4 pb-4 pt-2 border-t border-gray-100">
+      <%= form_with url: monthly_periods_path, method: :post, class: "flex flex-wrap items-end gap-3" do |f| %>
+        <div>
+          <%= f.label :year, t("personnel_reviews.new_period_form.year_label"),
+                class: "block text-xs font-medium text-gray-600 mb-1" %>
+          <%= f.number_field :year, value: Date.current.year, min: 2020, max: 2100,
+                class: "border border-gray-300 rounded-md px-3 py-1.5 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+        </div>
+        <div>
+          <%= f.label :month, t("personnel_reviews.new_period_form.month_label"),
+                class: "block text-xs font-medium text-gray-600 mb-1" %>
+          <%= f.number_field :month, value: Date.current.month, min: 1, max: 12,
+                class: "border border-gray-300 rounded-md px-3 py-1.5 text-sm w-20 focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+        </div>
+        <div>
+          <%= f.label :unit_price, t("personnel_reviews.new_period_form.unit_price_label"),
+                class: "block text-xs font-medium text-gray-600 mb-1" %>
+          <%= f.number_field :unit_price, step: "0.01", min: 0, placeholder: t("personnel_reviews.new_period_form.unit_price_hint"),
+                class: "border border-gray-300 rounded-md px-3 py-1.5 text-sm w-40 focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+        </div>
+        <%= f.submit t("personnel_reviews.new_period_form.submit"),
+              class: "px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors cursor-pointer" %>
+      <% end %>
+    </div>
+  </details>
+<% end %>
+
+<% if @period.nil? %>
+  <div class="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+    <%= t("personnel_reviews.show.no_period") %>
+  </div>
+<% elsif @target_org.nil? %>
+  <div class="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+    <%= t("personnel_reviews.show.no_org") %>
+  </div>
+<% elsif @personnel_rows.blank? %>
+  <div class="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+    <%= t("personnel_reviews.show.no_contact_points") %>
+  </div>
+<% else %>
+  <% can_write = current_user.admin_level1? || current_user.admin_unit? %>
+  <% can_review = can_write && !@period.locked? %>
+
+  <%# Summary counts %>
+  <% reviewed_count = @personnel_rows.count { |r| r[:personnel]&.reviewed? } %>
+  <% total_count = @personnel_rows.count { |r| r[:personnel].present? } %>
+  <div class="flex items-center gap-4 mb-4 text-sm text-gray-600">
+    <span>
+      <%= t("personnel_reviews.status.reviewed") %>:
+      <strong class="<%= reviewed_count == total_count && total_count > 0 ? 'text-green-700' : 'text-gray-900' %>">
+        <%= reviewed_count %> / <%= total_count %>
+      </strong>
+    </span>
+  </div>
+
+  <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200 text-sm">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-3 py-3 text-center font-medium text-gray-600 w-10">
+              <%= t("personnel_reviews.table.stt") %>
+            </th>
+            <th class="px-4 py-3 text-left font-medium text-gray-600">
+              <%= t("personnel_reviews.table.contact_point") %>
+            </th>
+            <% (1..7).each do |i| %>
+              <th class="px-2 py-3 text-center font-medium text-gray-600 w-16">
+                <%= t("personnel_reviews.table.rank#{i}") %>
+              </th>
+            <% end %>
+            <th class="px-3 py-3 text-center font-medium text-gray-600 w-16">
+              <%= t("personnel_reviews.table.total") %>
+            </th>
+            <th class="px-4 py-3 text-center font-medium text-gray-600 w-28">
+              <%= t("personnel_reviews.table.status") %>
+            </th>
+            <% if can_write %>
+              <th class="px-4 py-3 text-center font-medium text-gray-600 w-28">
+                <%= t("personnel_reviews.table.actions") %>
+              </th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <% @personnel_rows.each_with_index do |row, idx| %>
+            <% cp = row[:contact_point] %>
+            <% p = row[:personnel] %>
+            <% changed = row[:changed] %>
+            <%
+              row_class = if p.nil?
+                "bg-gray-50"
+              elsif changed
+                "bg-yellow-50"
+              else
+                "hover:bg-gray-50"
+              end
+            %>
+            <tr class="<%= row_class %>">
+              <td class="px-3 py-3 text-center text-gray-500"><%= idx + 1 %></td>
+              <td class="px-4 py-3 font-medium text-gray-900">
+                <%= cp.name %>
+                <% if changed %>
+                  <span class="ml-1.5 inline-flex items-center rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
+                    <%= t("personnel_reviews.status.changed") %>
+                  </span>
+                <% end %>
+              </td>
+              <% (1..7).each do |i| %>
+                <td class="px-2 py-3 text-center font-mono text-gray-700">
+                  <%= p ? p.public_send(:"rank#{i}_count") : "—" %>
+                </td>
+              <% end %>
+              <td class="px-3 py-3 text-center font-mono font-semibold text-gray-900">
+                <%= p ? p.total_count : "—" %>
+              </td>
+              <td class="px-4 py-3 text-center">
+                <% if p.nil? %>
+                  <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+                    <%= t("personnel_reviews.status.not_entered") %>
+                  </span>
+                <% elsif p.reviewed? %>
+                  <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                    <%= t("personnel_reviews.status.reviewed") %>
+                  </span>
+                <% else %>
+                  <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500">
+                    <%= t("personnel_reviews.status.pending") %>
+                  </span>
+                <% end %>
+              </td>
+              <% if can_write %>
+                <td class="px-4 py-3 text-center">
+                  <div class="flex items-center justify-center gap-2">
+                    <%= link_to t("personnel_reviews.actions.edit"),
+                          contact_point_personnel_path(cp, period_id: @period.id),
+                          class: "text-blue-600 hover:text-blue-800 text-xs font-medium" %>
+                    <% if p && can_review %>
+                      <%= button_to p.reviewed? ? t("personnel_reviews.actions.unmark_review") : t("personnel_reviews.actions.toggle_review"),
+                            toggle_review_contact_point_personnel_path(cp),
+                            params: { period_id: @period.id },
+                            method: :patch,
+                            class: "#{p.reviewed? ? 'text-gray-500 hover:text-gray-700' : 'text-green-600 hover:text-green-800'} text-xs font-medium bg-transparent border-0 cursor-pointer p-0" %>
+                    <% end %>
+                  </div>
+                </td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% end %>

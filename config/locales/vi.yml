@@ -99,6 +99,13 @@ vi:
     personnel:
       saved: "Lưu quân số thành công."
       no_period: "Chưa có kỳ nào. Vui lòng tạo kỳ tính toán trước."
+      period_locked: "Kỳ này đã khóa, không thể chỉnh sửa."
+      no_record: "Chưa có dữ liệu quân số cho đầu mối này."
+      review_marked: "Đã đánh dấu soát lại."
+      review_unmarked: "Đã bỏ đánh dấu soát lại."
+    monthly_periods:
+      created: "Đã mở kỳ %{label} thành công."
+      unlocked: "Đã mở khóa kỳ %{label}."
     unit_configs:
       division_updated: "Cập nhật cấu hình Sư đoàn thành công."
       unit_updated: "Cập nhật cấu hình đơn vị thành công."
@@ -287,10 +294,56 @@ vi:
       reading_end: "Cuối kỳ"
       consumption: "Sử dụng (kWh)"
 
+  personnel_reviews:
+    show:
+      title: "Soát lại quân số"
+      no_period: "Chưa có kỳ nào. Vui lòng tạo kỳ tính toán trước."
+      no_org: "Không tìm thấy đơn vị."
+      no_contact_points: "Đơn vị chưa có đầu mối nào."
+    status:
+      reviewed: "Đã soát"
+      pending: "Chưa soát"
+      not_entered: "Chưa nhập"
+      changed: "▲ thay đổi"
+    lock_banner:
+      locked: "Kỳ này đã khóa"
+      locked_by: "bởi %{user}"
+      unlocked: "Kỳ đang mở"
+    new_period_form:
+      title: "Mở kỳ mới"
+      year_label: "Năm"
+      month_label: "Tháng"
+      unit_price_label: "Đơn giá (đ/kWh)"
+      unit_price_hint: "Để trống nếu chưa có"
+      submit: "Mở kỳ mới"
+    table:
+      stt: "STT"
+      contact_point: "Đầu mối"
+      rank1: "ĐT"
+      rank2: "TC"
+      rank3: "Úy"
+      rank4: "QNCN"
+      rank5: "CS"
+      rank6: "Hạ sĩ"
+      rank7: "BS"
+      total: "Tổng"
+      status: "Trạng thái"
+      actions: "Thao tác"
+    actions:
+      toggle_review: "Soát lại"
+      unmark_review: "Bỏ soát"
+      edit: "Sửa"
+      unlock: "Mở khóa"
+
+  monthly_periods:
+    new:
+      title: "Mở kỳ tính toán mới"
+
   nav:
     contact_points: "Đầu mối"
     unit_config: "Cấu hình"
     meter_readings: "Chỉ số công tơ"
+    personnel_review: "Soát lại quân số"
     sign_out: "Đăng xuất"
 
   helpers:
