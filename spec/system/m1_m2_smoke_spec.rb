@@ -106,20 +106,21 @@ RSpec.describe "M1+M2 smoke", type: :system do
       fill_in "personnel_rank6_count", with: 20
       fill_in "personnel_rank7_count", with: 50
 
-      # Stimulus target: totalCount — exact match "91"
-      total_count_el = find("[data-personnel-calculator-target='totalCount']")
-      expect(total_count_el).to have_text("91")
+      # Stimulus target: totalCount — `exact_text` avoids substring match on
+      # "910" / "1910"; `have_css` auto-retries so we wait for the DOM update.
+      expect(page).to have_css(
+        "[data-personnel-calculator-target='totalCount']",
+        exact_text: "91"
+      )
 
-      # Living standard, water standard, total standard must all be non-zero
-      living_el = find("[data-personnel-calculator-target='livingStandard']")
-      expect(living_el.text).not_to eq("0")
-      expect(living_el.text).to match(/\d/)
-
-      water_el = find("[data-personnel-calculator-target='waterStandard']")
-      expect(water_el.text).not_to eq("0")
-
-      total_std_el = find("[data-personnel-calculator-target='totalStandard']")
-      expect(total_std_el.text).not_to eq("0")
+      # Living/water/total standards must all be populated (matches a number
+      # with fractional part — see Intl.NumberFormat vi-VN output "1.234,56").
+      %w[livingStandard waterStandard totalStandard].each do |target|
+        expect(page).to have_css(
+          "[data-personnel-calculator-target='#{target}']",
+          text: /\d[.,]\d/
+        )
+      end
 
       # Submit and verify persistence
       click_on I18n.t("personnel.form.submit")
@@ -155,16 +156,17 @@ RSpec.describe "M1+M2 smoke", type: :system do
       expect(new_val.to_f).to eq(3.0)
 
       # Now test Stimulus toggle on "Khác" column
-      row = find("tr[data-cp-id='#{cp.id}']")
+      row_selector = "tr[data-cp-id='#{cp.id}']"
+      within(row_selector) do
+        # Fill value 10 with type = fixed_kw (default). Result should be 10.xx
+        find("input[data-role='other-value']").set("10")
+        expect(page).to have_css("[data-role='other-result']", text: /\A10[.,]/)
 
-      # Fill value 10 with type = fixed_kw (default). Result should be 10.
-      row.find("input[data-role='other-value']").set("10")
-      expect(row.find("[data-role='other-result']").text).to match(/^10[.,]/)
-
-      # Toggle to factor_per_person → result = 10 * personnel_count = 10 * 10 = 100
-      row.find("select[data-role='other-type']")
-         .select(I18n.t("unit_configs.other_types.factor_per_person"))
-      expect(row.find("[data-role='other-result']").text).to match(/^100[.,]/)
+        # Toggle to factor_per_person → 10 * personnel_count (10) = 100.xx
+        find("select[data-role='other-type']")
+          .select(I18n.t("unit_configs.other_types.factor_per_person"))
+        expect(page).to have_css("[data-role='other-result']", text: /\A100[.,]/)
+      end
     end
 
     # -------------------------------------------------------------------------
@@ -197,12 +199,16 @@ RSpec.describe "M1+M2 smoke", type: :system do
       expect(page).to have_content("Công tơ A")
 
       # One meter → one row with Stimulus controller attached
-      row = find("tr[data-controller='meter-reading']")
-      row.find("input[data-meter-reading-target='start']").set("100")
-      row.find("input[data-meter-reading-target='end']").set("250")
+      within("tr[data-controller='meter-reading']") do
+        find("input[data-meter-reading-target='start']").set("100")
+        find("input[data-meter-reading-target='end']").set("250")
 
-      # Stimulus computes 250 - 100 = 150 → vi-VN "150,00"
-      expect(row.find("[data-meter-reading-target='consumption']").text).to match(/^150[.,]/)
+        # Stimulus computes 250 - 100 = 150 → vi-VN "150,00" or "150.00"
+        expect(page).to have_css(
+          "[data-meter-reading-target='consumption']",
+          text: /\A150[.,]/
+        )
+      end
 
       # Save and verify
       click_on I18n.t("meter_readings.save_all")
@@ -279,9 +285,10 @@ RSpec.describe "M1+M2 smoke", type: :system do
       # Totals row is present
       expect(page).to have_content(I18n.t("monthly_summary.total_row"))
 
-      # Non-zero values rendered (engine ran)
-      expect(page).to have_content("9,320")  # total_standard_kw with delimiter
-      expect(page).to have_content("40")     # total_personnel
+      # Specific formatted values from the seeded calculation. Uses the full
+      # rendered string (not a substring) to avoid accidental matches.
+      expect(page).to have_content("9,320.00")  # total_standard_kw
+      expect(page).to have_content("174,000")   # total_amount
     end
   end
 
@@ -303,12 +310,12 @@ RSpec.describe "M1+M2 smoke", type: :system do
     end
 
     it "sees a unit filter/dropdown on the 22-column monthly summary" do
-      # Force unit creation so @all_orgs is non-empty in the controller
-      unit
-      other_unit
+      # Controller renders the org dropdown only when at least one unit exists.
+      create(:organization, :unit, parent: division, name: "Unit A")
+      create(:organization, :unit, parent: division, name: "Unit B")
       create(:monthly_period, year: 2026, month: 2)
+
       visit monthly_summary_path
-      # admin_level1 gets an org_id dropdown for unit selection
       expect(page).to have_css("select[name='org_id']")
     end
   end
