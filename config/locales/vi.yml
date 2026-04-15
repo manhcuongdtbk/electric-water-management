@@ -1,6 +1,17 @@
 vi:
   app_name: "Phần mềm Quản lý Điện Nước"
 
+  time:
+    formats:
+      default: "%d/%m/%Y %H:%M"
+      short: "%H:%M %d/%m/%Y"
+      long: "%H:%M %d/%m/%Y"
+  date:
+    formats:
+      default: "%d/%m/%Y"
+      short: "%d/%m"
+      long: "%d/%m/%Y"
+
   activerecord:
     errors:
       messages:
