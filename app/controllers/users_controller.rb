@@ -34,6 +34,9 @@ class UsersController < ApplicationController
       @user.force_password_change = true
     end
     if @user.save
+      # If admin changed their own password, Devise rotates authenticatable_salt,
+      # invalidating the current session. bypass_sign_in refreshes it.
+      bypass_sign_in(@user) if @user == current_user && params.dig(:user, :password).present?
       redirect_to users_path, notice: t("flash.users.updated")
     else
       @unit_organizations = unit_organizations

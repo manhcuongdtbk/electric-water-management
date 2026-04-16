@@ -71,6 +71,35 @@ RSpec.describe "F16 — Force password change", type: :system do
   end
 
   # -------------------------------------------------------------------------
+  # Tech user with force_password_change = true → password change page,
+  # NOT users_path (check_force_password_change! runs before restrict_tech!)
+  # -------------------------------------------------------------------------
+  it "redirects tech user to password change page, not users_path, when flag is set" do
+    tech_user = create(:user, :tech, organization: division, force_password_change: true)
+    login_as tech_user, scope: :user
+
+    visit users_path
+    expect(page).to have_current_path(edit_password_change_path)
+    expect(page).to have_content(I18n.t("password_changes.edit.title"))
+  end
+
+  # -------------------------------------------------------------------------
+  # Admin edits own password → force_password_change must NOT be set
+  # -------------------------------------------------------------------------
+  it "does not set force_password_change when admin updates their own password" do
+    admin = create(:user, :admin_level1, organization: division, force_password_change: false)
+    login_as admin, scope: :user
+
+    visit edit_user_path(admin)
+    fill_in I18n.t("users.form.password"),              with: "MyNewPass1!"
+    fill_in I18n.t("users.form.password_confirmation"), with: "MyNewPass1!"
+    click_on I18n.t("users.form.submit_update")
+
+    expect(page).to have_content(I18n.t("flash.users.updated"))
+    expect(admin.reload.force_password_change).to be false
+  end
+
+  # -------------------------------------------------------------------------
   # Admin resets password → target user forced on next login
   # -------------------------------------------------------------------------
   it "forces target user to change password after admin resets it" do
