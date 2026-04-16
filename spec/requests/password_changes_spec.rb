@@ -141,6 +141,31 @@ RSpec.describe "PasswordChanges", type: :request do
   end
 
   # ---------------------------------------------------------------------------
+  # Tech user with force_password_change = true — must go to password change,
+  # NOT to users_path (check_force_password_change! runs before restrict_tech!)
+  # ---------------------------------------------------------------------------
+  describe "tech user force redirect order" do
+    let(:tech_user) { create(:user, :tech, organization: division, force_password_change: true) }
+
+    before { sign_in tech_user }
+
+    it "redirects tech user to password change (not users_path) when force flag is set" do
+      get contact_points_path
+      expect(response).to redirect_to(edit_password_change_path)
+    end
+
+    it "also redirects tech user away from users_path when force flag is set" do
+      get users_path
+      expect(response).to redirect_to(edit_password_change_path)
+    end
+
+    it "allows tech user to access password change page" do
+      get edit_password_change_path
+      expect(response).to have_http_status(:ok)
+    end
+  end
+
+  # ---------------------------------------------------------------------------
   # Admin resets another user's password → force_password_change = true
   # ---------------------------------------------------------------------------
   describe "admin resets password for another user" do
