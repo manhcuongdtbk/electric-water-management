@@ -20,6 +20,14 @@ vi:
           has_one: "Không thể xóa bản ghi vì đang có %{record} liên quan"
           has_many: "Không thể xóa bản ghi vì đang có nhiều %{record} liên quan"
     attributes:
+      user:
+        full_name: "Họ tên"
+        email: "Email"
+        role: "Vai trò"
+        organization: "Đơn vị"
+        organization_id: "Đơn vị"
+        password: "Mật khẩu"
+        password_confirmation: "Xác nhận mật khẩu"
       contact_point:
         name: "Tên đầu mối"
         group_name: "Nhóm"
@@ -70,6 +78,14 @@ vi:
       inclusion: "không nằm trong danh sách cho phép"
 
   devise:
+    failure:
+      unauthenticated: "Bạn cần đăng nhập để tiếp tục."
+      locked: "Tài khoản của bạn đã bị khóa."
+      invalid: "Email hoặc mật khẩu không đúng. Vui lòng thử lại."
+      last_attempt: "Bạn còn một lần thử. Tài khoản sẽ bị khóa nếu đăng nhập sai."
+      not_found_in_database: "Email hoặc mật khẩu không đúng. Vui lòng thử lại."
+      timeout: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."
+      already_authenticated: "Bạn đã đăng nhập rồi."
     sessions:
       new:
         sign_in: "Đăng nhập"
@@ -89,6 +105,12 @@ vi:
 
   flash:
     unauthorized: "Bạn không có quyền thực hiện thao tác này."
+    users:
+      created: "Tạo tài khoản thành công."
+      updated: "Cập nhật tài khoản thành công."
+      locked: "Đã khóa tài khoản."
+      unlocked: "Đã mở khóa tài khoản."
+      cannot_lock_self: "Không thể khóa tài khoản của chính mình."
     actions:
       create:
         notice: "Tạo %{resource_name} thành công."
@@ -402,7 +424,54 @@ vi:
     meter_readings: "Chỉ số công tơ"
     personnel_review: "Soát lại quân số"
     monthly_summary: "Bảng tổng hợp"
+    users: "Quản lý tài khoản"
     sign_out: "Đăng xuất"
+
+  users:
+    index:
+      title: "Quản lý tài khoản"
+      new_button: "Thêm tài khoản"
+      columns:
+        stt: "STT"
+        full_name: "Họ tên"
+        email: "Email"
+        role: "Vai trò"
+        organization: "Đơn vị"
+        status: "Trạng thái"
+        last_sign_in: "Đăng nhập cuối"
+        actions: "Thao tác"
+      empty: "Chưa có tài khoản nào."
+      status:
+        active: "Hoạt động"
+        locked: "Khóa"
+    new:
+      title: "Thêm tài khoản mới"
+    edit:
+      title: "Sửa tài khoản"
+    form:
+      full_name: "Họ và tên"
+      email: "Email"
+      password: "Mật khẩu tạm"
+      password_confirmation: "Xác nhận mật khẩu"
+      password_hint: "Để trống nếu không đổi mật khẩu"
+      role: "Vai trò"
+      role_prompt: "— Chọn vai trò —"
+      organization: "Đơn vị"
+      organization_prompt: "— Chọn đơn vị —"
+      submit_create: "Tạo tài khoản"
+      submit_update: "Lưu thay đổi"
+      cancel: "Hủy"
+    roles:
+      admin_level1: "Quản trị cấp 1 (Ban Doanh trại Sư đoàn)"
+      admin_unit: "Quản trị đơn vị"
+      commander: "Chỉ huy đơn vị"
+      tech: "Kỹ thuật"
+    actions:
+      edit: "Sửa"
+      lock: "Khóa"
+      unlock: "Mở khóa"
+      lock_confirm: "Bạn có chắc muốn khóa tài khoản này?"
+      unlock_confirm: "Bạn có chắc muốn mở khóa tài khoản này?"
 
   helpers:
     page_entries_info:

@@ -1,0 +1,78 @@
+<%= form_with model: user, data: { controller: "user-form" } do |f| %>
+  <% if user.errors.any? %>
+    <div class="mb-4 rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">
+      <ul class="list-disc pl-4 space-y-0.5">
+        <% user.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="space-y-4 max-w-lg">
+    <%# Full name %>
+    <div>
+      <%= f.label :full_name, t("users.form.full_name"), class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.text_field :full_name,
+            class: "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500",
+            required: true %>
+    </div>
+
+    <%# Email %>
+    <div>
+      <%= f.label :email, t("users.form.email"), class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.email_field :email,
+            class: "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500",
+            autocomplete: "off",
+            required: true %>
+    </div>
+
+    <%# Password %>
+    <div>
+      <%= f.label :password, t("users.form.password"), class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.password_field :password,
+            class: "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500",
+            autocomplete: "new-password",
+            required: user.new_record? %>
+      <% unless user.new_record? %>
+        <p class="mt-1 text-xs text-gray-500"><%= t("users.form.password_hint") %></p>
+      <% end %>
+    </div>
+
+    <%# Password confirmation %>
+    <div>
+      <%= f.label :password_confirmation, t("users.form.password_confirmation"), class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.password_field :password_confirmation,
+            class: "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500",
+            autocomplete: "new-password",
+            required: user.new_record? %>
+    </div>
+
+    <%# Role %>
+    <div>
+      <%= f.label :role, t("users.form.role"), class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.select :role,
+            User.roles.keys.map { |r| [ t("users.roles.#{r}"), r ] },
+            { prompt: t("users.form.role_prompt") },
+            class: "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500",
+            required: true,
+            data: { "user-form-target": "roleSelect", action: "change->user-form#roleChanged" } %>
+    </div>
+
+    <%# Organization — only shown for admin_unit and commander %>
+    <div data-user-form-target="orgField">
+      <%= f.label :organization_id, t("users.form.organization"), class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.select :organization_id,
+            options_from_collection_for_select(unit_organizations, :id, :name, user.organization_id),
+            { prompt: t("users.form.organization_prompt") },
+            class: "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+    </div>
+
+    <div class="flex items-center gap-3 pt-2">
+      <%= f.submit user.new_record? ? t("users.form.submit_create") : t("users.form.submit_update"),
+            class: "inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors cursor-pointer" %>
+      <%= link_to t("users.form.cancel"), users_path,
+            class: "text-sm text-gray-600 hover:underline" %>
+    </div>
+  </div>
+<% end %>

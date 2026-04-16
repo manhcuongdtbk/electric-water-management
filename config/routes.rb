@@ -24,6 +24,14 @@ Rails.application.routes.draw do
     post :recalculate
   end
 
+  # F15: Quản lý tài khoản
+  resources :users, only: [ :index, :new, :create, :edit, :update ] do
+    member do
+      patch :lock
+      patch :unlock
+    end
+  end
+
   root "contact_points#index"
 
   get "up" => "rails/health#show", as: :rails_health_check

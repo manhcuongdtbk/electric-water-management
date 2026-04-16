@@ -149,10 +149,10 @@ RSpec.describe "MonthlySummary", type: :request do
     end
 
     context "as tech" do
-      it "redirects — no access" do
+      it "is redirected to user management" do
         sign_in tech_user
         get monthly_summary_path
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(users_path)
         expect(flash[:alert]).to eq(I18n.t("flash.unauthorized"))
       end
     end
@@ -298,10 +298,10 @@ RSpec.describe "MonthlySummary", type: :request do
     end
 
     context "as tech" do
-      it "redirects — no access" do
+      it "is redirected to user management" do
         sign_in tech_user
         post recalculate_monthly_summary_path, params: { period_id: period.id }
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(users_path)
       end
     end
 

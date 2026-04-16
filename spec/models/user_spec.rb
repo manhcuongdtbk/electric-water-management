@@ -28,14 +28,15 @@ RSpec.describe User, type: :model do
   end
 
   describe "scopes" do
-    let!(:org) { create(:organization, :division) }
-    let!(:u1)  { create(:user, :admin_level1, organization: org) }
-    let!(:u2)  { create(:user, :commander, organization: org) }
-    let!(:u3)  { create(:user, :admin_unit) }
+    let!(:org)      { create(:organization, :division) }
+    let!(:unit_org) { create(:organization, :unit, parent: org) }
+    let!(:u1)       { create(:user, :admin_level1, organization: org) }
+    let!(:u2)       { create(:user, :commander,    organization: unit_org) }
+    let!(:u3)       { create(:user, :admin_unit) }
 
     it ".by_organization filters by organization" do
-      expect(User.by_organization(org.id)).to include(u1, u2)
-      expect(User.by_organization(org.id)).not_to include(u3)
+      expect(User.by_organization(org.id)).to include(u1)
+      expect(User.by_organization(org.id)).not_to include(u2, u3)
     end
 
     it ".admins returns admin_level1 and admin_unit" do

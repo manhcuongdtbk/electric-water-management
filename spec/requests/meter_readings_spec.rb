@@ -74,10 +74,10 @@ RSpec.describe "MeterReadings", type: :request do
     end
 
     context "as tech" do
-      it "redirects — no access" do
+      it "is redirected to user management" do
         sign_in tech_user
         get meter_readings_path
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(users_path)
         expect(flash[:alert]).to eq(I18n.t("flash.unauthorized"))
       end
     end
@@ -268,10 +268,10 @@ RSpec.describe "MeterReadings", type: :request do
     end
 
     context "as tech" do
-      it "redirects — no access" do
+      it "is redirected to user management" do
         sign_in tech_user
         patch meter_readings_path, params: valid_params
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(users_path)
       end
     end
 

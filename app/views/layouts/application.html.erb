@@ -24,12 +24,14 @@
           </div>
 
           <nav class="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto">
-            <%= link_to contact_points_path,
-                  class: "flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-colors #{controller_name == 'contact_points' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}" do %>
-              <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <%= t("nav.contact_points") %>
+            <% unless current_user.tech? %>
+              <%= link_to contact_points_path,
+                    class: "flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-colors #{controller_name == 'contact_points' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}" do %>
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <%= t("nav.contact_points") %>
+              <% end %>
             <% end %>
             <% if current_user.admin_level1? || current_user.admin_unit? || current_user.commander? %>
               <%= link_to unit_config_path,
@@ -60,6 +62,15 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18M10 3v18M6 3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6a3 3 0 013-3z" />
                 </svg>
                 <%= t("nav.monthly_summary") %>
+              <% end %>
+            <% end %>
+            <% if current_user.admin_level1? || current_user.tech? %>
+              <%= link_to users_path,
+                    class: "flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-colors #{controller_name == 'users' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}" do %>
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <%= t("nav.users") %>
               <% end %>
             <% end %>
           </nav>

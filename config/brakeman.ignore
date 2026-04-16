@@ -1,0 +1,12 @@
+{
+  "ignored_warnings": [
+    {
+      "fingerprint": "06d76f0ebc0d0abc3d9c31d2833cd43838bfc983a444daa82ad6af80a656a7ca",
+      "note": "Intentional: :role assignment is safe here. UsersController is gated behind require_user_management_access! (admin_level1 and tech only). Allowing role assignment is the intended behaviour for user management."
+    },
+    {
+      "fingerprint": "739f3891f3b78343d2d333ec6178df9a3677d76bd500261d7d321d8efad07aec",
+      "note": "Intentional: :role assignment is safe here. UsersController is gated behind require_user_management_access! (admin_level1 and tech only). Allowing role assignment is the intended behaviour for user management."
+    }
+  ]
+}
