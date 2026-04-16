@@ -80,7 +80,7 @@ vi:
   devise:
     failure:
       unauthenticated: "Bạn cần đăng nhập để tiếp tục."
-      locked: "Tài khoản của bạn đã bị khóa."
+      locked: "Tài khoản đã bị khóa do nhập sai mật khẩu quá nhiều lần. Vui lòng liên hệ quản trị viên."
       invalid: "Email hoặc mật khẩu không đúng. Vui lòng thử lại."
       last_attempt: "Bạn còn một lần thử. Tài khoản sẽ bị khóa nếu đăng nhập sai."
       not_found_in_database: "Email hoặc mật khẩu không đúng. Vui lòng thử lại."
