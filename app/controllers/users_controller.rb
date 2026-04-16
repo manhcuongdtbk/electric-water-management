@@ -29,7 +29,14 @@ class UsersController < ApplicationController
   def update
     @user.assign_attributes(user_update_params)
     auto_assign_organization!
+    # When admin provides a new password for another user, force them to change it on next login
+    if @user != current_user && params.dig(:user, :password).present?
+      @user.force_password_change = true
+    end
     if @user.save
+      # If admin changed their own password, Devise rotates authenticatable_salt,
+      # invalidating the current session. bypass_sign_in refreshes it.
+      bypass_sign_in(@user) if @user == current_user && params.dig(:user, :password).present?
       redirect_to users_path, notice: t("flash.users.updated")
     else
       @unit_organizations = unit_organizations

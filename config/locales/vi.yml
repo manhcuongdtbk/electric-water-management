@@ -105,6 +105,9 @@ vi:
 
   flash:
     unauthorized: "Bạn không có quyền thực hiện thao tác này."
+    password_changes:
+      required: "Bạn phải đổi mật khẩu trước khi sử dụng hệ thống."
+      success: "Đổi mật khẩu thành công. Chào mừng bạn!"
     users:
       created: "Tạo tài khoản thành công."
       updated: "Cập nhật tài khoản thành công."
@@ -417,6 +420,15 @@ vi:
       total_usage_kw: "Sử dụng"
       over_under_kw: "Chênh lệch"
       total_amount: "Thành tiền (đ)"
+
+  password_changes:
+    edit:
+      title: "Đổi mật khẩu"
+      subtitle: "Tài khoản của bạn yêu cầu đổi mật khẩu. Vui lòng đặt mật khẩu mới trước khi tiếp tục sử dụng hệ thống."
+    form:
+      new_password: "Mật khẩu mới"
+      confirm_password: "Xác nhận mật khẩu mới"
+      submit: "Đổi mật khẩu"
 
   nav:
     contact_points: "Đầu mối"
