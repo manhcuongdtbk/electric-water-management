@@ -3,9 +3,25 @@ class ApplicationController < ActionController::Base
   stale_when_importmap_changes
 
   before_action :authenticate_user!
+  before_action :check_force_password_change!
   before_action :restrict_tech_to_user_management!
 
   protected
+
+  def after_sign_in_path_for(resource)
+    if resource.force_password_change?
+      edit_password_change_path
+    else
+      stored_location_for(resource) || root_path
+    end
+  end
+
+  def check_force_password_change!
+    return unless current_user&.force_password_change?
+    return if controller_name == "password_changes"
+
+    redirect_to edit_password_change_path, alert: t("flash.password_changes.required")
+  end
 
   def require_write_access!
     return if current_user.admin_level1? || current_user.admin_unit?

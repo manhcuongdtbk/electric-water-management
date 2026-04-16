@@ -1,6 +1,9 @@
 Rails.application.routes.draw do
   devise_for :users
 
+  # F16: Force password change on first login
+  resource :password_change, only: [ :edit, :update ]
+
   # F07: Soát lại quân số
   resource :personnel_review, only: [ :show ]
 
