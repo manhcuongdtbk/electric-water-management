@@ -45,10 +45,10 @@ RSpec.describe "UnitConfigs", type: :request do
     end
 
     context "as tech" do
-      it "is redirected — no access" do
+      it "is redirected to user management" do
         sign_in tech_user
         get unit_config_path(period_id: period.id)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(users_path)
       end
     end
 

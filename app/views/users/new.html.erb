@@ -1,0 +1,12 @@
+<% content_for :title, t("users.new.title") %>
+
+<div class="mb-6 flex items-center gap-2 text-sm text-gray-500">
+  <%= link_to t("users.index.title"), users_path, class: "hover:underline" %>
+  <span>/</span>
+  <span class="text-gray-900"><%= t("users.new.title") %></span>
+</div>
+
+<div class="bg-white rounded-lg border border-gray-200 p-6 max-w-lg">
+  <h1 class="text-xl font-semibold text-gray-900 mb-6"><%= t("users.new.title") %></h1>
+  <%= render "form", user: @user, unit_organizations: @unit_organizations %>
+</div>

@@ -61,9 +61,9 @@ RSpec.describe "PersonnelReviews", type: :request do
     context "as tech" do
       before { sign_in tech_user }
 
-      it "is forbidden" do
+      it "is redirected to user management" do
         get personnel_review_path
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(users_path)
       end
     end
   end

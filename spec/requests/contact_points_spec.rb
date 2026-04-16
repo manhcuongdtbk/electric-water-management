@@ -45,12 +45,10 @@ RSpec.describe "ContactPoints", type: :request do
     end
 
     context "as tech" do
-      it "shows only own organization's contact points (read-only)" do
+      it "is redirected to user management" do
         sign_in tech_user
         get contact_points_path
-        expect(response).to have_http_status(:ok)
-        expect(response.body).to include(cp_a.name)
-        expect(response.body).not_to include(cp_b.name)
+        expect(response).to redirect_to(users_path)
       end
     end
 
@@ -106,10 +104,10 @@ RSpec.describe "ContactPoints", type: :request do
       expect(response).to redirect_to(root_path)
     end
 
-    it "redirects tech" do
+    it "redirects tech to user management" do
       sign_in tech_user
       get new_contact_point_path
-      expect(response).to redirect_to(root_path)
+      expect(response).to redirect_to(users_path)
     end
   end
 

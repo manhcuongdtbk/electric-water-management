@@ -84,10 +84,10 @@ RSpec.describe "Meters", type: :request do
       expect(response).to redirect_to(root_path)
     end
 
-    it "redirects tech" do
+    it "redirects tech to user management" do
       sign_in tech_user
       get new_contact_point_meter_path(cp_a)
-      expect(response).to redirect_to(root_path)
+      expect(response).to redirect_to(users_path)
     end
   end
 

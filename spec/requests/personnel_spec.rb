@@ -60,10 +60,10 @@ RSpec.describe "Personnel", type: :request do
     end
 
     context "as tech" do
-      it "can view (read-only)" do
+      it "is redirected to user management" do
         sign_in tech_user
         get contact_point_personnel_path(cp_a, period_id: period.id)
-        expect(response).to have_http_status(:ok)
+        expect(response).to redirect_to(users_path)
       end
     end
 
@@ -177,12 +177,12 @@ RSpec.describe "Personnel", type: :request do
     end
 
     context "as tech" do
-      it "is redirected (no write access)" do
+      it "is redirected to user management" do
         sign_in tech_user
         expect {
           patch contact_point_personnel_path(cp_a), params: valid_params
         }.not_to change(Personnel, :count)
-        expect(response).to redirect_to(root_path)
+        expect(response).to redirect_to(users_path)
       end
     end
   end
