@@ -1,12 +1,15 @@
 class PersonnelController < ApplicationController
-  before_action :require_write_access!, only: [ :update, :toggle_review ]
   before_action :set_contact_point
   before_action :set_period
   before_action :set_personnel_and_quotas
 
-  def show; end
+  def show
+    authorize! :read, @contact_point
+  end
 
   def update
+    authorize! :update, @contact_point
+
     if @period.nil?
       redirect_to contact_point_personnel_path(@contact_point),
                   alert: t("flash.personnel.no_period")
@@ -28,6 +31,8 @@ class PersonnelController < ApplicationController
   end
 
   def toggle_review
+    authorize! :update, @contact_point
+
     if @period.nil?
       redirect_to personnel_review_path, alert: t("flash.personnel.no_period")
       return
@@ -59,16 +64,8 @@ class PersonnelController < ApplicationController
 
   private
 
-  def contact_points_scope
-    if current_user.admin_level1?
-      ContactPoint.all
-    else
-      current_user.organization.contact_points
-    end
-  end
-
   def set_contact_point
-    @contact_point = contact_points_scope.includes(:organization).find(params[:contact_point_id])
+    @contact_point = ContactPoint.includes(:organization).find(params[:contact_point_id])
   end
 
   def set_period

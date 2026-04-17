@@ -33,7 +33,8 @@ RSpec.describe "Personnel", type: :request do
       it "cannot access another org's contact_point" do
         sign_in admin_unit_a
         get contact_point_personnel_path(cp_b, period_id: period.id)
-        expect(response).to have_http_status(:not_found)
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
       end
 
       it "renders without period_id param (uses first period)" do
@@ -131,7 +132,8 @@ RSpec.describe "Personnel", type: :request do
         expect {
           patch contact_point_personnel_path(cp_b), params: valid_params
         }.not_to change(Personnel, :count)
-        expect(response).to have_http_status(:not_found)
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
       end
 
       it "rejects negative counts" do
