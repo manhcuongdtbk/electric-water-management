@@ -1,27 +1,30 @@
 class ContactPointsController < ApplicationController
   include Pagy::Method
 
-  before_action :require_write_access!, only: [ :new, :create, :edit, :update, :destroy ]
   before_action :set_contact_point, only: [ :show, :edit, :update, :destroy ]
 
   def index
     @organizations = Organization.ordered if current_user.admin_level1?
-    @q = contact_points_scope.ransack(params[:q])
+    @q = ContactPoint.accessible_by(current_ability).ransack(params[:q])
     @pagy, @contact_points = pagy(
       @q.result.ordered.includes(:organization, :meters, :personnel_records),
       limit: 25
     )
   end
 
-  def show; end
+  def show
+    authorize! :read, @contact_point
+  end
 
   def new
+    authorize! :create, ContactPoint
     @contact_point = ContactPoint.new
     @organizations = Organization.ordered if current_user.admin_level1?
   end
 
   def create
     @contact_point = build_contact_point
+    authorize! :create, @contact_point
     if @contact_point.save
       redirect_to contact_points_path, notice: t("flash.contact_points.created")
     else
@@ -31,10 +34,12 @@ class ContactPointsController < ApplicationController
   end
 
   def edit
+    authorize! :update, @contact_point
     @organizations = Organization.ordered if current_user.admin_level1?
   end
 
   def update
+    authorize! :update, @contact_point
     if @contact_point.update(contact_point_params)
       redirect_to contact_points_path, notice: t("flash.contact_points.updated")
     else
@@ -44,6 +49,7 @@ class ContactPointsController < ApplicationController
   end
 
   def destroy
+    authorize! :destroy, @contact_point
     if @contact_point.destroy
       redirect_to contact_points_path, notice: t("flash.contact_points.destroyed")
     else
@@ -53,16 +59,8 @@ class ContactPointsController < ApplicationController
 
   private
 
-  def contact_points_scope
-    if current_user.admin_level1?
-      ContactPoint.all
-    else
-      current_user.organization.contact_points
-    end
-  end
-
   def set_contact_point
-    @contact_point = contact_points_scope.find(params[:id])
+    @contact_point = ContactPoint.find(params[:id])
   end
 
   def build_contact_point

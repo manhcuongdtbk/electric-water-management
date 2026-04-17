@@ -6,6 +6,10 @@ class ApplicationController < ActionController::Base
   before_action :check_force_password_change!
   before_action :restrict_tech_to_user_management!
 
+  rescue_from CanCan::AccessDenied do |_exception|
+    redirect_to root_path, alert: t("flash.access_denied")
+  end
+
   protected
 
   def after_sign_in_path_for(resource)
