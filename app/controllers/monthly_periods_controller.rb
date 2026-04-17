@@ -1,5 +1,5 @@
 class MonthlyPeriodsController < ApplicationController
-  before_action :require_admin_level1!
+  before_action :authorize_period_manage
 
   def create
     @period = MonthlyPeriod.new(period_params.merge(locked: false))
@@ -29,10 +29,8 @@ class MonthlyPeriodsController < ApplicationController
 
   private
 
-  def require_admin_level1!
-    return if current_user.admin_level1?
-
-    redirect_to root_path, alert: t("flash.unauthorized")
+  def authorize_period_manage
+    authorize! :manage, MonthlyPeriod
   end
 
   def period_params
