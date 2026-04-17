@@ -32,7 +32,8 @@ RSpec.describe "Meters", type: :request do
       it "cannot access meters of another org's contact_point" do
         sign_in admin_unit_a
         get contact_point_meters_path(cp_b)
-        expect(response).to have_http_status(:not_found)
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
       end
     end
 
@@ -116,7 +117,8 @@ RSpec.describe "Meters", type: :request do
         expect {
           post contact_point_meters_path(cp_b), params: valid_params
         }.not_to change(Meter, :count)
-        expect(response).to have_http_status(:not_found)
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
       end
 
       it "re-renders form on invalid data (blank name)" do
@@ -206,7 +208,8 @@ RSpec.describe "Meters", type: :request do
     it "blocks admin_unit from editing another org's meter" do
       sign_in admin_unit_a
       get edit_contact_point_meter_path(cp_b, meter_b)
-      expect(response).to have_http_status(:not_found)
+      expect(response).to redirect_to(root_path)
+      expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
     end
   end
 
@@ -228,7 +231,8 @@ RSpec.describe "Meters", type: :request do
         sign_in admin_unit_a
         patch contact_point_meter_path(cp_b, meter_b),
               params: { meter: { name: "Hacked" } }
-        expect(response).to have_http_status(:not_found)
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
         expect(meter_b.reload.name).not_to eq("Hacked")
       end
 
@@ -257,7 +261,8 @@ RSpec.describe "Meters", type: :request do
       it "cannot destroy another org's meter" do
         sign_in admin_unit_a
         delete contact_point_meter_path(cp_b, meter_b)
-        expect(response).to have_http_status(:not_found)
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
         expect { meter_b.reload }.not_to raise_error
       end
     end

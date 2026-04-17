@@ -1,19 +1,21 @@
 class MetersController < ApplicationController
-  before_action :require_write_access!, only: [ :new, :create, :edit, :update, :destroy ]
   before_action :set_contact_point
   before_action :set_meter, only: [ :edit, :update, :destroy ]
 
   def index
+    authorize! :read, @contact_point
     @meters = @contact_point.meters.ordered
   end
 
   def new
+    authorize! :create, Meter
     @meter = @contact_point.meters.new
   end
 
   def create
     @meter = @contact_point.meters.new(meter_params)
     @meter.organization = @contact_point.organization
+    authorize! :create, @meter
     if @meter.save
       redirect_to contact_point_meters_path(@contact_point), notice: t("flash.meters.created")
     else
@@ -21,9 +23,12 @@ class MetersController < ApplicationController
     end
   end
 
-  def edit; end
+  def edit
+    authorize! :update, @meter
+  end
 
   def update
+    authorize! :update, @meter
     if @meter.update(meter_params)
       redirect_to contact_point_meters_path(@contact_point), notice: t("flash.meters.updated")
     else
@@ -32,6 +37,7 @@ class MetersController < ApplicationController
   end
 
   def destroy
+    authorize! :destroy, @meter
     if @meter.destroy
       redirect_to contact_point_meters_path(@contact_point), notice: t("flash.meters.destroyed")
     else
@@ -41,16 +47,8 @@ class MetersController < ApplicationController
 
   private
 
-  def contact_points_scope
-    if current_user.admin_level1?
-      ContactPoint.all
-    else
-      current_user.organization.contact_points
-    end
-  end
-
   def set_contact_point
-    @contact_point = contact_points_scope.includes(:organization).find(params[:contact_point_id])
+    @contact_point = ContactPoint.includes(:organization).find(params[:contact_point_id])
   end
 
   def set_meter
