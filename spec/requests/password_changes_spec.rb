@@ -138,6 +138,17 @@ RSpec.describe "PasswordChanges", type: :request do
         expect(response).to redirect_to(root_path)
       end
     end
+
+    context "tech user with force_password_change = false signs in" do
+      let(:tech) { create(:user, :tech, organization: division, force_password_change: false) }
+
+      it "redirects to users_path without unauthorized flash" do
+        post user_session_path, params: {
+          user: { email: tech.email, password: "Password1!" }
+        }
+        expect(response).to redirect_to(users_path)
+      end
+    end
   end
 
   # ---------------------------------------------------------------------------
