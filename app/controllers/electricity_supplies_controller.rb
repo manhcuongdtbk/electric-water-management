@@ -9,7 +9,7 @@ class ElectricitySuppliesController < ApplicationController
   end
 
   def update
-    authorize! :update_unit_config, UnitConfig
+    authorize! :update_electricity_supply, UnitConfig
 
     return redirect_to electricity_supply_path, alert: t("electricity_supplies.no_period") if @period.nil?
     return redirect_to electricity_supply_path, alert: t("electricity_supplies.no_org") if @target_org.nil?

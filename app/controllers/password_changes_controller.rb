@@ -1,6 +1,4 @@
 class PasswordChangesController < ApplicationController
-  skip_before_action :restrict_tech_to_user_management!
-
   def edit
     @user = current_user
   end

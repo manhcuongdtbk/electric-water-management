@@ -4,6 +4,7 @@ class ContactPointsController < ApplicationController
   before_action :set_contact_point, only: [ :show, :edit, :update, :destroy ]
 
   def index
+    authorize! :read, ContactPoint
     @organizations = Organization.ordered if current_user.admin_level1?
     @q = ContactPoint.accessible_by(current_ability).ransack(params[:q])
     @pagy, @contact_points = pagy(

@@ -31,7 +31,8 @@ class Ability
     can :manage, MonthlyCalculation, contact_point: { organization_id: org_id }
 
     can :read, UnitConfig, organization_id: org_id
-    can :update_unit_config, UnitConfig, organization_id: org_id
+    can :update_unit_config,        UnitConfig, organization_id: org_id
+    can :update_electricity_supply, UnitConfig, organization_id: org_id
   end
 
   def commander_abilities(user)
