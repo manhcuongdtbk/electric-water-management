@@ -279,11 +279,11 @@ RSpec.describe "MonthlySummary", type: :request do
     end
 
     context "as commander" do
-      it "redirects with unauthorized alert" do
+      it "redirects with access_denied alert" do
         sign_in commander
         post recalculate_monthly_summary_path, params: { period_id: period.id }
-        expect(response).to redirect_to(monthly_summary_path)
-        expect(flash[:alert]).to eq(I18n.t("flash.unauthorized"))
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
       end
     end
 

@@ -4,18 +4,16 @@
 # Hiển thị kết quả tính toán từ CalculationEngine cho một đơn vị và một kỳ tháng.
 # Nếu chưa có dữ liệu → tự động chạy engine. Nút "Tính lại" cho admin.
 class MonthlySummariesController < ApplicationController
-  before_action :require_access!
   before_action :set_period
   before_action :set_target_org
 
   def show
+    authorize! :read, MonthlyCalculation
     load_or_calculate if @period && @target_org
   end
 
   def recalculate
-    unless current_user.admin_level1? || current_user.admin_unit?
-      return redirect_to monthly_summary_path, alert: t("flash.unauthorized")
-    end
+    authorize! :manage, MonthlyCalculation
 
     if @period.nil?
       return redirect_to monthly_summary_path, alert: t("monthly_summary.no_period")
@@ -25,21 +23,18 @@ class MonthlySummariesController < ApplicationController
       return redirect_to monthly_summary_path, alert: t("monthly_summary.no_org")
     end
 
-    CalculationEngine.new(organization: @target_org, monthly_period: @period).call
+    begin
+      CalculationEngine.new(organization: @target_org, monthly_period: @period).call
+    rescue => e
+      return redirect_to monthly_summary_path(period_id: @period.id, org_id: effective_org_id),
+                         alert: t("flash.monthly_summary.recalculate_failed", error: e.message)
+    end
+
     redirect_to monthly_summary_path(period_id: @period.id, org_id: effective_org_id),
                 notice: t("flash.monthly_summary.recalculated")
-  rescue => e
-    redirect_to monthly_summary_path(period_id: @period.id, org_id: effective_org_id),
-                alert: t("flash.monthly_summary.recalculate_failed", error: e.message)
   end
 
   private
-
-  def require_access!
-    return if current_user.admin_level1? || current_user.admin_unit? || current_user.commander?
-
-    redirect_to root_path, alert: t("flash.unauthorized")
-  end
 
   def set_period
     @periods = MonthlyPeriod.ordered
