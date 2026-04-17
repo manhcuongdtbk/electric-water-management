@@ -263,7 +263,7 @@ RSpec.describe "MeterReadings", type: :request do
         sign_in commander
         patch meter_readings_path, params: valid_params
         expect(response).to redirect_to(root_path)
-        expect(flash[:alert]).to eq(I18n.t("flash.unauthorized"))
+        expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
       end
     end
 
