@@ -84,7 +84,7 @@ vi:
       invalid: "Email hoặc mật khẩu không đúng. Vui lòng thử lại."
       last_attempt: "Bạn còn một lần thử. Tài khoản sẽ bị khóa nếu đăng nhập sai."
       not_found_in_database: "Email hoặc mật khẩu không đúng. Vui lòng thử lại."
-      timeout: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."
+      timeout: "Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại."
       already_authenticated: "Bạn đã đăng nhập rồi."
     sessions:
       new:

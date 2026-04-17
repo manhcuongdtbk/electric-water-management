@@ -97,8 +97,15 @@ RSpec.describe "M1+M2 smoke", type: :system do
         expect(page).to have_css("input#personnel_rank#{i}_count")
       end
 
-      # Fill 7 ranks (Stimulus calculates on input)
+      # Fill rank1 first, then confirm Stimulus has connected and is responding
+      # to input events before filling the remaining 6 fields. This eliminates
+      # the race where Chrome processes events before the controller connects.
       fill_in "personnel_rank1_count", with: 1
+      expect(page).to have_css(
+        "[data-personnel-calculator-target='totalCount']",
+        exact_text: "1"
+      )
+
       fill_in "personnel_rank2_count", with: 2
       fill_in "personnel_rank3_count", with: 3
       fill_in "personnel_rank4_count", with: 5
@@ -106,8 +113,8 @@ RSpec.describe "M1+M2 smoke", type: :system do
       fill_in "personnel_rank6_count", with: 20
       fill_in "personnel_rank7_count", with: 50
 
-      # Stimulus target: totalCount — `exact_text` avoids substring match on
-      # "910" / "1910"; `have_css` auto-retries so we wait for the DOM update.
+      # `exact_text` avoids substring match on "910" / "1910";
+      # `have_css` auto-retries so we wait for the final DOM update.
       expect(page).to have_css(
         "[data-personnel-calculator-target='totalCount']",
         exact_text: "91"

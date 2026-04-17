@@ -1,6 +1,6 @@
 class User < ApplicationRecord
   devise :database_authenticatable, :recoverable, :rememberable, :validatable,
-         :trackable, :lockable
+         :trackable, :lockable, :timeoutable
 
   has_paper_trail
 
