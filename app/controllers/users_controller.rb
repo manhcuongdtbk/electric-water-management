@@ -1,5 +1,5 @@
 class UsersController < ApplicationController
-  before_action :require_user_management_access!
+  before_action :authorize_user_management
   before_action :set_user, only: [ :edit, :update, :lock, :unlock ]
 
   def index
@@ -60,10 +60,8 @@ class UsersController < ApplicationController
 
   private
 
-  def require_user_management_access!
-    return if current_user.admin_level1? || current_user.tech?
-
-    redirect_to root_path, alert: t("flash.unauthorized")
+  def authorize_user_management
+    authorize! :manage, User
   end
 
   def set_user
