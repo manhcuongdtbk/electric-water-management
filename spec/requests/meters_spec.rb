@@ -90,6 +90,13 @@ RSpec.describe "Meters", type: :request do
       get new_contact_point_meter_path(cp_a)
       expect(response).to redirect_to(users_path)
     end
+
+    it "blocks admin_unit from viewing new form under another org's contact_point" do
+      sign_in admin_unit_a
+      get new_contact_point_meter_path(cp_b)
+      expect(response).to redirect_to(root_path)
+      expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
+    end
   end
 
   # ---------------------------------------------------------------------------

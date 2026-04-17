@@ -1,9 +1,9 @@
 class MetersController < ApplicationController
   before_action :set_contact_point
+  before_action :authorize_contact_point_read
   before_action :set_meter, only: [ :edit, :update, :destroy ]
 
   def index
-    authorize! :read, @contact_point
     @meters = @contact_point.meters.ordered
   end
 
@@ -49,6 +49,10 @@ class MetersController < ApplicationController
 
   def set_contact_point
     @contact_point = ContactPoint.includes(:organization).find(params[:contact_point_id])
+  end
+
+  def authorize_contact_point_read
+    authorize! :read, @contact_point
   end
 
   def set_meter
