@@ -11,6 +11,8 @@ class ApplicationController < ActionController::Base
   def after_sign_in_path_for(resource)
     if resource.force_password_change?
       edit_password_change_path
+    elsif resource.tech?
+      users_path
     else
       stored_location_for(resource) || root_path
     end
