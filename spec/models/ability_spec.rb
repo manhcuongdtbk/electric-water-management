@@ -44,7 +44,7 @@ RSpec.describe Ability do
     it { is_expected.to be_able_to(:manage, calc_b) }
     it { is_expected.to be_able_to(:manage, config_a) }
     it { is_expected.to be_able_to(:manage, division_config) }
-    it { is_expected.to be_able_to(:update_unit_config, config_a) }
+    it { is_expected.not_to be_able_to(:update_unit_config, config_a) }
     it { is_expected.to be_able_to(:manage, User.new) }
     it { is_expected.to be_able_to(:manage, MonthlyPeriod.new) }
     it { is_expected.to be_able_to(:manage, RankQuota.new) }

@@ -16,6 +16,9 @@ class Ability
 
   def admin_level1_abilities
     can :manage, :all
+    # Unit config section is for admin_unit only — admin_level1 manages via the
+    # division section instead.
+    cannot :update_unit_config, UnitConfig
   end
 
   def admin_unit_abilities(user)

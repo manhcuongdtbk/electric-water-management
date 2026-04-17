@@ -1,16 +1,19 @@
 class UnitConfigsController < ApplicationController
-  before_action :require_config_access!
   before_action :set_period
   before_action :set_division
   before_action :set_configs
 
-  def show; end
+  def show
+    authorize! :read, UnitConfig
+  end
 
   def update
     case params[:section]
     when "division"
+      authorize! :update, UnitConfig
       update_division_config
     when "unit"
+      authorize! :update_unit_config, UnitConfig
       update_unit_config
     else
       redirect_to unit_config_path, alert: t("flash.unauthorized")
@@ -75,18 +78,7 @@ class UnitConfigsController < ApplicationController
     ).index_by(&:contact_point_id)
   end
 
-  # --- Division config update (admin_level1 only) ---
-  def require_config_access!
-    return if current_user.admin_level1? || current_user.admin_unit? || current_user.commander?
-
-    redirect_to root_path, alert: t("flash.unauthorized")
-  end
-
   def update_division_config
-    unless current_user.admin_level1?
-      return redirect_to unit_config_path, alert: t("flash.unauthorized")
-    end
-
     if @division_config.update(division_config_params)
       redirect_to unit_config_path(period_id: @period&.id),
                   notice: t("flash.unit_configs.division_updated")
@@ -95,12 +87,7 @@ class UnitConfigsController < ApplicationController
     end
   end
 
-  # --- Unit config update (admin_unit only) ---
   def update_unit_config
-    unless current_user.admin_unit?
-      return redirect_to unit_config_path, alert: t("flash.unauthorized")
-    end
-
     UnitConfig.transaction do
       @unit_config.assign_attributes(unit_config_params)
       @unit_config.save!

@@ -109,8 +109,8 @@ RSpec.describe "UnitConfigs", type: :request do
       it "is redirected — cannot update division config" do
         sign_in admin_unit_a
         patch unit_config_path, params: valid_division_params
-        expect(response).to redirect_to(unit_config_path)
-        expect(flash[:alert]).to eq(I18n.t("flash.unauthorized"))
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
       end
     end
 
@@ -118,8 +118,8 @@ RSpec.describe "UnitConfigs", type: :request do
       it "is redirected" do
         sign_in commander
         patch unit_config_path, params: valid_division_params
-        expect(response).to redirect_to(unit_config_path)
-        expect(flash[:alert]).to eq(I18n.t("flash.unauthorized"))
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
       end
     end
   end
@@ -193,8 +193,8 @@ RSpec.describe "UnitConfigs", type: :request do
       it "is redirected — cannot update unit config" do
         sign_in admin1
         patch unit_config_path, params: valid_unit_params
-        expect(response).to redirect_to(unit_config_path)
-        expect(flash[:alert]).to eq(I18n.t("flash.unauthorized"))
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
       end
     end
 
@@ -202,8 +202,8 @@ RSpec.describe "UnitConfigs", type: :request do
       it "is redirected" do
         sign_in commander
         patch unit_config_path, params: valid_unit_params
-        expect(response).to redirect_to(unit_config_path)
-        expect(flash[:alert]).to eq(I18n.t("flash.unauthorized"))
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
       end
     end
   end
