@@ -186,7 +186,7 @@ RSpec.describe "ElectricitySupplies", type: :request do
         sign_in commander
         patch electricity_supply_path, params: valid_params
         expect(response).to redirect_to(root_path)
-        expect(flash[:alert]).to eq(I18n.t("flash.unauthorized"))
+        expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
       end
     end
 
