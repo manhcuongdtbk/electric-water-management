@@ -59,7 +59,7 @@
   </div>
 <% end %>
 
-<% can_write = current_user.admin_level1? || current_user.admin_unit? %>
+<% can_write = can? :update, MeterReading %>
 
 <%= form_with url: meter_readings_path, method: :patch do %>
   <%= hidden_field_tag :period_id, @period.id %>

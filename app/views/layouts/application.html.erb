@@ -24,7 +24,7 @@
           </div>
 
           <nav class="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto">
-            <% unless current_user.tech? %>
+            <% if can? :read, ContactPoint %>
               <%= link_to contact_points_path,
                     class: "flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-colors #{controller_name == 'contact_points' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}" do %>
                 <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -33,7 +33,7 @@
                 <%= t("nav.contact_points") %>
               <% end %>
             <% end %>
-            <% if current_user.admin_level1? || current_user.admin_unit? || current_user.commander? %>
+            <% if can? :read, UnitConfig %>
               <%= link_to unit_config_path,
                     class: "flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-colors #{controller_name == 'unit_configs' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}" do %>
                 <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -42,6 +42,8 @@
                 </svg>
                 <%= t("nav.unit_config") %>
               <% end %>
+            <% end %>
+            <% if can? :read, MeterReading %>
               <%= link_to meter_readings_path,
                     class: "flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-colors #{controller_name == 'meter_readings' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}" do %>
                 <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -49,6 +51,8 @@
                 </svg>
                 <%= t("nav.meter_readings") %>
               <% end %>
+            <% end %>
+            <% if can? :read, Personnel %>
               <%= link_to personnel_review_path,
                     class: "flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-colors #{controller_name == 'personnel_reviews' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}" do %>
                 <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -56,6 +60,8 @@
                 </svg>
                 <%= t("nav.personnel_review") %>
               <% end %>
+            <% end %>
+            <% if can? :read, MonthlyCalculation %>
               <%= link_to monthly_summary_path,
                     class: "flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-colors #{controller_name == 'monthly_summaries' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}" do %>
                 <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,7 +70,7 @@
                 <%= t("nav.monthly_summary") %>
               <% end %>
             <% end %>
-            <% if current_user.admin_level1? || current_user.tech? %>
+            <% if can? :manage, User %>
               <%= link_to users_path,
                     class: "flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-colors #{controller_name == 'users' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}" do %>
                 <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

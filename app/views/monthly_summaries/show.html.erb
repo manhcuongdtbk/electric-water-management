@@ -29,7 +29,7 @@
       </div>
     <% end %>
 
-    <% if @period && @target_org && (current_user.admin_level1? || current_user.admin_unit?) %>
+    <% if @period && @target_org && can?(:manage, MonthlyCalculation) %>
       <div class="ml-auto">
         <%= form_with url: recalculate_monthly_summary_path, method: :post do %>
           <%= hidden_field_tag :period_id, @period.id %>

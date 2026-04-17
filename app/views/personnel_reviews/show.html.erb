@@ -114,7 +114,7 @@
     <%= t("personnel_reviews.show.no_contact_points") %>
   </div>
 <% else %>
-  <% can_write = current_user.admin_level1? || current_user.admin_unit? %>
+  <% can_write = can? :update, Personnel %>
   <% can_review = can_write && !@period.locked? %>
 
   <%# Summary counts %>

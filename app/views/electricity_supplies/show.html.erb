@@ -51,7 +51,7 @@
   </div>
 
   <div class="px-5 py-4">
-    <% if current_user.admin_unit? || current_user.admin_level1? %>
+    <% if can? :update_electricity_supply, UnitConfig %>
       <%= form_with url: electricity_supply_path, method: :patch do %>
         <%= hidden_field_tag :period_id, @period.id %>
         <%= hidden_field_tag :org_id, @target_org.id if current_user.admin_level1? %>

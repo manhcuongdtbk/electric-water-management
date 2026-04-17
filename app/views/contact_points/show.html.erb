@@ -46,7 +46,7 @@
   </div>
 
   <div class="mt-4 flex gap-3">
-    <% if current_user.admin_level1? || current_user.admin_unit? %>
+    <% if can? :update, @contact_point %>
       <%= link_to t("contact_points.actions.edit"), edit_contact_point_path(@contact_point),
             class: "px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-md hover:bg-amber-600 transition-colors" %>
       <%= button_to t("contact_points.actions.delete"), contact_point_path(@contact_point),
