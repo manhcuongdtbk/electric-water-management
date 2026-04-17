@@ -1,17 +1,15 @@
 class ElectricitySuppliesController < ApplicationController
-  before_action :require_access!
   before_action :set_period
   before_action :set_target_org
 
   def show
+    authorize! :read, UnitConfig
     set_config
     @history = load_history
   end
 
   def update
-    unless current_user.admin_level1? || current_user.admin_unit?
-      return redirect_to root_path, alert: t("flash.unauthorized")
-    end
+    authorize! :update_electricity_supply, UnitConfig
 
     return redirect_to electricity_supply_path, alert: t("electricity_supplies.no_period") if @period.nil?
     return redirect_to electricity_supply_path, alert: t("electricity_supplies.no_org") if @target_org.nil?
@@ -28,12 +26,6 @@ class ElectricitySuppliesController < ApplicationController
   end
 
   private
-
-  def require_access!
-    return if current_user.admin_level1? || current_user.admin_unit? || current_user.commander?
-
-    redirect_to root_path, alert: t("flash.unauthorized")
-  end
 
   def set_period
     @periods = MonthlyPeriod.ordered

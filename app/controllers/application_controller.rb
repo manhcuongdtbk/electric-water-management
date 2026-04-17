@@ -4,17 +4,30 @@ class ApplicationController < ActionController::Base
 
   before_action :authenticate_user!
   before_action :check_force_password_change!
-  before_action :restrict_tech_to_user_management!
+
+  rescue_from CanCan::AccessDenied do |_exception|
+    if current_user&.tech?
+      # Tech users work in /users; silently bounce them back instead of showing
+      # a scary "không có quyền" flash when they hit a business URL.
+      redirect_to users_path
+    else
+      redirect_to root_path, alert: t("flash.access_denied")
+    end
+  end
 
   protected
 
   def after_sign_in_path_for(resource)
-    if resource.force_password_change?
+    post_sign_in_destination_for(resource)
+  end
+
+  def post_sign_in_destination_for(user)
+    if user.force_password_change?
       edit_password_change_path
-    elsif resource.tech?
+    elsif user.tech?
       users_path
     else
-      stored_location_for(resource) || root_path
+      stored_location_for(user) || root_path
     end
   end
 
@@ -23,18 +36,5 @@ class ApplicationController < ActionController::Base
     return if controller_name == "password_changes"
 
     redirect_to edit_password_change_path, alert: t("flash.password_changes.required")
-  end
-
-  def require_write_access!
-    return if current_user.admin_level1? || current_user.admin_unit?
-
-    redirect_to root_path, alert: t("flash.unauthorized")
-  end
-
-  def restrict_tech_to_user_management!
-    return unless current_user&.tech?
-    return if controller_name == "users"
-
-    redirect_to users_path, alert: t("flash.unauthorized")
   end
 end

@@ -1,19 +1,13 @@
 class PersonnelReviewsController < ApplicationController
-  before_action :require_access!
   before_action :set_period
   before_action :set_target_org
 
   def show
+    authorize! :read, Personnel
     set_personnel_rows if @period && @target_org
   end
 
   private
-
-  def require_access!
-    return if current_user.admin_level1? || current_user.admin_unit? || current_user.commander?
-
-    redirect_to root_path, alert: t("flash.unauthorized")
-  end
 
   def set_period
     @periods = MonthlyPeriod.ordered

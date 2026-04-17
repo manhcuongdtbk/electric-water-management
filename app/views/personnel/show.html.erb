@@ -36,7 +36,7 @@
 <% else %>
   <%# Quotas as JSON for Stimulus (from DB, not hardcoded) %>
   <% quotas_json = @rank_quotas.transform_values { |v| v&.to_f || 0 }.to_json %>
-  <% can_edit = current_user.admin_level1? || current_user.admin_unit? %>
+  <% can_edit = can? :update, @contact_point %>
 
   <div data-controller="personnel-calculator"
        data-personnel-calculator-quotas-value="<%= quotas_json %>"

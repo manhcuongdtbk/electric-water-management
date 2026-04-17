@@ -45,8 +45,8 @@
   </div>
 
   <div class="px-5 py-4">
-    <% if current_user.admin_level1? %>
-      <%# Editable form for admin_level1 %>
+    <% if can? :update, UnitConfig %>
+      <%# Editable division-level form — admin_level1 only %>
       <%= form_with url: unit_config_path, method: :patch, class: "space-y-4" do |f| %>
         <%= hidden_field_tag :period_id, @period.id %>
         <%= hidden_field_tag :section, "division" %>
@@ -147,7 +147,7 @@
         </tbody>
       </table>
 
-    <% elsif current_user.admin_unit? %>
+    <% elsif can? :update_unit_config, UnitConfig %>
       <%# admin_unit: editable form %>
       <%# Personnel counts as JSON for Stimulus (keyed by contact_point_id as string) %>
       <% personnel_json = @personnel_counts.transform_keys(&:to_s).to_json %>

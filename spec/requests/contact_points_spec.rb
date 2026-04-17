@@ -72,7 +72,8 @@ RSpec.describe "ContactPoints", type: :request do
       it "cannot access another organization's contact point" do
         sign_in admin_unit_a
         get contact_point_path(cp_b)
-        expect(response).to have_http_status(:not_found)
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
       end
     end
 
@@ -166,7 +167,8 @@ RSpec.describe "ContactPoints", type: :request do
       it "cannot update another org's contact point" do
         sign_in admin_unit_a
         patch contact_point_path(cp_b), params: { contact_point: { name: "Hacked" } }
-        expect(response).to have_http_status(:not_found)
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
         expect(cp_b.reload.name).not_to eq("Hacked")
       end
     end
@@ -185,7 +187,8 @@ RSpec.describe "ContactPoints", type: :request do
       it "cannot destroy another org's contact point" do
         sign_in admin_unit_a
         delete contact_point_path(cp_b)
-        expect(response).to have_http_status(:not_found)
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
         expect { cp_b.reload }.not_to raise_error
       end
     end

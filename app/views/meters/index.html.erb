@@ -14,7 +14,7 @@
     <%= t("meters.index.title") %>
     <span class="text-base font-normal text-gray-500">— <%= @contact_point.name %></span>
   </h1>
-  <% if current_user.admin_level1? || current_user.admin_unit? %>
+  <% if can? :create, Meter %>
     <%= link_to t("meters.index.new_button"), new_contact_point_meter_path(@contact_point),
           class: "inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors" %>
   <% end %>
@@ -51,7 +51,7 @@
             <td class="px-4 py-3 text-gray-600"><%= meter.serial_number.presence || "—" %></td>
             <td class="px-4 py-3 text-center">
               <div class="flex items-center justify-center gap-2">
-                <% if current_user.admin_level1? || current_user.admin_unit? %>
+                <% if can? :update, meter %>
                   <%= link_to t("meters.actions.edit"), edit_contact_point_meter_path(@contact_point, meter),
                         class: "text-xs text-amber-600 hover:text-amber-800 font-medium" %>
                   <%= button_to t("meters.actions.delete"), contact_point_meter_path(@contact_point, meter),

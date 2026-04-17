@@ -102,7 +102,8 @@ RSpec.describe "PersonnelReviews", type: :request do
           patch toggle_review_contact_point_personnel_path(cp_b),
                 params: { period_id: period.id }
         }.not_to(change { Personnel.find_by(contact_point: cp_b, monthly_period: period)&.reviewed_at })
-        expect(response).to have_http_status(:not_found)
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
       end
     end
 

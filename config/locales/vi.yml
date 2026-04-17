@@ -105,6 +105,7 @@ vi:
 
   flash:
     unauthorized: "Bạn không có quyền thực hiện thao tác này."
+    access_denied: "Bạn không có quyền truy cập."
     password_changes:
       required: "Bạn phải đổi mật khẩu trước khi sử dụng hệ thống."
       success: "Đổi mật khẩu thành công. Chào mừng bạn!"

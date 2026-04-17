@@ -1,16 +1,14 @@
 class MeterReadingsController < ApplicationController
-  before_action :require_access!
   before_action :set_period
   before_action :set_target_org
 
   def show
+    authorize! :read, MeterReading
     set_grouped_readings
   end
 
   def update
-    unless current_user.admin_level1? || current_user.admin_unit?
-      return redirect_to root_path, alert: t("flash.unauthorized")
-    end
+    authorize! :update, MeterReading
 
     if @period.nil?
       return redirect_to meter_readings_path, alert: t("meter_readings.no_period")
@@ -35,12 +33,6 @@ class MeterReadingsController < ApplicationController
   end
 
   private
-
-  def require_access!
-    return if current_user.admin_level1? || current_user.admin_unit? || current_user.commander?
-
-    redirect_to root_path, alert: t("flash.unauthorized")
-  end
 
   def set_period
     @periods = MonthlyPeriod.ordered
