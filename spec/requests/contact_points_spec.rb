@@ -84,6 +84,12 @@ RSpec.describe "ContactPoints", type: :request do
         expect(response).to have_http_status(:ok)
       end
     end
+
+    context "when contact_point does not exist (existence enumeration)" do
+      before  { sign_in admin_unit_a }
+      subject { get contact_point_path(id: 999_999) }
+      it_behaves_like "denies cross-org parent access"
+    end
   end
 
   describe "GET /contact_points/new" do
@@ -172,6 +178,12 @@ RSpec.describe "ContactPoints", type: :request do
         expect(cp_b.reload.name).not_to eq("Hacked")
       end
     end
+
+    context "when contact_point does not exist (existence enumeration)" do
+      before  { sign_in admin_unit_a }
+      subject { patch contact_point_path(id: 999_999), params: { contact_point: { name: "X" } } }
+      it_behaves_like "denies cross-org parent access"
+    end
   end
 
   describe "DELETE /contact_points/:id" do
@@ -191,6 +203,12 @@ RSpec.describe "ContactPoints", type: :request do
         expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
         expect { cp_b.reload }.not_to raise_error
       end
+    end
+
+    context "when contact_point does not exist (existence enumeration)" do
+      before  { sign_in admin_unit_a }
+      subject { delete contact_point_path(id: 999_999) }
+      it_behaves_like "denies cross-org parent access"
     end
 
     context "as commander" do
