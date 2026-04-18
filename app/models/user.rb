@@ -16,6 +16,7 @@ class User < ApplicationRecord
   validates :role, presence: true
   validates :organization_id, presence: true
   validate :organization_must_be_unit, if: -> { admin_unit? || commander? }
+  validate :password_complexity
 
   # Scopes
   scope :by_organization, ->(org_id) { where(organization_id: org_id) }
@@ -29,5 +30,12 @@ class User < ApplicationRecord
     return if Organization.where(id: organization_id, level: :unit).exists?
 
     errors.add(:organization, :invalid)
+  end
+
+  def password_complexity
+    return if password.blank?
+    return if password.match?(/\A(?=.*[A-Za-z])(?=.*\d).+\z/)
+
+    errors.add(:password, :complexity)
   end
 end

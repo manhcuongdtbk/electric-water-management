@@ -20,6 +20,29 @@ RSpec.describe User, type: :model do
     end
   end
 
+  describe "password complexity" do
+    it "rejects a password with only letters" do
+      user = build(:user, password: "abcdefgh", password_confirmation: "abcdefgh")
+      expect(user).not_to be_valid
+      expect(user.errors[:password]).to include("phải có ít nhất 1 chữ và 1 số")
+    end
+
+    it "rejects a password with only digits" do
+      user = build(:user, password: "12345678", password_confirmation: "12345678")
+      expect(user).not_to be_valid
+    end
+
+    it "rejects a password shorter than 8 characters" do
+      user = build(:user, password: "abc123", password_confirmation: "abc123")
+      expect(user).not_to be_valid
+    end
+
+    it "accepts a password with at least 8 characters containing letters and digits" do
+      user = build(:user, password: "abc12345", password_confirmation: "abc12345")
+      expect(user).to be_valid
+    end
+  end
+
   describe "enums" do
     it {
       is_expected.to define_enum_for(:role)
