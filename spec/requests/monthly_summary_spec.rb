@@ -73,6 +73,16 @@ RSpec.describe "MonthlySummary", type: :request do
         expect(response.body).not_to include(cp_b.name)
       end
 
+      # Regression lock: set_target_org forces admin_unit to current_user.organization
+      # regardless of params[:org_id]. If someone refactors set_target_org to honor
+      # the param for all roles, this test catches the cross-org leak.
+      it "ignores params[:org_id] and scopes to own org" do
+        sign_in admin_unit_a
+        get monthly_summary_path(period_id: period.id, org_id: org_b.id)
+        expect(response.body).to include(cp_a.name)
+        expect(response.body).not_to include(cp_b.name)
+      end
+
       it "displays the 22-column table structure" do
         sign_in admin_unit_a
         get monthly_summary_path(period_id: period.id)

@@ -33,6 +33,20 @@ RSpec.describe "ElectricitySupplies", type: :request do
         # org_b's data should not appear
         expect(response.body).not_to include(org_b.name)
       end
+
+      # Regression lock: set_target_org forces admin_unit to current_user.organization
+      # regardless of params[:org_id]. If someone refactors set_target_org to honor
+      # the param for all roles, this test catches the cross-org leak.
+      it "ignores params[:org_id] and uses own org config" do
+        create(:unit_config, organization: org_a, monthly_period: period,
+               electricity_supply_kw: 11_111)
+        create(:unit_config, organization: org_b, monthly_period: period,
+               electricity_supply_kw: 22_222)
+        sign_in admin_unit_a
+        get electricity_supply_path(period_id: period.id, org_id: org_b.id)
+        expect(response.body).to include("11111")
+        expect(response.body).not_to include("22222")
+      end
     end
 
     context "as admin_level1" do

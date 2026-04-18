@@ -30,11 +30,10 @@ RSpec.describe "Personnel", type: :request do
         expect(response).to have_http_status(:ok)
       end
 
-      it "cannot access another org's contact_point" do
-        sign_in admin_unit_a
-        get contact_point_personnel_path(cp_b, period_id: period.id)
-        expect(response).to redirect_to(root_path)
-        expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
+      context "when contact_point belongs to another org" do
+        before  { sign_in admin_unit_a }
+        subject { get contact_point_personnel_path(cp_b, period_id: period.id) }
+        it_behaves_like "denies cross-org parent access"
       end
 
       it "renders without period_id param (uses first period)" do
@@ -73,6 +72,12 @@ RSpec.describe "Personnel", type: :request do
         get contact_point_personnel_path(cp_a)
         expect(response).to redirect_to(new_user_session_path)
       end
+    end
+
+    context "when contact_point does not exist (existence enumeration)" do
+      before  { sign_in admin_unit_a }
+      subject { get contact_point_personnel_path(contact_point_id: 999_999, period_id: period.id) }
+      it_behaves_like "denies cross-org parent access"
     end
 
     context "with no monthly periods" do
@@ -127,13 +132,15 @@ RSpec.describe "Personnel", type: :request do
         expect(existing.reload.rank7_count).to eq(20)
       end
 
-      it "scopes correctly — cannot update another org's contact_point" do
-        sign_in admin_unit_a
-        expect {
-          patch contact_point_personnel_path(cp_b), params: valid_params
-        }.not_to change(Personnel, :count)
-        expect(response).to redirect_to(root_path)
-        expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
+      context "when targeting another org's contact_point" do
+        before  { sign_in admin_unit_a }
+        subject { patch contact_point_personnel_path(cp_b), params: valid_params }
+
+        it_behaves_like "denies cross-org parent access"
+
+        it "does not create or update any personnel record" do
+          expect { subject }.not_to change(Personnel, :count)
+        end
       end
 
       it "rejects negative counts" do

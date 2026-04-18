@@ -41,6 +41,17 @@ RSpec.describe "MeterReadings", type: :request do
         get meter_readings_path(period_id: period.id)
         expect(response.body).not_to include(other_meter.name)
       end
+
+      # Regression lock: set_target_org forces admin_unit to current_user.organization
+      # regardless of params[:org_id]. If someone refactors set_target_org to honor
+      # the param for all roles, this test catches the cross-org leak.
+      it "ignores params[:org_id] and scopes to own org" do
+        other_meter = create(:meter, organization: org_b)
+        sign_in admin_unit_a
+        get meter_readings_path(period_id: period.id, org_id: org_b.id)
+        expect(response.body).to include(meter_a1.name)
+        expect(response.body).not_to include(other_meter.name)
+      end
     end
 
     context "as admin_level1" do
