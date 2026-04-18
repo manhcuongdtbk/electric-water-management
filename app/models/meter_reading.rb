@@ -10,6 +10,8 @@ class MeterReading < ApplicationRecord
   validates :reading_start, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :reading_end, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :consumption, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :reading_start, presence: { message: :required_when_end_present },   if: -> { reading_end.present? }
+  validates :reading_end,   presence: { message: :required_when_start_present }, if: -> { reading_start.present? }
   validate :reading_end_not_less_than_start
 
   # Scopes

@@ -24,6 +24,28 @@ RSpec.describe MeterReading, type: :model do
     it "allows nil readings" do
       expect(build(:meter_reading, reading_start: nil, reading_end: nil, consumption: nil)).to be_valid
     end
+
+    context "pair validation" do
+      it "rejects reading_start=nil when reading_end is present" do
+        reading = build(:meter_reading, reading_start: nil, reading_end: 100, consumption: nil)
+        expect(reading).not_to be_valid
+        expect(reading.errors[:reading_start]).to include("phải được nhập khi có chỉ số cuối kỳ")
+      end
+
+      it "rejects reading_end=nil when reading_start is present" do
+        reading = build(:meter_reading, reading_start: 50, reading_end: nil, consumption: nil)
+        expect(reading).not_to be_valid
+        expect(reading.errors[:reading_end]).to include("phải được nhập khi có chỉ số đầu kỳ")
+      end
+
+      it "allows both readings nil (no pair to validate)" do
+        expect(build(:meter_reading, reading_start: nil, reading_end: nil, consumption: nil)).to be_valid
+      end
+
+      it "allows both readings present (full pair)" do
+        expect(build(:meter_reading, reading_start: 50, reading_end: 100, consumption: 50)).to be_valid
+      end
+    end
   end
 
   describe "scopes" do

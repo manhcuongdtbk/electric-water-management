@@ -76,6 +76,8 @@ vi:
       less_than_or_equal_to: "phải nhỏ hơn hoặc bằng %{count}"
       not_a_number: "không phải là số"
       inclusion: "không nằm trong danh sách cho phép"
+      required_when_end_present: "phải được nhập khi có chỉ số cuối kỳ"
+      required_when_start_present: "phải được nhập khi có chỉ số đầu kỳ"
 
   devise:
     failure:
