@@ -14,9 +14,10 @@
   </head>
 
   <body class="bg-gray-100 antialiased">
-    <% if user_signed_in? && session_expires_at %>
+    <% expires_at = session_expires_at %>
+    <% if user_signed_in? && expires_at %>
       <div data-controller="session-timeout"
-           data-session-timeout-expires-at-value="<%= session_expires_at.to_i %>"
+           data-session-timeout-expires-at-value="<%= expires_at.to_i %>"
            data-session-timeout-timeout-in-value="<%= Devise.timeout_in.to_i %>">
         <%= render "layouts/session_timeout_warning" %>
       </div>

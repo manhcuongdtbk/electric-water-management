@@ -12,7 +12,7 @@ export default class extends Controller {
   expiresAtValueChanged() {
     clearTimeout(this.warningTimeout)
     clearInterval(this.countdownInterval)
-    if (this.hasModalTarget) this.modalTarget.hidden = true
+    this.modalTarget.hidden = true
     this.scheduleWarning()
   }
 
