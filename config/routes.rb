@@ -1,6 +1,10 @@
 Rails.application.routes.draw do
   devise_for :users
 
+  devise_scope :user do
+    post "sessions/extend", to: "sessions#extend_session", as: :extend_session
+  end
+
   # F16: Force password change on first login
   resource :password_change, only: [ :edit, :update ]
 

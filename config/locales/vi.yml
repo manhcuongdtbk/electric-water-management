@@ -19,6 +19,11 @@ vi:
         restrict_dependent_destroy:
           has_one: "Không thể xóa bản ghi vì đang có %{record} liên quan"
           has_many: "Không thể xóa bản ghi vì đang có nhiều %{record} liên quan"
+      models:
+        user:
+          attributes:
+            password:
+              complexity: "phải có ít nhất 1 chữ và 1 số"
     attributes:
       user:
         full_name: "Họ tên"

@@ -1,0 +1,19 @@
+<div hidden data-session-timeout-target="modal"
+     class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg p-6 shadow-xl max-w-md w-full mx-4">
+    <h2 class="text-lg font-semibold text-gray-900 mb-2">Phiên sắp hết hạn</h2>
+    <p class="text-gray-600 mb-4">
+      Phiên sẽ hết hạn sau
+      <span data-session-timeout-target="countdown" class="font-bold text-red-600">--</span>
+    </p>
+    <div class="flex gap-3 justify-end">
+      <button type="button"
+              data-action="click->session-timeout#keepAlive"
+              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        Duy trì phiên
+      </button>
+      <%= button_to "Đăng xuất", destroy_user_session_path, method: :delete,
+                    class: "px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none" %>
+    </div>
+  </div>
+</div>

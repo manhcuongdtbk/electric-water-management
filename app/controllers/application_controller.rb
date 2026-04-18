@@ -15,7 +15,18 @@ class ApplicationController < ActionController::Base
     end
   end
 
+  helper_method :session_expires_at
+
   protected
+
+  def session_expires_at
+    return nil unless user_signed_in?
+
+    last_request = warden.session(:user)["last_request_at"]
+    return nil unless last_request
+
+    Time.at(last_request).utc + Devise.timeout_in
+  end
 
   def after_sign_in_path_for(resource)
     post_sign_in_destination_for(resource)
