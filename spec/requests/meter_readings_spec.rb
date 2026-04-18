@@ -289,5 +289,75 @@ RSpec.describe "MeterReadings", type: :request do
         }.to change(MeterReading, :count).by(2)
       end
     end
+
+    context "skip logic and pair validation" do
+      let!(:meter_a3) { create(:meter, :normal, organization: org_a, contact_point: cp_a) }
+
+      it "skips meters with both reading_start and reading_end blank (no row created)" do
+        sign_in admin_unit_a
+        expect {
+          patch meter_readings_path, params: {
+            period_id: period.id,
+            readings: {
+              meter_a1.id.to_s => { reading_start: "100", reading_end: "200" },
+              meter_a2.id.to_s => { reading_start: "",    reading_end: ""    },
+              meter_a3.id.to_s => { reading_start: "500", reading_end: "600" }
+            }
+          }
+        }.to change(MeterReading, :count).by(2)
+
+        expect(MeterReading.find_by(meter: meter_a1, monthly_period: period)).to be_present
+        expect(MeterReading.find_by(meter: meter_a2, monthly_period: period)).to be_nil
+        expect(MeterReading.find_by(meter: meter_a3, monthly_period: period)).to be_present
+        expect(flash[:notice]).to eq(I18n.t("flash.meter_readings.saved"))
+      end
+
+      it "rejects half-pair (only reading_start) and rolls back the whole batch" do
+        sign_in admin_unit_a
+        expect {
+          patch meter_readings_path, params: {
+            period_id: period.id,
+            readings: {
+              meter_a1.id.to_s => { reading_start: "100", reading_end: "200" },
+              meter_a2.id.to_s => { reading_start: "500", reading_end: ""    }
+            }
+          }
+        }.not_to change(MeterReading, :count)
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.body).to include("phải được nhập khi có chỉ số đầu kỳ")
+      end
+
+      it "rejects half-pair (only reading_end) and rolls back the whole batch" do
+        sign_in admin_unit_a
+        expect {
+          patch meter_readings_path, params: {
+            period_id: period.id,
+            readings: {
+              meter_a1.id.to_s => { reading_start: "",    reading_end: "200" }
+            }
+          }
+        }.not_to change(MeterReading, :count)
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.body).to include("phải được nhập khi có chỉ số cuối kỳ")
+      end
+
+      it "treats all-blank batch as no-op (flash success, count unchanged)" do
+        sign_in admin_unit_a
+        expect {
+          patch meter_readings_path, params: {
+            period_id: period.id,
+            readings: {
+              meter_a1.id.to_s => { reading_start: "", reading_end: "" },
+              meter_a2.id.to_s => { reading_start: "", reading_end: "" },
+              meter_a3.id.to_s => { reading_start: "", reading_end: "" }
+            }
+          }
+        }.not_to change(MeterReading, :count)
+
+        expect(flash[:notice]).to eq(I18n.t("flash.meter_readings.saved"))
+      end
+    end
   end
 end

@@ -121,12 +121,20 @@ class MeterReadingsController < ApplicationController
         meter = @target_org.meters.find_by(id: meter_id_str.to_i)
         next unless meter
 
+        reading_start_raw = values[:reading_start]
+        reading_end_raw   = values[:reading_end]
+
+        # Skip meter nếu cả đầu kỳ và cuối kỳ đều trống — user chưa nhập meter
+        # này, không tạo row rỗng trong DB (nếu không, engine F09 sẽ đọc
+        # consumption=0 giả từ các row không có dữ liệu thật).
+        next if reading_start_raw.blank? && reading_end_raw.blank?
+
         reading = MeterReading.find_or_initialize_by(
           meter_id: meter.id,
           monthly_period_id: @period.id
         )
-        reading.reading_start = values[:reading_start].presence
-        reading.reading_end   = values[:reading_end].presence
+        reading.reading_start = reading_start_raw.presence
+        reading.reading_end   = reading_end_raw.presence
 
         @readings_by_meter_id[meter.id] = reading
 
