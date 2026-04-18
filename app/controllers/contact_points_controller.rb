@@ -60,8 +60,16 @@ class ContactPointsController < ApplicationController
 
   private
 
+  # Scopes the lookup through `accessible_by(current_ability)` so that
+  # non-existent IDs and cross-org IDs both produce identical responses
+  # (redirect + access_denied flash). Without this, an attacker could
+  # distinguish "record does not exist" (404) from "record exists but you
+  # can't reach it" (302) and enumerate cross-org contact_points.
   def set_contact_point
-    @contact_point = ContactPoint.find(params[:id])
+    @contact_point = ContactPoint
+                       .accessible_by(current_ability)
+                       .find_by(id: params[:id])
+    raise CanCan::AccessDenied unless @contact_point
   end
 
   def build_contact_point
