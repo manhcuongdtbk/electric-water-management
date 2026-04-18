@@ -1,10 +1,9 @@
 class PersonnelController < ApplicationController
-  before_action :set_contact_point
+  before_action :load_and_authorize_contact_point
   before_action :set_period
   before_action :set_personnel_and_quotas
 
   def show
-    authorize! :read, @contact_point
   end
 
   def update
@@ -64,8 +63,15 @@ class PersonnelController < ApplicationController
 
   private
 
-  def set_contact_point
-    @contact_point = ContactPoint.includes(:organization).find(params[:contact_point_id])
+  # Scopes the parent lookup through `accessible_by(current_ability)` so
+  # that non-existent and cross-org contact_point ids both produce the same
+  # redirect + access_denied flash. See MetersController for rationale.
+  def load_and_authorize_contact_point
+    @contact_point = ContactPoint
+                       .accessible_by(current_ability)
+                       .includes(:organization)
+                       .find_by(id: params[:contact_point_id])
+    raise CanCan::AccessDenied unless @contact_point
   end
 
   def set_period
