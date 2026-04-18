@@ -75,5 +75,13 @@ RSpec.describe "F18 — Session timeout", type: :system do
       click_button "Duy trì phiên"
       expect(page).not_to have_selector('[data-session-timeout-target="modal"]', visible: true, wait: 10)
     end
+
+    it "signs out when clicking Đăng xuất in the modal" do
+      visit contact_points_path
+      set_session_expires_in(300)
+      expect(page).to have_selector('[data-session-timeout-target="modal"]', visible: true, wait: 5)
+      within('[data-session-timeout-target="modal"]') { click_button "Đăng xuất" }
+      expect(page).to have_current_path(new_user_session_path)
+    end
   end
 end
