@@ -29,12 +29,17 @@ RSpec.describe "Meters", type: :request do
         expect(response.body).to include(meter_a.name)
       end
 
-      it "cannot access meters of another org's contact_point" do
-        sign_in admin_unit_a
-        get contact_point_meters_path(cp_b)
-        expect(response).to redirect_to(root_path)
-        expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
+      context "when contact_point belongs to another org" do
+        before  { sign_in admin_unit_a }
+        subject { get contact_point_meters_path(cp_b) }
+        it_behaves_like "denies cross-org parent access"
       end
+    end
+
+    context "when contact_point does not exist (existence enumeration)" do
+      before  { sign_in admin_unit_a }
+      subject { get contact_point_meters_path(contact_point_id: 999_999) }
+      it_behaves_like "denies cross-org parent access"
     end
 
     context "as admin_level1" do
@@ -91,11 +96,16 @@ RSpec.describe "Meters", type: :request do
       expect(response).to redirect_to(users_path)
     end
 
-    it "blocks admin_unit from viewing new form under another org's contact_point" do
-      sign_in admin_unit_a
-      get new_contact_point_meter_path(cp_b)
-      expect(response).to redirect_to(root_path)
-      expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
+    context "when contact_point belongs to another org (admin_unit)" do
+      before  { sign_in admin_unit_a }
+      subject { get new_contact_point_meter_path(cp_b) }
+      it_behaves_like "denies cross-org parent access"
+    end
+
+    context "when contact_point does not exist (existence enumeration)" do
+      before  { sign_in admin_unit_a }
+      subject { get new_contact_point_meter_path(contact_point_id: 999_999) }
+      it_behaves_like "denies cross-org parent access"
     end
   end
 
@@ -119,13 +129,15 @@ RSpec.describe "Meters", type: :request do
         expect(response).to redirect_to(contact_point_meters_path(cp_a))
       end
 
-      it "cannot create a meter for another org's contact_point" do
-        sign_in admin_unit_a
-        expect {
-          post contact_point_meters_path(cp_b), params: valid_params
-        }.not_to change(Meter, :count)
-        expect(response).to redirect_to(root_path)
-        expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
+      context "when targeting another org's contact_point" do
+        before  { sign_in admin_unit_a }
+        subject { post contact_point_meters_path(cp_b), params: valid_params }
+
+        it_behaves_like "denies cross-org parent access"
+
+        it "does not create any meter" do
+          expect { subject }.not_to change(Meter, :count)
+        end
       end
 
       it "re-renders form on invalid data (blank name)" do
@@ -212,11 +224,10 @@ RSpec.describe "Meters", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
-    it "blocks admin_unit from editing another org's meter" do
-      sign_in admin_unit_a
-      get edit_contact_point_meter_path(cp_b, meter_b)
-      expect(response).to redirect_to(root_path)
-      expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
+    context "when contact_point belongs to another org (admin_unit)" do
+      before  { sign_in admin_unit_a }
+      subject { get edit_contact_point_meter_path(cp_b, meter_b) }
+      it_behaves_like "denies cross-org parent access"
     end
   end
 
@@ -234,13 +245,16 @@ RSpec.describe "Meters", type: :request do
         expect(meter_a.reload.meter_type).to eq("public_meter")
       end
 
-      it "cannot update another org's meter" do
-        sign_in admin_unit_a
-        patch contact_point_meter_path(cp_b, meter_b),
-              params: { meter: { name: "Hacked" } }
-        expect(response).to redirect_to(root_path)
-        expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
-        expect(meter_b.reload.name).not_to eq("Hacked")
+      context "when targeting another org's meter" do
+        before  { sign_in admin_unit_a }
+        subject { patch contact_point_meter_path(cp_b, meter_b), params: { meter: { name: "Hacked" } } }
+
+        it_behaves_like "denies cross-org parent access"
+
+        it "does not mutate the cross-org meter" do
+          subject
+          expect(meter_b.reload.name).not_to eq("Hacked")
+        end
       end
 
       it "re-renders form on invalid data" do
@@ -265,12 +279,16 @@ RSpec.describe "Meters", type: :request do
         expect(response).to redirect_to(contact_point_meters_path(cp_a))
       end
 
-      it "cannot destroy another org's meter" do
-        sign_in admin_unit_a
-        delete contact_point_meter_path(cp_b, meter_b)
-        expect(response).to redirect_to(root_path)
-        expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
-        expect { meter_b.reload }.not_to raise_error
+      context "when targeting another org's meter" do
+        before  { sign_in admin_unit_a }
+        subject { delete contact_point_meter_path(cp_b, meter_b) }
+
+        it_behaves_like "denies cross-org parent access"
+
+        it "does not destroy the cross-org meter" do
+          subject
+          expect { meter_b.reload }.not_to raise_error
+        end
       end
     end
 

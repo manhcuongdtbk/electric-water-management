@@ -1,6 +1,5 @@
 class MetersController < ApplicationController
-  before_action :set_contact_point
-  before_action :authorize_contact_point_read
+  before_action :load_and_authorize_contact_point
   before_action :set_meter, only: [ :edit, :update, :destroy ]
 
   def index
@@ -47,12 +46,17 @@ class MetersController < ApplicationController
 
   private
 
-  def set_contact_point
-    @contact_point = ContactPoint.includes(:organization).find(params[:contact_point_id])
-  end
-
-  def authorize_contact_point_read
-    authorize! :read, @contact_point
+  # Scopes the parent lookup through `accessible_by(current_ability)` so that
+  # non-existent IDs and cross-org IDs both produce identical responses
+  # (redirect + access_denied flash). Without this, an attacker could
+  # distinguish "record does not exist" (404) from "record exists but you
+  # can't reach it" (302) and enumerate cross-org contact_points.
+  def load_and_authorize_contact_point
+    @contact_point = ContactPoint
+                       .accessible_by(current_ability)
+                       .includes(:organization)
+                       .find_by(id: params[:contact_point_id])
+    raise CanCan::AccessDenied unless @contact_point
   end
 
   def set_meter
