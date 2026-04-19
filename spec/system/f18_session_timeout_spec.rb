@@ -36,6 +36,25 @@ RSpec.describe "F18 — Session timeout", type: :system do
     end
   end
 
+  it "POST /sessions/extend resets the 2-hour countdown" do
+    login_as user, scope: :user
+    visit contact_points_path
+
+    travel_to 100.minutes.from_now do
+      # Hit the extend endpoint — session is refreshed to "now" (= T+100 min)
+      page.driver.submit :post, extend_session_path, {}
+      expect(page.status_code).to eq(204) # head :no_content
+    end
+
+    # T+219 min from original sign-in: without extend this would have timed
+    # out at T+120. With the extend, last_request_at is T+100, so timeout
+    # fires at T+220; 219 minutes in, we're still under the threshold.
+    travel_to 219.minutes.from_now do
+      visit contact_points_path
+      expect(page).to have_current_path(contact_points_path)
+    end
+  end
+
   describe "session timeout warning modal", :js do
     before { login_as user, scope: :user }
 
