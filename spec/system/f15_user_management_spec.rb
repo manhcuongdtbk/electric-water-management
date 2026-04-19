@@ -80,43 +80,28 @@ RSpec.describe "F15 — User management", type: :system do
       expect(target.reload.access_locked?).to be false
     end
 
-    it "refuses to lock the last active admin_level1 (self)" do
-      # scenario creates a single admin_level1 — locking them would leave zero.
-      # Self-lock guard triggers FIRST, blocking with cannot_lock_self.
+    it "hides the Lock button on the current user's own row (self-lock UI guard)" do
       visit users_path
       within("tr", text: scenario.admin_level1.email) do
-        # No Lock button appears for the current user — guard is UI-level too.
         expect(page).not_to have_button(I18n.t("users.actions.lock"))
       end
     end
+  end
 
-    it "refuses to lock the last active admin_level1 via direct PATCH" do
-      # Another admin_level1 is attempting to lock our scenario.admin_level1
-      # (we need TWO admin_level1s so the actor isn't self-locking).
-      other_admin = create(:user, :admin_level1, organization: scenario.division)
+  # ---------------------------------------------------------------------------
+  # Last-active-admin guard — exercised via tech (not self) so the self-lock
+  # branch doesn't short-circuit in front of it.
+  # ---------------------------------------------------------------------------
+  describe "last-active-admin guard" do
+    it "refuses to lock the only remaining admin_level1" do
+      # scenario has exactly one admin_level1. tech is authorized (:manage, User)
+      # but is not the target, so the controller falls through to the
+      # last-active-admin check instead of the self-lock check.
+      login_as scenario.tech, scope: :user
+      page.driver.submit :patch, lock_user_path(scenario.admin_level1), {}
 
-      # Log out the scenario admin, log in as "other_admin", then lock scenario's admin_level1.
-      # But the LAST-admin guard treats "last active" as "last unlocked", so locking scenario.admin_level1
-      # while other_admin is still active is PERMITTED. To actually exercise the guard we first lock other_admin.
-      other_admin.lock_access!(send_instructions: false)
-
-      visit users_path
-      within("tr", text: scenario.admin_level1.email) do
-        # Self-lock still applies (scenario.admin_level1 is the current user).
-        expect(page).not_to have_button(I18n.t("users.actions.lock"))
-      end
-      # The last-admin alert surfaces when someone else tries to lock them:
-      Warden.test_reset!
-      # Re-unlock other_admin so they can log in
-      other_admin.unlock_access!
-      login_as other_admin, scope: :user
-      # Lock scenario.admin_level1 → now other_admin is the "last active" admin_level1
-      scenario.admin_level1.lock_access!(send_instructions: false)
-      # Try locking other_admin — self-lock guard applies first, so only direct PATCH exercises last-admin guard.
-      # Here we just verify the model-level check surfaces as an alert from users_controller.
-      # (Request spec users_spec.rb covers the branch thoroughly; this is the UI layer.)
-      page.driver.submit :patch, lock_user_path(other_admin), {}
-      expect(page).to have_content(I18n.t("flash.users.cannot_lock_self"))
+      expect(page).to have_content(I18n.t("flash.users.cannot_lock_last_admin"))
+      expect(scenario.admin_level1.reload.access_locked?).to be false
     end
   end
 
