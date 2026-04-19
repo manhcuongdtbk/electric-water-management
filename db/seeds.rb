@@ -62,12 +62,12 @@ end
 puts "RankQuotas: #{RankQuota.count} records"
 
 # ============================================================
-# Development-only data — NOT for production
+# Demo/production users — all environments except test
 # Dev users — all password: admin123
 # Seed idempotent: rails db:seed restores all users even when DB already has data
 # ============================================================
 
-if Rails.env.development?
+unless Rails.env.test?
   sdb  = Organization.find_by!(code: "SDB")
   tr101 = Organization.find_by!(code: "TR101")
 
@@ -93,7 +93,7 @@ if Rails.env.development?
     user.save!
   end
 
-  puts "Users: #{User.count} records (development only)"
+  puts "Users: #{User.count} records"
 end
 
 puts "Seed completed successfully."
