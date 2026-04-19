@@ -23,5 +23,14 @@ FactoryBot.define do
     trait :tech do
       role { :tech }
     end
+
+    trait :locked do
+      locked_at { Time.current }
+      failed_attempts { 5 }
+    end
+
+    trait :force_change_password do
+      force_password_change { true }
+    end
   end
 end

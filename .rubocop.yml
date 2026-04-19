@@ -14,3 +14,7 @@ AllCops:
 Layout/SpaceInsideArrayLiteralBrackets:
   Exclude:
     - "db/schema.rb"
+
+Metrics/BlockLength:
+  Exclude:
+    - "spec/**/*"
