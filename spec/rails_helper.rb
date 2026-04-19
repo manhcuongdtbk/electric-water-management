@@ -1,5 +1,19 @@
 require 'spec_helper'
 ENV['RAILS_ENV'] ||= 'test'
+
+# Build tailwind.css BEFORE Rails boots so Propshaft's load path cache includes it.
+# The file is gitignored; we call the binary directly to avoid a full Rails process fork.
+unless File.exist?(File.expand_path("../app/assets/builds/tailwind.css", __dir__))
+  require "tailwindcss/ruby"
+  root = File.expand_path("..", __dir__)
+  system(
+    Tailwindcss::Ruby.executable,
+    "-i", "#{root}/app/assets/tailwind/application.css",
+    "-o", "#{root}/app/assets/builds/tailwind.css",
+    out: $stdout, err: $stderr
+  ) || abort("tailwindcss build failed — run: bin/rails tailwindcss:build")
+end
+
 require_relative '../config/environment'
 abort("The Rails environment is running in production mode!") if Rails.env.production?
 require 'rspec/rails'

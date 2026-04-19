@@ -1,2 +1,10 @@
 #!/usr/bin/env ruby
-exec "./bin/rails", "server", *ARGV
+
+# Foreman starts web and css concurrently. On a fresh checkout, the watcher's
+# initial build (~1-2s including Ruby load) races with the server startup, so
+# the first request can arrive before tailwind.css exists. Build once here to
+# guarantee the file is present before any process starts.
+system("bin/rails tailwindcss:build", out: $stdout, err: $stderr) ||
+  abort("tailwindcss:build failed")
+
+exec "foreman", "start", "-f", "Procfile.dev"
