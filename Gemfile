@@ -39,6 +39,10 @@ gem "rack-attack", "~> 6.7"
 # CSS
 gem "tailwindcss-rails"
 
+# Excel/CSV parsing (used by ImportFeb2026Service and future month imports on production)
+gem "roo", "~> 2.10"
+gem "csv" # roo loads roo/csv which requires csv; csv is no longer a default gem in Ruby 3.4+
+
 group :development, :test do
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
   gem "bundler-audit", require: false
