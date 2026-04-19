@@ -57,9 +57,8 @@ RSpec.describe "admin:reset_password rake task", type: :task do
     end
 
     it "outputs the new password and email" do
-      expect { Rake::Task[task_name].invoke(user.email) }.to output(/#{user.email}/).to_stdout
-      Rake::Task[task_name].reenable
-      expect { Rake::Task[task_name].invoke(user.email) }.to output(/New password:/).to_stdout
+      expect { Rake::Task[task_name].invoke(user.email) }
+        .to output(/Password reset for #{Regexp.escape(user.email)}.*New password:/m).to_stdout
     end
   end
 end

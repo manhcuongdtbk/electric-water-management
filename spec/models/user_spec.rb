@@ -83,7 +83,6 @@ RSpec.describe User, type: :model do
       end
 
       it "returns false for non-admin_level1 role" do
-        unit = create(:organization, :unit, parent: division)
         other = create(:user, :tech, organization: division)
         expect(other.last_active_admin_level1?).to be false
       end
@@ -116,7 +115,6 @@ RSpec.describe User, type: :model do
       end
 
       it "does not fire for non-admin_level1 users" do
-        unit = create(:organization, :unit, parent: division)
         tech = create(:user, :tech, organization: division)
         tech.locked_at = Time.current
         expect(tech).to be_valid
@@ -135,7 +133,6 @@ RSpec.describe User, type: :model do
       end
 
       it "allows destroy of non-admin_level1 users even when no other admin" do
-        unit = create(:organization, :unit, parent: division)
         tech = create(:user, :tech, organization: division)
         expect { tech.destroy }.to change(User, :count).by(-1)
       end
