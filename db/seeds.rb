@@ -63,16 +63,34 @@ puts "RankQuotas: #{RankQuota.count} records"
 
 # ============================================================
 # Development-only data — NOT for production
+# Dev users — all password: admin123
+# Seed idempotent: rails db:seed restores all users even when DB already has data
 # ============================================================
 
 if Rails.env.development?
-  User.find_or_create_by!(email: "admin@example.com") do |u|
-    u.full_name             = "Quản trị viên"
-    u.password              = "admin123"
-    u.password_confirmation = "admin123"
-    u.role                  = :admin_level1
-    u.organization          = division
-    u.force_password_change = false
+  sdb  = Organization.find_by!(code: "SDB")
+  tr101 = Organization.find_by!(code: "TR101")
+
+  dev_users = [
+    { email: "admin@example.com",        full_name: "Quản trị viên",      role: :admin_level1, org: division },
+    { email: "test_admin1@example.com",  full_name: "Quản trị viên 2",    role: :admin_level1, org: division },
+    { email: "admin_unit@example.com",   full_name: "Quản trị đơn vị",    role: :admin_unit,   org: sdb },
+    { email: "admin_unit_a@example.com", full_name: "Quản trị đơn vị A",  role: :admin_unit,   org: tr101 },
+    { email: "commander@example.com",    full_name: "Chỉ huy",            role: :commander,    org: sdb },
+    { email: "commander_a@example.com",  full_name: "Chỉ huy A",          role: :commander,    org: tr101 },
+    { email: "tech@example.com",         full_name: "Kỹ thuật",           role: :tech,         org: division },
+    { email: "test_adminunit@example.com", full_name: "Quản trị đơn vị B", role: :admin_unit,  org: tr101 }
+  ]
+
+  dev_users.each do |attrs|
+    user = User.find_or_initialize_by(email: attrs[:email])
+    user.full_name             = attrs[:full_name]
+    user.password              = "admin123"
+    user.password_confirmation = "admin123"
+    user.role                  = attrs[:role]
+    user.organization          = attrs[:org]
+    user.force_password_change = false
+    user.save!
   end
 
   puts "Users: #{User.count} records (development only)"
