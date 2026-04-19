@@ -1,8 +1,8 @@
 namespace :admin do
-  desc "Reset password and unlock account — escape hatch for last-admin lockout scenarios"
+  desc "Reset password and unlock account — escape hatch for last-admin lockout scenarios. Usage: rails \"admin:reset_password[email@example.com]\""
   task :reset_password, [ :email ] => :environment do |_t, args|
     email = args[:email]
-    abort "Usage: rails admin:reset_password[email@example.com]" if email.blank?
+    abort 'Usage: rails "admin:reset_password[email@example.com]"  (quote required to prevent shell glob expansion)' if email.blank?
 
     user = User.find_by(email: email)
     abort "User not found: #{email}" if user.nil?
