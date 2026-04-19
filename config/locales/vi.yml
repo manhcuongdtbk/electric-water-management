@@ -24,6 +24,9 @@ vi:
           attributes:
             password:
               complexity: "phải có ít nhất 1 chữ và 1 số"
+            base:
+              last_admin_lock: "Không thể khóa quản trị viên cấp 1 cuối cùng đang hoạt động."
+              last_admin_destroy: "Không thể xóa quản trị viên cấp 1 cuối cùng đang hoạt động."
     attributes:
       user:
         full_name: "Họ tên"
@@ -122,6 +125,7 @@ vi:
       locked: "Đã khóa tài khoản."
       unlocked: "Đã mở khóa tài khoản."
       cannot_lock_self: "Không thể khóa tài khoản của chính mình."
+      cannot_lock_last_admin: "Không thể khóa quản trị viên cấp 1 cuối cùng đang hoạt động."
     actions:
       create:
         notice: "Tạo %{resource_name} thành công."

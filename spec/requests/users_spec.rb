@@ -277,6 +277,27 @@ RSpec.describe "Users", type: :request do
         expect(target.reload.access_locked?).to be false
       end
     end
+
+    context "last admin_level1 safeguard" do
+      it "blocks locking when target is the last active admin_level1" do
+        # admin1 is the only admin_level1; tech attempts to lock them
+        sign_in tech_user
+        patch lock_user_path(admin1)
+        expect(response).to redirect_to(users_path)
+        expect(flash[:alert]).to include("cuối cùng")
+        expect(admin1.reload.access_locked?).to be false
+      end
+
+      it "allows locking an admin_level1 when another active admin_level1 exists" do
+        admin2 = create(:user, :admin_level1, organization: division)
+        sign_in tech_user
+        # Force admin1 to be created so admin2 is not the last active admin_level1
+        expect(admin1).to be_persisted
+        patch lock_user_path(admin2)
+        expect(response).to redirect_to(users_path)
+        expect(admin2.reload.access_locked?).to be true
+      end
+    end
   end
 
   # ---------------------------------------------------------------------------
