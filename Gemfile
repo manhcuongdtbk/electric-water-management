@@ -40,7 +40,7 @@ gem "rack-attack", "~> 6.7"
 gem "tailwindcss-rails"
 
 # Excel/CSV parsing (used by ImportFeb2026Service and future month imports on production)
-gem "roo", "~> 2.10"
+gem "roo", "~> 3.0"
 gem "csv" # roo loads roo/csv which requires csv; csv is no longer a default gem in Ruby 3.4+
 
 group :development, :test do
