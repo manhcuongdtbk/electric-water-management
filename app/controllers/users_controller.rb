@@ -47,6 +47,8 @@ class UsersController < ApplicationController
   def lock
     if @user == current_user
       redirect_to users_path, alert: t("flash.users.cannot_lock_self")
+    elsif @user.last_active_admin_level1?
+      redirect_to users_path, alert: t("flash.users.cannot_lock_last_admin")
     else
       @user.lock_access!(send_instructions: false)
       redirect_to users_path, notice: t("flash.users.locked")
