@@ -75,7 +75,7 @@
       + <%= t("personnel_reviews.new_period_form.title") %>
     </summary>
     <div class="px-4 pb-4 pt-2 border-t border-gray-100">
-      <%= form_with url: monthly_periods_path, method: :post, class: "flex flex-wrap items-end gap-3" do |f| %>
+      <%= form_with url: monthly_periods_path, scope: :monthly_period, method: :post, class: "flex flex-wrap items-end gap-3" do |f| %>
         <div>
           <%= f.label :year, t("personnel_reviews.new_period_form.year_label"),
                 class: "block text-xs font-medium text-gray-600 mb-1" %>
