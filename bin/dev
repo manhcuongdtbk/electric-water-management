@@ -1,2 +1,6 @@
 #!/usr/bin/env ruby
+# One-time synchronous build ensures tailwind.css exists before the first request.
+# The puma plugin (config/puma.rb) then starts the watcher for live reloading.
+system("bin/rails tailwindcss:build", out: $stdout, err: $stderr) ||
+  abort("tailwindcss:build failed")
 exec "./bin/rails", "server", *ARGV
