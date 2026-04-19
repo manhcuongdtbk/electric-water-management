@@ -29,6 +29,8 @@ module ElectricWaterManagement
 
     config.time_zone = "Asia/Ho_Chi_Minh"
 
+    config.middleware.use Rack::Attack
+
     config.generators do |g|
       g.test_framework :rspec,
         fixtures: true,

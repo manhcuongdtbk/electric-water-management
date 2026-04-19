@@ -33,6 +33,9 @@ gem "pagy"
 # Search/filter
 gem "ransack"
 
+# Rate limiting
+gem "rack-attack", "~> 6.7"
+
 # CSS
 gem "tailwindcss-rails"
 
