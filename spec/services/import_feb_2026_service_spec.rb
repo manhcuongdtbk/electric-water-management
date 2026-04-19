@@ -130,6 +130,29 @@ RSpec.describe ImportFeb2026Service do
       expect(counts_after).to eq(counts_before)
     end
 
+    it "does not create PaperTrail versions on re-run with identical data" do
+      described_class.new.call
+      versions_before = PaperTrail::Version.count
+
+      described_class.new.call
+      versions_after = PaperTrail::Version.count
+
+      expect(versions_after).to eq(versions_before)
+    end
+
+    context "when the period 2026-02 is already locked" do
+      before do
+        locker = create(:user, role: :admin_level1, organization: division)
+        MonthlyPeriod.create!(year: 2026, month: 2, unit_price: BigDecimal("2336.4"),
+                              locked: true, locked_at: Time.current, locked_by: locker)
+      end
+
+      it "refuses to import and rolls back any partial state" do
+        expect { described_class.new.call }.to raise_error(/locked period/)
+        expect(ContactPoint.count).to eq(0)
+      end
+    end
+
     it "returns a Result struct populated with imported counts" do
       expect(result).to have_attributes(
         contact_points_count: 79,
@@ -160,9 +183,24 @@ RSpec.describe ImportFeb2026Service do
       it "raises ArgumentError without any DB writes" do
         expect do
           described_class.new(path: "nonexistent.xlsx").call
-        end.to raise_error(ArgumentError, /không tồn tại/)
+        end.to raise_error(ArgumentError, /Excel file not found/)
 
         expect(ContactPoint.count).to eq(0)
+        expect(MonthlyPeriod.count).to eq(0)
+      end
+    end
+
+    context "when the organization SDB does not exist" do
+      before { sdb.destroy! }
+
+      it "raises RecordNotFound without creating partial records" do
+        expect do
+          described_class.new.call
+        end.to raise_error(ActiveRecord::RecordNotFound)
+
+        expect(ContactPoint.count).to eq(0)
+        # MonthlyPeriod is created before org lookup inside the txn,
+        # so the txn rollback must un-create it.
         expect(MonthlyPeriod.count).to eq(0)
       end
     end

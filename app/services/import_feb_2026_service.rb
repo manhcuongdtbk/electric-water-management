@@ -25,6 +25,7 @@ class ImportFeb2026Service
   PERIOD_YEAR  = 2026
   PERIOD_MONTH = 2
   ORG_CODE     = "SDB"
+  EXPECTED_CP_COUNT = 79  # Safety net: Sheet1(2) sections I-IV data rows. Diff → Excel structure changed.
 
   ELECTRICITY_SUPPLY_KW = BigDecimal("41940") # 45,960 − 4,020 TĐ18 no-loss position
   SAVINGS_RATE          = BigDecimal("0.05")
@@ -102,35 +103,42 @@ class ImportFeb2026Service
     :pump_stations_count, :warnings, keyword_init: true
   )
 
-  def initialize(path: PATH_DEFAULT, logger: Rails.logger)
+  def initialize(path: PATH_DEFAULT)
     @path = path.to_s
-    @logger = logger
     @warnings = []
   end
 
   def call
-    raise ArgumentError, "File không tồn tại: #{@path}" unless File.exist?(@path)
+    raise ArgumentError, "Excel file not found: #{@path}" unless File.exist?(@path)
 
     open_workbook!
 
-    ActiveRecord::Base.transaction do
-      @period = upsert_monthly_period
-      @organization = Organization.find_by!(code: ORG_CODE)
-      upsert_unit_config
+    # PaperTrail versions are for tracking human edits in the UI. This service
+    # is an automated bulk loader — audit trail for it belongs to git / the Rake
+    # task invocation, not to a per-row DB log. Suppress version creation so
+    # re-running on identical data is truly a no-op.
+    PaperTrail.request(enabled: false) do
+      ActiveRecord::Base.transaction do
+        @period = upsert_monthly_period
+        @organization = Organization.find_by!(code: ORG_CODE)
+        upsert_unit_config
 
-      cp_specs = parse_contact_points
-      meter_specs = parse_meter_specs
-      used_rows = Set.new
+        cp_specs = parse_contact_points
+        assert_unique_contact_point_names!(cp_specs)
+        meter_specs = parse_meter_specs
+        used_rows = Set.new
 
-      cp_specs.each do |spec|
-        cp = upsert_contact_point(spec)
-        upsert_personnel(cp, spec)
-        upsert_other_deduction(cp, spec)
-        upsert_meter_and_reading(cp, spec, meter_specs, used_rows)
+        cp_specs.each do |spec|
+          cp = upsert_contact_point(spec)
+          upsert_personnel(cp, spec)
+          upsert_other_deduction(cp, spec)
+          upsert_meter_and_reading(cp, spec, meter_specs, used_rows)
+        end
+
+        log_unmatched_meter_rows(meter_specs, used_rows)
+        upsert_pump_stations
+        assert_expected_contact_point_count!
       end
-
-      log_unmatched_meter_rows(meter_specs, used_rows)
-      upsert_pump_stations
     end
 
     build_result
@@ -143,7 +151,7 @@ class ImportFeb2026Service
     @book = Roo::Excelx.new(@path)
     unless @book.sheets.include?(SHEET_BANG22) && @book.sheets.include?(SHEET_METERS)
       raise ArgumentError,
-            "Excel thiếu sheet '#{SHEET_BANG22}' hoặc '#{SHEET_METERS}'"
+            "Excel missing expected sheet '#{SHEET_BANG22}' or '#{SHEET_METERS}'"
     end
   end
 
@@ -154,9 +162,11 @@ class ImportFeb2026Service
   # ============================================================= period/org/config
   def upsert_monthly_period
     period = MonthlyPeriod.find_or_initialize_by(year: PERIOD_YEAR, month: PERIOD_MONTH)
+    raise "Cannot import into locked period #{period.label}" if period.persisted? && period.locked?
+
     period.unit_price = UNIT_PRICE_VND
-    period.locked = false
-    period.save!
+    period.locked = false if period.new_record?
+    period.save! if period.new_record? || period.changed?
     period
   end
 
@@ -168,7 +178,7 @@ class ImportFeb2026Service
     cfg.other_deduction_type = :fixed_kw
     cfg.other_deduction_value = BigDecimal("0")
     cfg.electricity_supply_kw = ELECTRICITY_SUPPLY_KW
-    cfg.save!
+    cfg.save! if cfg.new_record? || cfg.changed?
     cfg
   end
 
@@ -177,7 +187,6 @@ class ImportFeb2026Service
     specs = []
     section = nil
     group = nil
-    group_stt = nil
 
     (9..91).each do |row|
       b = cell(SHEET_BANG22, row, 2)
@@ -195,7 +204,6 @@ class ImportFeb2026Service
       if b.is_a?(String) && b.match?(/\A(I|II|III|IV)\z/)
         section = "#{b.strip}. #{c.to_s.strip}"
         group = nil
-        group_stt = nil
         next
       end
 
@@ -207,7 +215,6 @@ class ImportFeb2026Service
 
       if d_str && c_str
         group = c_str
-        group_stt = b
         name = "#{c_str} — #{d_str}"
       elsif d_str
         raise ArgumentError, "Row #{row}: sub-row without a preceding group" if group.nil?
@@ -215,7 +222,6 @@ class ImportFeb2026Service
         name = "#{group} — #{d_str}"
       elsif c_str
         group = c_str
-        group_stt = b
         name = c_str
       else
         next
@@ -225,7 +231,6 @@ class ImportFeb2026Service
         row:         row,
         section:     section,
         group:       group,
-        group_stt:   group_stt,
         name:        name,
         detail:      d_str,
         rank1_count: to_int(e),
@@ -256,6 +261,9 @@ class ImportFeb2026Service
       detail = c.to_s.strip.presence
       next if detail.nil?
 
+      validate_reading_pair!(row, "Nhà ở", cs, ce)
+      validate_reading_pair!(row, "NLV", es, ee)
+
       has_reading = [ cs, ce, es, ee ].any? { |v| v.is_a?(Numeric) }
       next unless has_reading
 
@@ -271,12 +279,24 @@ class ImportFeb2026Service
     specs
   end
 
+  # Nhà ở start/end and NLV start/end must appear as pairs. A single-sided
+  # cell silently treats the missing side as 0 → wildly inflated consumption.
+  def validate_reading_pair!(row, label, start_val, end_val)
+    start_present = start_val.is_a?(Numeric)
+    end_present = end_val.is_a?(Numeric)
+    return if start_present == end_present
+
+    raise ArgumentError,
+          "Sheet1 row #{row} (#{label}): only one side of start/end present " \
+          "(start=#{start_val.inspect}, end=#{end_val.inspect})"
+  end
+
   # ============================================================= persistence
   def upsert_contact_point(spec)
     cp = ContactPoint.find_or_initialize_by(organization: @organization, name: spec[:name])
     cp.group_name = spec[:section]
     cp.position = spec[:row]
-    cp.save!
+    cp.save! if cp.new_record? || cp.changed?
     cp
   end
 
@@ -289,18 +309,23 @@ class ImportFeb2026Service
     p.rank5_count = spec[:rank5_count]
     p.rank6_count = 0
     p.rank7_count = spec[:rank7_count]
-    p.save!
+    p.save! if p.new_record? || p.changed?
   end
 
   def upsert_other_deduction(contact_point, spec)
     value = spec[:other_value]
-    return if value.nil? || value.zero?
 
-    ded = ContactPointOtherDeduction.find_or_initialize_by(
-      contact_point: contact_point, monthly_period: @period
-    )
+    ded = ContactPointOtherDeduction.find_by(contact_point: contact_point, monthly_period: @period)
+
+    if value.nil? || value.zero?
+      ded&.destroy! # clear stale row when fixture changes a prior non-zero to zero
+      return
+    end
+
+    ded ||= ContactPointOtherDeduction.new(contact_point: contact_point, monthly_period: @period)
     ded.other_type = :fixed_kw
     ded.other_value = value
+    return unless ded.new_record? || ded.changed?
 
     if value.negative?
       @warnings << "ContactPointOtherDeduction '#{contact_point.name}' = #{value} " \
@@ -329,17 +354,17 @@ class ImportFeb2026Service
     meter = Meter.find_or_initialize_by(
       organization: @organization,
       contact_point: contact_point,
-      name: "#{contact_point.name} — Tổng (Nhà ở + NLV)"
+      name: "#{contact_point.name} — Tổng (Nhà ở + NLV)",
+      meter_type: :normal
     )
-    meter.meter_type = :normal
     meter.position = spec[:row]
     meter.notes = "Aggregated from #{source_note}"
-    meter.save!
+    meter.save! if meter.new_record? || meter.changed?
 
     reading = MeterReading.find_or_initialize_by(meter: meter, monthly_period: @period)
     reading.reading_start = reading_start
     reading.reading_end = reading_end
-    reading.save!
+    reading.save! if reading.new_record? || reading.changed?
   end
 
   # Returns Array<meter_spec>. Tries MANUAL_METER_MATCH first, then normalized
@@ -394,25 +419,27 @@ class ImportFeb2026Service
       cs = to_decimal(cell(SHEET_METERS, row, 3))
       consumption = to_decimal(cell(SHEET_METERS, row, 7))
 
+      # meter_type included in the lookup so we never accidentally convert a
+      # pre-existing :normal meter with the same name.
       meter = Meter.find_or_initialize_by(
         organization: @organization,
-        name: "#{ps_spec[:name]} — công tơ"
+        name: "#{ps_spec[:name]} — công tơ",
+        meter_type: :pump_station
       )
-      meter.meter_type = :pump_station
       meter.contact_point = nil
       meter.position = row
-      meter.save!
+      meter.save! if meter.new_record? || meter.changed?
 
       ps = PumpStation.find_or_initialize_by(organization: @organization, name: ps_spec[:name])
       ps.meter = meter
-      ps.save!
+      ps.save! if ps.new_record? || ps.changed?
 
       PumpStationAssignment.find_or_create_by!(pump_station: ps, organization: @organization)
 
       reading = MeterReading.find_or_initialize_by(meter: meter, monthly_period: @period)
       reading.reading_start = cs
       reading.reading_end = cs + consumption
-      reading.save!
+      reading.save! if reading.new_record? || reading.changed?
     end
   end
 
@@ -440,7 +467,28 @@ class ImportFeb2026Service
   def to_int(value)
     return 0 if value.nil?
 
-    value.to_i
+    int_val = value.to_i
+    if value.is_a?(Numeric) && value != int_val
+      @warnings << "Truncated non-integer count: #{value} → #{int_val}"
+    end
+    int_val
+  end
+
+  def assert_unique_contact_point_names!(cp_specs)
+    duplicates = cp_specs.map { |s| s[:name] }.tally.select { |_, count| count > 1 }
+    return if duplicates.empty?
+
+    raise ArgumentError,
+          "Duplicate contact point names detected (would violate unique index): " \
+          "#{duplicates.keys.join(', ')}"
+  end
+
+  def assert_expected_contact_point_count!
+    count = ContactPoint.where(organization: @organization).count
+    return if count == EXPECTED_CP_COUNT
+
+    @warnings << "Expected #{EXPECTED_CP_COUNT} contact points for SDB but found #{count} — " \
+                 "Excel structure may have changed; review MANUAL_METER_MATCH and row ranges"
   end
 
   def to_decimal(value)
@@ -448,7 +496,8 @@ class ImportFeb2026Service
     when BigDecimal then value
     when Numeric then BigDecimal(value.to_s)
     when String then value.strip.empty? ? BigDecimal("0") : BigDecimal(value)
-    else BigDecimal("0")
+    when nil then BigDecimal("0")
+    else raise ArgumentError, "Unexpected #{value.class} for decimal: #{value.inspect}"
     end
   end
 

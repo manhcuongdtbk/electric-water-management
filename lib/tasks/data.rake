@@ -1,6 +1,10 @@
 namespace :data do
-  desc "Import February 2026 real data for demo (Sư đoàn bộ)"
+  desc "Import February 2026 real data for demo (Sư đoàn bộ). Requires `db:seed` first."
   task import_feb_2026: :environment do
+    unless Organization.exists?(code: "SDB")
+      abort "SDB organization missing — run `bin/rails db:seed` first."
+    end
+
     result = ImportFeb2026Service.new.call
 
     puts "=" * 60
