@@ -203,14 +203,11 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
     ss "12_calculation_table"
   end
 
-  # ---------------------------------------------------------------------------
-  # 13 — Admin level-1 view: org dropdown visible (no org_id → shows selector)
-  # ---------------------------------------------------------------------------
-  it "13_admin_l1_all_units" do
-    login_as @admin_level1, scope: :user
-    visit monthly_summary_path(period_id: @period.id)
-    ss "13_admin_l1_all_units"
-  end
+  # NOTE: a "#13 — admin_level1 all-units view" capture used to live here, but
+  # the seed only creates one cấp-2 unit (SDB) so `set_target_org` falls back
+  # to `@all_orgs.first` and the view is byte-identical to #12. The dropdown
+  # itself is already visible in #12 ("Đơn vị: Sư đoàn bộ"), so the admin
+  # unit-switcher is documented there. Re-add when the seed grows.
 
   # ---------------------------------------------------------------------------
   # 14 — Unlock button on a locked period (admin_level1 only)
