@@ -257,6 +257,22 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
   end
 
   # ---------------------------------------------------------------------------
+  # 12c — 22-column table, rightmost columns (Còn được hưởng group:
+  # Tiêu chuẩn còn lại, Sử dụng, Chênh lệch, Thành tiền).
+  # ---------------------------------------------------------------------------
+  it "12c_calculation_table_result" do
+    login_as @admin_level1, scope: :user
+    visit monthly_summary_path(period_id: @period.id, org_id: @sdb.id)
+    page.execute_script(<<~JS)
+      var el = document.querySelector('.overflow-x-auto') ||
+               document.querySelector('[style*="overflow-x"]') ||
+               (document.querySelector('table') && document.querySelector('table').closest('div'));
+      if (el) el.scrollLeft = el.scrollWidth;
+    JS
+    ss "12c_calculation_table_result"
+  end
+
+  # ---------------------------------------------------------------------------
   # 17 — Session timeout warning modal
   # Triggered via JS by setting expires-at to 300s from now (< 600s threshold).
   # Skipped if the Stimulus controller is not present on the page.
