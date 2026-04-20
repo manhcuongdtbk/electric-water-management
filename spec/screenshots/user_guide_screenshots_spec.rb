@@ -53,20 +53,24 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
     page.driver.browser.manage.window.resize_to(1280, 900)
   end
 
-  # Capture a true full-page screenshot.
+  # Standard viewport capture. Used for most screenshots — the visible 1280×900
+  # viewport is sufficient for users to recognize the interface in the guide.
+  def ss(name)
+    page.save_screenshot(Rails.root.join("tmp/screenshots/#{name}.png"))
+  end
+
+  # True full-page capture. Only #07 needs this — the personnel form has a
+  # "Kết quả tính toán" section below the 7-rank-group table that the guide
+  # text references explicitly and the viewport cuts off.
   #
   # The app layout (`application.html.erb`) uses `flex h-screen overflow-hidden`
   # on the outer wrapper with scrollable `<main class="overflow-auto">` inside,
   # so `document.body.scrollHeight` is clamped to the viewport. We temporarily
   # flatten these clamps, measure the natural content height, resize the
-  # browser window to fit (with ~140px margin for the outer-vs-inner delta),
+  # browser window to fit (with ~200px margin for the outer-vs-inner delta),
   # snap, then restore the original window size via `ensure`. DOM mutations
   # don't leak because the next test `visit`s a fresh page.
-  #
-  # `width:` overrides the capture width (default 1280). Test #12 passes a
-  # wider value so the full 22-column calculation table is captured without
-  # horizontal clipping.
-  def save_full_page_screenshot(name, width: 1280)
+  def save_full_page_screenshot(name)
     path = Rails.root.join("tmp/screenshots/#{name}.png")
     window = page.driver.browser.manage.window
     original = window.size
@@ -81,7 +85,7 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
     height = page.evaluate_script(
       "Math.max(document.documentElement.scrollHeight, document.body.scrollHeight)"
     ).to_i
-    window.resize_to(width, height + 200)
+    window.resize_to(1280, height + 200)
     sleep 0.3
     page.save_screenshot(path)
   ensure
@@ -93,7 +97,7 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
   # ---------------------------------------------------------------------------
   it "01_login_page" do
     visit root_path
-    save_full_page_screenshot "01_login_page"
+    ss "01_login_page"
   end
 
   # ---------------------------------------------------------------------------
@@ -102,7 +106,7 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
   it "02_force_password_change" do
     login_as @force_user, scope: :user
     visit root_path
-    save_full_page_screenshot "02_force_password_change"
+    ss "02_force_password_change"
   end
 
   # ---------------------------------------------------------------------------
@@ -111,7 +115,7 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
   it "03_contact_points_list" do
     login_as @admin_unit, scope: :user
     visit contact_points_path
-    save_full_page_screenshot "03_contact_points_list"
+    ss "03_contact_points_list"
   end
 
   # ---------------------------------------------------------------------------
@@ -120,7 +124,7 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
   it "04_contact_point_new" do
     login_as @admin_unit, scope: :user
     visit new_contact_point_path
-    save_full_page_screenshot "04_contact_point_new"
+    ss "04_contact_point_new"
   end
 
   # ---------------------------------------------------------------------------
@@ -129,7 +133,7 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
   it "05_meters_list" do
     login_as @admin_unit, scope: :user
     visit contact_point_meters_path(@cp)
-    save_full_page_screenshot "05_meters_list"
+    ss "05_meters_list"
   end
 
   # ---------------------------------------------------------------------------
@@ -138,11 +142,13 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
   it "06_meter_new" do
     login_as @admin_unit, scope: :user
     visit new_contact_point_meter_path(@cp)
-    save_full_page_screenshot "06_meter_new"
+    ss "06_meter_new"
   end
 
   # ---------------------------------------------------------------------------
-  # 07 — Personnel form (7-group headcount entry for a contact point)
+  # 07 — Personnel form (7-group headcount entry for a contact point).
+  # Full-page: the guide references the "Kết quả tính toán" section below the
+  # rank-group table, which falls outside the viewport.
   # ---------------------------------------------------------------------------
   it "07_personnel_form" do
     login_as @admin_unit, scope: :user
@@ -156,7 +162,7 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
   it "08_unit_config" do
     login_as @admin_unit, scope: :user
     visit unit_config_path
-    save_full_page_screenshot "08_unit_config"
+    ss "08_unit_config"
   end
 
   # ---------------------------------------------------------------------------
@@ -165,7 +171,7 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
   it "09_electricity_supply" do
     login_as @admin_unit, scope: :user
     visit electricity_supply_path
-    save_full_page_screenshot "09_electricity_supply"
+    ss "09_electricity_supply"
   end
 
   # ---------------------------------------------------------------------------
@@ -174,7 +180,7 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
   it "10_meter_readings" do
     login_as @admin_unit, scope: :user
     visit meter_readings_path
-    save_full_page_screenshot "10_meter_readings"
+    ss "10_meter_readings"
   end
 
   # ---------------------------------------------------------------------------
@@ -183,27 +189,18 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
   it "11_personnel_review" do
     login_as @admin_level1, scope: :user
     visit personnel_review_path(period_id: @period.id)
-    save_full_page_screenshot "11_personnel_review"
+    ss "11_personnel_review"
   end
 
   # ---------------------------------------------------------------------------
-  # 12 — 22-column calculation table for SDB (F11), full width (no clipping)
-  # Temporarily drops overflow-x clip on the container so the full table renders
-  # into the capture when the window is widened to the table's intrinsic width.
+  # 12 — 22-column calculation table for SDB (F11). Viewport shows leftmost
+  # columns + the horizontal-scroll affordance; 12a/12b capture the scrolled
+  # views separately.
   # ---------------------------------------------------------------------------
   it "12_calculation_table" do
     login_as @admin_level1, scope: :user
     visit monthly_summary_path(period_id: @period.id, org_id: @sdb.id)
-    full_width = page.evaluate_script(<<~JS).to_i
-      (function() {
-        var el = document.querySelector('.overflow-x-auto');
-        if (!el) return 1280;
-        el.style.overflowX = 'visible';
-        var t = el.querySelector('table');
-        return Math.max(el.scrollWidth, t ? t.scrollWidth : 0);
-      })();
-    JS
-    save_full_page_screenshot "12_calculation_table", width: [ full_width + 40, 1280 ].max
+    ss "12_calculation_table"
   end
 
   # ---------------------------------------------------------------------------
@@ -212,7 +209,7 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
   it "13_admin_l1_all_units" do
     login_as @admin_level1, scope: :user
     visit monthly_summary_path(period_id: @period.id)
-    save_full_page_screenshot "13_admin_l1_all_units"
+    ss "13_admin_l1_all_units"
   end
 
   # ---------------------------------------------------------------------------
@@ -221,7 +218,7 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
   it "14_admin_l1_unlock" do
     login_as @admin_level1, scope: :user
     visit personnel_review_path(period_id: @locked_period.id)
-    save_full_page_screenshot "14_admin_l1_unlock"
+    ss "14_admin_l1_unlock"
   end
 
   # ---------------------------------------------------------------------------
@@ -230,7 +227,7 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
   it "15_users_list" do
     login_as @tech, scope: :user
     visit users_path
-    save_full_page_screenshot "15_users_list"
+    ss "15_users_list"
   end
 
   # ---------------------------------------------------------------------------
@@ -239,11 +236,11 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
   it "16_user_new" do
     login_as @tech, scope: :user
     visit new_user_path
-    save_full_page_screenshot "16_user_new"
+    ss "16_user_new"
   end
 
   # ===========================================================================
-  # SUPPLEMENTAL — full-page + horizontal-scroll captures
+  # SUPPLEMENTAL — horizontal-scroll + modal captures
   # ===========================================================================
 
   # ---------------------------------------------------------------------------
@@ -259,7 +256,7 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
                (document.querySelector('table') && document.querySelector('table').closest('div'));
       if (el) el.scrollLeft = 0;
     JS
-    save_full_page_screenshot "12a_calculation_table_left"
+    ss "12a_calculation_table_left"
   end
 
   # ---------------------------------------------------------------------------
@@ -274,7 +271,7 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
                (document.querySelector('table') && document.querySelector('table').closest('div'));
       if (el) el.scrollLeft = 800;
     JS
-    save_full_page_screenshot "12b_calculation_table_right"
+    ss "12b_calculation_table_right"
   end
 
   # ---------------------------------------------------------------------------
@@ -297,7 +294,7 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
     JS
 
     if page.has_selector?('[data-session-timeout-target="modal"]', visible: true, wait: 5)
-      save_full_page_screenshot "17_timeout_warning"
+      ss "17_timeout_warning"
     else
       skip "session-timeout Stimulus controller not found on page — modal cannot be triggered via JS"
     end
