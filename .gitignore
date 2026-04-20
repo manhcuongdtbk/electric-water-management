@@ -50,3 +50,5 @@ yarn-error.log
 # Claude Code
 /.claude/worktrees/
 /.claude/projects/
+
+# Screenshot outputs go to tmp/screenshots/ — already covered by /tmp/* above
