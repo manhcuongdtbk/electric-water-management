@@ -445,6 +445,7 @@ vi:
   nav:
     contact_points: "Đầu mối"
     unit_config: "Cấu hình"
+    electricity_supply: "Nhập số điện lực"
     meter_readings: "Chỉ số công tơ"
     personnel_review: "Soát lại quân số"
     monthly_summary: "Bảng tổng hợp"
