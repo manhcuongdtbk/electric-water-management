@@ -193,9 +193,9 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
   end
 
   # ---------------------------------------------------------------------------
-  # 12 — 22-column calculation table for SDB (F11). Viewport shows leftmost
-  # columns + the horizontal-scroll affordance; 12a/12b capture the scrolled
-  # views separately.
+  # 12 — 22-column calculation table for SDB (F11). The default scroll
+  # position is leftmost, so this doubles as the "left half" capture; 12b
+  # captures the scrolled-right view with the remaining columns.
   # ---------------------------------------------------------------------------
   it "12_calculation_table" do
     login_as @admin_level1, scope: :user
@@ -244,23 +244,8 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
   # ===========================================================================
 
   # ---------------------------------------------------------------------------
-  # 12a — 22-column table, left half (Quân số + Tiêu chuẩn columns)
-  # ---------------------------------------------------------------------------
-  it "12a_calculation_table_left" do
-    login_as @admin_level1, scope: :user
-    visit monthly_summary_path(period_id: @period.id, org_id: @sdb.id)
-    # Reset any horizontal scroll to show the leftmost columns
-    page.execute_script(<<~JS)
-      var el = document.querySelector('.overflow-x-auto') ||
-               document.querySelector('[style*="overflow-x"]') ||
-               (document.querySelector('table') && document.querySelector('table').closest('div'));
-      if (el) el.scrollLeft = 0;
-    JS
-    ss "12a_calculation_table_left"
-  end
-
-  # ---------------------------------------------------------------------------
-  # 12b — 22-column table, right half (Sử dụng + Chênh lệch + Thành tiền)
+  # 12b — 22-column table, right half (Sử dụng + Chênh lệch + Thành tiền).
+  # The leftmost view is already captured by #12 (default scroll = 0).
   # ---------------------------------------------------------------------------
   it "12b_calculation_table_right" do
     login_as @admin_level1, scope: :user
