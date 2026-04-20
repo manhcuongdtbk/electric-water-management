@@ -50,3 +50,6 @@ yarn-error.log
 # Claude Code
 /.claude/worktrees/
 /.claude/projects/
+
+# Screenshot utility specs (local development only)
+/spec/screenshots/
