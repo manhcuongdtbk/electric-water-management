@@ -53,23 +53,43 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
     page.driver.browser.manage.window.resize_to(1280, 900)
   end
 
+  # Standard viewport capture. Used for most screenshots — the visible 1280×900
+  # viewport is sufficient for users to recognize the interface in the guide.
   def ss(name)
-    path = Rails.root.join("tmp/screenshots/#{name}.png")
-    # Resize window to page height so the full page is captured in one viewport
-    height = page.evaluate_script("document.body.scrollHeight").to_i
-    page.driver.browser.manage.window.resize_to(1280, [ height, 900 ].max)
-    page.save_screenshot(path)
+    page.save_screenshot(Rails.root.join("tmp/screenshots/#{name}.png"))
   end
 
-  # Full-page variant: uses documentElement.scrollHeight (more reliable than body
-  # for flex/grid layouts that clamp body height to viewport), capped at 3000px.
-  def ss_full(name)
+  # True full-page capture. Only #07 needs this — the personnel form has a
+  # "Kết quả tính toán" section below the 7-rank-group table that the guide
+  # text references explicitly and the viewport cuts off.
+  #
+  # The app layout (`application.html.erb`) uses `flex h-screen overflow-hidden`
+  # on the outer wrapper with scrollable `<main class="overflow-auto">` inside,
+  # so `document.body.scrollHeight` is clamped to the viewport. We temporarily
+  # flatten these clamps, measure the natural content height, resize the
+  # browser window to fit (with ~200px margin for the outer-vs-inner delta),
+  # snap, then restore the original window size via `ensure`. DOM mutations
+  # don't leak because the next test `visit`s a fresh page.
+  def save_full_page_screenshot(name)
     path = Rails.root.join("tmp/screenshots/#{name}.png")
+    window = page.driver.browser.manage.window
+    original = window.size
+
+    page.execute_script(<<~JS)
+      document.querySelectorAll('.h-screen').forEach(function(el) { el.style.height = 'auto'; });
+      document.querySelectorAll('.overflow-hidden, .overflow-auto, .overflow-y-auto').forEach(function(el) {
+        el.style.overflow = 'visible';
+      });
+    JS
+
     height = page.evaluate_script(
-      "Math.min(Math.max(document.documentElement.scrollHeight, document.body.scrollHeight, 900), 3000)"
+      "Math.max(document.documentElement.scrollHeight, document.body.scrollHeight)"
     ).to_i
-    page.driver.browser.manage.window.resize_to(1280, height)
+    window.resize_to(1280, height + 200)
+    sleep 0.3
     page.save_screenshot(path)
+  ensure
+    window.resize_to(original.width, original.height) if original
   end
 
   # ---------------------------------------------------------------------------
@@ -126,12 +146,14 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
   end
 
   # ---------------------------------------------------------------------------
-  # 07 — Personnel form (7-group headcount entry for a contact point)
+  # 07 — Personnel form (7-group headcount entry for a contact point).
+  # Full-page: the guide references the "Kết quả tính toán" section below the
+  # rank-group table, which falls outside the viewport.
   # ---------------------------------------------------------------------------
   it "07_personnel_form" do
     login_as @admin_unit, scope: :user
     visit contact_point_personnel_path(@cp, period_id: @period.id)
-    ss "07_personnel_form"
+    save_full_page_screenshot "07_personnel_form"
   end
 
   # ---------------------------------------------------------------------------
@@ -171,7 +193,9 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
   end
 
   # ---------------------------------------------------------------------------
-  # 12 — 22-column calculation table for SDB (F11)
+  # 12 — 22-column calculation table for SDB (F11). The default scroll
+  # position is leftmost, so this doubles as the "left half" capture; 12b
+  # captures the scrolled-right view with the remaining columns.
   # ---------------------------------------------------------------------------
   it "12_calculation_table" do
     login_as @admin_level1, scope: :user
@@ -179,14 +203,11 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
     ss "12_calculation_table"
   end
 
-  # ---------------------------------------------------------------------------
-  # 13 — Admin level-1 view: org dropdown visible (no org_id → shows selector)
-  # ---------------------------------------------------------------------------
-  it "13_admin_l1_all_units" do
-    login_as @admin_level1, scope: :user
-    visit monthly_summary_path(period_id: @period.id)
-    ss "13_admin_l1_all_units"
-  end
+  # NOTE: a "#13 — admin_level1 all-units view" capture used to live here, but
+  # the seed only creates one cấp-2 unit (SDB) so `set_target_org` falls back
+  # to `@all_orgs.first` and the view is byte-identical to #12. The dropdown
+  # itself is already visible in #12 ("Đơn vị: Sư đoàn bộ"), so the admin
+  # unit-switcher is documented there. Re-add when the seed grows.
 
   # ---------------------------------------------------------------------------
   # 14 — Unlock button on a locked period (admin_level1 only)
@@ -216,54 +237,12 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
   end
 
   # ===========================================================================
-  # SUPPLEMENTAL — full-page + horizontal-scroll captures
+  # SUPPLEMENTAL — horizontal-scroll + modal captures
   # ===========================================================================
 
   # ---------------------------------------------------------------------------
-  # 03_full — Contact points list, full page (79 rows, no viewport clipping)
-  # ---------------------------------------------------------------------------
-  it "03_full_contact_points_list" do
-    login_as @admin_unit, scope: :user
-    visit contact_points_path
-    ss_full "03_full_contact_points_list"
-  end
-
-  # ---------------------------------------------------------------------------
-  # 08_full — Unit config, full page (includes Khác section below the fold)
-  # ---------------------------------------------------------------------------
-  it "08_full_unit_config" do
-    login_as @admin_unit, scope: :user
-    visit unit_config_path
-    ss_full "08_full_unit_config"
-  end
-
-  # ---------------------------------------------------------------------------
-  # 11_full — Personnel review, full page (all contact points visible)
-  # ---------------------------------------------------------------------------
-  it "11_full_personnel_review" do
-    login_as @admin_level1, scope: :user
-    visit personnel_review_path(period_id: @period.id)
-    ss_full "11_full_personnel_review"
-  end
-
-  # ---------------------------------------------------------------------------
-  # 12a — 22-column table, left half (Quân số + Tiêu chuẩn columns)
-  # ---------------------------------------------------------------------------
-  it "12a_calculation_table_left" do
-    login_as @admin_level1, scope: :user
-    visit monthly_summary_path(period_id: @period.id, org_id: @sdb.id)
-    # Reset any horizontal scroll to show the leftmost columns
-    page.execute_script(<<~JS)
-      var el = document.querySelector('.overflow-x-auto') ||
-               document.querySelector('[style*="overflow-x"]') ||
-               (document.querySelector('table') && document.querySelector('table').closest('div'));
-      if (el) el.scrollLeft = 0;
-    JS
-    ss_full "12a_calculation_table_left"
-  end
-
-  # ---------------------------------------------------------------------------
-  # 12b — 22-column table, right half (Sử dụng + Chênh lệch + Thành tiền)
+  # 12b — 22-column table, right half (Sử dụng + Chênh lệch + Thành tiền).
+  # The leftmost view is already captured by #12 (default scroll = 0).
   # ---------------------------------------------------------------------------
   it "12b_calculation_table_right" do
     login_as @admin_level1, scope: :user
@@ -274,7 +253,7 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
                (document.querySelector('table') && document.querySelector('table').closest('div'));
       if (el) el.scrollLeft = 800;
     JS
-    ss_full "12b_calculation_table_right"
+    ss "12b_calculation_table_right"
   end
 
   # ---------------------------------------------------------------------------
