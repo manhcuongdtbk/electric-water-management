@@ -51,5 +51,4 @@ yarn-error.log
 /.claude/worktrees/
 /.claude/projects/
 
-# Screenshot utility specs (local development only)
-/spec/screenshots/
+# Screenshot outputs go to tmp/screenshots/ — already covered by /tmp/* above
