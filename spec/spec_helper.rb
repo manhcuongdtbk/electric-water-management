@@ -14,6 +14,10 @@
 #
 # See https://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 RSpec.configure do |config|
+  # Exclude screenshot utility specs from the default test run.
+  # Run them explicitly with: bundle exec rspec --tag screenshots
+  config.filter_run_excluding screenshots: true
+
   # rspec-expectations config goes here. You can use an alternate
   # assertion/expectation library such as wrong or the stdlib/minitest
   # assertions if you prefer.

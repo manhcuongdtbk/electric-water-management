@@ -1,11 +1,12 @@
 require "rails_helper"
 
 # Not a real test — navigation + screenshot utility for the user guide.
-# Run with: bundle exec rspec spec/screenshots/user_guide_screenshots_spec.rb
+# Excluded from the default rspec run via `screenshots: true` tag.
 #
-# Output: tmp/screenshots/*.png (covered by /tmp/* in .gitignore)
+# Run with: bundle exec rspec --tag screenshots
+# Output:   tmp/screenshots/*.png (covered by /tmp/* in .gitignore)
 # ImportFeb2026Service takes ~5-10s — data is set up once via before(:context).
-RSpec.describe "User Guide Screenshots", type: :system, js: true do
+RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: true do
   # ---------------------------------------------------------------------------
   # One-time data setup: import Feb 2026 real data + supporting records
   # ---------------------------------------------------------------------------
