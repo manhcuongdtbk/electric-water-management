@@ -39,7 +39,8 @@ Rails.application.routes.draw do
     end
   end
 
-  root "contact_points#index"
+  resource :dashboard, only: [ :show ], controller: "dashboard"
+  root "dashboard#show"
 
   get "up" => "rails/health#show", as: :rails_health_check
 end

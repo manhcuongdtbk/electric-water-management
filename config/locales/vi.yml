@@ -443,6 +443,7 @@ vi:
       submit: "Đổi mật khẩu"
 
   nav:
+    dashboard: "Trang chủ"
     contact_points: "Đầu mối"
     unit_config: "Cấu hình"
     electricity_supply: "Nhập số điện lực"
@@ -497,6 +498,32 @@ vi:
       unlock: "Mở khóa"
       lock_confirm: "Bạn có chắc muốn khóa tài khoản này?"
       unlock_confirm: "Bạn có chắc muốn mở khóa tài khoản này?"
+
+  dashboard:
+    show:
+      title: "Trang chủ"
+      period_select: "Chọn kỳ"
+      org_select: "Chọn đơn vị"
+      all_orgs: "Tất cả đơn vị"
+      no_data: "Chưa có dữ liệu tính toán cho kỳ này."
+    metrics:
+      total_standard: "Tổng tiêu chuẩn"
+      total_usage: "Tổng sử dụng"
+      difference: "Chênh lệch"
+      over_count: "Đầu mối vượt tiêu chuẩn"
+      unit_kw: "kW"
+      unit_count: "đầu mối"
+    chart:
+      title: "So sánh tiêu chuẩn và sử dụng"
+      standard: "Tiêu chuẩn"
+      usage: "Sử dụng"
+    table:
+      title: "Chi tiết đầu mối"
+      name: "Đầu mối"
+      standard: "Tiêu chuẩn (kW)"
+      usage: "Sử dụng (kW)"
+      difference: "Chênh lệch (kW)"
+      over_badge: "Vượt"
 
   helpers:
     page_entries_info:
