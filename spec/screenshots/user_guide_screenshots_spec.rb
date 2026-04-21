@@ -193,21 +193,88 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
   end
 
   # ---------------------------------------------------------------------------
-  # 12 — 22-column calculation table for SDB (F11). The default scroll
-  # position is leftmost, so this doubles as the "left half" capture; 12b
-  # captures the scrolled-right view with the remaining columns.
+  # 12 — 22-column calculation table (adaptive horizontal scroll).
+  # Measures scrollWidth / clientWidth of the overflow container, then takes
+  # ceil(scrollWidth / clientWidth) screenshots that together cover every
+  # column. Files: 12_calculation_table.png, 12b_calculation_table.png, …
+  # After capturing, prints which columns appear in each screenshot and
+  # asserts that every <th> is covered by at least one capture.
+  #
+  # NOTE: a "#13 — admin_level1 all-units view" was removed because the seed
+  # only creates one cấp-2 unit (SDB) — the view is byte-identical to #12.
+  # Re-add when the seed grows.
   # ---------------------------------------------------------------------------
   it "12_calculation_table" do
     login_as @admin_level1, scope: :user
     visit monthly_summary_path(period_id: @period.id, org_id: @sdb.id)
-    ss "12_calculation_table"
-  end
 
-  # NOTE: a "#13 — admin_level1 all-units view" capture used to live here, but
-  # the seed only creates one cấp-2 unit (SDB) so `set_target_org` falls back
-  # to `@all_orgs.first` and the view is byte-identical to #12. The dropdown
-  # itself is already visible in #12 ("Đơn vị: Sư đoàn bộ"), so the admin
-  # unit-switcher is documented there. Re-add when the seed grows.
+    dims = page.evaluate_script(<<~JS)
+      (function() {
+        var el = document.querySelector('.overflow-x-auto');
+        if (!el) return { scrollWidth: window.innerWidth, clientWidth: window.innerWidth };
+        return { scrollWidth: el.scrollWidth, clientWidth: el.clientWidth };
+      })()
+    JS
+
+    scroll_width = dims["scrollWidth"].to_i
+    client_width = dims["clientWidth"].to_i
+    num_shots    = (scroll_width.to_f / client_width).ceil.clamp(1, 26)
+
+    # Measure column positions while scroll is at 0 (initial state)
+    col_info = page.evaluate_script(<<~JS)
+      (function() {
+        var container = document.querySelector('.overflow-x-auto');
+        if (!container) return [];
+        var cRect = container.getBoundingClientRect();
+        return Array.from(document.querySelectorAll('table thead th')).map(function(th) {
+          var tRect = th.getBoundingClientRect();
+          return {
+            text: th.innerText.trim().replace(/\\n+/g, ' '),
+            left: Math.round(tRect.left - cRect.left),
+            width: th.offsetWidth
+          };
+        });
+      })()
+    JS
+
+    suffixes = [ "" ] + ("b".."z").to_a
+    coverage  = {}
+
+    num_shots.times do |i|
+      scroll_pos = (i == num_shots - 1) ? scroll_width : i * client_width
+
+      page.execute_script(
+        "var el = document.querySelector('.overflow-x-auto'); if (el) el.scrollLeft = #{scroll_pos};"
+      )
+      sleep 0.15
+
+      suffix    = suffixes[i]
+      file_name = "12#{suffix}_calculation_table"
+      ss file_name
+
+      actual_left   = [ scroll_pos, [ scroll_width - client_width, 0 ].max ].min
+      visible_start = actual_left
+      visible_end   = actual_left + client_width
+
+      coverage[file_name] = col_info.select do |c|
+        left  = c["left"].to_i
+        right = left + c["width"].to_i
+        right > visible_start && left < visible_end
+      end.map { |c| c["text"] }
+
+      puts "Screenshot #{file_name}.png: #{coverage[file_name].join(' | ')}"
+    end
+
+    all_headers  = col_info.map { |c| c["text"] }.uniq
+    covered_hdrs = coverage.values.flatten.uniq
+    uncovered    = all_headers - covered_hdrs
+
+    puts "\nTotal columns: #{all_headers.size} | Screenshots: #{num_shots}"
+    puts "Uncovered columns: #{uncovered.inspect}" if uncovered.any?
+
+    expect(uncovered).to be_empty,
+      "Columns not visible in any screenshot: #{uncovered.join(', ')}"
+  end
 
   # ---------------------------------------------------------------------------
   # 14 — Unlock button on a locked period (admin_level1 only)
@@ -234,42 +301,6 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
     login_as @tech, scope: :user
     visit new_user_path
     ss "16_user_new"
-  end
-
-  # ===========================================================================
-  # SUPPLEMENTAL — horizontal-scroll + modal captures
-  # ===========================================================================
-
-  # ---------------------------------------------------------------------------
-  # 12b — 22-column table, right half (Sử dụng + Chênh lệch + Thành tiền).
-  # The leftmost view is already captured by #12 (default scroll = 0).
-  # ---------------------------------------------------------------------------
-  it "12b_calculation_table_right" do
-    login_as @admin_level1, scope: :user
-    visit monthly_summary_path(period_id: @period.id, org_id: @sdb.id)
-    page.execute_script(<<~JS)
-      var el = document.querySelector('.overflow-x-auto') ||
-               document.querySelector('[style*="overflow-x"]') ||
-               (document.querySelector('table') && document.querySelector('table').closest('div'));
-      if (el) el.scrollLeft = 800;
-    JS
-    ss "12b_calculation_table_right"
-  end
-
-  # ---------------------------------------------------------------------------
-  # 12c — 22-column table, rightmost columns (Còn được hưởng group:
-  # Tiêu chuẩn còn lại, Sử dụng, Chênh lệch, Thành tiền).
-  # ---------------------------------------------------------------------------
-  it "12c_calculation_table_result" do
-    login_as @admin_level1, scope: :user
-    visit monthly_summary_path(period_id: @period.id, org_id: @sdb.id)
-    page.execute_script(<<~JS)
-      var el = document.querySelector('.overflow-x-auto') ||
-               document.querySelector('[style*="overflow-x"]') ||
-               (document.querySelector('table') && document.querySelector('table').closest('div'));
-      if (el) el.scrollLeft = el.scrollWidth;
-    JS
-    ss "12c_calculation_table_result"
   end
 
   # ---------------------------------------------------------------------------
