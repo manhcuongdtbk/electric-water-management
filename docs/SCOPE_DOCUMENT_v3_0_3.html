@@ -78,10 +78,10 @@
     <h1>Phần mềm Quản lý tiêu chuẩn điện nước</h1>
     <p>Mô tả phạm vi dự án &mdash; làm cơ sở để hai bên thống nhất trước khi triển khai</p>
     <div class="cover-meta">
-      <span>Phiên bản: <strong>3.0</strong></span>
-      <span>Ngày: <strong>___/04/2026</strong></span>
+      <span>Phiên bản: <strong>3.0.3</strong></span>
+      <span>Ngày: <strong>22/04/2026</strong></span>
     </div>
-    <p style="font-size:12px;color:var(--text3);margin-top:12px;">Cập nhật theo nghiệp vụ đã xác nhận trong &ldquo;Xác nhận nghiệp vụ v5&rdquo; (06/04/2026)</p>
+    <p style="font-size:12px;color:var(--text3);margin-top:12px;">Cập nhật theo nghiệp vụ đã xác nhận trong &ldquo;Xác nhận nghiệp vụ v5.3.0&rdquo; (22/04/2026)</p>
   </div>
 
   <div class="section">
@@ -102,42 +102,63 @@
     <h2>Cấu trúc tổ chức</h2>
     <p class="section-desc">Hệ thống phân thành 2 cấp. Mỗi đơn vị cấp 2 có dữ liệu riêng biệt, tài khoản riêng, không xem được dữ liệu đơn vị khác.</p>
     <div class="svg-w">
-      <svg width="100%" viewBox="0 0 820 480" xmlns="http://www.w3.org/2000/svg" style="font-family:'Be Vietnam Pro',sans-serif">
-        <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
-        <rect x="5" y="5" width="810" height="58" rx="12" fill="none" stroke="#DDD6FE" stroke-width="1" stroke-dasharray="6 3"/>
-        <text x="18" y="22" font-size="10" font-weight="600" fill="#7C3AED" letter-spacing="1">CẤP 1</text>
-        <rect x="200" y="14" width="420" height="38" rx="8" fill="#F5F3FF" stroke="#DDD6FE" stroke-width="1"/>
-        <text x="410" y="38" text-anchor="middle" font-size="13" font-weight="600" fill="#3C3489">Sư đoàn (1 tài khoản quản trị toàn hệ thống)</text>
-        <line x1="410" y1="63" x2="410" y2="82" stroke="#DDD6FE" stroke-width="1" marker-end="url(#arr)"/>
-        <rect x="5" y="86" width="810" height="160" rx="12" fill="none" stroke="#99F6E4" stroke-width="1" stroke-dasharray="6 3"/>
-        <text x="18" y="106" font-size="10" font-weight="600" fill="#0D9488" letter-spacing="1">CẤP 2 — 13 ĐƠN VỊ, MỖI ĐƠN VỊ CÓ QUẢN TRỊ VIÊN + CHỈ HUY + DỮ LIỆU RIÊNG</text>
-        <rect x="20" y="118" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/><text x="80" y="136" text-anchor="middle" font-size="11" fill="#085041">Sư đoàn bộ</text>
-        <rect x="148" y="118" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/><text x="208" y="136" text-anchor="middle" font-size="10" fill="#085041">Trung đoàn 101</text>
-        <rect x="276" y="118" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/><text x="336" y="136" text-anchor="middle" font-size="10" fill="#085041">Trung đoàn 18</text>
-        <rect x="404" y="118" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/><text x="464" y="136" text-anchor="middle" font-size="10" fill="#085041">Trung đoàn 95</text>
-        <rect x="532" y="118" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/><text x="592" y="136" text-anchor="middle" font-size="10" fill="#085041">Tiểu đoàn 14</text>
-        <rect x="660" y="118" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/><text x="720" y="136" text-anchor="middle" font-size="10" fill="#085041">Tiểu đoàn 15</text>
-        <rect x="20" y="154" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/><text x="80" y="172" text-anchor="middle" font-size="10" fill="#085041">Tiểu đoàn 16</text>
-        <rect x="148" y="154" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/><text x="208" y="172" text-anchor="middle" font-size="10" fill="#085041">Tiểu đoàn 17</text>
-        <rect x="276" y="154" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/><text x="336" y="172" text-anchor="middle" font-size="10" fill="#085041">Tiểu đoàn 18</text>
-        <rect x="404" y="154" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/><text x="464" y="172" text-anchor="middle" font-size="10" fill="#085041">Tiểu đoàn 24</text>
-        <rect x="532" y="154" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/><text x="592" y="172" text-anchor="middle" font-size="10" fill="#085041">Tiểu đoàn 25</text>
-        <rect x="660" y="154" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/><text x="720" y="172" text-anchor="middle" font-size="10" fill="#085041">Đại đội 26</text>
-        <rect x="20" y="190" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/><text x="80" y="208" text-anchor="middle" font-size="10" fill="#085041">Đại đội 29</text>
-        <text x="160" y="208" font-size="10" fill="#0D9488" font-style="italic">Có thể thêm đơn vị cấp 2 mới</text>
-        <line x1="80" y1="236" x2="80" y2="266" stroke="#F0997B" stroke-width="1" stroke-dasharray="4 3"/>
-        <rect x="5" y="266" width="500" height="180" rx="12" fill="#FAECE7" stroke="#F0997B" stroke-width="1"/>
-        <text x="18" y="288" font-size="10" font-weight="600" fill="#993C1D" letter-spacing="1">BÊN TRONG "SƯ ĐOÀN BỘ" (1 ĐƠN VỊ CẤP 2)</text>
-        <circle cx="24" cy="312" r="2" fill="#993C1D"/><text x="32" y="316" font-size="11" fill="#712B13">46 đầu mối (Chỉ huy Sư đoàn, Ban Tác huấn, Ban Quân lực, Tổ xe...)</text>
-        <circle cx="24" cy="334" r="2" fill="#993C1D"/><text x="32" y="338" font-size="11" fill="#712B13">Mỗi đầu mối có N công tơ (thêm bớt linh động, mỗi công tơ có tên riêng)</text>
-        <circle cx="24" cy="356" r="2" fill="#993C1D"/><text x="32" y="360" font-size="11" fill="#712B13">Quân số theo 7 nhóm cấp bậc (570, 440, 305, 130, 210, 110, 24 kW)</text>
-        <circle cx="24" cy="378" r="2" fill="#993C1D"/><text x="32" y="382" font-size="11" fill="#712B13">Tiêu chuẩn sinh hoạt + tiêu chuẩn điện bơm nước (9,45 kW/người/tháng)</text>
-        <circle cx="24" cy="400" r="2" fill="#993C1D"/><text x="32" y="404" font-size="11" fill="#712B13">Trừ tiết kiệm, tổn hao, công cộng Sư đoàn, công cộng đơn vị, khác</text>
-        <circle cx="24" cy="422" r="2" fill="#993C1D"/><text x="32" y="426" font-size="11" fill="#712B13">Tổng hợp so sánh tiêu chuẩn với sử dụng, thu tiền từng người</text>
-        <rect x="540" y="266" width="260" height="54" rx="10" fill="#FAECE7" stroke="#F0997B" stroke-width="1"/>
-        <text x="670" y="290" text-anchor="middle" font-size="12" font-weight="500" fill="#712B13">Mỗi đơn vị cấp 2 khác</text>
-        <text x="670" y="308" text-anchor="middle" font-size="11" fill="#993C1D">cấu trúc tương tự</text>
-      </svg>
+      <svg width="100%" viewBox="0 0 820 530" xmlns="http://www.w3.org/2000/svg" style="font-family:'Be Vietnam Pro',sans-serif">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+      <!-- CẤP 1 -->
+      <rect x="5" y="5" width="810" height="58" rx="12" fill="none" stroke="#DDD6FE" stroke-width="1" stroke-dasharray="6 3"/>
+      <text x="18" y="22" font-size="10" font-weight="600" fill="#7C3AED" letter-spacing="1">CẤP 1</text>
+      <rect x="200" y="14" width="420" height="38" rx="8" fill="#F5F3FF" stroke="#DDD6FE" stroke-width="1"/>
+      <text x="410" y="38" text-anchor="middle" font-size="13" font-weight="600" fill="#3C3489">Sư đoàn (1 tài khoản quản trị toàn hệ thống)</text>
+      <line x1="410" y1="63" x2="410" y2="82" stroke="#DDD6FE" stroke-width="1" marker-end="url(#arr)"/>
+      <!-- CẤP 2 — chỉ chứa 13 đơn vị, không chứa zoom -->
+      <rect x="5" y="86" width="810" height="160" rx="12" fill="none" stroke="#99F6E4" stroke-width="1" stroke-dasharray="6 3"/>
+      <text x="18" y="106" font-size="10" font-weight="600" fill="#0D9488" letter-spacing="1">CẤP 2 &mdash; 13 ĐƠN VỊ, MỖI ĐƠN VỊ CÓ QUẢN TRỊ VIÊN + CHỈ HUY + DỮ LIỆU RIÊNG</text>
+      <!-- Row 1 -->
+      <rect x="20" y="118" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/>
+      <text x="80" y="136" text-anchor="middle" font-size="11" fill="#085041">Sư đoàn bộ</text>
+      <rect x="148" y="118" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/>
+      <text x="208" y="136" text-anchor="middle" font-size="10" fill="#085041">Trung đoàn 101</text>
+      <rect x="276" y="118" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/>
+      <text x="336" y="136" text-anchor="middle" font-size="10" fill="#085041">Trung đoàn 18</text>
+      <rect x="404" y="118" width="120" height="28" rx="5" fill="#ECFDF5" stroke="#059669" stroke-width="1.5"/>
+      <text x="464" y="136" text-anchor="middle" font-size="10" font-weight="600" fill="#065F46">Trung đoàn 95</text>
+      <rect x="532" y="118" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/>
+      <text x="592" y="136" text-anchor="middle" font-size="10" fill="#085041">Tiểu đoàn 14</text>
+      <rect x="660" y="118" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/>
+      <text x="720" y="136" text-anchor="middle" font-size="10" fill="#085041">Tiểu đoàn 15</text>
+      <!-- Row 2 -->
+      <rect x="20" y="154" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/>
+      <text x="80" y="172" text-anchor="middle" font-size="10" fill="#085041">Tiểu đoàn 16</text>
+      <rect x="148" y="154" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/>
+      <text x="208" y="172" text-anchor="middle" font-size="10" fill="#085041">Tiểu đoàn 17</text>
+      <rect x="276" y="154" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/>
+      <text x="336" y="172" text-anchor="middle" font-size="10" fill="#085041">Tiểu đoàn 18</text>
+      <rect x="404" y="154" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/>
+      <text x="464" y="172" text-anchor="middle" font-size="10" fill="#085041">Tiểu đoàn 24</text>
+      <rect x="532" y="154" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/>
+      <text x="592" y="172" text-anchor="middle" font-size="10" fill="#085041">Tiểu đoàn 25</text>
+      <rect x="660" y="154" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/>
+      <text x="720" y="172" text-anchor="middle" font-size="10" fill="#085041">Đại đội 26</text>
+      <!-- Row 3 (still inside CẤP 2 border) -->
+      <rect x="20" y="190" width="120" height="28" rx="5" fill="#E1F5EE" stroke="#99F6E4" stroke-width="0.5"/>
+      <text x="80" y="208" text-anchor="middle" font-size="10" fill="#085041">Đại đội 29</text>
+      <text x="160" y="208" font-size="10" fill="#0D9488" font-style="italic">Có thể thêm đơn vị cấp 2 mới (ví dụ "Đại đội 30")</text>
+      <!-- Zoom — NGOÀI khung CẤP 2 -->
+      <line x1="80" y1="236" x2="80" y2="270" stroke="#F0997B" stroke-width="1" stroke-dasharray="4 3"/>
+      <rect x="5" y="270" width="530" height="210" rx="12" fill="#FAECE7" stroke="#F0997B" stroke-width="1"/>
+      <text x="18" y="292" font-size="10" font-weight="600" fill="#993C1D" letter-spacing="1">BÊN TRONG "SƯ ĐOÀN BỘ" (1 ĐƠN VỊ CẤP 2)</text>
+      <circle cx="24" cy="316" r="2" fill="#993C1D"/><text x="32" y="320" font-size="11" fill="#712B13">46 đầu mối (Chỉ huy Sư đoàn, Ban Tác huấn, Ban Quân lực, Tổ xe...)</text>
+      <circle cx="24" cy="340" r="2" fill="#993C1D"/><text x="32" y="344" font-size="11" fill="#712B13">Mỗi đầu mối có N công tơ (thêm bớt linh động, mỗi công tơ có tên riêng)</text>
+      <circle cx="24" cy="364" r="2" fill="#993C1D"/><text x="32" y="368" font-size="11" fill="#712B13">7 nhóm quân số (xem Bảng định mức 7 nhóm cấp bậc)</text>
+      <circle cx="24" cy="388" r="2" fill="#993C1D"/><text x="32" y="392" font-size="11" fill="#712B13">Tiêu chuẩn sinh hoạt + tiêu chuẩn điện bơm nước (9,45 kW/người/tháng)</text>
+      <circle cx="24" cy="412" r="2" fill="#993C1D"/><text x="32" y="416" font-size="11" fill="#712B13">Trừ Tiết kiệm của Bộ, Tổn hao, Công cộng dùng chung Sư đoàn,</text>
+      <text x="32" y="434" font-size="11" fill="#712B13">Công cộng dùng chung của đơn vị, Khác</text>
+      <circle cx="24" cy="454" r="2" fill="#993C1D"/><text x="32" y="458" font-size="11" fill="#712B13">Tổng hợp so sánh tiêu chuẩn với sử dụng &rarr; thu tiền từng người</text>
+      <rect x="560" y="270" width="250" height="54" rx="10" fill="#FAECE7" stroke="#F0997B" stroke-width="1"/>
+      <text x="685" y="294" text-anchor="middle" font-size="12" font-weight="500" fill="#712B13">Mỗi đơn vị cấp 2 khác</text>
+      <text x="685" y="312" text-anchor="middle" font-size="11" fill="#993C1D">cấu trúc tương tự</text>
+      <text x="18" y="508" font-size="10" fill="#3B82F6" font-style="italic">Nguồn: y_kien_cua_325.docx, mục "Sơ đồ phân cấp" + Zalo 06/04/2026 (xác nhận Trung đoàn 95)</text>
+    </svg>
     </div>
   </div>
 
@@ -145,31 +166,28 @@
     <h2>Phân quyền theo vai trò</h2>
     <p class="section-desc">Hệ thống có 3 vai trò người dùng chính và 1 vai trò vận hành kỹ thuật.</p>
     <div class="svg-w">
-      <svg width="100%" viewBox="0 0 820 390" xmlns="http://www.w3.org/2000/svg" style="font-family:'Be Vietnam Pro',sans-serif">
-        <rect x="5" y="5" width="810" height="128" rx="12" fill="none" stroke="#DDD6FE" stroke-width="1" stroke-dasharray="6 3"/>
-        <text x="18" y="24" font-size="10" font-weight="600" fill="#7C3AED" letter-spacing="1">CẤP 1 — SƯ ĐOÀN</text>
-        <rect x="24" y="38" width="500" height="84" rx="8" fill="#F5F3FF" stroke="#DDD6FE" stroke-width="1"/>
-        <text x="40" y="58" font-size="13" font-weight="600" fill="#3C3489">Quản trị viên cấp 1 (Ban Doanh trại)</text>
-        <circle cx="44" cy="76" r="2" fill="#534AB7"/><text x="52" y="80" font-size="11" fill="#534AB7">Thêm, bớt đơn vị cấp 2, quản lý tài khoản toàn hệ thống</text>
-        <circle cx="44" cy="94" r="2" fill="#534AB7"/><text x="52" y="98" font-size="11" fill="#534AB7">Mở khoá sửa dữ liệu tháng cũ</text>
-        <circle cx="44" cy="112" r="2" fill="#534AB7"/><text x="52" y="116" font-size="11" fill="#534AB7">Cấu hình bảng định mức kW, tỷ lệ tiết kiệm, tỷ lệ công cộng Sư đoàn</text>
-        <rect x="5" y="148" width="810" height="152" rx="12" fill="none" stroke="#99F6E4" stroke-width="1" stroke-dasharray="6 3"/>
-        <text x="18" y="168" font-size="10" font-weight="600" fill="#0D9488" letter-spacing="1">CẤP 2 — MỖI ĐƠN VỊ TRỰC THUỘC (13 ĐƠN VỊ, MỖI ĐƠN VỊ CÓ 2 VAI TRÒ DƯỚI ĐÂY)</text>
-        <rect x="24" y="184" width="440" height="104" rx="8" fill="#E1F5EE" stroke="#99F6E4" stroke-width="1"/>
-        <text x="40" y="204" font-size="13" font-weight="600" fill="#085041">Quản trị viên đơn vị</text>
-        <circle cx="44" cy="222" r="2" fill="#0F6E56"/><text x="52" y="226" font-size="11" fill="#0F6E56">Khai báo đầu mối, công tơ, quân số</text>
-        <circle cx="44" cy="242" r="2" fill="#0F6E56"/><text x="52" y="246" font-size="11" fill="#0F6E56">Nhập số liệu hàng tháng + số điện lực (đồng hồ tổng)</text>
-        <circle cx="44" cy="262" r="2" fill="#0F6E56"/><text x="52" y="266" font-size="11" fill="#0F6E56">Cấu hình tỷ lệ công cộng đơn vị, cột "Khác"</text>
-        <circle cx="44" cy="282" r="2" fill="#0F6E56"/><text x="52" y="286" font-size="11" fill="#0F6E56">Đẩy số liệu lên hệ thống</text>
-        <rect x="490" y="184" width="300" height="84" rx="8" fill="#F1EFE8" stroke="#D3D1C7" stroke-width="1"/>
-        <text x="506" y="206" font-size="13" font-weight="600" fill="#444441">Chỉ huy đơn vị</text>
-        <circle cx="510" cy="228" r="2" fill="#5F5E5A"/><text x="518" y="232" font-size="11" fill="#5F5E5A">Chỉ xem và kiểm tra số liệu</text>
-        <circle cx="510" cy="250" r="2" fill="#5F5E5A"/><text x="518" y="254" font-size="11" fill="#5F5E5A">Không thao tác, không sửa được gì</text>
-        <rect x="5" y="318" width="810" height="64" rx="12" fill="none" stroke="#BFDBFE" stroke-width="1" stroke-dasharray="6 3"/>
-        <text x="18" y="338" font-size="10" font-weight="600" fill="#2563EB" letter-spacing="1">VẬN HÀNH KỸ THUẬT</text>
-        <rect x="24" y="348" width="500" height="28" rx="6" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="0.5"/>
-        <text x="40" y="367" font-size="12" fill="#1E40AF">Đội kỹ thuật: quản lý tài khoản, xem nhật ký thay đổi, sao lưu, vận hành máy chủ</text>
-      </svg>
+      <svg width="100%" viewBox="0 0 820 330" xmlns="http://www.w3.org/2000/svg" style="font-family:'Be Vietnam Pro',sans-serif">
+      <rect x="5" y="5" width="810" height="146" rx="12" fill="none" stroke="#DDD6FE" stroke-width="1" stroke-dasharray="6 3"/>
+      <text x="18" y="24" font-size="10" font-weight="600" fill="#7C3AED" letter-spacing="1">CẤP 1 &mdash; SƯ ĐOÀN</text>
+      <rect x="24" y="38" width="500" height="102" rx="8" fill="#F5F3FF" stroke="#DDD6FE" stroke-width="1"/>
+      <text x="40" y="58" font-size="13" font-weight="600" fill="#3C3489">Quản trị viên cấp 1 (Ban Doanh trại)</text>
+      <circle cx="44" cy="76" r="2" fill="#534AB7"/><text x="52" y="80" font-size="11" fill="#534AB7">Thêm, bớt đơn vị cấp 2, quản lý tài khoản toàn hệ thống</text>
+      <circle cx="44" cy="94" r="2" fill="#534AB7"/><text x="52" y="98" font-size="11" fill="#534AB7">Mở khoá sửa dữ liệu tháng cũ</text>
+      <circle cx="44" cy="112" r="2" fill="#534AB7"/><text x="52" y="116" font-size="11" fill="#534AB7">Cấu hình bảng định mức kW, tỷ lệ Tiết kiệm của Bộ,</text>
+      <text x="52" y="132" font-size="11" fill="#534AB7">tỷ lệ Công cộng dùng chung Sư đoàn</text>
+      <rect x="5" y="166" width="810" height="152" rx="12" fill="none" stroke="#99F6E4" stroke-width="1" stroke-dasharray="6 3"/>
+      <text x="18" y="186" font-size="10" font-weight="600" fill="#0D9488" letter-spacing="1">CẤP 2 &mdash; MỖI ĐƠN VỊ TRỰC THUỘC (13 ĐƠN VỊ, MỖI ĐƠN VỊ CÓ 2 VAI TRÒ DƯỚI ĐÂY)</text>
+      <rect x="24" y="202" width="440" height="104" rx="8" fill="#E1F5EE" stroke="#99F6E4" stroke-width="1"/>
+      <text x="40" y="222" font-size="13" font-weight="600" fill="#085041">Quản trị viên đơn vị</text>
+      <circle cx="44" cy="240" r="2" fill="#0F6E56"/><text x="52" y="244" font-size="11" fill="#0F6E56">Khai báo đầu mối, công tơ, quân số</text>
+      <circle cx="44" cy="258" r="2" fill="#0F6E56"/><text x="52" y="262" font-size="11" fill="#0F6E56">Nhập số liệu hàng tháng + số điện lực (đồng hồ tổng)</text>
+      <circle cx="44" cy="276" r="2" fill="#0F6E56"/><text x="52" y="280" font-size="11" fill="#0F6E56">Cấu hình tỷ lệ Công cộng dùng chung của đơn vị, cột "Khác"</text>
+      <circle cx="44" cy="294" r="2" fill="#0F6E56"/><text x="52" y="298" font-size="11" fill="#0F6E56">Đẩy số liệu lên hệ thống</text>
+      <rect x="490" y="202" width="300" height="84" rx="8" fill="#F1EFE8" stroke="#D3D1C7" stroke-width="1"/>
+      <text x="506" y="224" font-size="13" font-weight="600" fill="#444441">Chỉ huy đơn vị</text>
+      <circle cx="510" cy="246" r="2" fill="#5F5E5A"/><text x="518" y="250" font-size="11" fill="#5F5E5A">Chỉ xem và kiểm tra số liệu</text>
+      <circle cx="510" cy="268" r="2" fill="#5F5E5A"/><text x="518" y="272" font-size="11" fill="#5F5E5A">Không thao tác, không sửa được gì</text>
+    </svg>
     </div>
   </div>
 
@@ -179,9 +197,9 @@
     <h3><span style="display:inline-flex;align-items:center;gap:8px;"><span style="width:24px;height:24px;border-radius:6px;background:var(--purple-light);display:inline-flex;align-items:center;justify-content:center;font-size:12px;">⚙️</span>Khai báo ban đầu — quản trị viên đơn vị thực hiện 1 lần, sửa khi cần</span></h3>
     <div class="card"><div class="screen-group">
       <div class="screen-item"><div class="screen-id">F01</div><div><div class="screen-name">Khai báo đầu mối trong đơn vị</div><div class="screen-desc">Khai báo các đầu mối sử dụng điện (ví dụ: Ban Tác huấn, Ban Quân lực, Tổ xe...). Thêm, bớt linh động khi có thay đổi tổ chức. Sư đoàn bộ hiện có 46 đầu mối.</div></div></div>
-      <div class="screen-item"><div class="screen-id">F02</div><div><div class="screen-name">Khai báo công tơ trong mỗi đầu mối</div><div class="screen-desc">Mỗi đầu mối có nhiều công tơ (mỗi công tơ có tên riêng). Thêm, bớt linh động. Có đánh dấu công tơ thuộc loại "công cộng" (không xuất hiện trong bản thu tiền) hoặc "trạm bơm nước".</div></div></div>
-      <div class="screen-item"><div class="screen-id">F03</div><div><div class="screen-name">Khai báo quân số theo 7 nhóm cấp bậc</div><div class="screen-desc">Nhập số người theo từng nhóm: Đại tá (570 kW), Thượng tá (440 kW), Trung tá và Thiếu tá (305 kW), cấp Úy (130 kW), cơ quan Sư đoàn và tương đương (210 kW), Tiểu đoàn và Đại đội (110 kW), Hạ sĩ quan và Binh sĩ (24 kW). Phần mềm tự tính tiêu chuẩn = tổng (số người mỗi nhóm × định mức nhóm).</div></div></div>
-      <div class="screen-item"><div class="screen-id">F04</div><div><div class="screen-name">Cấu hình tỷ lệ và cột "Khác"</div><div class="screen-desc">Tiết kiệm (5–10%, cấp 1 cấu hình), công cộng Sư đoàn (5–10%, cấp 1 cấu hình), công cộng đơn vị (10–20%, đơn vị tự cấu hình), cột "Khác" (nhập số cụ thể hoặc hệ số nhân với số người, ví dụ: nhà ăn, nhà bếp). Tổn hao: phần mềm tự tính, không cần khai báo.</div></div></div>
+      <div class="screen-item"><div class="screen-id">F02</div><div><div class="screen-name">Khai báo công tơ trong mỗi đầu mối</div><div class="screen-desc">Mỗi đầu mối có nhiều công tơ (mỗi công tơ có tên riêng). Thêm, bớt linh động. Có đánh dấu công tơ thuộc loại "công cộng" (không xuất hiện trong bản thu tiền), "trạm bơm nước", hoặc "vị trí không tổn hao" (công tơ đặt tại trạm biến áp, phần mềm bỏ qua khi tính tổn hao phân bổ).</div></div></div>
+      <div class="screen-item"><div class="screen-id">F03</div><div><div class="screen-name">Khai báo quân số theo 7 nhóm cấp bậc</div><div class="screen-desc">Nhập số người theo từng nhóm cấp bậc (xem Bảng định mức 7 nhóm cấp bậc bên dưới). Phần mềm tự tính tiêu chuẩn = tổng (số người mỗi nhóm × định mức nhóm).</div></div></div>
+      <div class="screen-item"><div class="screen-id">F04</div><div><div class="screen-name">Cấu hình tỷ lệ và cột "Khác"</div><div class="screen-desc">Tiết kiệm của Bộ (5–10%, cấp 1 cấu hình), Công cộng dùng chung Sư đoàn (5–10%, cấp 1 cấu hình), Công cộng dùng chung của đơn vị (10–20%, đơn vị tự cấu hình), cột "Khác" (nhập số cụ thể hoặc hệ số nhân với số người, ví dụ: nhà ăn, nhà bếp; cho phép giá trị âm — âm nghĩa là cộng ngược vào tiêu chuẩn, lấy từ đầu mối khác). Tổn hao: phần mềm tự tính, không cần khai báo.</div></div></div>
     </div></div>
     <h3><span style="display:inline-flex;align-items:center;gap:8px;"><span style="width:24px;height:24px;border-radius:6px;background:var(--blue-light);display:inline-flex;align-items:center;justify-content:center;font-size:12px;">📋</span>Nhập liệu hàng tháng — quản trị viên đơn vị thực hiện mỗi tháng</span></h3>
     <div class="card"><div class="screen-group">
@@ -204,7 +222,7 @@
       <div class="screen-item"><div class="screen-id">F15</div><div><div class="screen-name">Quản lý tài khoản người dùng</div><div class="screen-desc">Tạo, khoá, mở khoá tài khoản. Gán vai trò và đơn vị. Quản trị viên cấp 1 quản lý tài khoản toàn hệ thống.</div></div></div>
       <div class="screen-item"><div class="screen-id">F16</div><div><div class="screen-name">Đăng nhập bằng tài khoản, mật khẩu</div><div class="screen-desc">Mỗi người dùng có tài khoản riêng. Bắt buộc đổi mật khẩu lần đầu đăng nhập.</div></div></div>
       <div class="screen-item"><div class="screen-id">F17</div><div><div class="screen-name">Khoá tài khoản khi nhập sai mật khẩu</div><div class="screen-desc">Sau 5 lần nhập sai liên tiếp, tài khoản bị khoá. Cần quản trị viên mở lại.</div></div></div>
-      <div class="screen-item"><div class="screen-id">F18</div><div><div class="screen-name">Tự động đăng xuất khi không thao tác</div><div class="screen-desc">Sau 30 phút không sử dụng, phiên đăng nhập tự hết hạn.</div></div></div>
+      <div class="screen-item"><div class="screen-id">F18</div><div><div class="screen-name">Tự động đăng xuất khi không thao tác</div><div class="screen-desc">Sau 2 giờ không sử dụng, phiên đăng nhập tự hết hạn.</div></div></div>
       <div class="screen-item"><div class="screen-id">F19</div><div><div class="screen-name">Nhật ký thay đổi dữ liệu</div><div class="screen-desc">Hệ thống tự động ghi lại mọi thay đổi dữ liệu: ai sửa, sửa gì, lúc nào. Đội kỹ thuật và quản trị viên cấp 1 xem được.</div></div></div>
       <div class="screen-item"><div class="screen-id">F20</div><div><div class="screen-name">Cấu hình đơn giá điện</div><div class="screen-desc">Quản trị viên cấp 1 nhập đơn giá điện theo tháng. Giá có thể thay đổi hàng tháng theo quy định.</div></div></div>
       <div class="screen-item"><div class="screen-id">F21</div><div><div class="screen-name">Cấu hình bảng định mức cấp bậc</div><div class="screen-desc">Quản trị viên cấp 1 chỉnh sửa bảng 7 nhóm cấp bậc và định mức kW khi có nghị định mới.</div></div></div>
@@ -217,40 +235,44 @@
 
     <h3>Quy trình khai báo ban đầu (7 bước)</h3>
     <div class="svg-w">
-      <svg width="100%" viewBox="0 0 820 570" xmlns="http://www.w3.org/2000/svg" style="font-family:'Be Vietnam Pro',sans-serif">
-        <defs><marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
-        <rect x="10" y="10" width="800" height="80" rx="10" fill="#F5F3FF" stroke="#DDD6FE" stroke-width="1"/>
-        <text x="26" y="32" font-size="12" font-weight="600" fill="#3C3489">Bước 1: Khai báo đầu mối trong đơn vị</text>
-        <text x="26" y="52" font-size="11" fill="#534AB7">Ví dụ: Chỉ huy Sư đoàn, Ban Tác huấn, Ban Quân lực, Ban Trinh sát, Tổ xe... (46 đầu mối trong Sư đoàn bộ)</text>
-        <text x="26" y="72" font-size="11" fill="#534AB7">Thêm bớt linh động do thay đổi tổ chức</text>
-        <line x1="410" y1="90" x2="410" y2="114" stroke="#DDD6FE" stroke-width="1" marker-end="url(#a2)"/>
-        <rect x="10" y="118" width="800" height="64" rx="10" fill="#F5F3FF" stroke="#DDD6FE" stroke-width="1"/>
-        <text x="26" y="140" font-size="12" font-weight="600" fill="#3C3489">Bước 2: Khai báo công tơ trong mỗi đầu mối</text>
-        <text x="26" y="160" font-size="11" fill="#534AB7">Mỗi công tơ có tên riêng. Đánh dấu loại: thường, công cộng, hoặc trạm bơm nước. Thêm bớt linh động.</text>
-        <line x1="410" y1="182" x2="410" y2="206" stroke="#DDD6FE" stroke-width="1" marker-end="url(#a2)"/>
-        <rect x="10" y="210" width="800" height="80" rx="10" fill="#ECFDF5" stroke="#A7F3D0" stroke-width="1"/>
-        <text x="26" y="232" font-size="12" font-weight="600" fill="#27500A">Bước 3: Khai báo quân số theo 7 nhóm cấp bậc</text>
-        <text x="26" y="252" font-size="11" fill="#065F46">570 kW (Đại tá) · 440 kW (Thượng tá) · 305 kW (Trung tá, Thiếu tá) · 130 kW (cấp Úy)</text>
-        <text x="26" y="272" font-size="11" fill="#065F46">210 kW (cơ quan Sư đoàn, Lữ đoàn, Trung đoàn) · 110 kW (Tiểu đoàn, Đại đội) · 24 kW (Hạ sĩ quan, Binh sĩ)</text>
-        <line x1="410" y1="290" x2="410" y2="314" stroke="#A7F3D0" stroke-width="1" marker-end="url(#a2)"/>
-        <rect x="10" y="318" width="800" height="210" rx="12" fill="none" stroke="#FDE68A" stroke-width="1" stroke-dasharray="6 3"/>
-        <text x="24" y="338" font-size="10" font-weight="600" fill="#D97706" letter-spacing="1">BƯỚC 4–7: CẤU HÌNH TỶ LỆ (THAY ĐỔI THEO NĂM)</text>
-        <rect x="30" y="354" width="370" height="50" rx="6" fill="#FFFBEB" stroke="#FDE68A" stroke-width="0.5"/>
-        <text x="46" y="374" font-size="12" font-weight="600" fill="#854F0B">Bước 4: Tiết kiệm</text>
-        <text x="46" y="392" font-size="11" fill="#854F0B">Tỷ lệ 5–10%, thay đổi theo năm. Do cấp 1 cấu hình.</text>
-        <rect x="420" y="354" width="370" height="50" rx="6" fill="#FFFBEB" stroke="#FDE68A" stroke-width="0.5"/>
-        <text x="436" y="374" font-size="12" font-weight="600" fill="#854F0B">Bước 5: Công cộng Sư đoàn</text>
-        <text x="436" y="392" font-size="11" fill="#854F0B">Tỷ lệ 5–10%, thay đổi theo năm. Do cấp 1 cấu hình.</text>
-        <rect x="30" y="416" width="370" height="50" rx="6" fill="#FFFBEB" stroke="#FDE68A" stroke-width="0.5"/>
-        <text x="46" y="436" font-size="12" font-weight="600" fill="#854F0B">Bước 6: Công cộng đơn vị</text>
-        <text x="46" y="454" font-size="11" fill="#854F0B">Tỷ lệ 10–20%, thay đổi theo năm. Do đơn vị tự cấu hình.</text>
-        <rect x="420" y="416" width="370" height="66" rx="6" fill="#FFFBEB" stroke="#FDE68A" stroke-width="0.5"/>
-        <text x="436" y="436" font-size="12" font-weight="600" fill="#854F0B">Bước 7: Cột "Khác" (nhà ăn, nhà bếp)</text>
-        <text x="436" y="456" font-size="11" fill="#854F0B">Nhập số cụ thể cho mỗi đầu mối</text>
-        <text x="436" y="472" font-size="11" fill="#854F0B">hoặc nhập hệ số rồi nhân với số người</text>
-        <rect x="10" y="540" width="800" height="28" rx="4" fill="#FEF2F2" stroke="#FECACA" stroke-width="0.5"/>
-        <text x="26" y="558" font-size="11" fill="#991B1B">Tổn hao: phần mềm tự tính hàng tháng, trừ khỏi tiêu chuẩn (nằm trong "Số phải trừ"), không cần khai báo</text>
-      </svg>
+      <svg width="100%" viewBox="0 0 820 636" xmlns="http://www.w3.org/2000/svg" style="font-family:'Be Vietnam Pro',sans-serif">
+      <defs><marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+      <rect x="10" y="10" width="800" height="80" rx="10" fill="#F5F3FF" stroke="#DDD6FE" stroke-width="1"/>
+      <text x="26" y="32" font-size="12" font-weight="600" fill="#3C3489">Bước 1: Khai báo đầu mối trong đơn vị</text>
+      <text x="26" y="52" font-size="11" fill="#534AB7">Ví dụ: Chỉ huy Sư đoàn, Ban Tác huấn, Ban Quân lực, Ban Trinh sát, Tổ xe... (46 đầu mối trong Sư đoàn bộ)</text>
+      <text x="26" y="72" font-size="11" fill="#534AB7">Thêm bớt linh động do thay đổi tổ chức</text>
+      <line x1="410" y1="90" x2="410" y2="114" stroke="#DDD6FE" stroke-width="1" marker-end="url(#a2)"/>
+      <rect x="10" y="118" width="800" height="64" rx="10" fill="#F5F3FF" stroke="#DDD6FE" stroke-width="1"/>
+      <text x="26" y="140" font-size="12" font-weight="600" fill="#3C3489">Bước 2: Khai báo công tơ trong mỗi đầu mối</text>
+      <text x="26" y="160" font-size="11" fill="#534AB7">Mỗi công tơ có tên riêng. Đánh dấu loại: thường, công cộng, hoặc trạm bơm nước. Thêm bớt linh động.</text>
+      <line x1="410" y1="182" x2="410" y2="206" stroke="#DDD6FE" stroke-width="1" marker-end="url(#a2)"/>
+      <rect x="10" y="210" width="800" height="80" rx="10" fill="#ECFDF5" stroke="#A7F3D0" stroke-width="1"/>
+      <text x="26" y="232" font-size="12" font-weight="600" fill="#27500A">Bước 3: Khai báo quân số theo 7 nhóm cấp bậc</text>
+      <text x="26" y="252" font-size="11" fill="#065F46">Nhập số người theo từng nhóm cấp bậc (chi tiết xem Bảng định mức 7 nhóm cấp bậc)</text>
+      <text x="26" y="272" font-size="11" fill="#065F46">Phần mềm tự tính tiêu chuẩn = tổng (số người mỗi nhóm &times; định mức nhóm)</text>
+      <line x1="410" y1="290" x2="410" y2="314" stroke="#A7F3D0" stroke-width="1" marker-end="url(#a2)"/>
+      <!-- B4-7 grouped -->
+      <rect x="10" y="318" width="800" height="246" rx="12" fill="none" stroke="#FDE68A" stroke-width="1" stroke-dasharray="6 3"/>
+      <text x="24" y="338" font-size="10" font-weight="600" fill="#D97706" letter-spacing="1">BƯỚC 4&ndash;7: CẤU HÌNH TỶ LỆ (THAY ĐỔI THEO NĂM)</text>
+      <rect x="30" y="354" width="370" height="50" rx="6" fill="#FFFBEB" stroke="#FDE68A" stroke-width="0.5"/>
+      <text x="46" y="374" font-size="12" font-weight="600" fill="#854F0B">Bước 4: Tiết kiệm của Bộ</text>
+      <text x="46" y="392" font-size="11" fill="#854F0B">Tỷ lệ 5&ndash;10%, thay đổi theo năm. Do cấp 1 cấu hình.</text>
+      <rect x="420" y="354" width="370" height="50" rx="6" fill="#FFFBEB" stroke="#FDE68A" stroke-width="0.5"/>
+      <text x="436" y="374" font-size="12" font-weight="600" fill="#854F0B">Bước 5: Công cộng dùng chung Sư đoàn</text>
+      <text x="436" y="392" font-size="11" fill="#854F0B">Tỷ lệ 5&ndash;10%, thay đổi theo năm. Do cấp 1 cấu hình.</text>
+      <rect x="30" y="416" width="370" height="50" rx="6" fill="#FFFBEB" stroke="#FDE68A" stroke-width="0.5"/>
+      <text x="46" y="436" font-size="12" font-weight="600" fill="#854F0B">Bước 6: Công cộng dùng chung của đơn vị</text>
+      <text x="46" y="454" font-size="11" fill="#854F0B">Tỷ lệ 10&ndash;20%, thay đổi theo năm. Do đơn vị tự cấu hình.</text>
+      <rect x="420" y="416" width="370" height="102" rx="6" fill="#FFFBEB" stroke="#FDE68A" stroke-width="0.5"/>
+      <text x="436" y="436" font-size="12" font-weight="600" fill="#854F0B">Bước 7: Cột "Khác" (nhà ăn, nhà bếp)</text>
+      <text x="436" y="456" font-size="11" fill="#854F0B">Nhập số cụ thể cho mỗi đầu mối</text>
+      <text x="436" y="472" font-size="11" fill="#854F0B">hoặc nhập hệ số rồi nhân với số người.</text>
+      <text x="436" y="488" font-size="11" fill="#854F0B">Cho phép giá trị âm: âm = cộng ngược</text>
+      <text x="436" y="504" font-size="11" fill="#854F0B">vào tiêu chuẩn (lấy từ đầu mối khác).</text>
+      <!-- Outside group -->
+      <rect x="10" y="576" width="800" height="28" rx="4" fill="#FEF2F2" stroke="#FECACA" stroke-width="0.5"/>
+      <text x="26" y="594" font-size="11" fill="#991B1B">Tổn hao: phần mềm tự tính hàng tháng, trừ khỏi tiêu chuẩn (nằm trong "Số phải trừ"), không cần khai báo</text>
+    </svg>
     </div>
 
     <h3>Bảng định mức 7 nhóm cấp bậc</h3>
@@ -258,13 +280,13 @@
       <table class="s-table">
         <thead><tr><th>Nhóm cấp bậc</th><th style="width:80px">Định mức</th></tr></thead>
         <tbody>
-          <tr><td>Chỉ huy sư đoàn, bộ chỉ huy quân sự tỉnh (thành phố) và tương đương; sĩ quan có cấp bậc quân hàm cao nhất là Đại tá</td><td>570 kW</td></tr>
-          <tr><td>Chỉ huy lữ đoàn, trung đoàn và tương đương; sĩ quan có cấp bậc quân hàm cao nhất là Thượng tá</td><td>440 kW</td></tr>
-          <tr><td>Chỉ huy tiểu đoàn và tương đương; sĩ quan có cấp bậc quân hàm cao nhất là Trung tá, Thiếu tá</td><td>305 kW</td></tr>
-          <tr><td>Chỉ huy đại đội, trung đội và tương đương; sĩ quan có cấp bậc quân hàm là cấp Úy</td><td>130 kW</td></tr>
-          <tr><td>Cơ quan sư đoàn, lữ đoàn, trung đoàn và tương đương</td><td>210 kW</td></tr>
-          <tr><td>Tiểu đoàn, đại đội và tương đương</td><td>110 kW</td></tr>
-          <tr><td>Hạ sĩ quan, binh sĩ; thiếu sinh quân; học sinh năng khiếu</td><td>24 kW</td></tr>
+          <tr><td>Chỉ huy Sư đoàn; SQ có trần quân hàm là Đại tá</td><td>570 kW</td></tr>
+          <tr><td>Chỉ huy Trung đoàn; SQ có trần quân hàm là Thượng tá</td><td>440 kW</td></tr>
+          <tr><td>Chỉ huy tiểu đoàn; SQ có trần quân hàm là Trung tá, Thiếu tá</td><td>305 kW</td></tr>
+          <tr><td>Chỉ huy đại đội, trung đội; SQ có trần quân hàm là cấp Úy</td><td>130 kW</td></tr>
+          <tr><td>Cơ quan sư đoàn, trung đoàn</td><td>210 kW</td></tr>
+          <tr><td>Tiểu đoàn, đại đội</td><td>110 kW</td></tr>
+          <tr><td>Hạ sĩ quan, binh sĩ</td><td>24 kW</td></tr>
         </tbody>
       </table>
     </div>
@@ -274,14 +296,14 @@
       <table class="s-table">
         <thead><tr><th>Nhóm cột</th><th>Nội dung</th></tr></thead>
         <tbody>
-          <tr><td>Cột 1–3</td><td>Số thứ tự, Đơn vị, Tổng quân số</td></tr>
-          <tr><td>Cột 5–11</td><td>7 nhóm quân số (570, 440, 305, 130, 210, 110, 24 kW)</td></tr>
+          <tr><td>Cột 1–3</td><td>TT, Đơn vị, Tổng quân số</td></tr>
+          <tr><td>Cột 5–11</td><td>7 nhóm quân số (xem Bảng định mức 7 nhóm cấp bậc)</td></tr>
           <tr><td>Cột 12</td><td><strong>Điện bơm nước</strong> — 9,45 kW/người/tháng (tiêu chuẩn cố định)</td></tr>
           <tr><td>Cột 13</td><td><strong>Quân số</strong> — tổng số người của đầu mối</td></tr>
           <tr><td>Cột 14</td><td>Cộng được hưởng theo nghị định 02 (kW) — phần mềm tự tính</td></tr>
-          <tr><td>Cột 15–18</td><td>"Số phải trừ": Tiết kiệm, <strong>Tổn hao</strong>, Công cộng, Khác + Cộng</td></tr>
-          <tr><td>Cột 19–21</td><td>"Còn được hưởng": Khối lượng (kW), Giá (đồng), Thành tiền (đồng)</td></tr>
-          <tr><td>Cột 22</td><td>Ghi chú</td></tr>
+          <tr><td>Cột 15–18</td><td>"Số phải trừ": Tiết kiệm của Bộ, <strong>Tổn hao</strong>, Công cộng, Khác + Cộng</td></tr>
+          <tr><td>Cột 19–22</td><td>"Còn được hưởng": Tiêu chuẩn còn lại (kW), Sử dụng (kW), Chênh lệch (kW), Thành tiền (đồng). Gộp bảng sử dụng (sheet "SD điện" trong Excel gốc) vào cùng 1 bảng để tiện theo dõi.</td></tr>
+          <tr><td>Cột 23</td><td>Ghi chú</td></tr>
         </tbody>
       </table>
     </div>
@@ -295,36 +317,37 @@
     </div>
     <div class="card">
       <p><strong>Tổn hao:</strong> Tổn hao công tơ X = Tổng tổn hao × (kW công tơ X ÷ Tổng kW tất cả công tơ)</p>
-      <p><strong>Tiêu chuẩn còn lại:</strong> Tổng tiêu chuẩn − Tiết kiệm − Tổn hao − Công cộng − Khác</p>
+      <p><strong>Tiêu chuẩn còn lại:</strong> Tổng tiêu chuẩn − Tiết kiệm của Bộ − Tổn hao − Công cộng − Khác (Khác âm thì cộng ngược vào tiêu chuẩn)</p>
       <p><strong>Thâm điện:</strong> Tổng sử dụng (công tơ + bơm nước thực tế) − Tiêu chuẩn còn lại</p>
       <p><strong>Thành tiền:</strong> Thâm điện × Đơn giá (thay đổi hàng tháng)</p>
     </div>
 
     <h3>Quy trình nhập liệu hàng tháng (3 bước)</h3>
     <div class="svg-w">
-      <svg width="100%" viewBox="0 0 820 120" xmlns="http://www.w3.org/2000/svg" style="font-family:'Be Vietnam Pro',sans-serif">
-        <rect x="10" y="10" width="260" height="50" rx="10" fill="#E1F5EE" stroke="#99F6E4" stroke-width="1"/>
-        <text x="140" y="30" text-anchor="middle" font-size="12" font-weight="600" fill="#085041">Bước 1</text>
-        <text x="140" y="48" text-anchor="middle" font-size="11" fill="#0F6E56">Nhập số điện lực (đồng hồ tổng)</text>
-        <text x="278" y="38" font-size="14" fill="#D3D1C7">→</text>
-        <rect x="294" y="10" width="230" height="50" rx="10" fill="#E1F5EE" stroke="#99F6E4" stroke-width="1"/>
-        <text x="409" y="30" text-anchor="middle" font-size="12" font-weight="600" fill="#085041">Bước 2</text>
-        <text x="409" y="48" text-anchor="middle" font-size="11" fill="#0F6E56">Nhập đầu kỳ, cuối kỳ từng công tơ</text>
-        <text x="532" y="38" font-size="14" fill="#D3D1C7">→</text>
-        <rect x="550" y="10" width="260" height="50" rx="10" fill="#E1F5EE" stroke="#99F6E4" stroke-width="1"/>
-        <text x="680" y="30" text-anchor="middle" font-size="12" font-weight="600" fill="#085041">Bước 3</text>
-        <text x="680" y="48" text-anchor="middle" font-size="11" fill="#0F6E56">Soát lại quân số (nếu thay đổi)</text>
-        <rect x="10" y="76" width="400" height="28" rx="6" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="0.5"/>
-        <text x="22" y="94" font-size="11" fill="#1E40AF">Tự động kế thừa tháng trước. Chỉ cần sửa chỗ có thay đổi.</text>
-        <rect x="420" y="76" width="390" height="28" rx="6" fill="#FEF2F2" stroke="#FECACA" stroke-width="0.5"/>
-        <text x="432" y="94" font-size="11" fill="#991B1B">Dữ liệu tháng cũ bị khoá. Chỉ quản trị viên cấp 1 mở khoá.</text>
-      </svg>
+      <svg width="100%" viewBox="0 0 820 160" xmlns="http://www.w3.org/2000/svg" style="font-family:'Be Vietnam Pro',sans-serif">
+      <rect x="10" y="10" width="260" height="50" rx="10" fill="#E1F5EE" stroke="#99F6E4" stroke-width="1"/>
+      <text x="140" y="30" text-anchor="middle" font-size="12" font-weight="600" fill="#085041">Bước 1</text>
+      <text x="140" y="48" text-anchor="middle" font-size="11" fill="#0F6E56">Nhập số điện lực (đồng hồ tổng)</text>
+      <text x="278" y="38" font-size="14" fill="#D3D1C7">&rarr;</text>
+      <rect x="294" y="10" width="230" height="50" rx="10" fill="#E1F5EE" stroke="#99F6E4" stroke-width="1"/>
+      <text x="409" y="30" text-anchor="middle" font-size="12" font-weight="600" fill="#085041">Bước 2</text>
+      <text x="409" y="48" text-anchor="middle" font-size="11" fill="#0F6E56">Nhập đầu kỳ, cuối kỳ từng công tơ</text>
+      <text x="532" y="38" font-size="14" fill="#D3D1C7">&rarr;</text>
+      <rect x="550" y="10" width="260" height="50" rx="10" fill="#E1F5EE" stroke="#99F6E4" stroke-width="1"/>
+      <text x="680" y="30" text-anchor="middle" font-size="12" font-weight="600" fill="#085041">Bước 3</text>
+      <text x="680" y="48" text-anchor="middle" font-size="11" fill="#0F6E56">Soát lại quân số (nếu thay đổi)</text>
+      <rect x="10" y="80" width="400" height="28" rx="6" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="0.5"/>
+      <text x="22" y="98" font-size="11" fill="#1E40AF">Tự động kế thừa tháng trước. Chỉ cần sửa chỗ có thay đổi.</text>
+      <rect x="420" y="80" width="390" height="28" rx="6" fill="#FEF2F2" stroke="#FECACA" stroke-width="0.5"/>
+      <text x="432" y="98" font-size="11" fill="#991B1B">Dữ liệu tháng cũ bị khoá. Chỉ quản trị viên cấp 1 mở khoá.</text>
+      <text x="10" y="132" font-size="10" fill="#3B82F6" font-style="italic">Nguồn: y_kien_cua_325.docx, "Phần khai báo hàng tháng"</text>
+    </svg>
     </div>
 
     <h3>Điện công cộng</h3>
     <div class="card">
-      <p>Công cộng Sư đoàn: do cấp 1 (Ban Doanh trại) quy định tỷ lệ, áp dụng chung cho tất cả đơn vị cấp 2.</p>
-      <p>Công cộng đơn vị: do quản trị viên đơn vị tự cấu hình, tỷ lệ riêng cho đơn vị mình.</p>
+      <p>Công cộng dùng chung Sư đoàn: do cấp 1 (Ban Doanh trại) quy định tỷ lệ, áp dụng chung cho tất cả đơn vị cấp 2.</p>
+      <p>Công cộng dùng chung của đơn vị: do quản trị viên đơn vị tự cấu hình, tỷ lệ riêng cho đơn vị mình.</p>
       <p>Công cộng chỉ trừ cho đối tượng có tiêu chuẩn. Công tơ được đánh dấu "công cộng" sẽ không xuất hiện trong bản thu tiền.</p>
     </div>
 
@@ -401,12 +424,13 @@
 
   <div class="section">
     <h2>Thanh toán</h2>
-    <p class="section-desc">Chọn một trong hai phương án thanh toán dưới đây. Phương án được chọn sẽ ghi vào hợp đồng.</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:8px 0;">
-      <div style="padding:24px;border-radius:12px;border:2px solid var(--blue-border);background:var(--blue-light);text-align:center;"><div style="font-size:11px;font-weight:600;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">Phương án A</div><div style="font-size:32px;font-weight:700;color:var(--blue);line-height:1;margin-bottom:4px;">100%</div><div style="font-size:14px;font-weight:600;color:var(--blue);margin-bottom:12px;">Trả trước</div><div style="font-size:13px;color:#1E40AF;line-height:1.6;text-align:left;">Thanh toán toàn bộ sau khi hai bên ký tài liệu phạm vi, trước khi bắt đầu triển khai.</div></div>
-      <div style="padding:24px;border-radius:12px;border:2px solid var(--green-border);background:var(--green-light);text-align:center;"><div style="font-size:11px;font-weight:600;color:var(--green);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">Phương án B</div><div style="font-size:32px;font-weight:700;color:var(--green);line-height:1;margin-bottom:4px;">100%</div><div style="font-size:14px;font-weight:600;color:var(--green);margin-bottom:12px;">Trả sau</div><div style="font-size:13px;color:#065F46;line-height:1.6;text-align:left;">Thanh toán toàn bộ sau khi ký biên bản nghiệm thu, khi bên đặt hàng đã kiểm tra và xác nhận phần mềm hoạt động đúng.</div></div>
+    <div class="card">
+      <div style="text-align:center;padding:8px 0;">
+        <div style="font-size:32px;font-weight:700;color:var(--green);line-height:1;margin-bottom:4px;">100%</div>
+        <div style="font-size:14px;font-weight:600;color:var(--green);margin-bottom:12px;">Trả sau</div>
+      </div>
+      <p style="font-size:13.5px;line-height:1.6;">Thanh toán toàn bộ sau khi ký biên bản nghiệm thu, khi bên đặt hàng đã kiểm tra và xác nhận phần mềm hoạt động đúng.</p>
     </div>
-    <div style="margin-top:12px;padding:14px 18px;border-radius:8px;border:1px solid var(--border);background:var(--surface);font-size:13.5px;display:flex;align-items:center;gap:12px;"><span style="font-size:14px;">☐</span><span>Phương án được chọn: <strong>_______________</strong></span></div>
   </div>
 
   <div class="section">
@@ -430,16 +454,42 @@
   </div>
 
   <div class="section">
-    <h2>Thay đổi so với phiên bản 2.0</h2>
+    <h2>Thay đổi so với phiên bản trước</h2>
+
+    <h3>Phiên bản 3.0.2 → 3.0.3</h3>
     <div class="card" style="padding:12px 18px;">
       <table class="s-table">
-        <thead><tr><th style="width:24px">#</th><th>Trước (phiên bản 2.0)</th><th>Sau (phiên bản 3.0)</th></tr></thead>
+        <thead><tr><th style="width:24px">#</th><th>Trước (3.0.2)</th><th>Sau (3.0.3)</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Bảng định mức 7 nhóm cấp bậc ghi theo nghị định gốc (dài, đầy đủ "và tương đương", "sĩ quan có cấp bậc quân hàm cao nhất là...")</td><td>Đổi thành tên rút gọn theo <strong>bảng mẫu cập nhật</strong> do anh Thảo và anh Hưng gửi. Ví dụ: "Chỉ huy Sư đoàn; SQ có trần quân hàm là Đại tá"</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Phiên bản 3.0 → 3.0.1</h3>
+    <div class="card" style="padding:12px 18px;">
+      <table class="s-table">
+        <thead><tr><th style="width:24px">#</th><th>Trước (3.0)</th><th>Sau (3.0.1)</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>F18: "Sau 30 phút không sử dụng"</td><td>F18: Sau <strong>2 giờ</strong> không sử dụng (đã thay đổi trong quá trình triển khai)</td></tr>
+          <tr><td>2</td><td>Tên nhóm cấp bậc liệt kê lặp ở nhiều chỗ (F03, SVG bước 3, Cột 5–11, SVG cấu trúc tổ chức)</td><td>Tất cả tham chiếu tới <strong>Bảng định mức 7 nhóm cấp bậc</strong> (1 nguồn duy nhất)</td></tr>
+          <tr><td>3</td><td>"Tiết kiệm", "Công cộng Sư đoàn", "Công cộng đơn vị" (viết tắt ở nhiều chỗ — bắt nguồn từ Xác nhận nghiệp vụ v5 cũng viết tắt ngoài SVG bước 4–6)</td><td><strong>Tiết kiệm của Bộ</strong>, <strong>Công cộng dùng chung Sư đoàn</strong>, <strong>Công cộng dùng chung của đơn vị</strong> — viết đầy đủ ở mọi chỗ, khớp tên chính thức trong Xác nhận nghiệp vụ v5 (bước 4–6)</td></tr>
+          <tr><td>4</td><td>Thanh toán: 2 phương án (trả trước hoặc trả sau)</td><td>Thanh toán: chỉ còn <strong>phương án trả sau</strong> (100% sau nghiệm thu)</td></tr>
+          <tr><td>5</td><td>Bảng 22 cột, cột 19–21: "Còn được hưởng: Khối lượng, Giá, Thành tiền" (đúng mẫu Excel gốc)</td><td>Cột 19–22: "Còn được hưởng: Tiêu chuẩn còn lại, <strong>Sử dụng</strong>, <strong>Chênh lệch</strong>, Thành tiền". Gộp bảng sử dụng (sheet "SD điện" trong Excel gốc) vào cùng 1 bảng để tiện theo dõi.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Phiên bản 2.0 → 3.0</h3>
+    <div class="card" style="padding:12px 18px;">
+      <table class="s-table">
+        <thead><tr><th style="width:24px">#</th><th>Trước (2.0)</th><th>Sau (3.0)</th></tr></thead>
         <tbody>
           <tr><td>1</td><td>Gọi cấp 1 là "Lữ đoàn 164", 15 đơn vị phẳng</td><td>Cấp 1 là <strong>Sư đoàn</strong>, 13 đơn vị cấp 2 trực thuộc. Cấu trúc 2 cấp rõ ràng.</td></tr>
           <tr><td>2</td><td>4 vai trò (Kế toán, Chỉ huy, Quản trị viên, Đội kỹ thuật)</td><td><strong>3 vai trò chính</strong> (Quản trị viên cấp 1, Quản trị viên đơn vị, Chỉ huy đơn vị) + Đội kỹ thuật</td></tr>
           <tr><td>3</td><td>Cách nhập tiêu chuẩn "chờ xác nhận"</td><td>Nhập quân số theo <strong>7 nhóm cấp bậc</strong>, phần mềm tự tính tiêu chuẩn theo nghị định 02. Bao gồm cột bơm nước 9,45 kW/người/tháng.</td></tr>
           <tr><td>4</td><td>Cách nhập tiêu thụ "chờ xác nhận"</td><td>Nhập <strong>chỉ số đầu kỳ, cuối kỳ</strong> từng công tơ. Phần mềm tự tính sử dụng.</td></tr>
-          <tr><td>5</td><td>Chưa có quy trình khai báo ban đầu</td><td><strong>7 bước khai báo</strong>: đầu mối, công tơ, quân số, tiết kiệm, công cộng Sư đoàn, công cộng đơn vị, "Khác"</td></tr>
+          <tr><td>5</td><td>Chưa có quy trình khai báo ban đầu</td><td><strong>7 bước khai báo</strong>: đầu mối, công tơ, quân số, Tiết kiệm của Bộ, Công cộng dùng chung Sư đoàn, Công cộng dùng chung của đơn vị, "Khác"</td></tr>
           <tr><td>6</td><td>Nước tính riêng bằng mét khối</td><td>Nước = <strong>điện bơm nước</strong> (kW), nằm trong luồng tính toán điện. Không có đồng hồ nước.</td></tr>
           <tr><td>7</td><td>Tổn hao chưa rõ cách xử lý</td><td>Tổn hao <strong>trừ khỏi tiêu chuẩn</strong> (nằm trong "Số phải trừ"), phần mềm tự tính phân bổ theo tỷ lệ kW</td></tr>
           <tr><td>8</td><td>Cấu trúc phân quyền 3 cấp</td><td><strong>2 cấp</strong>: Sư đoàn → Đơn vị. Không có cấp trung gian.</td></tr>
