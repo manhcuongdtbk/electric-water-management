@@ -56,10 +56,8 @@ organizations, users, contact_points, meters, personnel, rank_quotas, monthly_pe
 - M1 (14/4–23/4): ✅ DONE — DB + CRUD khai báo F01–F04 + Docker dev + RSpec 247 specs
 - M2 (21/4–5/5): ✅ DONE — Nhập liệu F05–F07 + Engine F08–F10 + Bảng 22 cột F11 + RSpec 388 specs
 - M3 (2/5–9/5): ✅ DONE — Phân quyền Devise F15–F18 + CanCanCan Ability 4 vai trò + RSpec 546 specs
-- Pre-M4 Việc #1 + #2: ✅ DONE — F06 bug fix (PR #24) + nested auth audit (PR #25) + ContactPoints existence-enum fix (PR #26).
-- Pre-M4 Prompt 1: ✅ DONE — Devise hardening (PR #28: timeout 2h + password policy + warning modal).
-- Pre-M4 Prompt 2-4: ← TIẾP THEO — Deploy Railway + Last admin safeguard + Import data tháng 02 (demo 19-20/4)
-- M4 (sau demo): Báo cáo F12 tổng hợp + F13 tra cứu lịch sử + F14 xuất CSV
+- Pre-M4: ✅ DONE — F06 bug fix + nested auth audit + Devise hardening + Deploy Railway + Last admin + Import data tháng 02 + System specs (688 specs tổng)
+- M4: ← ĐANG LÀM — Dashboard (thay root_path) + F12 báo cáo tổng hợp (Chartkick, tháng/quý/năm) + F13 tra cứu lịch sử + so sánh cùng kỳ + F14 xuất CSV
 - M5 (14/5–19/5): Vận hành — F19 nhật ký + F20 đơn giá + F21 định mức + Docker prod + docs
 - M6 (17/5–25/5): Bàn giao — staging + fix bug + đào tạo + nghiệm thu
 
