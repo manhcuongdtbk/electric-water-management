@@ -115,9 +115,7 @@ RSpec.describe "MonthlySummary", type: :request do
         sign_in admin_unit_a
         get monthly_summary_path(period_id: period.id)
         body = response.body
-        [ "Đại tá", "Thượng tá", "Trung tá, Thiếu tá", "Cấp Úy",
-          "Cơ quan sư đoàn, lữ đoàn, trung đoàn", "Tiểu đoàn, đại đội",
-          "Hạ sĩ quan, binh sĩ" ].each do |header|
+        (1..7).map { |i| I18n.t("monthly_summary.columns.rank#{i}_kw") }.each do |header|
           expect(body).to include(header)
         end
       end
