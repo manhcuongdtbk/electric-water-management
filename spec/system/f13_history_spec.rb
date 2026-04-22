@@ -72,12 +72,72 @@ RSpec.describe "F13 — Tra cứu lịch sử điện", type: :system do
         expect(page).to have_css("span.text-green-600")
         expect(page).to have_content("▼")
       end
+
+      # over_under_kw: current factory default = 0 - prior factory default = 0 → equal
+      # Use scenario values: both calcs use default factory over_under_kw (0.0)
+      # Verify the column renders without crash
+      expect(page).to have_css("tr[data-col='over_under_kw']")
     end
 
-    it "shows no_prior_data banner when prior year period does not exist" do
-      visit history_path(contact_point_id: scenario.contact_point.id, year: 2026, month: 1)
-      # 2026/01 period doesn't exist — no_period state
-      expect(page).to have_content(I18n.t("history.show.no_period"))
+    it "shows green ▲ for over_under_kw when value increases (higher is better)" do
+      # Create a period where over_under_kw improved (current > prior → green ▲)
+      period_2026_03 = create(:monthly_period, year: 2026, month: 3)
+      period_2025_03 = create(:monthly_period, year: 2025, month: 3)
+      create(:monthly_calculation,
+        contact_point: scenario.contact_point,
+        monthly_period: period_2026_03,
+        total_standard_kw: 9000, total_usage_kw: 7000,
+        over_under_kw: 2000, total_amount: 14_000_000)
+      create(:monthly_calculation,
+        contact_point: scenario.contact_point,
+        monthly_period: period_2025_03,
+        total_standard_kw: 8000, total_usage_kw: 7500,
+        over_under_kw: 500, total_amount: 15_000_000)
+
+      visit history_path(contact_point_id: scenario.contact_point.id, year: 2026, month: 3)
+      # over_under_kw: current 2000 > prior 500 → higher is better → green ▲
+      within("tr[data-col='over_under_kw']") do
+        expect(page).to have_css("span.text-green-600")
+        expect(page).to have_content("▲")
+      end
+    end
+
+    it "shows red ▼ for over_under_kw when value decreases (higher is better)" do
+      period_2026_04 = create(:monthly_period, year: 2026, month: 4)
+      period_2025_04 = create(:monthly_period, year: 2025, month: 4)
+      create(:monthly_calculation,
+        contact_point: scenario.contact_point,
+        monthly_period: period_2026_04,
+        total_standard_kw: 9000, total_usage_kw: 8800,
+        over_under_kw: 200, total_amount: 17_600_000)
+      create(:monthly_calculation,
+        contact_point: scenario.contact_point,
+        monthly_period: period_2025_04,
+        total_standard_kw: 8000, total_usage_kw: 6000,
+        over_under_kw: 2000, total_amount: 12_000_000)
+
+      visit history_path(contact_point_id: scenario.contact_point.id, year: 2026, month: 4)
+      # over_under_kw: current 200 < prior 2000 → worse (got closer to limit) → red ▼
+      within("tr[data-col='over_under_kw']") do
+        expect(page).to have_css("span.text-red-600")
+        expect(page).to have_content("▼")
+      end
+    end
+
+    it "shows no_prior_data banner when current period exists but prior year period does not" do
+      period_2026_06 = create(:monthly_period, year: 2026, month: 6)
+      create(:monthly_calculation,
+        contact_point: scenario.contact_point,
+        monthly_period: period_2026_06,
+        total_standard_kw: 9000, total_usage_kw: 7000, total_amount: 14_000_000)
+
+      # 2025/06 does not exist → banner shown, comparison table still renders with dashes
+      visit history_path(contact_point_id: scenario.contact_point.id, year: 2026, month: 6)
+      expect(page).to have_css("[data-testid='no-prior-data-banner']")
+      expect(page).to have_css("[data-testid='comparison-table']")
+      within("[data-testid='comparison-table']") do
+        expect(page).to have_content("—")
+      end
     end
 
     it "shows no_prior_data banner when prior period exists but no calc" do
