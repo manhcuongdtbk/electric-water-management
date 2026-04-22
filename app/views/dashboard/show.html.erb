@@ -1,7 +1,4 @@
 <% content_for :title, t("dashboard.show.title") %>
-<% content_for :head do %>
-  <%= javascript_include_tag "https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js", defer: false %>
-<% end %>
 
 <div class="flex items-center justify-between mb-6">
   <h1 class="text-xl font-semibold text-gray-900"><%= t("dashboard.show.title") %></h1>
@@ -96,20 +93,25 @@
             } %>
     </div>
     <script>
-      document.addEventListener("DOMContentLoaded", function() {
+      (function() {
         var chartEl = document.getElementById("dashboard-bar-chart");
         if (!chartEl) return;
-        var colors = JSON.parse(chartEl.closest("[data-chart-usage-colors]").dataset.chartUsageColors || "[]");
+        var container = chartEl.closest("[data-chart-usage-colors]");
+        if (!container) return;
+        var colors;
+        try { colors = JSON.parse(container.dataset.chartUsageColors || "[]"); } catch(e) { return; }
         if (!colors.length) return;
+        var attempts = 0;
         var check = setInterval(function() {
-          var chart = Chart.getChart ? Chart.getChart(chartEl) : null;
+          if (++attempts > 100) { clearInterval(check); return; }
+          var chart = window.Chart && Chart.getChart ? Chart.getChart(chartEl) : null;
           if (chart && chart.data && chart.data.datasets && chart.data.datasets.length >= 2) {
             chart.data.datasets[1].backgroundColor = colors;
-            chart.update();
+            chart.update("none");
             clearInterval(check);
           }
         }, 50);
-      });
+      })();
     </script>
   </div>
 

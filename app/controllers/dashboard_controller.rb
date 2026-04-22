@@ -48,13 +48,14 @@ class DashboardController < ApplicationController
   end
 
   def fetch_calculations
-    scope = MonthlyCalculation.for_period(@period.id).ordered.includes(:contact_point)
+    # preload avoids includes+joins conflict; ordered scope already joins contact_points
+    scope = MonthlyCalculation.for_period(@period.id).ordered.preload(:contact_point)
     if @target_org
       scope.by_organization(@target_org.id)
     else
-      # admin_level1 "Tất cả": all contact points across all units under division
-      scope.joins(contact_point: :organization)
-           .where(organizations: { parent_id: current_user.organization.id })
+      # admin_level1 "Tất cả": all contact points across units under division
+      unit_ids = Organization.where(parent_id: current_user.organization.id).pluck(:id)
+      scope.where(contact_points: { organization_id: unit_ids })
     end
   end
 
