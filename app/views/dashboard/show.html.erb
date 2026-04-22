@@ -1,0 +1,166 @@
+<% content_for :title, t("dashboard.show.title") %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-xl font-semibold text-gray-900"><%= t("dashboard.show.title") %></h1>
+</div>
+
+<%# Period + Org selectors %>
+<% if @periods.any? %>
+  <div class="mb-6 flex flex-wrap items-end gap-4">
+    <div>
+      <%= label_tag :period_id, t("dashboard.show.period_select"),
+            class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= select_tag :period_id,
+            options_from_collection_for_select(@periods, :id, :label, @period&.id),
+            data: { base_url: dashboard_path, org_id: current_user.admin_level1? ? (@selected_org_id || "all") : nil },
+            onchange: "var url = this.dataset.baseUrl + '?period_id=' + this.value; var orgId = this.dataset.orgId; if (orgId && orgId !== 'null') url += '&org_id=' + orgId; window.location.href = url;",
+            class: "border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+            id: "period_id" %>
+    </div>
+
+    <% if current_user.admin_level1? && @all_orgs&.any? %>
+      <div>
+        <%= label_tag :org_id, t("dashboard.show.org_select"),
+              class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= select_tag :org_id,
+              options_for_select(
+                [ [ t("dashboard.show.all_orgs"), "all" ] ] + @all_orgs.map { |o| [ o.name, o.id.to_s ] },
+                @selected_org_id || "all"
+              ),
+              data: { period_id: @period&.id, base_url: dashboard_path },
+              onchange: "window.location.href = this.dataset.baseUrl + '?period_id=' + this.dataset.periodId + '&org_id=' + this.value",
+              class: "border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+              id: "org_id" %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<% if @period.nil? %>
+  <div class="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+    <%= t("monthly_summary.no_period") %>
+  </div>
+<% elsif @calculations.nil? || @calculations.empty? %>
+  <div class="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+    <%= t("dashboard.show.no_data") %>
+  </div>
+<% else %>
+
+  <%# Metric cards %>
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1"><%= t("dashboard.metrics.total_standard") %></p>
+      <p class="text-2xl font-bold text-blue-600"><%= number_with_delimiter(@total_standard.to_i) %></p>
+      <p class="text-xs text-gray-400 mt-0.5"><%= t("dashboard.metrics.unit_kw") %></p>
+    </div>
+
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1"><%= t("dashboard.metrics.total_usage") %></p>
+      <p class="text-2xl font-bold text-green-600"><%= number_with_delimiter(@total_usage.to_i) %></p>
+      <p class="text-xs text-gray-400 mt-0.5"><%= t("dashboard.metrics.unit_kw") %></p>
+    </div>
+
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1"><%= t("dashboard.metrics.difference") %></p>
+      <p class="text-2xl font-bold <%= @difference >= 0 ? 'text-gray-800' : 'text-red-600' %>">
+        <%= number_with_delimiter(@difference.to_i) %>
+      </p>
+      <p class="text-xs text-gray-400 mt-0.5"><%= t("dashboard.metrics.unit_kw") %></p>
+    </div>
+
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1"><%= t("dashboard.metrics.over_count") %></p>
+      <p class="text-2xl font-bold <%= @over_count > 0 ? 'text-red-600' : 'text-gray-800' %>" data-testid="over-count"><%= @over_count %></p>
+      <p class="text-xs text-gray-400 mt-0.5"><%= t("dashboard.metrics.unit_count") %></p>
+    </div>
+  </div>
+
+  <%# Bar chart %>
+  <div class="bg-white rounded-lg border border-gray-200 p-6 mb-8">
+    <h2 class="text-sm font-semibold text-gray-700 mb-4"><%= t("dashboard.chart.title") %></h2>
+    <div data-chart-usage-colors="<%= @usage_colors.to_json %>">
+      <%= bar_chart @chart_data,
+            colors: [ "rgba(59,130,246,0.8)", "rgba(34,197,94,0.8)" ],
+            height: "320px",
+            id: "dashboard-bar-chart",
+            library: {
+              plugins: {
+                legend: { position: "top" }
+              },
+              scales: {
+                y: { beginAtZero: true }
+              }
+            } %>
+    </div>
+    <script>
+      (function() {
+        var chartEl = document.getElementById("dashboard-bar-chart");
+        if (!chartEl) return;
+        var container = chartEl.closest("[data-chart-usage-colors]");
+        if (!container) return;
+        var colors;
+        try { colors = JSON.parse(container.dataset.chartUsageColors || "[]"); } catch(e) { return; }
+        if (!colors.length) return;
+        var attempts = 0;
+        var check = setInterval(function() {
+          if (++attempts > 100) { clearInterval(check); return; }
+          var chart = window.Chart && Chart.getChart ? Chart.getChart(chartEl) : null;
+          if (chart && chart.data && chart.data.datasets && chart.data.datasets.length >= 2) {
+            chart.data.datasets[1].backgroundColor = colors;
+            chart.update("none");
+            clearInterval(check);
+          }
+        }, 50);
+      })();
+    </script>
+  </div>
+
+  <%# Table %>
+  <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-sm font-semibold text-gray-700"><%= t("dashboard.table.title") %></h2>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
+              <%= t("dashboard.table.name") %>
+            </th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
+              <%= t("dashboard.table.standard") %>
+            </th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
+              <%= t("dashboard.table.usage") %>
+            </th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
+              <%= t("dashboard.table.difference") %>
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <% @table_rows.each do |row| %>
+            <tr class="<%= row[:over] ? 'bg-red-50' : 'bg-white' %>">
+              <td class="px-4 py-3 text-sm text-gray-900">
+                <%= row[:name] %>
+                <% if row[:over] %>
+                  <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">
+                    <%= t("dashboard.table.over_badge") %>
+                  </span>
+                <% end %>
+              </td>
+              <td class="px-4 py-3 text-sm text-right text-gray-700"><%= number_with_delimiter(row[:standard].to_i) %></td>
+              <td class="px-4 py-3 text-sm text-right <%= row[:over] ? 'text-red-600 font-medium' : 'text-gray-700' %>">
+                <%= number_with_delimiter(row[:usage].to_i) %>
+              </td>
+              <td class="px-4 py-3 text-sm text-right <%= row[:diff] < 0 ? 'text-red-600 font-medium' : 'text-gray-700' %>">
+                <%= number_with_delimiter(row[:diff].to_i) %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+<% end %>

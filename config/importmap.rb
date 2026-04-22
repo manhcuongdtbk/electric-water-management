@@ -4,3 +4,6 @@ pin "application"
 pin "@hotwired/stimulus", to: "stimulus.min.js"
 pin "@hotwired/stimulus-loading", to: "stimulus-loading.js"
 pin_all_from "app/javascript/controllers", under: "controllers"
+
+pin "chartkick", to: "chartkick.js"
+pin "Chart.bundle.min", to: "https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"
