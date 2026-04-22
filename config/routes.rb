@@ -40,6 +40,7 @@ Rails.application.routes.draw do
   end
 
   resource :dashboard, only: [ :show ], controller: "dashboard"
+  resource :history, only: [ :show ], controller: "history"
   root "dashboard#show"
 
   get "up" => "rails/health#show", as: :rails_health_check

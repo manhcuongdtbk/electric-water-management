@@ -1,0 +1,183 @@
+<% content_for :title, t("history.show.title") %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-xl font-semibold text-gray-900"><%= t("history.show.title") %></h1>
+</div>
+
+<%# Selectors %>
+<div class="mb-6 flex flex-wrap items-end gap-4">
+  <%# Org dropdown — admin_level1 only %>
+  <% if current_user.admin_level1? && @all_orgs&.any? %>
+    <div>
+      <%= label_tag :org_id, t("history.selectors.org"),
+            class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= select_tag :org_id,
+            options_from_collection_for_select(@all_orgs, :id, :name, @selected_org_id),
+            data: {
+              base_url: history_path,
+              cp_id:    @contact_point&.id,
+              year:     @selected_year,
+              month:    @selected_month
+            },
+            onchange: "var d = this.dataset; var url = d.baseUrl + '?org_id=' + this.value + '&year=' + d.year + '&month=' + d.month; window.location.href = url;",
+            class: "border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+            id: "org_id" %>
+    </div>
+  <% end %>
+
+  <%# Contact point dropdown %>
+  <% if @contact_points&.any? %>
+    <div>
+      <%= label_tag :contact_point_id, t("history.selectors.contact_point"),
+            class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= select_tag :contact_point_id,
+            options_from_collection_for_select(@contact_points, :id, :name, @contact_point&.id),
+            data: {
+              base_url: history_path,
+              org_id:   current_user.admin_level1? ? @selected_org_id : nil,
+              year:     @selected_year,
+              month:    @selected_month
+            },
+            onchange: "var d = this.dataset; var url = d.baseUrl + '?contact_point_id=' + this.value + '&year=' + d.year + '&month=' + d.month; if (d.orgId && d.orgId !== 'null') url += '&org_id=' + d.orgId; window.location.href = url;",
+            class: "border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+            id: "contact_point_id" %>
+    </div>
+  <% end %>
+
+  <%# Year dropdown %>
+  <% if @available_years&.any? %>
+    <div>
+      <%= label_tag :year, t("history.selectors.year"),
+            class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= select_tag :year,
+            options_for_select(@available_years.map { |y| [y.to_s, y.to_s] }, @selected_year&.to_s),
+            data: {
+              base_url: history_path,
+              cp_id:    @contact_point&.id,
+              org_id:   current_user.admin_level1? ? @selected_org_id : nil,
+              month:    @selected_month
+            },
+            onchange: "var d = this.dataset; var url = d.baseUrl + '?year=' + this.value + '&month=' + d.month; if (d.cpId && d.cpId !== 'null') url += '&contact_point_id=' + d.cpId; if (d.orgId && d.orgId !== 'null') url += '&org_id=' + d.orgId; window.location.href = url;",
+            class: "border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+            id: "year" %>
+    </div>
+  <% end %>
+
+  <%# Month dropdown %>
+  <div>
+    <%= label_tag :month, t("history.selectors.month"),
+          class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= select_tag :month,
+          options_for_select(
+            (1..12).map { |m| [t("history.month_option", month: m), m.to_s] },
+            @selected_month&.to_s
+          ),
+          data: {
+            base_url: history_path,
+            cp_id:    @contact_point&.id,
+            org_id:   current_user.admin_level1? ? @selected_org_id : nil,
+            year:     @selected_year
+          },
+          onchange: "var d = this.dataset; var url = d.baseUrl + '?month=' + this.value + '&year=' + d.year; if (d.cpId && d.cpId !== 'null') url += '&contact_point_id=' + d.cpId; if (d.orgId && d.orgId !== 'null') url += '&org_id=' + d.orgId; window.location.href = url;",
+          class: "border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
+          id: "month" %>
+  </div>
+</div>
+
+<%# Empty states %>
+<% if @contact_points.blank? %>
+  <div class="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+    <%= t("history.show.no_contact_points") %>
+  </div>
+<% elsif @contact_point.nil? || @period.nil? %>
+  <div class="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+    <%= t("history.show.no_period") %>
+  </div>
+<% elsif @current_calc.nil? %>
+  <div class="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+    <%= t("history.show.no_data") %>
+  </div>
+<% else %>
+
+  <% current_period_label = "#{@selected_year}/#{@selected_month.to_s.rjust(2, '0')}" %>
+  <% prior_period_label   = "#{@selected_year - 1}/#{@selected_month.to_s.rjust(2, '0')}" %>
+
+  <%# Detail table %>
+  <div class="bg-white rounded-lg border border-gray-200 mb-8 overflow-hidden">
+    <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+      <h2 class="text-sm font-semibold text-gray-700">
+        <%= t("history.detail_table.title", period: current_period_label) %>
+        <span class="ml-2 font-normal text-gray-500">— <%= @contact_point.name %></span>
+      </h2>
+    </div>
+    <table class="w-full text-sm" data-testid="detail-table">
+      <thead>
+        <tr class="bg-gray-50 border-b border-gray-200">
+          <th class="px-4 py-2 text-left font-medium text-gray-600 w-2/3"><%= t("history.detail_table.field") %></th>
+          <th class="px-4 py-2 text-right font-medium text-gray-600"><%= t("history.detail_table.value") %></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        <% HistoryController::DETAIL_COLUMNS.each do |col| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-2 text-gray-700"><%= history_column_label(col) %></td>
+            <td class="px-4 py-2 text-right font-mono text-gray-900"><%= format_history_value(@current_calc, col) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <%# Comparison table %>
+  <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+      <h2 class="text-sm font-semibold text-gray-700"><%= t("history.comparison_table.title") %></h2>
+    </div>
+
+    <% if @prior_calc.nil? %>
+      <div class="px-4 py-3 bg-amber-50 border-b border-amber-200 text-sm text-amber-800" data-testid="no-prior-data-banner">
+        <%= t("history.comparison_table.no_prior_data", year: @selected_year - 1, month: @selected_month.to_s.rjust(2, "0")) %>
+      </div>
+    <% end %>
+
+    <table class="w-full text-sm" data-testid="comparison-table">
+      <thead>
+        <tr class="bg-gray-50 border-b border-gray-200">
+          <th class="px-4 py-2 text-left font-medium text-gray-600 w-1/2"><%= t("history.comparison_table.field") %></th>
+          <th class="px-4 py-2 text-right font-medium text-gray-600"><%= t("history.comparison_table.current", period: current_period_label) %></th>
+          <th class="px-4 py-2 text-right font-medium text-gray-600"><%= t("history.comparison_table.prior", period: prior_period_label) %></th>
+          <th class="px-4 py-2 text-center font-medium text-gray-600 w-20"><%= t("history.comparison_table.delta") %></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        <% HistoryController::DETAIL_COLUMNS.each do |col| %>
+          <% current_val = @current_calc.public_send(col).to_d %>
+          <% prior_val   = @prior_calc&.public_send(col)&.to_d %>
+          <% diff        = prior_val ? current_val - prior_val : nil %>
+          <% lower_better = HistoryController::LOWER_IS_BETTER_COLUMNS.include?(col) %>
+          <tr class="hover:bg-gray-50" data-col="<%= col %>">
+            <td class="px-4 py-2 text-gray-700"><%= history_column_label(col) %></td>
+            <td class="px-4 py-2 text-right font-mono text-gray-900"><%= format_history_value(@current_calc, col) %></td>
+            <td class="px-4 py-2 text-right font-mono text-gray-500">
+              <%= @prior_calc ? format_history_value(@prior_calc, col) : "—" %>
+            </td>
+            <td class="px-4 py-2 text-center">
+              <% if diff.nil? %>
+                <span class="text-gray-400">—</span>
+              <% elsif diff.zero? %>
+                <span class="text-gray-500 font-medium">=</span>
+              <% elsif diff > 0 %>
+                <% color = lower_better ? "text-red-600" : "text-green-600" %>
+                <span class="<%= color %> font-medium">▲</span>
+              <% else %>
+                <% color = lower_better ? "text-green-600" : "text-red-600" %>
+                <span class="<%= color %> font-medium">▼</span>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+<% end %>

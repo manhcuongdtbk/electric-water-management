@@ -97,6 +97,15 @@
                 <%= t("nav.monthly_summary") %>
               <% end %>
             <% end %>
+            <% if can? :read, MonthlyCalculation %>
+              <%= link_to history_path,
+                    class: "flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-colors #{controller_name == 'history' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}" do %>
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <%= t("nav.history") %>
+              <% end %>
+            <% end %>
             <% if can? :manage, User %>
               <%= link_to users_path,
                     class: "flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-colors #{controller_name == 'users' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}" do %>
