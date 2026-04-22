@@ -209,4 +209,97 @@ RSpec.describe "F12 — Dashboard", type: :system do
       expect(page).to have_content(I18n.t("dashboard.show.no_data"))
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # Quarter view
+  # ---------------------------------------------------------------------------
+  describe "quarter view" do
+    # scenario.period = 2026/02 (Q1). Add 2026/01 to have 2 months in Q1.
+    let!(:period_jan) { create(:monthly_period, year: 2026, month: 1) }
+    let!(:calc_jan) do
+      create(:monthly_calculation,
+             contact_point: contact_point,
+             monthly_period: period_jan,
+             total_standard_kw: 3000,
+             total_usage_kw: 2500)
+    end
+
+    it "shows quarter selector and hides period selector" do
+      login_as scenario.admin_unit, scope: :user
+      visit dashboard_path(view_type: "quarter", year: 2026, quarter: 1)
+      expect(page).to have_select("quarter")
+      expect(page).not_to have_select("period_id")
+    end
+
+    it "aggregates metric cards across months in the same quarter" do
+      login_as scenario.admin_unit, scope: :user
+      visit dashboard_path(view_type: "quarter", year: 2026, quarter: 1)
+      # standard: 3000 (Jan) + 5000 (Feb) = 8000
+      # usage:    2500 (Jan) + 4000 (Feb) = 6500
+      expect(page).to have_content("8,000")
+      expect(page).to have_content("6,500")
+    end
+
+    it "renders chart container for quarter view" do
+      login_as scenario.admin_unit, scope: :user
+      visit dashboard_path(view_type: "quarter", year: 2026, quarter: 1)
+      expect(page).to have_css("#dashboard-quarter-chart")
+    end
+
+    it "shows no_data for a quarter with no calculations" do
+      login_as scenario.admin_unit, scope: :user
+      visit dashboard_path(view_type: "quarter", year: 2026, quarter: 3)
+      expect(page).to have_content(I18n.t("dashboard.show.no_data"))
+    end
+
+    it "admin_level1 org dropdown works in quarter view" do
+      login_as scenario.admin_level1, scope: :user
+      visit dashboard_path(view_type: "quarter", year: 2026, quarter: 1)
+      expect(page).to have_select("org_id")
+      expect(page).to have_content("8,000")
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # Year view
+  # ---------------------------------------------------------------------------
+  describe "year view" do
+    # scenario.period = 2026/02. Add 2026/01 for a 2-month year aggregate.
+    let!(:period_jan) { create(:monthly_period, year: 2026, month: 1) }
+    let!(:calc_jan) do
+      create(:monthly_calculation,
+             contact_point: contact_point,
+             monthly_period: period_jan,
+             total_standard_kw: 3000,
+             total_usage_kw: 2500)
+    end
+
+    it "shows year selector, hides period and quarter selectors" do
+      login_as scenario.admin_unit, scope: :user
+      visit dashboard_path(view_type: "year", year: 2026)
+      expect(page).to have_select("year")
+      expect(page).not_to have_select("period_id")
+      expect(page).not_to have_select("quarter")
+    end
+
+    it "aggregates metric cards for the full year" do
+      login_as scenario.admin_unit, scope: :user
+      visit dashboard_path(view_type: "year", year: 2026)
+      # standard: 3000 + 5000 = 8000, usage: 2500 + 4000 = 6500
+      expect(page).to have_content("8,000")
+      expect(page).to have_content("6,500")
+    end
+
+    it "renders line chart container for year view" do
+      login_as scenario.admin_unit, scope: :user
+      visit dashboard_path(view_type: "year", year: 2026)
+      expect(page).to have_css("#dashboard-year-chart")
+    end
+
+    it "shows no_data for a year with no calculations" do
+      login_as scenario.admin_unit, scope: :user
+      visit dashboard_path(view_type: "year", year: 2025)
+      expect(page).to have_content(I18n.t("dashboard.show.no_data"))
+    end
+  end
 end
