@@ -1,6 +1,15 @@
 vi:
   app_name: "Phần mềm Quản lý Điện Nước"
 
+  rank_groups: &rank_groups
+    rank1: "Chỉ huy Sư đoàn; SQ có trần quân hàm là Đại tá"
+    rank2: "Chỉ huy Trung đoàn; SQ có trần quân hàm là Thượng tá"
+    rank3: "Chỉ huy tiểu đoàn; SQ có trần quân hàm là Trung tá, Thiếu tá"
+    rank4: "Chỉ huy đại đội, trung đội; SQ có trần quân hàm là cấp Úy"
+    rank5: "Cơ quan sư đoàn, trung đoàn"
+    rank6: "Tiểu đoàn, đại đội"
+    rank7: "Hạ sĩ quan, binh sĩ"
+
   time:
     formats:
       default: "%d/%m/%Y %H:%M"
@@ -245,13 +254,7 @@ vi:
       no_period: "Chưa có kỳ nào. Vui lòng tạo kỳ tính toán trước."
     period_select: "Kỳ tính toán"
     ranks:
-      rank1: "Chỉ huy Sư đoàn; SQ có trần quân hàm là Đại tá"
-      rank2: "Chỉ huy Trung đoàn; SQ có trần quân hàm là Thượng tá"
-      rank3: "Chỉ huy tiểu đoàn; SQ có trần quân hàm là Trung tá, Thiếu tá"
-      rank4: "Chỉ huy đại đội, trung đội; SQ có trần quân hàm là cấp Úy"
-      rank5: "Cơ quan sư đoàn, trung đoàn"
-      rank6: "Tiểu đoàn, đại đội"
-      rank7: "Hạ sĩ quan, binh sĩ"
+      <<: *rank_groups
     results:
       title: "Kết quả tính toán"
       total_count: "Tổng quân số"
@@ -370,13 +373,7 @@ vi:
     table:
       stt: "STT"
       contact_point: "Đầu mối"
-      rank1: "Chỉ huy Sư đoàn; SQ có trần quân hàm là Đại tá"
-      rank2: "Chỉ huy Trung đoàn; SQ có trần quân hàm là Thượng tá"
-      rank3: "Chỉ huy tiểu đoàn; SQ có trần quân hàm là Trung tá, Thiếu tá"
-      rank4: "Chỉ huy đại đội, trung đội; SQ có trần quân hàm là cấp Úy"
-      rank5: "Cơ quan sư đoàn, trung đoàn"
-      rank6: "Tiểu đoàn, đại đội"
-      rank7: "Hạ sĩ quan, binh sĩ"
+      <<: *rank_groups
       total: "Tổng"
       status: "Trạng thái"
       actions: "Thao tác"
@@ -450,6 +447,7 @@ vi:
     meter_readings: "Chỉ số công tơ"
     personnel_review: "Soát lại quân số"
     monthly_summary: "Bảng tổng hợp"
+    history: "Tra cứu lịch sử"
     users: "Quản lý tài khoản"
     sign_out: "Đăng xuất"
 
@@ -536,6 +534,46 @@ vi:
       q2: "Quý 2 (Tháng 4–6)"
       q3: "Quý 3 (Tháng 7–9)"
       q4: "Quý 4 (Tháng 10–12)"
+
+  history:
+    show:
+      title: "Tra cứu lịch sử điện"
+      no_contact_points: "Đơn vị chưa có đầu mối nào."
+      no_period: "Không có kỳ tính toán cho tháng/năm đã chọn."
+      no_data: "Chưa có dữ liệu tính toán cho kỳ này."
+    selectors:
+      org: "Đơn vị"
+      contact_point: "Đầu mối"
+      year: "Năm"
+      month: "Tháng"
+    month_option: "Tháng %{month}"
+    detail_table:
+      title: "Chi tiết kỳ %{period}"
+      field: "Chỉ tiêu"
+      value: "Giá trị"
+    comparison_table:
+      title: "So sánh cùng kỳ năm trước"
+      field: "Chỉ tiêu"
+      current: "Kỳ %{period}"
+      prior: "Kỳ %{period}"
+      delta: "So sánh"
+      no_prior_data: "Không có dữ liệu năm trước (%{year}/%{month}) để so sánh."
+    columns:
+      total_personnel: "Tổng quân số"
+      water_pump_standard_kw: "Bơm nước TC (kW)"
+      water_pump_actual_kw: "Bơm nước TT (kW)"
+      total_standard_kw: "Tổng tiêu chuẩn (kW)"
+      total_usage_kw: "Tổng sử dụng (kW)"
+      total_deduction_kw: "Tổng trừ (kW)"
+      savings_deduction_kw: "Tiết kiệm (kW)"
+      loss_deduction_kw: "Tổn hao (kW)"
+      division_public_deduction_kw: "Công cộng Sư đoàn (kW)"
+      unit_public_deduction_kw: "Công cộng đơn vị (kW)"
+      other_deduction_kw: "Khác (kW)"
+      meter_usage_kw: "Sử dụng đồng hồ (kW)"
+      over_under_kw: "Chênh lệch (kW)"
+      unit_price: "Đơn giá (đ/kWh)"
+      total_amount: "Thành tiền (đ)"
 
   helpers:
     page_entries_info:

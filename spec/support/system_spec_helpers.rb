@@ -42,6 +42,29 @@ module SystemSpecHelpers
     cp
   end
 
+  # Creates a scenario with two periods (2026/02 and 2025/02) and one contact
+  # point that has a calculation for each, for testing F13 year-over-year comparison.
+  def setup_history_scenario
+    s = setup_basic_scenario(year: 2026, month: 2)
+    cp = create(:contact_point, organization: s.unit)
+
+    current_calc = create(:monthly_calculation,
+      contact_point: cp, monthly_period: s.period,
+      total_standard_kw: 9320, total_usage_kw: 7450, total_amount: 14_900_000)
+
+    prior_period = create(:monthly_period, year: 2025, month: 2)
+    prior_calc   = create(:monthly_calculation,
+      contact_point: cp, monthly_period: prior_period,
+      total_standard_kw: 8500, total_usage_kw: 8000, total_amount: 16_000_000)
+
+    s.tap do |o|
+      o.contact_point = cp
+      o.current_calc  = current_calc
+      o.prior_period  = prior_period
+      o.prior_calc    = prior_calc
+    end
+  end
+
   # Drives the Devise login form in a browser. F16 / F17 need the real form
   # because Warden's `login_as` bypasses the lockable and force-password
   # redirects we actually want to exercise.
