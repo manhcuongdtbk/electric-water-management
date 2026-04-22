@@ -194,8 +194,16 @@
 
   <%# Table %>
   <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-    <div class="px-6 py-4 border-b border-gray-200">
+    <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
       <h2 class="text-sm font-semibold text-gray-700"><%= t("dashboard.table.title") %></h2>
+      <% if @table_rows&.any? %>
+        <%= link_to t("csv.export_button"),
+              dashboard_path(format: :csv, view_type: @view_type,
+                             period_id: @period&.id,
+                             org_id: current_user.admin_level1? ? @selected_org_id : nil,
+                             year: @selected_year, quarter: @selected_quarter),
+              class: "px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded hover:bg-green-700 transition-colors" %>
+      <% end %>
     </div>
     <div class="overflow-x-auto">
       <table class="min-w-full divide-y divide-gray-200">

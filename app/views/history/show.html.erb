@@ -82,6 +82,15 @@
           class: "border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
           id: "month" %>
   </div>
+
+  <% if @current_calc %>
+    <%= link_to t("csv.export_button"),
+          history_path(format: :csv,
+                       contact_point_id: @contact_point.id,
+                       year: @selected_year, month: @selected_month,
+                       org_id: current_user.admin_level1? ? @selected_org_id : nil),
+          class: "px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors self-end" %>
+  <% end %>
 </div>
 
 <%# Empty states %>
