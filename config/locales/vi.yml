@@ -584,3 +584,6 @@ vi:
           one: "<b>1</b> %{entry_name}"
           other: "<b>Tất cả %{count}</b> %{entry_name}"
           zero: "Không có %{entry_name}"
+
+  csv:
+    export_button: "Xuất CSV"

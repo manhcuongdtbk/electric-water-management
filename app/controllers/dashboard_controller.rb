@@ -14,6 +14,17 @@ class DashboardController < ApplicationController
     when "quarter" then setup_quarter_view
     when "year"    then setup_year_view
     end
+
+    respond_to do |format|
+      format.html
+      format.csv do
+        return head(:not_found) unless @table_rows&.any?
+
+        send_data dashboard_csv,
+                  type: "text/csv; charset=utf-8",
+                  filename: dashboard_csv_filename
+      end
+    end
   end
 
   private
@@ -237,5 +248,37 @@ class DashboardController < ApplicationController
       .order(month: :desc)
       .pick(:month)
     month ? ((month - 1) / 3) + 1 : 1
+  end
+
+  # ---------------------------------------------------------------------------
+  # CSV export
+  # ---------------------------------------------------------------------------
+
+  def dashboard_csv
+    headers = [
+      t("dashboard.table.name"),
+      t("dashboard.table.standard"),
+      t("dashboard.table.usage"),
+      t("dashboard.table.difference")
+    ]
+
+    bom = +"\xEF\xBB\xBF"
+    bom + CSV.generate(encoding: "UTF-8") do |csv|
+      csv << headers
+      @table_rows.each do |row|
+        csv << [ row[:name], row[:standard].to_f, row[:usage].to_f, row[:diff].to_f ]
+      end
+    end
+  end
+
+  def dashboard_csv_filename
+    case @view_type
+    when "month"
+      "bao_cao_dashboard_thang_#{@period.month}_#{@period.year}.csv"
+    when "quarter"
+      "bao_cao_dashboard_quy_#{@selected_quarter}_#{@selected_year}.csv"
+    when "year"
+      "bao_cao_dashboard_nam_#{@selected_year}.csv"
+    end
   end
 end

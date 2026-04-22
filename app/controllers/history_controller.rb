@@ -25,7 +25,13 @@ class HistoryController < ApplicationController
   before_action :set_year_month
 
   def show
-    return unless @contact_point && @period
+    if @contact_point.nil? || @period.nil?
+      respond_to do |f|
+        f.html
+        f.csv { head :not_found }
+      end
+      return
+    end
 
     @current_calc = MonthlyCalculation
       .for_period(@period.id)
@@ -35,6 +41,17 @@ class HistoryController < ApplicationController
     prior_period = MonthlyPeriod.find_by(year: @selected_year - 1, month: @selected_month)
     @prior_calc = prior_period &&
       MonthlyCalculation.for_period(prior_period.id).for_contact_point(@contact_point.id).first
+
+    respond_to do |format|
+      format.html
+      format.csv do
+        return head(:not_found) unless @current_calc
+
+        send_data history_csv,
+                  type: "text/csv; charset=utf-8",
+                  filename: "bao_cao_lich_su_#{@selected_month}_#{@selected_year}.csv"
+      end
+    end
   end
 
   private
@@ -67,5 +84,40 @@ class HistoryController < ApplicationController
     @selected_year   = params[:year].presence&.to_i || @available_years.first
     @selected_month  = params[:month].presence&.to_i || Time.current.month
     @period          = MonthlyPeriod.find_by(year: @selected_year, month: @selected_month)
+  end
+
+  def history_csv
+    current_period_label = "#{@selected_year}/#{@selected_month.to_s.rjust(2, '0')}"
+    prior_period_label   = "#{@selected_year - 1}/#{@selected_month.to_s.rjust(2, '0')}"
+
+    headers = [
+      t("history.comparison_table.field"),
+      t("history.comparison_table.current", period: current_period_label),
+      t("history.comparison_table.prior",   period: prior_period_label),
+      t("history.comparison_table.delta")
+    ]
+
+    bom = +"\xEF\xBB\xBF"
+    bom + CSV.generate(encoding: "UTF-8") do |csv|
+      csv << headers
+
+      DETAIL_COLUMNS.each do |col|
+        label       = helpers.history_column_label(col)
+        current_val = @current_calc.public_send(col)
+        prior_val   = @prior_calc&.public_send(col)
+
+        delta = if prior_val.nil?
+          ""
+        else
+          diff = current_val.to_d - prior_val.to_d
+          if diff.zero? then "="
+          elsif diff > 0 then "▲"
+          else "▼"
+          end
+        end
+
+        csv << [ label, current_val, prior_val || "", delta ]
+      end
+    end
   end
 end

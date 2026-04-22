@@ -29,6 +29,13 @@
       </div>
     <% end %>
 
+    <% if @period && @target_org && @calculations&.any? %>
+      <%= link_to t("csv.export_button"),
+            monthly_summary_path(format: :csv, period_id: @period.id,
+                                 org_id: current_user.admin_level1? ? @target_org&.id : nil),
+            class: "px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors" %>
+    <% end %>
+
     <% if @period && @target_org && can?(:manage, MonthlyCalculation) %>
       <div class="ml-auto">
         <%= form_with url: recalculate_monthly_summary_path, method: :post do %>
