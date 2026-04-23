@@ -64,7 +64,11 @@ RSpec.describe Ability do
     it { is_expected.not_to be_able_to(:read, personnel_b) }
     it { is_expected.to be_able_to(:manage, reading_a) }
     it { is_expected.not_to be_able_to(:read, reading_b) }
-    it { is_expected.to be_able_to(:manage, calc_a) }
+    it { is_expected.to be_able_to(:read, calc_a) }
+    it { is_expected.to be_able_to(:recalculate, calc_a) }
+    it { is_expected.not_to be_able_to(:create, calc_a) }
+    it { is_expected.not_to be_able_to(:update, calc_a) }
+    it { is_expected.not_to be_able_to(:destroy, calc_a) }
     it { is_expected.not_to be_able_to(:read, calc_b) }
 
     it { is_expected.to be_able_to(:read, config_a) }

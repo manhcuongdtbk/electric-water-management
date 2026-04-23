@@ -36,7 +36,7 @@
             class: "px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors" %>
     <% end %>
 
-    <% if @period && @target_org && can?(:manage, MonthlyCalculation) %>
+    <% if @period && @target_org && can?(:recalculate, MonthlyCalculation) %>
       <div class="ml-auto">
         <%= form_with url: recalculate_monthly_summary_path, method: :post do %>
           <%= hidden_field_tag :period_id, @period.id %>

@@ -24,7 +24,7 @@ class MonthlySummariesController < ApplicationController
   end
 
   def recalculate
-    authorize! :manage, MonthlyCalculation
+    authorize! :recalculate, MonthlyCalculation
 
     if @period.nil?
       return redirect_to monthly_summary_path, alert: t("monthly_summary.no_period")
