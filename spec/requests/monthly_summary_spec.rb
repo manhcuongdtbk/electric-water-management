@@ -83,7 +83,7 @@ RSpec.describe "MonthlySummary", type: :request do
         expect(response.body).not_to include(cp_b.name)
       end
 
-      it "displays the 22-column table structure" do
+      it "displays the 24-column table structure" do
         sign_in admin_unit_a
         get monthly_summary_path(period_id: period.id)
         body = response.body

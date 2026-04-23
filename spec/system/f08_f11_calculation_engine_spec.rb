@@ -1,12 +1,12 @@
 require "rails_helper"
 
-# F08-F11 — Calculation engine + bảng 22 cột (monthly_summary).
+# F08-F11 — Calculation engine + bảng 24 cột (monthly_summary).
 # Mix of two strategies:
 #   * End-to-end: admin_unit visits /monthly_summary with full data; the
 #     controller auto-runs the engine and persists rows (F08-F10).
-#   * Render-only: seed MonthlyCalculation directly and assert the 22-column
+#   * Render-only: seed MonthlyCalculation directly and assert the 24-column
 #     table shape and formatting (F11).
-RSpec.describe "F08-F11 — Calculation engine + 22-column summary", type: :system do
+RSpec.describe "F08-F11 — Calculation engine + 24-column summary", type: :system do
   let(:scenario) { setup_basic_scenario }
 
   # ---------------------------------------------------------------------------
