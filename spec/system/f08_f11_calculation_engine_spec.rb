@@ -168,6 +168,36 @@ RSpec.describe "F08-F11 — Calculation engine + 24-column summary", type: :syst
       end
     end
 
+    it "surplus values appear in green cells, red cells carry no text" do
+      cp = create(:contact_point, organization: scenario.unit)
+      create(:monthly_calculation,
+             contact_point: cp, monthly_period: scenario.period,
+             over_under_kw: 87, total_amount: 174_000)
+
+      login_as scenario.admin_unit, scope: :user
+      visit monthly_summary_path(period_id: scenario.period.id)
+
+      expect(page).to have_css("td.text-green-600", text: "87.00")
+      expect(page).to have_css("td.text-green-700", text: "174,000")
+      expect(page).not_to have_css("td.text-red-600", text: /\S/)
+      expect(page).not_to have_css("td.text-red-700", text: /\S/)
+    end
+
+    it "deficit values appear in red cells as absolute values, green cells carry no text" do
+      cp = create(:contact_point, organization: scenario.unit)
+      create(:monthly_calculation,
+             contact_point: cp, monthly_period: scenario.period,
+             over_under_kw: -87, total_amount: -174_000)
+
+      login_as scenario.admin_unit, scope: :user
+      visit monthly_summary_path(period_id: scenario.period.id)
+
+      expect(page).to have_css("td.text-red-600", text: "87.00")
+      expect(page).to have_css("td.text-red-700", text: "174,000")
+      expect(page).not_to have_css("td.text-green-600", text: /\S/)
+      expect(page).not_to have_css("td.text-green-700", text: /\S/)
+    end
+
     it "only lists contact points belonging to the admin_unit's own organization" do
       other_unit = create(:organization, :unit, parent: scenario.division)
       own_cp = create(:contact_point, organization: scenario.unit, name: "Own CP")

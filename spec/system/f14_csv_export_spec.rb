@@ -107,6 +107,83 @@ RSpec.describe "F14 — Xuất CSV", type: :request do
         get monthly_summary_path(format: :csv, period_id: 0)
         expect(response).to have_http_status(:not_found)
       end
+
+      describe "cột Thừa/Thiếu: vị trí và giá trị đúng" do
+        let(:cp_surplus) { create(:contact_point, organization: unit, name: "CP Thừa") }
+        let(:cp_deficit) { create(:contact_point, organization: unit, name: "CP Thiếu") }
+
+        before do
+          MonthlyCalculation.delete_all
+          create(:monthly_calculation,
+                 contact_point: cp_surplus, monthly_period: period,
+                 over_under_kw: 100, total_amount: 200_000)
+          create(:monthly_calculation,
+                 contact_point: cp_deficit, monthly_period: period,
+                 over_under_kw: -40, total_amount: -80_000)
+        end
+
+        def parsed_csv
+          body = response.body.sub(/\A\xEF\xBB\xBF/, "")
+          CSV.parse(body, headers: true)
+        end
+
+        def parsed_csv_headers
+          body = response.body.sub(/\A\xEF\xBB\xBF/, "")
+          CSV.parse(body, headers: false).first
+        end
+
+        it "4 cột split nằm cuối header, đúng thứ tự liên tiếp" do
+          get monthly_summary_path(format: :csv, period_id: period.id)
+          hdrs = parsed_csv_headers
+
+          s_kw = hdrs.index(I18n.t("monthly_summary.columns.surplus_kw"))
+          d_kw = hdrs.index(I18n.t("monthly_summary.columns.deficit_kw"))
+          s_am = hdrs.index(I18n.t("monthly_summary.columns.surplus_amount"))
+          d_am = hdrs.index(I18n.t("monthly_summary.columns.deficit_amount"))
+
+          expect(s_kw).not_to be_nil
+          expect(d_kw).to eq(s_kw + 1)
+          expect(s_am).to eq(d_kw + 1)
+          expect(d_am).to eq(s_am + 1)
+          expect(d_am).to eq(hdrs.size - 1)
+        end
+
+        it "dòng thừa: cột Thừa có giá trị, cột Thiếu trống" do
+          get monthly_summary_path(format: :csv, period_id: period.id)
+          rows   = parsed_csv
+          cp_col = I18n.t("monthly_summary.columns.contact_point")
+          row    = rows.find { |r| r[cp_col] == cp_surplus.name }
+
+          expect(row[I18n.t("monthly_summary.columns.surplus_kw")]).to    eq("100.0")
+          expect(row[I18n.t("monthly_summary.columns.deficit_kw")]).to     eq("")
+          expect(row[I18n.t("monthly_summary.columns.surplus_amount")]).to eq("200000.0")
+          expect(row[I18n.t("monthly_summary.columns.deficit_amount")]).to eq("")
+        end
+
+        it "dòng thiếu: cột Thiếu có giá trị tuyệt đối, cột Thừa trống" do
+          get monthly_summary_path(format: :csv, period_id: period.id)
+          rows   = parsed_csv
+          cp_col = I18n.t("monthly_summary.columns.contact_point")
+          row    = rows.find { |r| r[cp_col] == cp_deficit.name }
+
+          expect(row[I18n.t("monthly_summary.columns.surplus_kw")]).to    eq("")
+          expect(row[I18n.t("monthly_summary.columns.deficit_kw")]).to     eq("40.0")
+          expect(row[I18n.t("monthly_summary.columns.surplus_amount")]).to eq("")
+          expect(row[I18n.t("monthly_summary.columns.deficit_amount")]).to eq("80000.0")
+        end
+
+        it "dòng tổng cộng: Thừa và Thiếu tính độc lập, không bù trừ" do
+          get monthly_summary_path(format: :csv, period_id: period.id)
+          rows    = parsed_csv
+          stt_col = I18n.t("monthly_summary.columns.stt")
+          total   = rows.find { |r| r[stt_col] == I18n.t("monthly_summary.total_row") }
+
+          expect(total[I18n.t("monthly_summary.columns.surplus_kw")]).to    eq("100.0")
+          expect(total[I18n.t("monthly_summary.columns.deficit_kw")]).to     eq("40.0")
+          expect(total[I18n.t("monthly_summary.columns.surplus_amount")]).to eq("200000.0")
+          expect(total[I18n.t("monthly_summary.columns.deficit_amount")]).to eq("80000.0")
+        end
+      end
     end
   end
 
