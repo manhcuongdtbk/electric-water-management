@@ -1,0 +1,51 @@
+<% content_for :title, t("rank_quotas.edit.title") %>
+
+<div class="mb-6 flex items-center gap-2 text-sm text-gray-500">
+  <%= link_to t("rank_quotas.index.title"), rank_quotas_path, class: "hover:underline" %>
+  <span>/</span>
+  <span class="text-gray-900"><%= t("rank_quotas.edit.title") %></span>
+</div>
+
+<div class="bg-white rounded-lg border border-gray-200 p-6 max-w-md">
+  <h1 class="text-xl font-semibold text-gray-900 mb-1"><%= t("rank_quotas.edit.title") %></h1>
+  <p class="text-sm text-gray-500 mb-6">Nhóm <%= @rank_quota.rank_group %> — hiệu lực từ <%= l(@rank_quota.effective_from, format: :default) %></p>
+
+  <%= form_with model: @rank_quota, url: rank_quota_path(@rank_quota), method: :patch do |f| %>
+    <% if @rank_quota.errors.any? %>
+      <div class="mb-4 rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">
+        <ul class="list-disc pl-4 space-y-0.5">
+          <% @rank_quota.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="space-y-4">
+      <div>
+        <%= f.label :rank_name, t("rank_quotas.form.rank_name"),
+              class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.text_field :rank_name,
+              class: "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500",
+              required: true %>
+      </div>
+
+      <div>
+        <%= f.label :quota_kw, t("rank_quotas.form.quota_kw"),
+              class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.number_field :quota_kw,
+              step: "any",
+              min: 0.01,
+              class: "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500",
+              required: true %>
+      </div>
+
+      <div class="flex items-center gap-3 pt-2">
+        <%= f.submit t("rank_quotas.form.submit"),
+              class: "inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors cursor-pointer" %>
+        <%= link_to t("rank_quotas.form.cancel"), rank_quotas_path,
+              class: "text-sm text-gray-600 hover:underline" %>
+      </div>
+    </div>
+  <% end %>
+</div>

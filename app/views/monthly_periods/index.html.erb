@@ -1,0 +1,61 @@
+<% content_for :title, t("monthly_periods.index.title") %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-xl font-semibold text-gray-900"><%= t("monthly_periods.index.title") %></h1>
+</div>
+
+<div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+  <table class="min-w-full divide-y divide-gray-200 text-sm">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-4 py-3 text-center font-medium text-gray-600 w-12">STT</th>
+        <th class="px-4 py-3 text-left font-medium text-gray-600">Kỳ</th>
+        <th class="px-4 py-3 text-right font-medium text-gray-600"><%= t("monthly_periods.index.unit_price_col") %></th>
+        <th class="px-4 py-3 text-center font-medium text-gray-600"><%= t("monthly_periods.index.locked_col") %></th>
+        <% if can? :manage, MonthlyPeriod %>
+          <th class="px-4 py-3 text-center font-medium text-gray-600">Thao tác</th>
+        <% end %>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      <% if @monthly_periods.empty? %>
+        <tr>
+          <td colspan="<%= can?(:manage, MonthlyPeriod) ? 5 : 4 %>" class="px-4 py-8 text-center text-gray-400">
+            <%= t("monthly_periods.index.empty") %>
+          </td>
+        </tr>
+      <% else %>
+        <% @monthly_periods.each_with_index do |period, idx| %>
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="px-4 py-3 text-center text-gray-500"><%= idx + 1 %></td>
+            <td class="px-4 py-3 font-medium text-gray-900"><%= period.label %></td>
+            <td class="px-4 py-3 text-right text-gray-700">
+              <% if period.unit_price %>
+                <%= number_with_delimiter(period.unit_price) %> đ/kWh
+              <% else %>
+                <span class="text-gray-400"><%= t("monthly_periods.index.not_set") %></span>
+              <% end %>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <% if period.locked? %>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+                  <%= t("monthly_periods.index.locked_status") %>
+                </span>
+              <% else %>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-50 text-green-700">
+                  <%= t("monthly_periods.index.unlocked_status") %>
+                </span>
+              <% end %>
+            </td>
+            <% if can? :manage, MonthlyPeriod %>
+              <td class="px-4 py-3 text-center">
+                <%= link_to t("monthly_periods.actions.edit"), edit_monthly_period_path(period),
+                      class: "text-xs text-amber-600 hover:text-amber-800 font-medium" %>
+              </td>
+            <% end %>
+          </tr>
+        <% end %>
+      <% end %>
+    </tbody>
+  </table>
+</div>

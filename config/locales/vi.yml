@@ -163,6 +163,9 @@ vi:
     monthly_periods:
       created: "Đã mở kỳ %{label} thành công."
       unlocked: "Đã mở khóa kỳ %{label}."
+      updated: "Cập nhật đơn giá thành công."
+    rank_quotas:
+      updated: "Cập nhật định mức thành công. Hãy tính lại các kỳ bị ảnh hưởng."
     unit_configs:
       division_updated: "Cập nhật cấu hình Sư đoàn thành công."
       unit_updated: "Cập nhật cấu hình đơn vị thành công."
@@ -386,6 +389,23 @@ vi:
   monthly_periods:
     new:
       title: "Mở kỳ tính toán mới"
+    index:
+      title: "Quản lý đơn giá điện"
+      unit_price_col: "Đơn giá (đ/kWh)"
+      locked_col: "Trạng thái"
+      not_set: "(chưa nhập)"
+      locked_status: "Đã khoá"
+      unlocked_status: "Mở"
+      empty: "Chưa có kỳ nào."
+    edit:
+      title: "Sửa đơn giá"
+      warning: "Thay đổi đơn giá sẽ ảnh hưởng kết quả tính toán. Hãy vào Bảng 22 cột và tính lại kỳ này sau khi lưu."
+    form:
+      unit_price: "Đơn giá (đ/kWh)"
+      submit: "Lưu đơn giá"
+      cancel: "Hủy"
+    actions:
+      edit: "Sửa đơn giá"
 
   monthly_summary:
     show:
@@ -450,6 +470,9 @@ vi:
     history: "Tra cứu lịch sử"
     users: "Quản lý tài khoản"
     sign_out: "Đăng xuất"
+    config_section: "Cấu hình hệ thống"
+    monthly_periods: "Đơn giá điện"
+    rank_quotas: "Định mức cấp bậc"
 
   users:
     index:
@@ -584,6 +607,24 @@ vi:
           one: "<b>1</b> %{entry_name}"
           other: "<b>Tất cả %{count}</b> %{entry_name}"
           zero: "Không có %{entry_name}"
+
+  rank_quotas:
+    index:
+      title: "Quản lý định mức cấp bậc"
+      rank_group_col: "Nhóm"
+      rank_name_col: "Tên cấp bậc"
+      quota_kw_col: "Định mức (kW/người/tháng)"
+      effective_from_col: "Ngày hiệu lực"
+      note: "Thay đổi định mức ảnh hưởng toàn bộ kỳ tính toán. Hãy tính lại các kỳ bị ảnh hưởng sau khi lưu."
+    edit:
+      title: "Sửa định mức"
+    form:
+      rank_name: "Tên cấp bậc"
+      quota_kw: "Định mức (kW/người/tháng)"
+      submit: "Lưu định mức"
+      cancel: "Hủy"
+    actions:
+      edit: "Sửa"
 
   csv:
     export_button: "Xuất CSV"

@@ -11,11 +11,13 @@ Rails.application.routes.draw do
   # F07: Soát lại quân số
   resource :personnel_review, only: [ :show ]
 
-  resources :monthly_periods, only: [ :create ] do
+  resources :monthly_periods, only: [ :index, :create, :edit, :update ] do
     member do
       patch :unlock
     end
   end
+
+  resources :rank_quotas, only: [ :index, :edit, :update ]
 
   resources :contact_points do
     resource :personnel, only: [ :show, :update ], controller: :personnel do

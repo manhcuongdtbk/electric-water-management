@@ -1,7 +1,28 @@
 class MonthlyPeriodsController < ApplicationController
-  before_action :authorize_period_manage
+  def index
+    authorize! :read, MonthlyPeriod
+    @monthly_periods = MonthlyPeriod.ordered
+  end
+
+  def edit
+    authorize! :manage, MonthlyPeriod
+    @monthly_period = MonthlyPeriod.accessible_by(current_ability).find_by(id: params[:id])
+    raise CanCan::AccessDenied unless @monthly_period
+  end
+
+  def update
+    authorize! :manage, MonthlyPeriod
+    @monthly_period = MonthlyPeriod.accessible_by(current_ability).find_by(id: params[:id])
+    raise CanCan::AccessDenied unless @monthly_period
+    if @monthly_period.update(unit_price_params)
+      redirect_to monthly_periods_path, notice: t("flash.monthly_periods.updated")
+    else
+      render :edit, status: :unprocessable_entity
+    end
+  end
 
   def create
+    authorize! :manage, MonthlyPeriod
     @period = MonthlyPeriod.new(period_params.merge(locked: false))
 
     if @period.save
@@ -21,7 +42,9 @@ class MonthlyPeriodsController < ApplicationController
   end
 
   def unlock
-    @period = MonthlyPeriod.find(params[:id])
+    authorize! :manage, MonthlyPeriod
+    @period = MonthlyPeriod.accessible_by(current_ability).find_by(id: params[:id])
+    raise CanCan::AccessDenied unless @period
     @period.unlock!
     redirect_to personnel_review_path(period_id: @period.id),
                 notice: t("flash.monthly_periods.unlocked", label: @period.label)
@@ -29,8 +52,8 @@ class MonthlyPeriodsController < ApplicationController
 
   private
 
-  def authorize_period_manage
-    authorize! :manage, MonthlyPeriod
+  def unit_price_params
+    params.require(:monthly_period).permit(:unit_price)
   end
 
   def period_params
