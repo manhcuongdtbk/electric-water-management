@@ -1,11 +1,11 @@
 require "rails_helper"
 
-# End-to-end smoke for ImportFeb2026Service + bảng 22 cột render.
+# End-to-end smoke for ImportFeb2026Service + bảng 24 cột render.
 # The service parses test/fixtures/files/bang_tinh_thang_02.xlsx (~5-10s per
 # run). We accept that cost here — these are the only specs that exercise the
 # real demo data, and they're what catches regressions between the importer and
 # the engine (see docs/BANG_22_COT_ANALYSIS.md).
-RSpec.describe "ImportFeb2026Service + 22-column render", type: :system do
+RSpec.describe "ImportFeb2026Service + 24-column render", type: :system do
   let!(:division) { create(:organization, :division, name: "Sư đoàn") }
   let!(:sdb)      { create(:organization, :unit, parent: division, code: "SDB", name: "Sư đoàn bộ") }
   let!(:admin)    { create(:user, :admin_level1, organization: division) }
@@ -19,7 +19,7 @@ RSpec.describe "ImportFeb2026Service + 22-column render", type: :system do
     expect(@result.contact_points_count).to eq(79)
   end
 
-  it "renders 79 rows in the 22-column monthly summary for admin_level1" do
+  it "renders 79 rows in the 24-column monthly summary for admin_level1" do
     login_as admin, scope: :user
     visit monthly_summary_path(period_id: @result.period.id, org_id: sdb.id)
 

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# F11 — Bảng tổng hợp theo tháng (bảng 22 cột)
+# F11 — Bảng tổng hợp theo tháng (bảng 24 cột)
 # Hiển thị kết quả tính toán từ CalculationEngine cho một đơn vị và một kỳ tháng.
 # Nếu chưa có dữ liệu → tự động chạy engine. Nút "Tính lại" cho admin.
 class MonthlySummariesController < ApplicationController
@@ -108,6 +108,10 @@ class MonthlySummariesController < ApplicationController
     totals = { total_personnel: calculations.sum(&:total_personnel) }
     kw_cols.each { |col| totals[col] = calculations.sum { |c| c.public_send(col) } }
     totals[:living_standard_kw] = MonthlyCalculation::RANK_KW_COLUMNS.sum { |col| totals[col] }
+    totals[:surplus_kw]     = calculations.sum { |c| c.over_under_kw > 0 ? c.over_under_kw : 0 }
+    totals[:deficit_kw]     = calculations.sum { |c| c.over_under_kw < 0 ? -c.over_under_kw : 0 }
+    totals[:surplus_amount] = calculations.sum { |c| c.total_amount > 0 ? c.total_amount : 0 }
+    totals[:deficit_amount] = calculations.sum { |c| c.total_amount < 0 ? -c.total_amount : 0 }
     totals
   end
 
@@ -116,17 +120,19 @@ class MonthlySummariesController < ApplicationController
     savings_deduction_kw loss_deduction_kw division_public_deduction_kw
     unit_public_deduction_kw other_deduction_kw total_deduction_kw
     remaining_standard_kw meter_usage_kw water_pump_actual_kw total_usage_kw
-    over_under_kw total_amount
   ].freeze
 
   def monthly_summary_csv
     rank_headers = (1..7).map { |i| helpers.history_column_label(:"rank#{i}_kw") }
     non_rank_headers = CSV_DATA_COLS.map { |col| t("monthly_summary.columns.#{col}") }
+    split_headers = %i[surplus_kw deficit_kw surplus_amount deficit_amount]
+                      .map { |k| t("monthly_summary.columns.#{k}") }
     headers = [
       t("monthly_summary.columns.stt"),
       t("monthly_summary.columns.contact_point"),
       *rank_headers,
-      *non_rank_headers
+      *non_rank_headers,
+      *split_headers
     ]
 
     bom = +"\xEF\xBB\xBF"
@@ -149,11 +155,17 @@ class MonthlySummariesController < ApplicationController
           calc.remaining_standard_kw.to_f,
           calc.meter_usage_kw.to_f,
           calc.water_pump_actual_kw.to_f,
-          calc.total_usage_kw.to_f,
-          calc.over_under_kw.to_f,
-          calc.total_amount.to_f
+          calc.total_usage_kw.to_f
         ]
-        csv << [ idx + 1, calc.contact_point.name, *rank_values, *non_rank_values ]
+        ou  = calc.over_under_kw.to_d
+        amt = calc.total_amount.to_d
+        split_values = [
+          ou > 0  ? ou.to_f  : "",
+          ou < 0  ? ou.abs.to_f : "",
+          amt > 0 ? amt.to_f : "",
+          amt < 0 ? amt.abs.to_f : ""
+        ]
+        csv << [ idx + 1, calc.contact_point.name, *rank_values, *non_rank_values, *split_values ]
       end
 
       if @totals
@@ -172,11 +184,15 @@ class MonthlySummariesController < ApplicationController
           @totals[:remaining_standard_kw].to_f,
           @totals[:meter_usage_kw].to_f,
           @totals[:water_pump_actual_kw].to_f,
-          @totals[:total_usage_kw].to_f,
-          @totals[:over_under_kw].to_f,
-          @totals[:total_amount].to_f
+          @totals[:total_usage_kw].to_f
         ]
-        csv << [ t("monthly_summary.total_row"), "", *totals_rank, *totals_non_rank ]
+        totals_split = [
+          @totals[:surplus_kw] > 0  ? @totals[:surplus_kw].to_f  : "",
+          @totals[:deficit_kw] > 0  ? @totals[:deficit_kw].to_f  : "",
+          @totals[:surplus_amount] > 0 ? @totals[:surplus_amount].to_f : "",
+          @totals[:deficit_amount] > 0 ? @totals[:deficit_amount].to_f : ""
+        ]
+        csv << [ t("monthly_summary.total_row"), "", *totals_rank, *totals_non_rank, *totals_split ]
       end
     end
   end

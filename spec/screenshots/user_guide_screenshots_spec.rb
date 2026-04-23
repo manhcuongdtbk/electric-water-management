@@ -193,7 +193,7 @@ RSpec.describe "User Guide Screenshots", type: :system, js: true, screenshots: t
   end
 
   # ---------------------------------------------------------------------------
-  # 12 — 22-column calculation table (adaptive horizontal scroll).
+  # 12 — 24-column calculation table (adaptive horizontal scroll).
   # Measures scrollWidth / clientWidth of the overflow container, then takes
   # ceil(scrollWidth / clientWidth) screenshots that together cover every
   # column. Files: 12_calculation_table.png, 12b_calculation_table.png, …

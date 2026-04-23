@@ -83,7 +83,7 @@ RSpec.describe "MonthlySummary", type: :request do
         expect(response.body).not_to include(cp_b.name)
       end
 
-      it "displays the 22-column table structure" do
+      it "displays the 24-column table structure" do
         sign_in admin_unit_a
         get monthly_summary_path(period_id: period.id)
         body = response.body
@@ -198,19 +198,20 @@ RSpec.describe "MonthlySummary", type: :request do
     end
 
     context "data correctness" do
-      it "displays over_under_kw value from calculation" do
+      it "displays over_under_kw absolute value in deficit column" do
         sign_in admin_unit_a
         get monthly_summary_path(period_id: period.id)
-        # calc_a.over_under_kw = -215 → formatted as "-215.00"
-        expect(response.body).to include("-215.00")
+        # calc_a.over_under_kw = -215 → deficit column shows "215.00" (absolute, no minus)
+        expect(response.body).to include("215.00")
+        expect(response.body).not_to include("-215.00")
       end
 
-      it "displays total_amount without decimal places" do
+      it "displays total_amount absolute value without decimal places in deficit column" do
         sign_in admin_unit_a
         get monthly_summary_path(period_id: period.id)
-        # calc_a.total_amount = -430_000 → formatted as "-430,000" (no .00)
-        expect(response.body).to include("-430,000")
-        expect(response.body).not_to include("-430,000.00")
+        # calc_a.total_amount = -430_000 → deficit column shows "430,000" (absolute, no minus)
+        expect(response.body).to include("430,000")
+        expect(response.body).not_to include("-430,000")
       end
 
       it "totals row sums total_personnel across all contact points" do
