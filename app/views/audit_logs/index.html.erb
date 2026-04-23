@@ -1,0 +1,110 @@
+<% content_for :title, t("audit_log.index.title") %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-xl font-semibold text-gray-900"><%= t("audit_log.index.title") %></h1>
+</div>
+
+<form method="get" action="<%= audit_logs_path %>" class="mb-4 flex flex-wrap gap-2 items-end">
+  <div>
+    <label class="block text-xs font-medium text-gray-600 mb-1"><%= t("audit_log.index.filter_user") %></label>
+    <select name="whodunnit" class="rounded-md border border-gray-300 px-2 py-1.5 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+      <option value=""><%= t("audit_log.index.filter_all_users") %></option>
+      <% @all_users.each do |user| %>
+        <option value="<%= user.id %>" <%= "selected" if params[:whodunnit] == user.id.to_s %>>
+          <%= user.full_name %>
+        </option>
+      <% end %>
+    </select>
+  </div>
+
+  <div>
+    <label class="block text-xs font-medium text-gray-600 mb-1"><%= t("audit_log.index.filter_item_type") %></label>
+    <select name="item_type" class="rounded-md border border-gray-300 px-2 py-1.5 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+      <option value=""><%= t("audit_log.index.filter_all_types") %></option>
+      <% @item_types.each do |type| %>
+        <option value="<%= type %>" <%= "selected" if params[:item_type] == type %>>
+          <%= item_type_label(type) %>
+        </option>
+      <% end %>
+    </select>
+  </div>
+
+  <div>
+    <label class="block text-xs font-medium text-gray-600 mb-1"><%= t("audit_log.index.filter_date_from") %></label>
+    <input type="date" name="date_from" value="<%= params[:date_from] %>"
+           class="rounded-md border border-gray-300 px-2 py-1.5 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+  </div>
+
+  <div>
+    <label class="block text-xs font-medium text-gray-600 mb-1"><%= t("audit_log.index.filter_date_to") %></label>
+    <input type="date" name="date_to" value="<%= params[:date_to] %>"
+           class="rounded-md border border-gray-300 px-2 py-1.5 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+  </div>
+
+  <button type="submit" class="inline-flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors">
+    <%= t("audit_log.index.filter_submit") %>
+  </button>
+  <% if params[:whodunnit].present? || params[:item_type].present? || params[:date_from].present? || params[:date_to].present? %>
+    <%= link_to t("audit_log.index.filter_reset"), audit_logs_path,
+          class: "text-sm text-gray-500 hover:underline" %>
+  <% end %>
+</form>
+
+<div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+  <table class="min-w-full divide-y divide-gray-200 text-sm">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-4 py-3 text-center font-medium text-gray-600 w-12"><%= t("audit_log.index.columns.stt") %></th>
+        <th class="px-4 py-3 text-left font-medium text-gray-600 w-36"><%= t("audit_log.index.columns.time") %></th>
+        <th class="px-4 py-3 text-left font-medium text-gray-600 w-32"><%= t("audit_log.index.columns.user") %></th>
+        <th class="px-4 py-3 text-left font-medium text-gray-600 w-32"><%= t("audit_log.index.columns.item_type") %></th>
+        <th class="px-4 py-3 text-center font-medium text-gray-600 w-24"><%= t("audit_log.index.columns.event") %></th>
+        <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("audit_log.index.columns.changes") %></th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      <% if @versions.empty? %>
+        <tr>
+          <td colspan="6" class="px-4 py-8 text-center text-gray-400"><%= t("audit_log.index.empty") %></td>
+        </tr>
+      <% else %>
+        <% @versions.each_with_index do |version, idx| %>
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="px-4 py-3 text-center text-gray-500"><%= @pagy.offset + idx + 1 %></td>
+            <td class="px-4 py-3 text-gray-600 whitespace-nowrap">
+              <%= l(version.created_at, format: :default) %>
+            </td>
+            <td class="px-4 py-3 text-gray-900">
+              <% user = @users_map[version.whodunnit] %>
+              <%= user ? user.full_name : t("audit_log.index.unknown_user") %>
+            </td>
+            <td class="px-4 py-3 text-gray-700">
+              <%= item_type_label(version.item_type) %>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <%= event_badge(version.event) %>
+            </td>
+            <td class="px-4 py-3 text-gray-600">
+              <% changes = humanize_changes(version) %>
+              <% if changes.present? %>
+                <ul class="space-y-0.5">
+                  <% changes.each do |line| %>
+                    <li class="text-xs"><%= line %></li>
+                  <% end %>
+                </ul>
+              <% else %>
+                <span class="text-gray-400"><%= t("audit_log.index.no_changes") %></span>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<% if @pagy.pages > 1 %>
+  <div class="mt-4 flex justify-center">
+    <%== @pagy.series_nav %>
+  </div>
+<% end %>
