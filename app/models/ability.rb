@@ -19,6 +19,8 @@ class Ability
     # Unit config section is for admin_unit only — admin_level1 manages via the
     # division section instead.
     cannot :update_unit_config, UnitConfig
+    # Backup/restore is tech-only.
+    cannot :manage, :backup
   end
 
   def admin_unit_abilities(user)
@@ -55,5 +57,6 @@ class Ability
   def tech_abilities
     can :manage, User
     can :read, :audit_log
+    can :manage, :backup
   end
 end

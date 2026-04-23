@@ -50,6 +50,7 @@ RSpec.describe Ability do
     it { is_expected.to be_able_to(:manage, User.new) }
     it { is_expected.to be_able_to(:manage, MonthlyPeriod.new) }
     it { is_expected.to be_able_to(:manage, RankQuota.new) }
+    it { is_expected.not_to be_able_to(:manage, :backup) }
   end
 
   context "when user is admin_unit of unit_a" do
@@ -118,6 +119,7 @@ RSpec.describe Ability do
 
     it { is_expected.to be_able_to(:manage, User.new) }
     it { is_expected.to be_able_to(:manage, create(:user, :admin_unit, organization: unit_a)) }
+    it { is_expected.to be_able_to(:manage, :backup) }
 
     it { is_expected.not_to be_able_to(:read, cp_a) }
     it { is_expected.not_to be_able_to(:read, meter_a) }

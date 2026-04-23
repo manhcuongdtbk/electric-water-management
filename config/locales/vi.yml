@@ -176,6 +176,13 @@ vi:
     monthly_summary:
       recalculated: "Đã tính lại bảng tổng hợp thành công."
       recalculate_failed: "Tính lại thất bại: %{error}"
+    backups:
+      created: "Đã tạo bản sao lưu: %{filename}"
+      create_failed: "Sao lưu thất bại: %{error}"
+      restored: "Phục hồi thành công. Vui lòng đăng nhập lại."
+      restore_failed: "Phục hồi thất bại: %{error}"
+      deleted: "Đã xóa file sao lưu."
+      delete_failed: "Xóa thất bại: %{error}"
 
   contact_points:
     index:
@@ -474,6 +481,7 @@ vi:
     monthly_periods: "Đơn giá điện"
     rank_quotas: "Định mức cấp bậc"
     audit_logs: "Nhật ký hoạt động"
+    backups: "Sao lưu dữ liệu"
 
   users:
     index:
@@ -669,3 +677,21 @@ vi:
       MonthlyPeriod: "Kỳ tính toán"
       Organization: "Đơn vị"
       User: "Tài khoản"
+
+  backups:
+    index:
+      title: "Sao lưu & Phục hồi dữ liệu"
+      backup_button: "Sao lưu ngay"
+      restore_confirm: "Bạn chắc chắn muốn phục hồi từ file này? Toàn bộ dữ liệu hiện tại sẽ bị ghi đè và bạn cần đăng nhập lại."
+      delete_confirm: "Bạn chắc chắn muốn xóa file sao lưu này?"
+      empty: "Chưa có bản sao lưu nào."
+      restore_warning: "Phục hồi sẽ ghi đè toàn bộ dữ liệu hiện tại. Bạn sẽ cần đăng nhập lại sau khi phục hồi."
+      columns:
+        stt: "STT"
+        filename: "Tên file"
+        size: "Kích thước"
+        created_at: "Thời gian"
+        actions: "Thao tác"
+      actions:
+        restore: "Phục hồi"
+        delete: "Xóa"

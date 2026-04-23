@@ -5,6 +5,7 @@
 /.env*
 !/.env*.erb
 !/.env.example
+!/.env.production.example
 
 # Ignore all logfiles and tempfiles.
 /log/*
@@ -52,3 +53,7 @@ yarn-error.log
 /.claude/projects/
 
 # Screenshot outputs go to tmp/screenshots/ — already covered by /tmp/* above
+
+# Database backups (keep the directory, ignore contents)
+/db/backups/*
+!/db/backups/.keep

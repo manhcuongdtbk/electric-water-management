@@ -41,6 +41,13 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :backups, only: [ :index, :create ] do
+    collection do
+      post :restore
+      delete :destroy_file
+    end
+  end
+
   resources :audit_logs, only: [ :index ]
 
   resource :dashboard, only: [ :show ], controller: "dashboard"
