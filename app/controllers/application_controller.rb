@@ -3,6 +3,7 @@ class ApplicationController < ActionController::Base
   stale_when_importmap_changes
 
   before_action :authenticate_user!
+  before_action :set_paper_trail_whodunnit
   before_action :check_force_password_change!
 
   rescue_from CanCan::AccessDenied do |_exception|
@@ -18,6 +19,10 @@ class ApplicationController < ActionController::Base
   helper_method :session_expires_at
 
   protected
+
+  def user_for_paper_trail
+    current_user&.id
+  end
 
   def session_expires_at
     return nil unless user_signed_in?

@@ -41,6 +41,8 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :audit_logs, only: [ :index ]
+
   resource :dashboard, only: [ :show ], controller: "dashboard"
   resource :history, only: [ :show ], controller: "history"
   root "dashboard#show"

@@ -473,6 +473,7 @@ vi:
     config_section: "Cấu hình hệ thống"
     monthly_periods: "Đơn giá điện"
     rank_quotas: "Định mức cấp bậc"
+    audit_logs: "Nhật ký hoạt động"
 
   users:
     index:
@@ -628,3 +629,43 @@ vi:
 
   csv:
     export_button: "Xuất CSV"
+
+  audit_log:
+    index:
+      title: "Nhật ký thay đổi dữ liệu"
+      filter_user: "Người thao tác"
+      filter_all_users: "Tất cả"
+      filter_item_type: "Loại dữ liệu"
+      filter_all_types: "Tất cả"
+      filter_date_from: "Từ ngày"
+      filter_date_to: "Đến ngày"
+      filter_submit: "Lọc"
+      filter_reset: "Xóa bộ lọc"
+      columns:
+        stt: "STT"
+        time: "Thời gian"
+        user: "Người"
+        item_type: "Đối tượng"
+        event: "Hành động"
+        changes: "Thay đổi"
+      empty: "Chưa có nhật ký nào."
+      no_changes: "—"
+      unknown_user: "(hệ thống)"
+    events:
+      create: "Tạo mới"
+      update: "Cập nhật"
+      destroy: "Xóa"
+    item_types:
+      ContactPoint: "Đầu mối"
+      Meter: "Công tơ"
+      Personnel: "Quân số"
+      MeterReading: "Chỉ số công tơ"
+      MonthlyCalculation: "Tính toán tháng"
+      UnitConfig: "Cấu hình đơn vị"
+      ContactPointOtherDeduction: "Khoản trừ khác"
+      PumpStation: "Trạm bơm"
+      PumpStationAssignment: "Phân bổ trạm bơm"
+      RankQuota: "Định mức cấp bậc"
+      MonthlyPeriod: "Kỳ tính toán"
+      Organization: "Đơn vị"
+      User: "Tài khoản"

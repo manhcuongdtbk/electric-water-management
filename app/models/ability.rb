@@ -54,5 +54,6 @@ class Ability
 
   def tech_abilities
     can :manage, User
+    can :read, :audit_log
   end
 end
