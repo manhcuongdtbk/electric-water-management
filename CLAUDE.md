@@ -52,11 +52,14 @@ Rails 8, PostgreSQL, Tailwind (via tailwindcss-rails, không cần Node), Hotwir
 ### Database schema chính
 organizations, users, contact_points, meters, personnel, rank_quotas, monthly_periods, meter_readings, monthly_calculations, unit_configs, pump_stations, contact_point_other_deductions
 
-### Routes & controllers (M4 additions)
+### Routes & controllers
 - `root` → `dashboard#show` (Dashboard + F12 báo cáo tổng hợp: tháng/quý/năm)
 - `history#show` → F13 tra cứu lịch sử + so sánh cùng kỳ
 - `monthly_summaries#show` → F11 bảng 22 cột (+ CSV export)
 - CSV export: `respond_to format.csv` trên dashboard, history, monthly_summaries
+- `audit_logs#index` → F19 nhật ký thay đổi (PaperTrail::Version, tech + admin_level1)
+- `monthly_periods#index/edit/update` → F20 đơn giá điện (admin_level1 sửa)
+- `rank_quotas#index/edit/update` → F21 định mức cấp bậc (admin_level1 sửa)
 
 ## Milestones
 - M1 (14/4–23/4): ✅ DONE — DB + CRUD khai báo F01–F04 + Docker dev + RSpec 247 specs
@@ -64,7 +67,8 @@ organizations, users, contact_points, meters, personnel, rank_quotas, monthly_pe
 - M3 (2/5–9/5): ✅ DONE — Phân quyền Devise F15–F18 + CanCanCan Ability 4 vai trò + RSpec 546 specs
 - Pre-M4: ✅ DONE — Bug fix + deploy + import + system specs (688 specs)
 - M4: ✅ DONE — Dashboard + F12 báo cáo (tháng/quý/năm) + F13 tra cứu lịch sử + F14 CSV export (771 specs)
-- M5: ← ĐANG LÀM — F19 nhật ký + F20 đơn giá + F21 định mức + Docker prod
+- M5 PR1: ✅ DONE — F20 đơn giá + F21 định mức (PR#55, 786 specs)
+- M5 PR2: ✅ DONE — F19 nhật ký hoạt động (PR#56, 795 specs)
 - M6 (17/5–25/5): Bàn giao — staging + fix bug + đào tạo + nghiệm thu
 
 ## File tham chiếu nghiệp vụ
