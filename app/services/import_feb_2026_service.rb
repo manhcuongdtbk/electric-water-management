@@ -327,13 +327,7 @@ class ImportFeb2026Service
     ded.other_value = value
     return unless ded.new_record? || ded.changed?
 
-    if value.negative?
-      @warnings << "ContactPointOtherDeduction '#{contact_point.name}' = #{value} " \
-                   "(negative, bypass validation as per Excel row 42 Bảo đảm workaround)"
-      ded.save(validate: false)
-    else
-      ded.save!
-    end
+    ded.save!
   end
 
   def upsert_meter_and_reading(contact_point, spec, meter_specs, used_rows)
