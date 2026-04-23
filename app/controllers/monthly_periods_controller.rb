@@ -43,7 +43,8 @@ class MonthlyPeriodsController < ApplicationController
 
   def unlock
     authorize! :manage, MonthlyPeriod
-    @period = MonthlyPeriod.find(params[:id])
+    @period = MonthlyPeriod.accessible_by(current_ability).find_by(id: params[:id])
+    raise CanCan::AccessDenied unless @period
     @period.unlock!
     redirect_to personnel_review_path(period_id: @period.id),
                 notice: t("flash.monthly_periods.unlocked", label: @period.label)
