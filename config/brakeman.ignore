@@ -7,6 +7,10 @@
     {
       "fingerprint": "739f3891f3b78343d2d333ec6178df9a3677d76bd500261d7d321d8efad07aec",
       "note": "Intentional: :role assignment is safe here. UsersController is gated behind require_user_management_access! (admin_level1 and tech only). Allowing role assignment is the intended behaviour for user management."
+    },
+    {
+      "fingerprint": "3d352243082957533d15c02b8893426073f4a96ab8adbfad8a225d5b221a2c22",
+      "note": "False positive: Open3.capture3 is called with an array (not a shell string), so no shell interpolation occurs. Values come from Rails' own connection_db_config (database.yml / operator-controlled ENV vars), not from user input. BackupService is gated behind authorize! :manage, :backup (tech role only)."
     }
   ]
 }
