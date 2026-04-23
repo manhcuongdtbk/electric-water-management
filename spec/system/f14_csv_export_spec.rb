@@ -31,7 +31,7 @@ RSpec.describe "F14 — Xuất CSV", type: :request do
   # ===========================================================================
   # F11 — MonthlySummariesController
   # ===========================================================================
-  describe "GET /monthly_summary (F11 — Bảng 22 cột)" do
+  describe "GET /monthly_summary (F11 — Bảng 24 cột)" do
     describe "nút Xuất CSV hiển thị đúng vai trò" do
       it "admin_unit thấy nút Xuất CSV" do
         sign_in admin_unit
@@ -71,11 +71,14 @@ RSpec.describe "F14 — Xuất CSV", type: :request do
         expect(response.body.b[0..2]).to eq(UTF8_BOM)
       end
 
-      it "có header tiếng Việt cho cột quân số và tiêu chuẩn" do
+      it "có header tiếng Việt cho cột quân số, tiêu chuẩn và chênh lệch tách" do
         get monthly_summary_path(format: :csv, period_id: period.id)
         expect(response.body).to include(I18n.t("monthly_summary.columns.total_personnel"))
         expect(response.body).to include(I18n.t("monthly_summary.columns.total_standard_kw"))
-        expect(response.body).to include(I18n.t("monthly_summary.columns.total_amount"))
+        expect(response.body).to include(I18n.t("monthly_summary.columns.surplus_kw"))
+        expect(response.body).to include(I18n.t("monthly_summary.columns.deficit_kw"))
+        expect(response.body).to include(I18n.t("monthly_summary.columns.surplus_amount"))
+        expect(response.body).to include(I18n.t("monthly_summary.columns.deficit_amount"))
       end
 
       it "có tên đầu mối trong dữ liệu" do
