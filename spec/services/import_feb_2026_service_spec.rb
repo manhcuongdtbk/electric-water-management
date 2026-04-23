@@ -71,14 +71,13 @@ RSpec.describe ImportFeb2026Service do
       expect(reading.consumption).to   eq(BigDecimal("99"))
     end
 
-    it "stores the negative 'Khác' for Bảo đảm via save(validate: false) and emits a warning" do
-      res = result
+    it "stores the negative 'Khác' for Bảo đảm without bypassing validation" do
+      result
       bao_dam = ContactPoint.find_by!(organization: sdb, name: "Bảo đảm (Không tính quân y f bộ)")
       ded = ContactPointOtherDeduction.find_by!(contact_point: bao_dam, monthly_period: MonthlyPeriod.last)
 
       expect(ded.other_value).to eq(BigDecimal("-296"))
       expect(ded.other_type).to eq("fixed_kw")
-      expect(res.warnings).to include(match(/Bảo đảm.*-296.*bypass validation/))
     end
 
     it "creates 3 pump stations, each with a pump_station meter assigned to SDB, summing ≈ 6,152 kW raw" do

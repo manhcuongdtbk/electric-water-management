@@ -12,5 +12,5 @@ class ContactPointOtherDeduction < ApplicationRecord
 
   # Validations
   validates :contact_point_id, uniqueness: { scope: :monthly_period_id }
-  validates :other_value, numericality: { greater_than_or_equal_to: 0 }
+  validates :other_value, numericality: true
 end

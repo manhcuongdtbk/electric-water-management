@@ -30,7 +30,8 @@ class Ability
     can :manage, Meter,              organization_id: org_id
     can :manage, Personnel,          contact_point: { organization_id: org_id }
     can :manage, MeterReading,       meter: { organization_id: org_id }
-    can :manage, MonthlyCalculation, contact_point: { organization_id: org_id }
+    can :read,        MonthlyCalculation, contact_point: { organization_id: org_id }
+    can :recalculate, MonthlyCalculation, contact_point: { organization_id: org_id }
 
     can :read, UnitConfig, organization_id: org_id
     can :update_unit_config,        UnitConfig, organization_id: org_id
