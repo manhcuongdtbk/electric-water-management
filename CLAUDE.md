@@ -40,7 +40,7 @@ Rails 8, PostgreSQL, Tailwind (via tailwindcss-rails, không cần Node), Hotwir
 - `admin_level1` — quản trị viên cấp 1 (Ban Doanh trại Sư đoàn)
 - `admin_unit` — quản trị viên đơn vị (cấp 2)
 - `commander` — chỉ huy đơn vị (chỉ xem, không thao tác)
-- `tech` — đội kỹ thuật (quản lý tài khoản, nhật ký, sao lưu)
+- `tech` — đội kỹ thuật (quản lý tài khoản, nhật ký, sao lưu & phục hồi)
 
 ### Engine tính toán — bảng 22 cột
 - 7 nhóm cấp bậc: 570 / 440 / 305 / 130 / 210 / 110 / 24 kW
@@ -50,7 +50,7 @@ Rails 8, PostgreSQL, Tailwind (via tailwindcss-rails, không cần Node), Hotwir
 - Đơn giá thay đổi hàng tháng
 
 ### Database schema chính
-organizations, users, contact_points, meters, personnel, rank_quotas, monthly_periods, meter_readings, monthly_calculations, unit_configs, pump_stations, contact_point_other_deductions
+organizations, users, contact_points, meters, personnel, rank_quotas (cột: rank_name, quota_kw, effective_from), monthly_periods, meter_readings, monthly_calculations, unit_configs, pump_stations, contact_point_other_deductions
 
 ### Routes & controllers
 - `root` → `dashboard#show` (Dashboard + F12 báo cáo tổng hợp: tháng/quý/năm)
@@ -60,6 +60,7 @@ organizations, users, contact_points, meters, personnel, rank_quotas, monthly_pe
 - `audit_logs#index` → F19 nhật ký thay đổi (PaperTrail::Version, tech + admin_level1)
 - `monthly_periods#index/edit/update` → F20 đơn giá điện (admin_level1 sửa)
 - `rank_quotas#index/edit/update` → F21 định mức cấp bậc (admin_level1 sửa)
+- `backups#index/create/restore/destroy_file` → Sao lưu & phục hồi (tech only, admin_level1 explicit cannot)
 
 ## Milestones
 - M1 (14/4–23/4): ✅ DONE — DB + CRUD khai báo F01–F04 + Docker dev + RSpec 247 specs
@@ -69,6 +70,7 @@ organizations, users, contact_points, meters, personnel, rank_quotas, monthly_pe
 - M4: ✅ DONE — Dashboard + F12 báo cáo (tháng/quý/năm) + F13 tra cứu lịch sử + F14 CSV export (771 specs)
 - M5 PR1: ✅ DONE — F20 đơn giá + F21 định mức (PR#55, 786 specs)
 - M5 PR2: ✅ DONE — F19 nhật ký hoạt động (PR#56, 795 specs)
+- M5 PR3: ✅ DONE — Sao lưu & phục hồi + Docker production (PR#58, 836 specs)
 - M6 (17/5–25/5): Bàn giao — staging + fix bug + đào tạo + nghiệm thu
 
 ## File tham chiếu nghiệp vụ
