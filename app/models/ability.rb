@@ -33,6 +33,9 @@ class Ability
     can :read, UnitConfig, organization_id: org_id
     can :update_unit_config,        UnitConfig, organization_id: org_id
     can :update_electricity_supply, UnitConfig, organization_id: org_id
+
+    can :read, MonthlyPeriod
+    can :read, RankQuota
   end
 
   def commander_abilities(user)
@@ -44,6 +47,9 @@ class Ability
     can :read, MeterReading,       meter: { organization_id: org_id }
     can :read, MonthlyCalculation, contact_point: { organization_id: org_id }
     can :read, UnitConfig,         organization_id: org_id
+
+    can :read, MonthlyPeriod
+    can :read, RankQuota
   end
 
   def tech_abilities

@@ -1,0 +1,47 @@
+<% content_for :title, t("rank_quotas.index.title") %>
+
+<div class="flex items-center justify-between mb-4">
+  <h1 class="text-xl font-semibold text-gray-900"><%= t("rank_quotas.index.title") %></h1>
+</div>
+
+<div class="mb-4 rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+  <%= t("rank_quotas.index.note") %>
+</div>
+
+<div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+  <table class="min-w-full divide-y divide-gray-200 text-sm">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-4 py-3 text-center font-medium text-gray-600 w-12">STT</th>
+        <th class="px-4 py-3 text-center font-medium text-gray-600 w-16"><%= t("rank_quotas.index.rank_group_col") %></th>
+        <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("rank_quotas.index.rank_name_col") %></th>
+        <th class="px-4 py-3 text-right font-medium text-gray-600"><%= t("rank_quotas.index.quota_kw_col") %></th>
+        <th class="px-4 py-3 text-center font-medium text-gray-600"><%= t("rank_quotas.index.effective_from_col") %></th>
+        <% if can? :manage, RankQuota %>
+          <th class="px-4 py-3 text-center font-medium text-gray-600">Thao tác</th>
+        <% end %>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      <% @rank_quotas.each_with_index do |quota, idx| %>
+        <tr class="hover:bg-gray-50 transition-colors">
+          <td class="px-4 py-3 text-center text-gray-500"><%= idx + 1 %></td>
+          <td class="px-4 py-3 text-center font-medium text-gray-700"><%= quota.rank_group %></td>
+          <td class="px-4 py-3 text-gray-900"><%= quota.rank_name %></td>
+          <td class="px-4 py-3 text-right font-medium text-gray-900">
+            <%= number_with_delimiter(quota.quota_kw) %> kW
+          </td>
+          <td class="px-4 py-3 text-center text-gray-600">
+            <%= l(quota.effective_from, format: :default) %>
+          </td>
+          <% if can? :manage, RankQuota %>
+            <td class="px-4 py-3 text-center">
+              <%= link_to t("rank_quotas.actions.edit"), edit_rank_quota_path(quota),
+                    class: "text-xs text-amber-600 hover:text-amber-800 font-medium" %>
+            </td>
+          <% end %>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
