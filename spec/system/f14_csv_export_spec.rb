@@ -154,8 +154,8 @@ RSpec.describe "F14 — Xuất CSV", type: :request do
           cp_col = I18n.t("monthly_summary.columns.contact_point")
           row    = rows.find { |r| r[cp_col] == cp_surplus.name }
 
-          expect(row[I18n.t("monthly_summary.columns.surplus_kw")]).to    eq("100.0")
-          expect(row[I18n.t("monthly_summary.columns.deficit_kw")]).to     eq("")
+          expect(row[I18n.t("monthly_summary.columns.surplus_kw")]).to eq("100.0")
+          expect(row[I18n.t("monthly_summary.columns.deficit_kw")]).to eq("")
           expect(row[I18n.t("monthly_summary.columns.surplus_amount")]).to eq("200000.0")
           expect(row[I18n.t("monthly_summary.columns.deficit_amount")]).to eq("")
         end
@@ -166,8 +166,8 @@ RSpec.describe "F14 — Xuất CSV", type: :request do
           cp_col = I18n.t("monthly_summary.columns.contact_point")
           row    = rows.find { |r| r[cp_col] == cp_deficit.name }
 
-          expect(row[I18n.t("monthly_summary.columns.surplus_kw")]).to    eq("")
-          expect(row[I18n.t("monthly_summary.columns.deficit_kw")]).to     eq("40.0")
+          expect(row[I18n.t("monthly_summary.columns.surplus_kw")]).to eq("")
+          expect(row[I18n.t("monthly_summary.columns.deficit_kw")]).to eq("40.0")
           expect(row[I18n.t("monthly_summary.columns.surplus_amount")]).to eq("")
           expect(row[I18n.t("monthly_summary.columns.deficit_amount")]).to eq("80000.0")
         end
@@ -178,8 +178,8 @@ RSpec.describe "F14 — Xuất CSV", type: :request do
           stt_col = I18n.t("monthly_summary.columns.stt")
           total   = rows.find { |r| r[stt_col] == I18n.t("monthly_summary.total_row") }
 
-          expect(total[I18n.t("monthly_summary.columns.surplus_kw")]).to    eq("100.0")
-          expect(total[I18n.t("monthly_summary.columns.deficit_kw")]).to     eq("40.0")
+          expect(total[I18n.t("monthly_summary.columns.surplus_kw")]).to eq("100.0")
+          expect(total[I18n.t("monthly_summary.columns.deficit_kw")]).to eq("40.0")
           expect(total[I18n.t("monthly_summary.columns.surplus_amount")]).to eq("200000.0")
           expect(total[I18n.t("monthly_summary.columns.deficit_amount")]).to eq("80000.0")
         end
