@@ -67,4 +67,28 @@ RSpec.describe RankQuota, type: :model do
       expect(result[7]).to eq(24)
     end
   end
+
+  describe ".current_names" do
+    before do
+      (1..7).each { |g| create(:rank_quota, :"rank#{g}") }
+    end
+
+    it "returns a hash with keys 1..7" do
+      result = RankQuota.current_names(Date.new(2026, 1, 1))
+      expect(result.keys.sort).to eq((1..7).to_a)
+    end
+
+    it "returns rank_name from the most recent effective record" do
+      create(:rank_quota, rank_group: 1, rank_name: "Ten moi", quota_kw: 570,
+                          effective_from: Date.new(2025, 1, 1))
+      result = RankQuota.current_names(Date.new(2026, 1, 1))
+      expect(result[1]).to eq("Ten moi")
+    end
+
+    it "falls back to 'Nhóm N' when no record exists for a group" do
+      RankQuota.where(rank_group: 3).delete_all
+      result = RankQuota.current_names(Date.new(2026, 1, 1))
+      expect(result[3]).to eq("Nhóm 3")
+    end
+  end
 end

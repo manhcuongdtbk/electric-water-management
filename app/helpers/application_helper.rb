@@ -10,9 +10,13 @@ module ApplicationHelper
     end
   end
 
+  def rank_names
+    @rank_names ||= RankQuota.current_names
+  end
+
   def history_column_label(col)
     if (m = col.to_s.match(/\Arank(\d)_kw\z/))
-      "#{t("rank_groups.rank#{m[1]}")} (kW)"
+      "#{rank_names[m[1].to_i]} (kW)"
     else
       t("history.columns.#{col}")
     end

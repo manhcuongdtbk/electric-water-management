@@ -142,7 +142,7 @@
             </th>
             <% (1..7).each do |i| %>
               <th class="px-2 py-3 text-center font-medium text-gray-600 w-16">
-                <%= t("personnel_reviews.table.rank#{i}") %>
+                <%= rank_names[i] %>
               </th>
             <% end %>
             <th class="px-3 py-3 text-center font-medium text-gray-600 w-16">
