@@ -96,18 +96,15 @@ unless Rails.env.test?
   puts "Users: #{User.count} records"
 
   # Test accounts for development
-  sd   = Organization.find_by!(code: "SD")
-  tr101_org = Organization.find_by!(code: "TR101")
-
   test_users = [
-    { email: "cuong_admin1@test.local",    full_name: "Cường - QTV cấp 1",    role: :admin_level1, org: sd },
+    { email: "cuong_admin1@test.local",    full_name: "Cường - QTV cấp 1",    role: :admin_level1, org: division },
     { email: "cuong_unit@test.local",      full_name: "Cường - QTV đơn vị",   role: :admin_unit,   org: sdb },
     { email: "cuong_commander@test.local", full_name: "Cường - Chỉ huy",      role: :commander,    org: sdb },
-    { email: "cuong_tech@test.local",      full_name: "Cường - Kỹ thuật",     role: :tech,         org: sd },
-    { email: "thy_admin1@test.local",      full_name: "Thy - QTV cấp 1",      role: :admin_level1, org: sd },
-    { email: "thy_unit@test.local",        full_name: "Thy - QTV đơn vị",     role: :admin_unit,   org: tr101_org },
-    { email: "thy_commander@test.local",   full_name: "Thy - Chỉ huy",        role: :commander,    org: tr101_org },
-    { email: "thy_tech@test.local",        full_name: "Thy - Kỹ thuật",       role: :tech,         org: sd }
+    { email: "cuong_tech@test.local",      full_name: "Cường - Kỹ thuật",     role: :tech,         org: division },
+    { email: "thy_admin1@test.local",      full_name: "Thy - QTV cấp 1",      role: :admin_level1, org: division },
+    { email: "thy_unit@test.local",        full_name: "Thy - QTV đơn vị",     role: :admin_unit,   org: tr101 },
+    { email: "thy_commander@test.local",   full_name: "Thy - Chỉ huy",        role: :commander,    org: tr101 },
+    { email: "thy_tech@test.local",        full_name: "Thy - Kỹ thuật",       role: :tech,         org: division }
   ]
 
   test_users.each do |attrs|
