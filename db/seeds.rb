@@ -94,6 +94,34 @@ unless Rails.env.test?
   end
 
   puts "Users: #{User.count} records"
+
+  # Test accounts for development
+  sd   = Organization.find_by!(code: "SD")
+  tr101_org = Organization.find_by!(code: "TR101")
+
+  test_users = [
+    { email: "cuong_admin1@test.local",    full_name: "Cường - QTV cấp 1",    role: :admin_level1, org: sd },
+    { email: "cuong_unit@test.local",      full_name: "Cường - QTV đơn vị",   role: :admin_unit,   org: sdb },
+    { email: "cuong_commander@test.local", full_name: "Cường - Chỉ huy",      role: :commander,    org: sdb },
+    { email: "cuong_tech@test.local",      full_name: "Cường - Kỹ thuật",     role: :tech,         org: sd },
+    { email: "thy_admin1@test.local",      full_name: "Thy - QTV cấp 1",      role: :admin_level1, org: sd },
+    { email: "thy_unit@test.local",        full_name: "Thy - QTV đơn vị",     role: :admin_unit,   org: tr101_org },
+    { email: "thy_commander@test.local",   full_name: "Thy - Chỉ huy",        role: :commander,    org: tr101_org },
+    { email: "thy_tech@test.local",        full_name: "Thy - Kỹ thuật",       role: :tech,         org: sd }
+  ]
+
+  test_users.each do |attrs|
+    user = User.find_or_initialize_by(email: attrs[:email])
+    user.full_name             = attrs[:full_name]
+    user.password              = "Test1234!"
+    user.password_confirmation = "Test1234!"
+    user.role                  = attrs[:role]
+    user.organization          = attrs[:org]
+    user.force_password_change = false
+    user.save!
+  end
+
+  puts "Test accounts: #{test_users.count} records seeded"
 end
 
 puts "Seed completed successfully."
