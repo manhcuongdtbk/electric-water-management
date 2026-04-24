@@ -11,7 +11,8 @@ RSpec.describe "MonthlySummary", type: :request do
   let(:commander)    { create(:user, :commander,    organization: org_a) }
   let(:tech_user)    { create(:user, :tech,          organization: org_a) }
 
-  let!(:period) { create(:monthly_period, year: 2026, month: 2) }
+  let!(:period)       { create(:monthly_period, year: 2026, month: 2) }
+  let!(:rank_quotas)  { (1..7).map { |g| create(:rank_quota, :"rank#{g}") } }
 
   let!(:cp_a) { create(:contact_point, organization: org_a) }
   let!(:cp_b) { create(:contact_point, organization: org_b) }
@@ -115,8 +116,8 @@ RSpec.describe "MonthlySummary", type: :request do
         sign_in admin_unit_a
         get monthly_summary_path(period_id: period.id)
         body = response.body
-        (1..7).map { |i| I18n.t("monthly_summary.columns.rank#{i}_kw") }.each do |header|
-          expect(body).to include(header)
+        rank_quotas.each do |rq|
+          expect(body).to include(rq.rank_name)
         end
       end
     end

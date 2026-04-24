@@ -100,8 +100,8 @@
         <%# Quân số group (7 rank kW + total_personnel) %>
         <% (1..7).each do |i| %>
           <th class="px-2 py-2 text-right font-medium border border-slate-500 bg-blue-600 whitespace-nowrap min-w-[52px]"
-              title="<%= t("personnel.ranks.rank#{i}") %>">
-            <%= t("monthly_summary.columns.rank#{i}_kw") %>
+              title="<%= rank_names[i] %>">
+            <%= rank_names[i] %>
           </th>
         <% end %>
         <th class="px-2 py-2 text-right font-medium border border-slate-500 bg-blue-600 whitespace-nowrap min-w-[56px]">

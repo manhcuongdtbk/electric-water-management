@@ -35,4 +35,11 @@ class RankQuota < ApplicationRecord
       hash[group] = quota&.quota_kw
     end
   end
+
+  def self.current_names(date = Date.current)
+    RANK_GROUPS.each_with_object({}) do |group, hash|
+      quota = for_rank(group).effective_at(date).first
+      hash[group] = quota&.rank_name || "Nhóm #{group}"
+    end
+  end
 end

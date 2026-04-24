@@ -1,15 +1,6 @@
 vi:
   app_name: "Phần mềm Quản lý Điện Nước"
 
-  rank_groups: &rank_groups
-    rank1: "Chỉ huy Sư đoàn; SQ có trần quân hàm là Đại tá"
-    rank2: "Chỉ huy Trung đoàn; SQ có trần quân hàm là Thượng tá"
-    rank3: "Chỉ huy tiểu đoàn; SQ có trần quân hàm là Trung tá, Thiếu tá"
-    rank4: "Chỉ huy đại đội, trung đội; SQ có trần quân hàm là cấp Úy"
-    rank5: "Cơ quan sư đoàn, trung đoàn"
-    rank6: "Tiểu đoàn, đại đội"
-    rank7: "Hạ sĩ quan, binh sĩ"
-
   time:
     formats:
       default: "%d/%m/%Y %H:%M"
@@ -263,8 +254,6 @@ vi:
       title: "Khai báo quân số"
       no_period: "Chưa có kỳ nào. Vui lòng tạo kỳ tính toán trước."
     period_select: "Kỳ tính toán"
-    ranks:
-      <<: *rank_groups
     results:
       title: "Kết quả tính toán"
       total_count: "Tổng quân số"
@@ -383,7 +372,6 @@ vi:
     table:
       stt: "STT"
       contact_point: "Đầu mối"
-      <<: *rank_groups
       total: "Tổng"
       status: "Trạng thái"
       actions: "Thao tác"
@@ -435,13 +423,6 @@ vi:
     columns:
       stt: "STT"
       contact_point: "Tên đầu mối"
-      rank1_kw: "Chỉ huy Sư đoàn; SQ có trần quân hàm là Đại tá"
-      rank2_kw: "Chỉ huy Trung đoàn; SQ có trần quân hàm là Thượng tá"
-      rank3_kw: "Chỉ huy tiểu đoàn; SQ có trần quân hàm là Trung tá, Thiếu tá"
-      rank4_kw: "Chỉ huy đại đội, trung đội; SQ có trần quân hàm là cấp Úy"
-      rank5_kw: "Cơ quan sư đoàn, trung đoàn"
-      rank6_kw: "Tiểu đoàn, đại đội"
-      rank7_kw: "Hạ sĩ quan, binh sĩ"
       total_personnel: "Tổng QS"
       living_standard_kw: "Sinh hoạt"
       water_pump_standard_kw: "Bơm nước"
