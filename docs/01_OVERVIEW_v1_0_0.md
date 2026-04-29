@@ -4,7 +4,7 @@
 >
 > File này cung cấp bối cảnh tổng thể: dự án giải quyết vấn đề gì, cho ai, bằng công nghệ nào, trong thời gian bao lâu, và cách đọc bộ tài liệu. Đọc file này trước khi đọc bất kỳ file nào khác trong thư mục `docs/`.
 >
-> Thuật ngữ sử dụng trong file này tuân theo `02_GLOSSARY_v1_0_0.md`.
+> Thuật ngữ sử dụng trong file này tuân theo `02_GLOSSARY_v1_1_0.md`.
 
 ---
 
