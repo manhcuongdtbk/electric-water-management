@@ -1,4 +1,4 @@
-# 04. Database & Models — v1.0.0
+# 04. Database & Models — v1.0.1
 
 > **Đọc lần đầu?** Đọc 01_OVERVIEW trước để hiểu dự án là gì. Tra thuật ngữ tại 02_GLOSSARY.
 >
@@ -31,71 +31,145 @@
 - **Database engine:** PostgreSQL (extension `pg_catalog.plpgsql` được bật).
 - **Kiểu số quan trọng:** Mọi cột tiền và kW đều dùng `decimal` (mapping ra `BigDecimal` ở Ruby), không dùng `float`. Xem mục 4.1.
 
-### 1.2 ERD dạng text
+### 1.2 ERD (Mermaid)
 
-Quan hệ giữa các bảng chính. Mũi tên đi từ bảng con (chứa foreign key) sang bảng cha.
+Quan hệ giữa các bảng chính. FK được ghi nhãn trên từng đường quan hệ. `rank_quotas` và `versions` đứng độc lập (không có đường FK nối ra ngoài).
 
+```mermaid
+erDiagram
+    organizations {
+        bigint id PK
+        string name
+        string code UK
+        integer level "division=1 | unit=2"
+        bigint parent_id FK
+        integer position
+    }
+    users {
+        bigint id PK
+        string email UK
+        integer role "admin_level1=0 | admin_unit=1 | commander=2 | tech=3"
+        bigint organization_id FK
+        boolean force_password_change
+        datetime locked_at
+    }
+    contact_points {
+        bigint id PK
+        string name
+        bigint organization_id FK
+        integer position
+        string group_name
+    }
+    meters {
+        bigint id PK
+        string name
+        integer meter_type "3 loai: normal=0 | public_meter=1 | pump_station=2 (no_loss chua implement - xem TODO 1)"
+        bigint contact_point_id FK
+        bigint organization_id FK
+    }
+    rank_quotas {
+        bigint id PK
+        integer rank_group "1..7"
+        string rank_name
+        decimal quota_kw
+        date effective_from
+    }
+    monthly_periods {
+        bigint id PK
+        integer year
+        integer month
+        decimal unit_price
+        boolean locked
+        bigint locked_by_id FK
+    }
+    personnel {
+        bigint id PK
+        bigint contact_point_id FK
+        bigint monthly_period_id FK
+        integer rank1_count
+        integer rank7_count
+        datetime reviewed_at
+    }
+    meter_readings {
+        bigint id PK
+        bigint meter_id FK
+        bigint monthly_period_id FK
+        decimal reading_start
+        decimal reading_end
+        decimal consumption
+    }
+    unit_configs {
+        bigint id PK
+        bigint organization_id FK
+        bigint monthly_period_id FK
+        decimal savings_rate
+        decimal division_public_rate
+        decimal unit_public_rate
+        decimal electricity_supply_kw
+    }
+    monthly_calculations {
+        bigint id PK
+        bigint contact_point_id FK
+        bigint monthly_period_id FK
+        decimal total_standard_kw
+        decimal total_usage_kw
+        decimal over_under_kw "signed: duong=thua | am=thieu"
+        decimal total_amount
+    }
+    contact_point_other_deductions {
+        bigint id PK
+        bigint contact_point_id FK
+        bigint monthly_period_id FK
+        integer other_type
+        decimal other_value "cho phep am"
+    }
+    pump_stations {
+        bigint id PK
+        string name
+        bigint organization_id FK
+        bigint meter_id FK
+    }
+    pump_station_assignments {
+        bigint id PK
+        bigint pump_station_id FK
+        bigint organization_id FK
+    }
+    versions {
+        bigint id PK
+        string item_type "polymorphic - tat ca 13 model"
+        bigint item_id
+        string event "create | update | destroy"
+        string whodunnit "user_id"
+        jsonb object
+        jsonb object_changes
+    }
+
+    organizations ||--o{ organizations : "parent_id (unit to division)"
+    organizations ||--o{ users : "organization_id"
+    organizations ||--o{ contact_points : "organization_id"
+    organizations ||--o{ meters : "organization_id"
+    organizations ||--o{ unit_configs : "organization_id"
+    organizations ||--o{ pump_stations : "organization_id"
+    organizations ||--o{ pump_station_assignments : "organization_id"
+    users ||--o{ monthly_periods : "locked_by_id"
+    contact_points ||--o{ meters : "contact_point_id"
+    contact_points ||--o{ personnel : "contact_point_id"
+    contact_points ||--o{ monthly_calculations : "contact_point_id"
+    contact_points ||--o{ contact_point_other_deductions : "contact_point_id"
+    meters ||--o{ meter_readings : "meter_id"
+    meters ||--o| pump_stations : "meter_id (tren pump_stations)"
+    monthly_periods ||--o{ meter_readings : "monthly_period_id"
+    monthly_periods ||--o{ personnel : "monthly_period_id"
+    monthly_periods ||--o{ unit_configs : "monthly_period_id"
+    monthly_periods ||--o{ monthly_calculations : "monthly_period_id"
+    monthly_periods ||--o{ contact_point_other_deductions : "monthly_period_id"
+    pump_stations ||--o{ pump_station_assignments : "pump_station_id"
 ```
-                    ┌──────────────────┐
-                    │  organizations   │ (cấp 1: Sư đoàn, cấp 2: Đơn vị)
-                    │  (parent_id ──┐  │
-                    └──────┬────────┘  │
-                           │           │
-                           │ self-ref (Sư đoàn ← Đơn vị)
-                           │           │
-                ┌──────────┴───────────┴──────────────┐
-                │                                     │
-                ▼                                     ▼
-         ┌────────────┐                        ┌─────────────┐
-         │   users    │                        │contact_points│
-         │ (Devise +  │                        │  (Đầu mối)  │
-         │   role)    │                        └──────┬──────┘
-         └─────┬──────┘                               │
-               │                                      │
-               │ locked_by                            │
-               │                          ┌───────────┼───────────────┐
-               ▼                          │           │               │
-         ┌─────────────┐              ┌───┴────┐ ┌────┴────────┐ ┌────┴───────────┐
-         │monthly_     │              │ meters │ │ personnel   │ │contact_point_  │
-         │  periods    │              │(4 loại │ │(7 nhóm cấp  │ │other_deductions│
-         │(năm/tháng + │              │ — xem  │ │  bậc count) │ │ (cột "Khác")   │
-         │ unit_price)│              │ TODO)  │ └────┬────────┘ └────┬───────────┘
-         └─────┬───────┘              └───┬────┘      │                │
-               │                          │           │                │
-               │                          ▼           │                │
-               │                   ┌──────────────┐   │                │
-               │                   │meter_readings│   │                │
-               │                   │(start/end/   │   │                │
-               │                   │ consumption) │   │                │
-               │                   └──────┬───────┘   │                │
-               │                          │           │                │
-               └──────────────────────────┴───────────┴────────────────┘
-                                          │
-                                          ▼ (mọi bảng "tháng" tham chiếu monthly_period)
-                              ┌────────────────────────┐
-                              │  unit_configs          │ (savings_rate, public_rate,
-                              │  (cấu hình theo tháng) │  electricity_supply_kw)
-                              └────────────────────────┘
 
-                              ┌──────────────────────────┐
-                              │  monthly_calculations    │ (snapshot bảng 22 cột —
-                              │  (kết quả tính toán)     │  24 cột là view layer)
-                              └──────────────────────────┘
-
-         ┌─────────────────┐         ┌──────────────────────────┐
-         │  pump_stations  │ ◄───────│ pump_station_assignments │ (join: trạm bơm phục vụ
-         │  (trạm bơm)     │         │                          │  đơn vị nào)
-         └─────────────────┘         └──────────────────────────┘
-
-         ┌──────────────┐
-         │ rank_quotas  │ (định mức 7 nhóm cấp bậc, có effective_from)
-         └──────────────┘ (độc lập, không có FK đến bảng khác)
-
-         ┌──────────────┐
-         │   versions   │ (PaperTrail — audit log toàn hệ thống,
-         │              │  polymorphic qua item_type + item_id)
-         └──────────────┘
-```
+**Ghi chú:**
+- `rank_quotas` — độc lập, không có FK đến bảng khác. Được tra cứu bởi `CalculationEngine` tại thời điểm tính.
+- `versions` (PaperTrail) — polymorphic qua `item_type + item_id`, không có FK thực ở tầng DB. Tất cả 13 model nghiệp vụ đều có `has_paper_trail`.
+- `pump_station_assignments` — bảng nối (join table) giữa `pump_stations` và `organizations`.
 
 ### 1.3 13 bảng nghiệp vụ — tóm tắt mục đích
 
@@ -372,7 +446,7 @@ Map vào F02 (CRUD công tơ). Xem `02_GLOSSARY` mục 2.
   - `public_meter` — công tơ công cộng (hội trường, đèn đường…). KHÔNG xuất hiện trong bản thu tiền nhưng vẫn tham gia tính tổn hao.
   - `pump_station` — công tơ trạm bơm, không có `contact_point_id`.
 
-**⚠️ Sai lệch với glossary:** `02_GLOSSARY` mục 2 và 14 mô tả 4 loại công tơ (thêm `public_use` và `no_loss`), nhưng code chỉ có 3. Loại `no_loss` ("vị trí không tổn hao") chưa được implement. Xem mục TODO.
+**ℹ️ Ghi chú:** `02_GLOSSARY v1.1.0` đã cập nhật khớp code: key là `public_meter` (không phải `public_use`). Loại `no_loss` ("vị trí không tổn hao") được đánh dấu "chưa implement" trong glossary. Xem mục TODO #1.
 
 **Callbacks:** không có ngoài PaperTrail.
 
@@ -572,7 +646,7 @@ Map vào F02 (CRUD công tơ). Xem `02_GLOSSARY` mục 2.
 | `consumption` | `decimal(12,2)` | ✅ | — | = `reading_end − reading_start`. Phần mềm tự tính qua `before_save` callback. |
 | `created_at`, `updated_at` | `datetime` | ❌ | — | |
 
-**⚠️ Sai lệch với glossary:** `02_GLOSSARY` mục 2 và 14 ghi tên cột là `previous_reading`, `current_reading`, `consumption_kw` — KHÔNG khớp với code thực tế (`reading_start`, `reading_end`, `consumption`). Xem mục TODO.
+**✅ Đã sửa trong 02_GLOSSARY v1.1.0:** Tên cột trong glossary đã cập nhật khớp code thực tế (`reading_start`, `reading_end`, `consumption`). Xem mục TODO #2.
 
 **Index:**
 
@@ -1048,18 +1122,17 @@ Cần đối chiếu và quyết định cập nhật bên nào (glossary hay co
 enum :meter_type, { normal: 0, public_meter: 1, pump_station: 2 }, validate: true
 ```
 
-**Glossary** (`02_GLOSSARY` mục 2 và 14): mô tả 4 loại — `normal`, `public_use`, `pump_station`, `no_loss` (vị trí không tổn hao).
+**Trạng thái (02_GLOSSARY v1.1.0):** Glossary đã cập nhật — dùng đúng tên `public_meter`, và `no_loss` được đánh dấu "chưa implement trong code".
 
-**Phát hiện:**
-- Tên `public_use` vs `public_meter` không khớp. `config/locales/vi.yml:242`, `app/helpers/application_helper.rb:27`, và migration đều dùng `public_meter`.
-- `no_loss` chưa được implement. `app/services/import_feb_2026_service.rb:403` ghi nhận: `"no_loss_position chưa support — Tiểu đoàn 18 tại trạm biến áp..."`.
+**Phát hiện (còn mở):**
+- `no_loss` chưa được implement trong code. `app/services/import_feb_2026_service.rb:403` ghi nhận: `"no_loss_position chưa support — Tiểu đoàn 18 tại trạm biến áp..."`.
 - `13_BUSINESS_RULES` mục 6.2 và 9.2 mô tả nghiệp vụ "vị trí không tổn hao" chi tiết (Tiểu đoàn 18 = 4.020 kW). Nghiệp vụ này hiện **chưa** được hỗ trợ ở data model.
 
 **Ảnh hưởng:** Engine tính tổn hao không loại trừ được công tơ `no_loss`. Tháng 02/2026 import bằng workaround.
 
-**Cần quyết định:**
-- (a) Cập nhật glossary: chỉ 3 loại, xoá `public_use`/`no_loss`. Phù hợp nếu nghiệp vụ `no_loss` không bắt buộc cho M6.
-- (b) Bổ sung enum + migration thêm `no_loss: 3`, sửa engine. Bắt buộc nếu khách yêu cầu trước nghiệm thu 25/05.
+**Cần quyết định (code):**
+- (a) Chấp nhận 3 loại cho M6 — nghiệp vụ `no_loss` không bắt buộc cho nghiệm thu 25/05.
+- (b) Bổ sung enum + migration thêm `no_loss: 3`, sửa engine — nếu khách yêu cầu trước nghiệm thu.
 
 ### 2. `MeterReading` tên cột không khớp glossary
 
@@ -1068,12 +1141,7 @@ enum :meter_type, { normal: 0, public_meter: 1, pump_station: 2 }, validate: tru
 - `reading_end`
 - `consumption`
 
-**Glossary** (`02_GLOSSARY` mục 2 và 14):
-- `previous_reading`
-- `current_reading`
-- `consumption_kw`
-
-**Đề xuất:** Cập nhật `02_GLOSSARY` mục 2 và 14 cho khớp code. Tên DB là source of truth. Đặc biệt index Anh → Việt mục 14 phải đúng tên cột thật.
+**Trạng thái (02_GLOSSARY v1.1.0):** ✅ Đã sửa — glossary mục 2 và 14 đã dùng đúng tên cột DB: `reading_start`, `reading_end`, `consumption`. Sai lệch này không còn.
 
 ### 3. `MonthlyCalculation` không có cột `surplus_kw`/`deficit_kw`/`surplus_amount`/`deficit_amount`
 
@@ -1114,5 +1182,13 @@ Code: `User` có `has_paper_trail` không loại trừ cột nào. Tức `encryp
 
 ### 7. Tên i18n `meter_types.public_meter` so với glossary
 
-`config/locales/vi.yml:242` ghi `public_meter: "Công cộng"`. Glossary mục 2 dùng key `public_use`. Cần thống nhất: nếu glossary đổi sang `public_meter` thì xoá ghi chú "công tơ công cộng = `public_use`" trong mục 2 và 14.
+`config/locales/vi.yml:242` ghi `public_meter: "Công cộng"`. **Trạng thái (02_GLOSSARY v1.1.0):** ✅ Đã sửa — glossary mục 2 và 14 đã dùng đúng key `public_meter`. Sai lệch này không còn.
 
+---
+
+## Changelog
+
+| Version | Ngày | Thay đổi |
+|---|---|---|
+| v1.0.0 | 28/04/2026 | Khởi tạo. |
+| v1.0.1 | 30/04/2026 | ERD chuyển từ ASCII sang Mermaid. Sửa "4 loại" → "3 loại" ở ERD và bảng tóm tắt. |
