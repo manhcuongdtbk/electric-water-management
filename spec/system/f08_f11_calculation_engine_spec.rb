@@ -92,10 +92,10 @@ RSpec.describe "F08-F11 — Calculation engine + 24-column summary", type: :syst
       expect(page).to have_content(cp.name)
       expect(page).to have_content(I18n.t("monthly_summary.total_row"))
       expect(page).to have_content("9,320.00")  # total_standard_kw
-      expect(page).to have_content("174,000")   # surplus_amount (over_under_kw > 0)
+      expect(page).to have_content("174,000")   # deficit_amount (over_under_kw: 87 positive = deficit)
     end
 
-    it "shows surplus column value and empty deficit when over_under_kw > 0" do
+    it "shows deficit column value and empty surplus when over_under_kw > 0" do
       cp = create(:contact_point, organization: scenario.unit)
       create(:monthly_calculation,
              contact_point: cp, monthly_period: scenario.period,
@@ -108,12 +108,12 @@ RSpec.describe "F08-F11 — Calculation engine + 24-column summary", type: :syst
         expect(page).to have_content("87.00")
         expect(page).to have_content("174,000")
       end
-      # Deficit cells must be empty (no value rendered)
-      expect(page).not_to have_css("td.text-red-600", text: "87.00")
-      expect(page).not_to have_css("td.text-red-700", text: "174,000")
+      # Surplus cells must be empty (positive = deficit, shown in red)
+      expect(page).not_to have_css("td.text-green-600", text: "87.00")
+      expect(page).not_to have_css("td.text-green-700", text: "174,000")
     end
 
-    it "shows deficit column with absolute value and empty surplus when over_under_kw < 0" do
+    it "shows surplus column with absolute value and empty deficit when over_under_kw < 0" do
       cp = create(:contact_point, organization: scenario.unit)
       create(:monthly_calculation,
              contact_point: cp, monthly_period: scenario.period,
@@ -126,9 +126,9 @@ RSpec.describe "F08-F11 — Calculation engine + 24-column summary", type: :syst
         expect(page).to have_content("87.00")
         expect(page).to have_content("174,000")
       end
-      # Surplus cells must be empty
-      expect(page).not_to have_css("td.text-green-600", text: "87.00")
-      expect(page).not_to have_css("td.text-green-700", text: "174,000")
+      # Deficit cells must be empty (negative = surplus, shown in green)
+      expect(page).not_to have_css("td.text-red-600", text: "87.00")
+      expect(page).not_to have_css("td.text-red-700", text: "174,000")
     end
 
     it "shows empty surplus and deficit cells when over_under_kw == 0" do
@@ -152,10 +152,10 @@ RSpec.describe "F08-F11 — Calculation engine + 24-column summary", type: :syst
       cp2 = create(:contact_point, organization: scenario.unit, name: "CP deficit")
       create(:monthly_calculation,
              contact_point: cp1, monthly_period: scenario.period,
-             over_under_kw: 100, total_amount: 200_000)
+             over_under_kw: -100, total_amount: -200_000)   # negative = surplus
       create(:monthly_calculation,
              contact_point: cp2, monthly_period: scenario.period,
-             over_under_kw: -40, total_amount: -80_000)
+             over_under_kw: 40, total_amount: 80_000)        # positive = deficit
 
       login_as scenario.admin_unit, scope: :user
       visit monthly_summary_path(period_id: scenario.period.id)
@@ -168,7 +168,7 @@ RSpec.describe "F08-F11 — Calculation engine + 24-column summary", type: :syst
       end
     end
 
-    it "surplus values appear in green cells, red cells carry no text" do
+    it "deficit values appear in red cells, green cells carry no text" do
       cp = create(:contact_point, organization: scenario.unit)
       create(:monthly_calculation,
              contact_point: cp, monthly_period: scenario.period,
@@ -177,13 +177,13 @@ RSpec.describe "F08-F11 — Calculation engine + 24-column summary", type: :syst
       login_as scenario.admin_unit, scope: :user
       visit monthly_summary_path(period_id: scenario.period.id)
 
-      expect(page).to have_css("td.text-green-600", text: "87.00")
-      expect(page).to have_css("td.text-green-700", text: "174,000")
-      expect(page).not_to have_css("td.text-red-600", text: /\S/)
-      expect(page).not_to have_css("td.text-red-700", text: /\S/)
+      expect(page).to have_css("td.text-red-600", text: "87.00")
+      expect(page).to have_css("td.text-red-700", text: "174,000")
+      expect(page).not_to have_css("td.text-green-600", text: /\S/)
+      expect(page).not_to have_css("td.text-green-700", text: /\S/)
     end
 
-    it "deficit values appear in red cells as absolute values, green cells carry no text" do
+    it "surplus values appear in green cells as absolute values, red cells carry no text" do
       cp = create(:contact_point, organization: scenario.unit)
       create(:monthly_calculation,
              contact_point: cp, monthly_period: scenario.period,
@@ -192,10 +192,10 @@ RSpec.describe "F08-F11 — Calculation engine + 24-column summary", type: :syst
       login_as scenario.admin_unit, scope: :user
       visit monthly_summary_path(period_id: scenario.period.id)
 
-      expect(page).to have_css("td.text-red-600", text: "87.00")
-      expect(page).to have_css("td.text-red-700", text: "174,000")
-      expect(page).not_to have_css("td.text-green-600", text: /\S/)
-      expect(page).not_to have_css("td.text-green-700", text: /\S/)
+      expect(page).to have_css("td.text-green-600", text: "87.00")
+      expect(page).to have_css("td.text-green-700", text: "174,000")
+      expect(page).not_to have_css("td.text-red-600", text: /\S/)
+      expect(page).not_to have_css("td.text-red-700", text: /\S/)
     end
 
     it "only lists contact points belonging to the admin_unit's own organization" do

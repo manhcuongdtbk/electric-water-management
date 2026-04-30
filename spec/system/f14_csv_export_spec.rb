@@ -116,10 +116,10 @@ RSpec.describe "F14 — Xuất CSV", type: :request do
           MonthlyCalculation.delete_all
           create(:monthly_calculation,
                  contact_point: cp_surplus, monthly_period: period,
-                 over_under_kw: 100, total_amount: 200_000)
+                 over_under_kw: -100, total_amount: -200_000)
           create(:monthly_calculation,
                  contact_point: cp_deficit, monthly_period: period,
-                 over_under_kw: -40, total_amount: -80_000)
+                 over_under_kw: 40, total_amount: 80_000)
         end
 
         def parsed_csv

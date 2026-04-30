@@ -12,7 +12,7 @@ class HistoryController < ApplicationController
   ].freeze
 
   # Columns where a lower value is better (decrease = improvement)
-  # over_under_kw = standard - usage: positive means under quota (good) → higher is better
+  # over_under_kw = usage - remaining_standard: positive means over quota (deficit), negative means under (surplus)
   LOWER_IS_BETTER_COLUMNS = %i[
     total_usage_kw total_deduction_kw savings_deduction_kw loss_deduction_kw
     division_public_deduction_kw unit_public_deduction_kw other_deduction_kw
