@@ -4,7 +4,7 @@
 >
 > File này cung cấp bối cảnh tổng thể: dự án giải quyết vấn đề gì, cho ai, bằng công nghệ nào, trong thời gian bao lâu, và cách đọc bộ tài liệu. Đọc file này trước khi đọc bất kỳ file nào khác trong thư mục `docs/`.
 >
-> Thuật ngữ sử dụng trong file này tuân theo `02_GLOSSARY_v1_1_0.md`.
+> Thuật ngữ sử dụng trong file này tuân theo `02_GLOSSARY_v1_2_0.md`.
 
 ---
 
@@ -27,7 +27,7 @@ Dự án này xây dựng ứng dụng web thay thế toàn bộ quy trình trê
 
 - **Khai báo ban đầu (F01–F04):** Quản lý đầu mối, công tơ (4 loại: thường, công cộng, trạm bơm, vị trí không tổn hao), quân số theo 7 nhóm cấp bậc, cấu hình tỷ lệ và khoản trừ "Khác" (khoản trừ đặc thù từng đầu mối, cho phép giá trị âm — xem `02_GLOSSARY` mục 4). Xem `02_GLOSSARY` mục 8.1.
 - **Nhập liệu hàng tháng (F05–F07):** Nhập số điện lực (đồng hồ tổng), chỉ số công tơ (đầu kỳ kế thừa tự động từ cuối kỳ tháng trước), soát lại quân số. Xem `02_GLOSSARY` mục 8.2.
-- **Tính toán tự động (F08–F10):** Engine tính bảng 24 cột — tiêu chuẩn theo Nghị định 02, sử dụng thực tế, 4 khoản trừ (tiết kiệm, tổn hao, công cộng, khác), phân bổ bơm nước, so sánh thừa/thiếu, thành tiền. Xem `02_GLOSSARY` mục 8.3 và chi tiết tại `13_BUSINESS_RULES_v1_0_0.md` (khi có).
+- **Tính toán tự động (F08–F10):** Engine tính bảng 24 cột — tiêu chuẩn theo Nghị định 02, sử dụng thực tế, 4 khoản trừ (tiết kiệm, tổn hao, công cộng, khác), phân bổ bơm nước, so sánh thừa/thiếu, thành tiền. Xem `02_GLOSSARY` mục 8.3 và chi tiết tại `13_BUSINESS_RULES_v1_1_0.md` (khi có).
 - **Báo cáo và tra cứu (F11–F14):** Bảng tổng hợp 24 cột, dashboard so sánh tiêu chuẩn và sử dụng (tháng, quý, năm), tra cứu lịch sử và so sánh cùng kỳ, xuất CSV. Xem `02_GLOSSARY` mục 8.4.
 - **Quản trị hệ thống (F15–F21):** Quản lý tài khoản, đăng nhập, khoá tài khoản sau 5 lần sai, bắt buộc đổi mật khẩu lần đầu, nhật ký hoạt động, quản lý đơn giá, quản lý định mức cấp bậc. Xem `02_GLOSSARY` mục 8.5.
 
@@ -153,7 +153,7 @@ Chi tiết xem `08_INFRASTRUCTURE_v1_0_0.md` (khi có).
 
 Toàn bộ nghiệp vụ tính toán đã được anh Thảo xác nhận (21/04/2026). Không còn mục nào chờ xác nhận về mặt nghiệp vụ.
 
-Tóm tắt nghiệp vụ cốt lõi (chi tiết xem `13_BUSINESS_RULES_v1_0_0.md` khi có, hoặc `02_GLOSSARY` mục 3–5):
+Tóm tắt nghiệp vụ cốt lõi (chi tiết xem `13_BUSINESS_RULES_v1_1_0.md` khi có, hoặc `02_GLOSSARY` mục 3–5):
 
 - **Bảng 24 cột:** Bảng tính toán chính, gốc 22 cột từ mẫu Excel khách, đã tách cột Chênh lệch thành Thừa + Thiếu và cột Thành tiền thành Thừa (đồng) + Thiếu (đồng) (PR#62). Thừa và Thiếu không bù trừ nhau trong dòng tổng.
 - **7 nhóm cấp bậc:** Định mức 570 / 440 / 305 / 130 / 210 / 110 / 24 kW/tháng. Tên nhóm và định mức đọc từ database (`RankQuota`), admin_level1 sửa qua F21 khi có nghị định mới. Cột `effective_from` ghi nhận ngày hiệu lực.

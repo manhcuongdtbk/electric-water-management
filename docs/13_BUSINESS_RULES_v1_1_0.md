@@ -1,4 +1,4 @@
-# 13. Quy tắc nghiệp vụ / Business Rules — v1.0.0
+# 13. Quy tắc nghiệp vụ / Business Rules — v1.1.0
 
 > **Đọc lần đầu?** Đọc 01_OVERVIEW trước để hiểu dự án là gì, phục vụ ai. Tra thuật ngữ tại 02_GLOSSARY.
 >
@@ -270,7 +270,12 @@ Quản trị viên có thể chỉ định trạm bơm phục vụ nhóm đối 
 
 ### 8.1 Kế thừa tháng
 
-Khi mở kỳ mới (xem 02_GLOSSARY mục 6), dữ liệu tự sao chép từ tháng trước: đầu mối, công tơ, quân số, cấu hình. Quản trị viên đơn vị chỉ cần sửa chỗ có thay đổi. Chỉ số đầu kỳ = chỉ số cuối kỳ tháng trước (tự động).
+Khi mở kỳ mới (xem 02_GLOSSARY mục 6), **phạm vi kế thừa hẹp hơn** như sau:
+
+- **Quân số (`Personnel`):** Tự copy qua `PeriodInheritanceService`. `reviewed_at` set NULL — buộc admin_unit soát lại qua F07.
+- **Đầu mối + công tơ:** Không phụ thuộc kỳ (dùng chung mọi kỳ) — không cần copy.
+- **Cấu hình đơn vị (`UnitConfig`) + Khoản "Khác" (`ContactPointOtherDeduction`):** Không copy — admin_unit nhập lại tỷ lệ và khoản trừ mỗi tháng qua F04 + F05.
+- **Chỉ số đầu kỳ (`MeterReading.reading_start`):** Pre-fill trên form F06 bằng giá trị cuối kỳ tháng trước (controller). Chưa lưu vào DB cho đến khi user submit form.
 
 ### 8.2 Khoá dữ liệu
 
@@ -426,6 +431,15 @@ Data từ sheet "Sheet1 (2)", row 85.
 4. Trao đổi Zalo ngày 02–06/04/2026 — tin nhắn, ảnh bảng mẫu mới, phản hồi xác nhận.
 5. Trao đổi Zalo ngày 21/04/2026 — xác nhận 3 câu hỏi + duyệt tài liệu.
 6. Ảnh bảng mẫu cập nhật MẪU THEO DÕI SỬ DỤNG ĐIỆN — Zalo 21/04/2026.
+
+---
+
+## Changelog
+
+| Version | Ngày | Thay đổi |
+|---|---|---|
+| v1.0.0 | 30/04/2026 | Khởi tạo. |
+| v1.1.0 | 30/04/2026 | Sửa mục 8.1: mô tả chính xác phạm vi kế thừa tháng theo code thực tế (`PeriodInheritanceService`). |
 
 ---
 
