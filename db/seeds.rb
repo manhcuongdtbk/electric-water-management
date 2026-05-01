@@ -39,15 +39,15 @@ end
 
 puts "Organizations: #{Organization.count} records"
 
-# Rank quotas — names per XAC_NHAN_NGHIEP_VU_v5
+# Rank quotas — names per 02_GLOSSARY_v1_3_0 mục 9 (client-approved template 21/04)
 rank_names = {
-  1 => "Chỉ huy sư đoàn và tương đương; quân hàm cao nhất là Đại tá",
-  2 => "Chỉ huy lữ đoàn, trung đoàn và tương đương; quân hàm cao nhất là Thượng tá",
-  3 => "Chỉ huy tiểu đoàn và tương đương; quân hàm cao nhất là Trung tá, Thiếu tá",
-  4 => "Chỉ huy đại đội, trung đội và tương đương; quân hàm là cấp Úy",
-  5 => "Cơ quan sư đoàn, lữ đoàn, trung đoàn và tương đương",
-  6 => "Tiểu đoàn, đại đội và tương đương",
-  7 => "Hạ sĩ quan, binh sĩ; thiếu sinh quân; học sinh năng khiếu"
+  1 => "Chỉ huy Sư đoàn; SQ có trần quân hàm là Đại tá",
+  2 => "Chỉ huy Trung đoàn; SQ có trần quân hàm là Thượng tá",
+  3 => "Chỉ huy tiểu đoàn; SQ có trần quân hàm là Trung tá, Thiếu tá",
+  4 => "Chỉ huy đại đội, trung đội; SQ có trần quân hàm là cấp Úy",
+  5 => "Cơ quan sư đoàn, trung đoàn",
+  6 => "Tiểu đoàn, đại đội",
+  7 => "Hạ sĩ quan, binh sĩ"
 }
 
 effective_from = Date.new(2024, 1, 1)
