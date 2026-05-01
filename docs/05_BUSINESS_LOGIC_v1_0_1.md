@@ -1,4 +1,4 @@
-# 05. Business Logic — v1.0.0
+# 05. Business Logic — v1.0.1
 
 > **Đọc lần đầu?** Đọc 01_OVERVIEW trước để hiểu dự án là gì. Tra thuật ngữ tại 02_GLOSSARY.
 >
@@ -1144,6 +1144,8 @@ Các sai lệch phát hiện giữa code thực tế và `02_GLOSSARY` / `13_BUS
 
 ### TODO #1 — Sign-inversion bug giữa engine và view layer (Thừa/Thiếu)
 
+✅ RESOLVED — commit `34f3fae`
+
 **Engine convention** (`calculation_engine.rb` dòng 276 + `calculation_engine_spec.rb` dòng 233):
 
 ```ruby
@@ -1254,6 +1256,8 @@ Hai cách này cho kết quả **khác nhau** trong nhiều trường hợp. Ví
 
 ### TODO #5 — Phạm vi kế thừa tháng hẹp hơn mô tả trong glossary
 
+✅ RESOLVED — 02_GLOSSARY v1.2.0 + 13_BUSINESS_RULES v1.1.0 đã cập nhật
+
 **`02_GLOSSARY` mục 6** ghi:
 
 > Khi mở kỳ mới, data tự sao chép từ tháng trước: **đầu mối, công tơ, quân số, cấu hình**. Admin_unit chỉ cần sửa chỗ thay đổi.
@@ -1326,3 +1330,4 @@ CalculationEngine.new(organization: result.organization, monthly_period: result.
 | Version | Ngày | Thay đổi |
 |---|---|---|
 | v1.0.0 | 30/04/2026 | Khởi tạo. CalculationEngine, 4 services, end-to-end data flow, rake tasks. Phát hiện 7 sai lệch giữa code và docs (sign-inversion, no_loss, công thức tổn hao, PumpStation 30/70, phạm vi kế thừa, restore signout, rake import + calc). |
+| v1.0.1 | 01/05/2026 | Đánh dấu RESOLVED: TODO #1 (sign-inversion fix tại commit 34f3fae), TODO #5 (phạm vi kế thừa đã cập nhật trong 02_GLOSSARY v1.2.0 + 13_BUSINESS_RULES v1.1.0). |

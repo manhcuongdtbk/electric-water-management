@@ -10,7 +10,7 @@
 >
 > **Backup chi tiết:** Xem 05_BUSINESS_LOGIC mục 5 cho `BackupService` code.
 
-> Thuật ngữ sử dụng tuân theo `02_GLOSSARY_v1_2_0.md`.
+> Thuật ngữ sử dụng tuân theo `02_GLOSSARY_v1_3_0.md`.
 
 ---
 

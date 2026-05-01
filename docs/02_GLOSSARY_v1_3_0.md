@@ -1,4 +1,4 @@
-# 02. Bảng thuật ngữ / Glossary — v1.2.0
+# 02. Bảng thuật ngữ / Glossary — v1.3.0
 
 > **Đọc lần đầu?** Đọc 01_OVERVIEW trước để hiểu dự án là gì, phục vụ ai. File này là bảng tra cứu thuật ngữ, không giải thích bối cảnh.
 >
@@ -330,7 +330,7 @@ Dùng bảng này khi đọc code và cần biết nghĩa tiếng Việt.
 | `normal` | Công tơ thường | 2 |
 | `Organization` | Sư đoàn hoặc Đơn vị | 1 |
 | `other_deduction_kw` | Khác + Cộng — cột 18 | 3.2, 4 |
-| `over_under_kw` | Chênh lệch kW (signed: dương = thừa, âm = thiếu) — cột DB | 3.2 |
+| `over_under_kw` | Chênh lệch kW (signed: dương = thiếu (deficit), âm = thừa (surplus)) — cột DB | 3.2 |
 | `parent_id` | ID Sư đoàn (liên kết đơn vị cấp 2 → cấp 1) | 1 |
 | `Personnel` | Quân số | 1 |
 | `public_kw` | Công cộng — cột 17 | 3.2, 4 |
@@ -369,3 +369,4 @@ Dùng bảng này khi đọc code và cần biết nghĩa tiếng Việt.
 | v1.0.0 | 28/04/2026 | Khởi tạo. |
 | v1.1.0 | 30/04/2026 | Sửa tên cột MeterReading (reading_start/reading_end/consumption). Sửa meter_type public_use → public_meter. Ghi rõ cột 21–24 là derived (view layer). Thêm electricity_supply_kw vào mục 2. Đóng 4 TODO. Cập nhật index mục 14. |
 | v1.2.0 | 30/04/2026 | Sửa mục 6 "Kế thừa tháng": mô tả chính xác phạm vi copy theo code thực tế — chỉ Personnel được copy; đầu mối + công tơ dùng chung kỳ; UnitConfig + ContactPointOtherDeduction không copy; chỉ số đầu kỳ pre-fill trên form F06. |
+| v1.3.0 | 01/05/2026 | Sửa convention `over_under_kw` trong mục 14: dương = thiếu (deficit), âm = thừa (surplus) — khớp với engine convention và Excel gốc. |

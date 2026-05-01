@@ -8,7 +8,7 @@
 >
 > **Đối tượng đọc:** Developer mới vào project, hoặc developer quay lại sau thời gian dài.
 >
-> Thuật ngữ sử dụng tuân theo `02_GLOSSARY_v1_2_0.md`. Cấu trúc 24 cột bảng tổng hợp xem `13_BUSINESS_RULES_v1_1_0.md` mục 4.
+> Thuật ngữ sử dụng tuân theo `02_GLOSSARY_v1_3_0.md`. Cấu trúc 24 cột bảng tổng hợp xem `13_BUSINESS_RULES_v1_1_0.md` mục 4.
 
 ---
 
