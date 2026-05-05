@@ -506,4 +506,263 @@ RSpec.describe CalculationEngine do
       expect(other[:water_pump_actual_kw]).to eq(bd("500"))
     end
   end
+
+  # M6 nghiệp vụ 30/70 (XAC_NHAN_NGHIEP_VU v5.3.0 mục 6 + BANG_22_COT_ANALYSIS Bảng II).
+  # Một số đầu mối hưởng tỷ lệ cố định trên consumption của trạm bơm; phần còn lại
+  # chia cho các orgs khác theo quân số.
+  describe "30/70 pump allocation (M6)" do
+    let(:hq_unit)   { create(:organization, level: :unit, parent: division, name: "Chi huy F + nha khach") }
+    let(:other_a)   { create(:organization, level: :unit, parent: division, name: "Other A") }
+
+    let!(:cp_hq)    { create(:contact_point, organization: hq_unit, name: "CP HQ") }
+    let!(:p_hq) do
+      create(:personnel, contact_point: cp_hq, monthly_period: period,
+             rank1_count: 0, rank2_count: 1, rank3_count: 0, rank4_count: 0,
+             rank5_count: 0, rank6_count: 0, rank7_count: 0)
+    end
+
+    let!(:cp_other_a) { create(:contact_point, organization: other_a, name: "CP Other A") }
+    let!(:p_other_a) do
+      create(:personnel, contact_point: cp_other_a, monthly_period: period,
+             rank1_count: 0, rank2_count: 0, rank3_count: 0, rank4_count: 5,
+             rank5_count: 0, rank6_count: 0, rank7_count: 0)
+    end
+
+    context "1 fixed (30%) + variable orgs sharing 70%" do
+      let!(:hq_assignment) do
+        create(:pump_station_assignment, pump_station: pump_station, organization: hq_unit,
+               fixed_pump_percentage: bd("30"))
+      end
+      let!(:other_a_assignment) do
+        create(:pump_station_assignment, pump_station: pump_station, organization: other_a)
+      end
+
+      it "fixed org receives consumption × 30/100, distributed to its CPs by personnel" do
+        hq_engine = described_class.new(organization: hq_unit, monthly_period: period)
+        row = hq_engine.compute.find { |r| r[:contact_point_id] == cp_hq.id }
+        # 1000 × 30/100 = 300, single CP with 1 person → 300
+        expect(row[:water_pump_actual_kw]).to eq(bd("300"))
+      end
+
+      it "variable orgs share 70% pool by personnel ratio (HQ excluded from denominator)" do
+        # Variable pool = 1000 × 70/100 = 700
+        # Variable orgs: organization (5 ppl) + other_a (5 ppl) = 10
+        # Our org (organization) = 5/10 of 700 = 350
+        # cp_truong (1) → 700 × 1 / 10 = 70
+        # cp_qluc (2)   → 700 × 2 / 10 = 140
+        # cp_tac_huan (2) → 700 × 2 / 10 = 140
+        results = engine.compute
+        t = results.find { |r| r[:contact_point_id] == cp_truong.id }
+        q = results.find { |r| r[:contact_point_id] == cp_qluc.id }
+        h = results.find { |r| r[:contact_point_id] == cp_tac_huan.id }
+        expect(t[:water_pump_actual_kw]).to eq(bd("700") * bd("1") / bd("10"))
+        expect(q[:water_pump_actual_kw]).to eq(bd("700") * bd("2") / bd("10"))
+        expect(h[:water_pump_actual_kw]).to eq(bd("700") * bd("2") / bd("10"))
+      end
+
+      it "sum across all engine runs equals total pump consumption" do
+        sum  = engine.compute.sum { |r| r[:water_pump_actual_kw] }                                              # 350
+        sum += described_class.new(organization: other_a, monthly_period: period).compute
+                              .sum { |r| r[:water_pump_actual_kw] }                                             # 350
+        sum += described_class.new(organization: hq_unit, monthly_period: period).compute
+                              .sum { |r| r[:water_pump_actual_kw] }                                             # 300
+        expect(sum).to eq(bd("1000"))
+      end
+    end
+
+    # Dữ liệu thật từ Excel "bang tinh dien thao thang 02 — THU CO QUAN" Sheet1 rows 162–170.
+    # consumption stored as decimal(12,2) → use scale-2 value (6420.197 → 6420.20 sau khi vào DB).
+    context "Excel real-data Feb 2026 (consumption 6420.20, fixed 30%, 5 variable orgs sum 557 ppl)" do
+      let(:total) { bd("6420.20") }
+
+      let(:org_co_quan)     { create(:organization, level: :unit, parent: division, name: "Co quan SDB") }
+      let(:org_td18)        { create(:organization, level: :unit, parent: division, name: "Tieu doan 18 (real)") }
+      let(:org_dd2023)      { create(:organization, level: :unit, parent: division, name: "Dai doi 20-23") }
+      let(:org_che_bien)    { create(:organization, level: :unit, parent: division, name: "Tram che bien") }
+      let(:org_tho_xay)     { create(:organization, level: :unit, parent: division, name: "Tho xay") }
+
+      # CPs với personnel y như Excel: 251, 149, 109, 18, 30 (tổng 557)
+      let!(:cp_co_quan) do
+        cp = create(:contact_point, organization: org_co_quan, name: "Co quan SDB CP")
+        create(:personnel, contact_point: cp, monthly_period: period,
+               rank4_count: 251, rank1_count: 0, rank2_count: 0, rank3_count: 0,
+               rank5_count: 0, rank6_count: 0, rank7_count: 0)
+        cp
+      end
+      let!(:cp_td18) do
+        cp = create(:contact_point, organization: org_td18, name: "TD18 CP")
+        create(:personnel, contact_point: cp, monthly_period: period,
+               rank4_count: 149, rank1_count: 0, rank2_count: 0, rank3_count: 0,
+               rank5_count: 0, rank6_count: 0, rank7_count: 0)
+        cp
+      end
+      let!(:cp_dd2023) do
+        cp = create(:contact_point, organization: org_dd2023, name: "DD2023 CP")
+        create(:personnel, contact_point: cp, monthly_period: period,
+               rank4_count: 109, rank1_count: 0, rank2_count: 0, rank3_count: 0,
+               rank5_count: 0, rank6_count: 0, rank7_count: 0)
+        cp
+      end
+      let!(:cp_che_bien) do
+        cp = create(:contact_point, organization: org_che_bien, name: "Che bien CP")
+        create(:personnel, contact_point: cp, monthly_period: period,
+               rank4_count: 18, rank1_count: 0, rank2_count: 0, rank3_count: 0,
+               rank5_count: 0, rank6_count: 0, rank7_count: 0)
+        cp
+      end
+      let!(:cp_tho_xay) do
+        cp = create(:contact_point, organization: org_tho_xay, name: "Tho xay CP")
+        create(:personnel, contact_point: cp, monthly_period: period,
+               rank4_count: 30, rank1_count: 0, rank2_count: 0, rank3_count: 0,
+               rank5_count: 0, rank6_count: 0, rank7_count: 0)
+        cp
+      end
+
+      let(:variable_total) { bd("557") }
+
+      before do
+        # Override pump consumption to the real Excel total
+        pump_reading.update!(reading_end: total, consumption: total)
+        # 1 fixed assignment for HQ, 5 variable assignments
+        create(:pump_station_assignment, pump_station: pump_station, organization: hq_unit,
+               fixed_pump_percentage: bd("30"))
+        create(:pump_station_assignment, pump_station: pump_station, organization: org_co_quan)
+        create(:pump_station_assignment, pump_station: pump_station, organization: org_td18)
+        create(:pump_station_assignment, pump_station: pump_station, organization: org_dd2023)
+        create(:pump_station_assignment, pump_station: pump_station, organization: org_che_bien)
+        create(:pump_station_assignment, pump_station: pump_station, organization: org_tho_xay)
+        # The default fixture's pump_assignment for `organization` would also be a
+        # variable claim. Remove it so the math matches the Excel — only Bảng II
+        # orgs share the pool.
+        pump_assignment.destroy!
+      end
+
+      it "HQ org receives 6420.20 × 30/100 = 1926.06" do
+        hq_engine = described_class.new(organization: hq_unit, monthly_period: period)
+        row = hq_engine.compute.find { |r| r[:contact_point_id] == cp_hq.id }
+        expect(row[:water_pump_actual_kw]).to eq(total * bd("30") / bd("100"))
+      end
+
+      it "Cơ quan SĐB (251 ng) receives (6420.20 × 70/100) × 251/557" do
+        eng = described_class.new(organization: org_co_quan, monthly_period: period)
+        row = eng.compute.find { |r| r[:contact_point_id] == cp_co_quan.id }
+        pool = total * bd("70") / bd("100")
+        expect(row[:water_pump_actual_kw]).to eq(pool * bd("251") / variable_total)
+      end
+
+      it "Tiểu đoàn 18 (149 ng) receives (6420.20 × 70/100) × 149/557" do
+        eng = described_class.new(organization: org_td18, monthly_period: period)
+        row = eng.compute.find { |r| r[:contact_point_id] == cp_td18.id }
+        pool = total * bd("70") / bd("100")
+        expect(row[:water_pump_actual_kw]).to eq(pool * bd("149") / variable_total)
+      end
+
+      it "Đại đội 20,23 (109 ng) receives (6420.20 × 70/100) × 109/557" do
+        eng = described_class.new(organization: org_dd2023, monthly_period: period)
+        row = eng.compute.find { |r| r[:contact_point_id] == cp_dd2023.id }
+        pool = total * bd("70") / bd("100")
+        expect(row[:water_pump_actual_kw]).to eq(pool * bd("109") / variable_total)
+      end
+
+      it "Trạm chế biến (18 ng) receives (6420.20 × 70/100) × 18/557" do
+        eng = described_class.new(organization: org_che_bien, monthly_period: period)
+        row = eng.compute.find { |r| r[:contact_point_id] == cp_che_bien.id }
+        pool = total * bd("70") / bd("100")
+        expect(row[:water_pump_actual_kw]).to eq(pool * bd("18") / variable_total)
+      end
+
+      it "Thợ xây (30 ng) receives (6420.20 × 70/100) × 30/557" do
+        eng = described_class.new(organization: org_tho_xay, monthly_period: period)
+        row = eng.compute.find { |r| r[:contact_point_id] == cp_tho_xay.id }
+        pool = total * bd("70") / bd("100")
+        expect(row[:water_pump_actual_kw]).to eq(pool * bd("30") / variable_total)
+      end
+
+      it "sum across all 6 engine runs equals total consumption (no kW lost)" do
+        sum = bd("0")
+        [ hq_unit, org_co_quan, org_td18, org_dd2023, org_che_bien, org_tho_xay ].each do |org|
+          eng = described_class.new(organization: org, monthly_period: period)
+          sum += eng.compute.sum { |r| r[:water_pump_actual_kw] }
+        end
+        # Tolerance vì chia 4494.14 cho 557 (irrational); BigDecimal default precision tích luỹ
+        # error rất nhỏ qua 5 lần chia. Đảm bảo không có kW nào bị mất ở mức nghiệp vụ.
+        expect(sum).to be_within(bd("0.0001")).of(total)
+      end
+    end
+
+    context "edge: sum_fixed_pct >= 100" do
+      let!(:hq_assignment) do
+        create(:pump_station_assignment, pump_station: pump_station, organization: hq_unit,
+               fixed_pump_percentage: bd("60"))
+      end
+      let!(:other_assignment) do
+        create(:pump_station_assignment, pump_station: pump_station, organization: other_a,
+               fixed_pump_percentage: bd("60"))
+      end
+
+      it "clamps fixed total to 100 → variable orgs receive 0" do
+        results = engine.compute
+        truong = results.find { |r| r[:contact_point_id] == cp_truong.id }
+        # Our `organization` is variable but pool = 0, so its CPs all get 0
+        expect(truong[:water_pump_actual_kw]).to eq(bd("0"))
+      end
+    end
+
+    context "edge: fixed org with 0 personnel" do
+      let(:empty_hq) { create(:organization, level: :unit, parent: division, name: "Empty HQ") }
+      let!(:cp_empty_hq) { create(:contact_point, organization: empty_hq, name: "CP Empty") }
+      # No Personnel record → 0 people in the org
+      let!(:empty_assignment) do
+        create(:pump_station_assignment, pump_station: pump_station, organization: empty_hq,
+               fixed_pump_percentage: bd("30"))
+      end
+
+      it "loses the fixed slice (CPs with 0 personnel are skipped)" do
+        empty_engine = described_class.new(organization: empty_hq, monthly_period: period)
+        row = empty_engine.compute.find { |r| r[:contact_point_id] == cp_empty_hq.id }
+        expect(row[:water_pump_actual_kw]).to eq(bd("0"))
+      end
+
+      it "variable pool stays at 70% — does not absorb the lost slice" do
+        # Our org (5 ppl) is the only variable org → it gets the entire 70%
+        truong = engine.compute.find { |r| r[:contact_point_id] == cp_truong.id }
+        # 1000 × 70/100 × 1/5 = 140
+        expect(truong[:water_pump_actual_kw]).to eq(bd("700") * bd("1") / bd("5"))
+      end
+    end
+
+    context "edge: variable org with 0 personnel" do
+      let(:empty_unit) { create(:organization, level: :unit, parent: division, name: "Empty unit") }
+      let!(:cp_empty) { create(:contact_point, organization: empty_unit, name: "CP Empty unit") }
+      let!(:empty_assignment) do
+        create(:pump_station_assignment, pump_station: pump_station, organization: empty_unit)
+      end
+
+      it "the empty org receives 0; existing org receives full pool" do
+        # Variable orgs: organization (5 ppl) + empty_unit (0 ppl) = 5
+        # Pool = 1000 (no fixed), our org gets 1000 × 5/5 = 1000 (its CPs by ratio)
+        truong = engine.compute.find { |r| r[:contact_point_id] == cp_truong.id }
+        expect(truong[:water_pump_actual_kw]).to eq(bd("1000") * bd("1") / bd("5"))
+      end
+    end
+
+    context "edge: fixed_pump_percentage = 0" do
+      let!(:zero_assignment) do
+        create(:pump_station_assignment, pump_station: pump_station, organization: hq_unit,
+               fixed_pump_percentage: bd("0"))
+      end
+
+      it "treats 0 as fixed (HQ org receives 0 kW, NOT in variable pool)" do
+        hq_engine = described_class.new(organization: hq_unit, monthly_period: period)
+        row = hq_engine.compute.find { |r| r[:contact_point_id] == cp_hq.id }
+        expect(row[:water_pump_actual_kw]).to eq(bd("0"))
+      end
+
+      it "variable pool = 100% (sum_fixed_pct = 0); our org receives full share" do
+        # Our org is the only variable assignment (5 ppl)
+        truong = engine.compute.find { |r| r[:contact_point_id] == cp_truong.id }
+        expect(truong[:water_pump_actual_kw]).to eq(bd("1000") * bd("1") / bd("5"))
+      end
+    end
+  end
 end

@@ -157,6 +157,8 @@ vi:
       updated: "Cập nhật đơn giá thành công."
     rank_quotas:
       updated: "Cập nhật định mức thành công. Hãy tính lại các kỳ bị ảnh hưởng."
+    pump_station_assignments:
+      updated: "Cập nhật phân bổ trạm bơm thành công. Hãy tính lại các kỳ bị ảnh hưởng."
     unit_configs:
       division_updated: "Cập nhật cấu hình Sư đoàn thành công."
       unit_updated: "Cập nhật cấu hình đơn vị thành công."
@@ -466,6 +468,7 @@ vi:
     config_section: "Cấu hình hệ thống"
     monthly_periods: "Đơn giá điện"
     rank_quotas: "Định mức cấp bậc"
+    pump_stations: "Phân bổ trạm bơm"
     audit_logs: "Nhật ký hoạt động"
     backups: "Sao lưu dữ liệu"
 
@@ -617,6 +620,28 @@ vi:
       rank_name: "Tên cấp bậc"
       quota_kw: "Định mức (kW/người/tháng)"
       submit: "Lưu định mức"
+      cancel: "Hủy"
+    actions:
+      edit: "Sửa"
+
+  pump_stations:
+    index:
+      title: "Phân bổ điện trạm bơm"
+      note: "Đặt phần trăm cố định (ví dụ 30%) cho đầu mối hưởng riêng. Phần còn lại sẽ chia cho các đơn vị khác theo quân số. Tổng các tỷ lệ cố định trên cùng một trạm bơm không được vượt quá 100%."
+      empty: "Chưa có trạm bơm nào."
+
+  pump_station_assignments:
+    index:
+      organization_col: "Đơn vị"
+      fixed_pct_col: "Tỷ lệ cố định"
+      variable: "Theo quân số"
+      no_assignments: "Trạm bơm này chưa được gán cho đơn vị nào."
+    edit:
+      title: "Sửa phân bổ trạm bơm"
+    form:
+      fixed_pump_percentage: "Tỷ lệ cố định (%)"
+      fixed_pump_percentage_hint: "Để trống nếu đơn vị tham gia chia theo quân số. Để 0 nếu cố định nhận 0 kW (vẫn không tham gia chia theo quân số)."
+      submit: "Lưu phân bổ"
       cancel: "Hủy"
     actions:
       edit: "Sửa"

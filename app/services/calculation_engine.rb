@@ -184,14 +184,17 @@ class CalculationEngine
   end
 
   # --- Water pump actual (per CP) ------------------------------------------
-  # For each pump station serving our unit, distribute its meter reading across
-  # ALL contact points in ALL served organizations (by personnel ratio). Then
-  # sum the shares that fall on our unit's contact points.
+  # 30/70 model (M6). Each pump station has assignments to organizations; an
+  # assignment may carry a `fixed_pump_percentage` (e.g. 30) meaning that org
+  # takes that slice off the top, regardless of personnel. Orgs with NULL
+  # percentage share the remaining pool by personnel ratio. Within an org
+  # (fixed or variable), the share is split across the org's contact points
+  # by personnel ratio (CPs with 0 personnel receive nothing — slice is lost
+  # if the whole org has 0 personnel).
   #
-  # A pump that serves one unit gives that unit 100% (same as the simple case).
-  # A pump that serves two units with 3 and 7 people respectively gives the
-  # first unit 3/10 × consumption, the second 7/10 × consumption — matches
-  # Bảng II in docs/BANG_22_COT_ANALYSIS.md.
+  # Backward compat: when every assignment is NULL, sum_fixed_pct = 0 →
+  # variable_pct = 100 → behaves identically to the previous 100%-by-personnel
+  # logic.
   def pump_allocations_by_cp
     @pump_allocations_by_cp ||= compute_pump_allocations
   end
@@ -209,20 +212,66 @@ class CalculationEngine
       consumption = pump_station_consumption(ps)
       next unless consumption.positive?
 
-      served_personnel = served_personnel_map_for(ps)
-      total_served = served_personnel.values.sum(0)
-      next unless total_served.positive?
+      assignments = pump_station_assignments_for(ps)
+      next if assignments.empty?
 
-      total_served_bd = to_bd(total_served)
-      contact_point_ids.each do |cp_id|
-        people = served_personnel[cp_id]
-        next if people.nil? || people.zero?
+      fixed_assignments    = assignments.select(&:fixed?)
+      variable_assignments = assignments - fixed_assignments
 
-        allocations[cp_id] += consumption * to_bd(people) / total_served_bd
+      sum_fixed_pct = fixed_assignments.sum { |a| to_bd(a.fixed_pump_percentage) }
+      sum_fixed_pct = bd_100 if sum_fixed_pct > bd_100
+
+      fixed_assignments.each do |asg|
+        next unless asg.organization_id == organization.id
+
+        org_pct      = to_bd(asg.fixed_pump_percentage)
+        org_share_kw = consumption * org_pct / bd_100
+        distribute_within_org(allocations, ps, asg.organization_id, org_share_kw)
+      end
+
+      variable_pct = bd_100 - sum_fixed_pct
+      next unless variable_pct.positive?
+
+      variable_pool_kw = consumption * variable_pct / bd_100
+      org_personnel    = personnel_by_org_for(ps)
+      variable_org_ids = variable_assignments.map(&:organization_id)
+      variable_total   = variable_org_ids.sum { |oid| org_personnel[oid].to_i }
+      next unless variable_total.positive?
+
+      variable_total_bd = to_bd(variable_total)
+
+      variable_assignments.each do |asg|
+        next unless asg.organization_id == organization.id
+
+        personnel_by_cp_for_org(ps, asg.organization_id).each do |cp_id, people|
+          next if people.zero?
+          next unless contact_point_ids.include?(cp_id)
+
+          allocations[cp_id] += variable_pool_kw * to_bd(people) / variable_total_bd
+        end
       end
     end
 
     allocations
+  end
+
+  # Distribute one org's slice (kW) across the org's CPs by personnel ratio.
+  # Slice is lost when the org has 0 personnel (consistent with current
+  # behaviour: CPs with personnel = 0 are skipped).
+  def distribute_within_org(allocations, ps, org_id, org_share_kw)
+    return unless org_share_kw.positive?
+
+    cp_personnel = personnel_by_cp_for_org(ps, org_id)
+    org_total    = cp_personnel.values.sum(0)
+    return unless org_total.positive?
+
+    org_total_bd = to_bd(org_total)
+    cp_personnel.each do |cp_id, people|
+      next if people.zero?
+      next unless contact_point_ids.include?(cp_id)
+
+      allocations[cp_id] += org_share_kw * to_bd(people) / org_total_bd
+    end
   end
 
   def pump_stations_serving_unit
@@ -241,16 +290,43 @@ class CalculationEngine
     to_bd(reading&.consumption)
   end
 
-  # {cp_id => personnel_count} for all contact points in all organizations
-  # served by this pump station (in this period).
-  def served_personnel_map_for(pump_station)
-    org_ids = PumpStationAssignment.for_pump_station(pump_station.id).pluck(:organization_id)
-    return {} if org_ids.empty?
+  def pump_station_assignments_for(pump_station)
+    @pump_station_assignments_for ||= {}
+    @pump_station_assignments_for[pump_station.id] ||=
+      PumpStationAssignment.for_pump_station(pump_station.id).to_a
+  end
 
-    Personnel.for_period(monthly_period.id)
-             .joins(:contact_point)
-             .where(contact_points: { organization_id: org_ids })
-             .each_with_object({}) { |p, hash| hash[p.contact_point_id] = p.total_count }
+  # {org_id => total_personnel} across CPs of every org assigned to this pump
+  # in this period — used to compute the variable-pool denominator.
+  def personnel_by_org_for(pump_station)
+    @personnel_by_org_for ||= {}
+    @personnel_by_org_for[pump_station.id] ||= begin
+      org_ids = pump_station_assignments_for(pump_station).map(&:organization_id)
+      if org_ids.empty?
+        {}
+      else
+        Personnel.for_period(monthly_period.id)
+                 .joins(:contact_point)
+                 .where(contact_points: { organization_id: org_ids })
+                 .group("contact_points.organization_id")
+                 .sum("rank1_count + rank2_count + rank3_count + rank4_count + " \
+                      "rank5_count + rank6_count + rank7_count")
+      end
+    end
+  end
+
+  # {cp_id => total_count} for CPs of one specific org in this period.
+  def personnel_by_cp_for_org(pump_station, org_id)
+    @personnel_by_cp_for_org ||= {}
+    @personnel_by_cp_for_org[[ pump_station.id, org_id ]] ||=
+      Personnel.for_period(monthly_period.id)
+               .joins(:contact_point)
+               .where(contact_points: { organization_id: org_id })
+               .each_with_object({}) { |p, h| h[p.contact_point_id] = p.total_count }
+  end
+
+  def bd_100
+    @bd_100 ||= BigDecimal("100")
   end
 
   # --- Misc -----------------------------------------------------------------

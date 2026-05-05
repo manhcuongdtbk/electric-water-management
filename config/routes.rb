@@ -19,6 +19,11 @@ Rails.application.routes.draw do
 
   resources :rank_quotas, only: [ :index, :edit, :update ]
 
+  resources :pump_stations, only: [ :index ] do
+    resources :assignments, only: [ :edit, :update ],
+              controller: "pump_station_assignments"
+  end
+
   resources :contact_points do
     resource :personnel, only: [ :show, :update ], controller: :personnel do
       patch :toggle_review
