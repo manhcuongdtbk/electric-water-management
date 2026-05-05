@@ -2,7 +2,10 @@ class User < ApplicationRecord
   devise :database_authenticatable, :rememberable, :validatable,
          :trackable, :lockable, :timeoutable
 
-  has_paper_trail
+  has_paper_trail ignore: %i[
+    current_sign_in_at last_sign_in_at sign_in_count
+    current_sign_in_ip last_sign_in_ip remember_created_at
+  ]
 
   # Associations
   belongs_to :organization

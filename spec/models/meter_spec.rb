@@ -29,8 +29,12 @@ RSpec.describe Meter, type: :model do
   describe "enums" do
     it {
       is_expected.to define_enum_for(:meter_type)
-        .with_values(normal: 0, public_meter: 1, pump_station: 2)
+        .with_values(normal: 0, public_meter: 1, pump_station: 2, no_loss: 3)
     }
+
+    it "is valid with meter_type :no_loss" do
+      expect(build(:meter, :no_loss)).to be_valid
+    end
   end
 
   describe "scopes" do

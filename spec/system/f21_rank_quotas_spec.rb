@@ -9,7 +9,7 @@ RSpec.describe "F21 — Định mức cấp bậc", type: :system do
     it "thấy danh sách 7 nhóm định mức" do
       visit rank_quotas_path
       expect(page).to have_content(I18n.t("rank_quotas.index.title"))
-      expect(page).to have_content("Si quan cap cao")
+      expect(page).to have_content("Chỉ huy Sư đoàn; SQ có trần quân hàm là Đại tá")
       expect(page).to have_content("570")
     end
 

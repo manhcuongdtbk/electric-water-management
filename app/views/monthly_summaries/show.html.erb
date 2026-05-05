@@ -212,17 +212,17 @@
           </td>
           <% ou = calc.over_under_kw %>
           <td class="px-2 py-2 text-right font-mono font-semibold border-r border-gray-100 text-green-600">
-            <%= number_with_precision(ou, precision: 2, delimiter: ",") if ou > 0 %>
+            <%= number_with_precision(ou.abs, precision: 2, delimiter: ",") if ou < 0 %>
           </td>
           <td class="px-2 py-2 text-right font-mono font-semibold border-r border-gray-100 text-red-600">
-            <%= number_with_precision(ou.abs, precision: 2, delimiter: ",") if ou < 0 %>
+            <%= number_with_precision(ou, precision: 2, delimiter: ",") if ou > 0 %>
           </td>
           <% amt = calc.total_amount %>
           <td class="px-2 py-2 text-right font-mono font-semibold border-r border-gray-100 text-green-700">
-            <%= number_with_precision(amt, precision: 0, delimiter: ",") if amt > 0 %>
+            <%= number_with_precision(amt.abs, precision: 0, delimiter: ",") if amt < 0 %>
           </td>
           <td class="px-2 py-2 text-right font-mono font-semibold text-red-700">
-            <%= number_with_precision(amt.abs, precision: 0, delimiter: ",") if amt < 0 %>
+            <%= number_with_precision(amt, precision: 0, delimiter: ",") if amt > 0 %>
           </td>
         </tr>
       <% end %>

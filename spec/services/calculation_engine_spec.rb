@@ -8,6 +8,8 @@ require "rails_helper"
 #
 #   * Water pump standard uses 9.45 kW/person/month (NOT Excel's 6.3)
 #   * Loss (tổn hao) is subtracted from standard, NOT added to usage
+#   * Loss allocation uses METER CONSUMPTION ratio (NOT standard ratio):
+#     cp_loss = total_unit_loss × (cp_meter_consumption / total_meter_consumption)
 #
 # Other inputs (personnel counts, rank quotas, rate %, meter readings, pump
 # station totals) are taken verbatim from the Excel file.
@@ -90,15 +92,14 @@ RSpec.describe CalculationEngine do
   # TMP Truong:   rank1=1 → 115 kW; pump_std = 1 × 9.45 = 9.45; total_std = 124.45
   # TB Q.Luc:     rank2=1, rank4=1 → 38 + 11 = 49 kW; pump_std = 2 × 9.45 = 18.90; total_std = 67.90
   # Ban Tac Huan: rank2=2 → 76 kW; pump_std = 2 × 9.45 = 18.90; total_std = 94.90
-  # Sum total_std = 124.45 + 67.90 + 94.90 = 287.25
   # Total personnel org = 1 + 2 + 2 = 5
   # Total meter consumption (normal + public) = 99 + 105 + 500 = 704
   # Total unit loss = 800 − 704 = 96
   # Total pump energy served = 1000
-  let(:sum_total_std)    { bd("287.25") }
-  let(:total_org_people) { bd("5") }
-  let(:total_unit_loss)  { bd("96") }
-  let(:total_pump)       { bd("1000") }
+  let(:total_meter_consumption) { bd("704") }   # 99 + 105 + 500 (loss-pool denominator)
+  let(:total_org_people)        { bd("5") }
+  let(:total_unit_loss)         { bd("96") }
+  let(:total_pump)              { bd("1000") }
 
   def expected_for(rank_total_kw:, personnel_count:, meter_usage:)
     rank_total = bd(rank_total_kw)
@@ -109,7 +110,9 @@ RSpec.describe CalculationEngine do
     total_standard      = rank_total + water_pump_standard
 
     savings       = total_standard * savings_rate
-    loss          = total_unit_loss * total_standard / sum_total_std
+    # Loss allocated by meter-consumption ratio (v3+ rule).
+    # Test fixture has only normal meters → cp_meter_consumption = meter_usage.
+    loss          = total_unit_loss * meter / total_meter_consumption
     div_public    = total_standard * div_public_rate
     unit_public   = total_standard * unit_public_rate
     other         = bd("0")
@@ -184,7 +187,7 @@ RSpec.describe CalculationEngine do
         expect(result_for(cp_tac_huan)[:savings_deduction_kw]).to eq(expected_tac_huan[:savings_deduction_kw])
       end
 
-      it "loss = total_unit_loss × (cp_total_standard / sum_total_standard) — placed inside deductions" do
+      it "loss = total_unit_loss × (cp_meter_consumption / total_meter_consumption) — placed inside deductions" do
         expect(result_for(cp_truong)[:loss_deduction_kw]).to eq(expected_truong[:loss_deduction_kw])
         expect(result_for(cp_qluc)[:loss_deduction_kw]).to eq(expected_qluc[:loss_deduction_kw])
         expect(result_for(cp_tac_huan)[:loss_deduction_kw]).to eq(expected_tac_huan[:loss_deduction_kw])
@@ -265,9 +268,9 @@ RSpec.describe CalculationEngine do
       end
 
       it "does NOT round intermediate calculations (e.g. loss allocation has many decimals)" do
-        # 96 × 124.45 / 287.25 is irrational in decimal — many digits.
-        raw = result_for(cp_truong)[:loss_deduction_kw]
-        expected_raw = bd("96") * bd("124.45") / bd("287.25")
+        # 96 × 105 / 704 is irrational in decimal — many digits.
+        raw = result_for(cp_qluc)[:loss_deduction_kw]
+        expected_raw = bd("96") * bd("105") / bd("704")
         expect(raw).to eq(expected_raw)
       end
     end
@@ -336,7 +339,7 @@ RSpec.describe CalculationEngine do
         expect(empty[:total_personnel]).to eq(0)
         expect(empty[:total_standard_kw]).to eq(bd("0"))
         expect(empty[:water_pump_standard_kw]).to eq(bd("0"))
-        expect(empty[:loss_deduction_kw]).to eq(bd("0"))     # no standard → no allocation
+        expect(empty[:loss_deduction_kw]).to eq(bd("0"))     # no meter readings → no allocation
         expect(empty[:water_pump_actual_kw]).to eq(bd("0"))  # no people → no allocation
       end
     end
@@ -345,10 +348,11 @@ RSpec.describe CalculationEngine do
       let!(:cp_no_meter) { create(:contact_point, organization: organization, name: "No Meter CP", position: 5) }
       let!(:p_no_meter)  { create(:personnel, contact_point: cp_no_meter, monthly_period: period, rank1_count: 1, rank2_count: 0, rank3_count: 0, rank4_count: 0, rank5_count: 0, rank6_count: 0, rank7_count: 0) }
 
-      it "uses 0 for meter_usage_kw" do
+      it "uses 0 for meter_usage_kw and 0 loss (no meter → no loss allocation)" do
         results = engine.compute
         row = results.find { |r| r[:contact_point_id] == cp_no_meter.id }
         expect(row[:meter_usage_kw]).to eq(bd("0"))
+        expect(row[:loss_deduction_kw]).to eq(bd("0"))
       end
     end
 
@@ -407,6 +411,53 @@ RSpec.describe CalculationEngine do
       it "contributes 0 to water_pump_actual_kw" do
         row = engine.compute.find { |r| r[:contact_point_id] == cp_truong.id }
         expect(row[:water_pump_actual_kw]).to eq(bd("0"))
+      end
+    end
+
+    # Nghiệp vụ XAC_NHAN_NGHIEP_VU v5 mục 11 câu 1 (Zalo 21/04/2026):
+    # Một số công tơ đặt tại trạm biến áp không đi qua đường dây nội bộ,
+    # KHÔNG chịu tổn hao đường dây. kW công tơ no_loss phải bị trừ khỏi
+    # supply TRƯỚC khi tính tổn hao, đồng thời không tham gia tử số/mẫu số
+    # phân bổ tổn hao cho các CP khác.
+    context "with no_loss meter (vị trí không tổn hao)" do
+      # Tăng supply lên 850: 850 − 50 (no_loss) − 704 (normal) = 96
+      # → tổng tổn hao đường dây vẫn = 96 (giữ nguyên expected_for cũ).
+      let!(:cp_substation) { create(:contact_point, organization: organization, name: "Tram bien ap", position: 4) }
+      let!(:meter_no_loss) { create(:meter, :no_loss, organization: organization, contact_point: cp_substation, name: "M-NoLoss") }
+      let!(:reading_no_loss) do
+        create(:meter_reading, meter: meter_no_loss, monthly_period: period,
+                               reading_start: 0, reading_end: 50, consumption: 50)
+      end
+      before { unit_config.update!(electricity_supply_kw: bd("850")) }
+
+      it "subtracts no_loss kW from supply before computing total_unit_loss" do
+        # supply 850 − no_loss 50 − meter 704 = 96 → tổng loss vẫn = 96
+        total_loss = engine.compute.sum { |r| r[:loss_deduction_kw] }
+        expect(total_loss).to eq(bd("96"))
+      end
+
+      it "does not include no_loss meter in the loss-allocation denominator" do
+        # mẫu số vẫn = 99 + 105 + 500 = 704 (không có 50 của no_loss)
+        loss = engine.compute.find { |r| r[:contact_point_id] == cp_qluc.id }[:loss_deduction_kw]
+        expect(loss).to eq(bd("96") * bd("105") / bd("704"))
+      end
+
+      it "assigns loss_deduction = 0 for a CP with only a no_loss meter" do
+        row = engine.compute.find { |r| r[:contact_point_id] == cp_substation.id }
+        expect(row[:loss_deduction_kw]).to eq(bd("0"))
+      end
+
+      it "does not include no_loss consumption in meter_usage_kw" do
+        row = engine.compute.find { |r| r[:contact_point_id] == cp_substation.id }
+        expect(row[:meter_usage_kw]).to eq(bd("0"))
+      end
+
+      it "clamps total_unit_loss to 0 when supply < no_loss + total_meter_consumption" do
+        # supply 700 − no_loss 50 − meter 704 = -54 → clamp về 0
+        unit_config.update!(electricity_supply_kw: bd("700"))
+        described_class.new(organization: organization, monthly_period: period).compute.each do |row|
+          expect(row[:loss_deduction_kw]).to eq(bd("0"))
+        end
       end
     end
   end

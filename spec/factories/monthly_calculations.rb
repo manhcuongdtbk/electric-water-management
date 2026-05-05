@@ -25,5 +25,15 @@ FactoryBot.define do
     over_under_kw { -87 }
     unit_price { 2000 }
     total_amount { 14_900_000 }
+
+    trait :surplus do
+      over_under_kw { -87 }
+      total_amount { -174_000 }
+    end
+
+    trait :deficit do
+      over_under_kw { 87 }
+      total_amount { 174_000 }
+    end
   end
 end

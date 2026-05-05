@@ -241,6 +241,7 @@ vi:
       normal: "Thường"
       public_meter: "Công cộng"
       pump_station: "Trạm bơm nước"
+      no_loss: "Vị trí không tổn hao"
     actions:
       edit: "Sửa"
       delete: "Xóa"

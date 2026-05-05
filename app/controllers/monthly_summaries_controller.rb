@@ -108,10 +108,10 @@ class MonthlySummariesController < ApplicationController
     totals = { total_personnel: calculations.sum(&:total_personnel) }
     kw_cols.each { |col| totals[col] = calculations.sum { |c| c.public_send(col) } }
     totals[:living_standard_kw] = MonthlyCalculation::RANK_KW_COLUMNS.sum { |col| totals[col] }
-    totals[:surplus_kw]     = calculations.sum { |c| c.over_under_kw > 0 ? c.over_under_kw : 0 }
-    totals[:deficit_kw]     = calculations.sum { |c| c.over_under_kw < 0 ? -c.over_under_kw : 0 }
-    totals[:surplus_amount] = calculations.sum { |c| c.total_amount > 0 ? c.total_amount : 0 }
-    totals[:deficit_amount] = calculations.sum { |c| c.total_amount < 0 ? -c.total_amount : 0 }
+    totals[:surplus_kw]     = calculations.sum { |c| c.over_under_kw.negative? ? -c.over_under_kw : 0 }
+    totals[:deficit_kw]     = calculations.sum { |c| c.over_under_kw.positive? ? c.over_under_kw : 0 }
+    totals[:surplus_amount] = calculations.sum { |c| c.total_amount.negative?  ? -c.total_amount  : 0 }
+    totals[:deficit_amount] = calculations.sum { |c| c.total_amount.positive?  ? c.total_amount   : 0 }
     totals
   end
 
@@ -160,10 +160,10 @@ class MonthlySummariesController < ApplicationController
         ou  = calc.over_under_kw.to_d
         amt = calc.total_amount.to_d
         split_values = [
-          ou > 0  ? ou.to_f  : "",
-          ou < 0  ? ou.abs.to_f : "",
-          amt > 0 ? amt.to_f : "",
-          amt < 0 ? amt.abs.to_f : ""
+          ou < 0  ? ou.abs.to_f  : "",
+          ou > 0  ? ou.to_f      : "",
+          amt < 0 ? amt.abs.to_f : "",
+          amt > 0 ? amt.to_f     : ""
         ]
         csv << [ idx + 1, calc.contact_point.name, *rank_values, *non_rank_values, *split_values ]
       end

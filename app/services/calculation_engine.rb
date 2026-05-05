@@ -9,9 +9,11 @@
 #   * Tiêu chuẩn bơm nước = 9.45 kW/người/tháng (Personnel::WATER_PUMP_RATE).
 #   * "Số phải trừ" gồm: Tiết kiệm, Tổn hao, Công cộng Sư đoàn, Công cộng đơn vị, Khác.
 #     Tổn hao TRỪ khỏi tiêu chuẩn, KHÔNG cộng vào sử dụng.
-#   * Tổn hao toàn đơn vị = điện lực cung cấp − tổng công tơ (normal + public_meter)
-#     trong đơn vị. Phân bổ cho từng đầu mối theo tỷ lệ
-#     tiêu chuẩn đầu mối / tổng tiêu chuẩn đơn vị.
+#   * Tổn hao toàn đơn vị = điện lực cung cấp − kW công tơ no_loss
+#     − tổng công tơ (normal + public_meter) trong đơn vị.
+#     Phân bổ cho từng đầu mối theo tỷ lệ
+#     kW công tơ (normal + public_meter) đầu mối / kW công tơ toàn đơn vị.
+#     (Đầu mối không có công tơ thường → loss = 0; công tơ no_loss không tham gia.)
 #   * Bơm nước thực tế: mỗi trạm bơm phục vụ đơn vị (qua pump_station_assignments)
 #     phân bổ công tơ pump của trạm cho từng đầu mối theo tỷ lệ
 #     quân số đầu mối / tổng quân số trên TẤT CẢ các đơn vị mà trạm bơm phục vụ.
@@ -41,11 +43,9 @@ class CalculationEngine
   # Returns an Array of Hashes — one per contact point — with full-precision
   # BigDecimal values. Does NOT touch the database.
   def compute
-    standards = contact_points.map { |cp| build_standard_row(cp) }
-    sum_total_standard = standards.sum(ZERO) { |row| row[:total_standard_kw] }
-
-    standards.map do |row|
-      apply_deductions_usage_and_billing(row, sum_total_standard)
+    contact_points.map do |cp|
+      row = build_standard_row(cp)
+      apply_deductions_usage_and_billing(row)
       row.except(:contact_point)
     end
   end
@@ -115,16 +115,57 @@ class CalculationEngine
     meter_usage_by_cp[cp_id] || ZERO
   end
 
+  # --- Loss-pool consumption (per CP) — DB-side group + sum ----------------
+  # Used as the numerator for loss allocation. Includes normal + public_meter
+  # only. Pump-station meters are billed separately. No-loss meters are
+  # behind the substation (no internal-line loss) and are subtracted from
+  # supply directly — neither participate in loss allocation.
+  def loss_pool_consumption_by_cp
+    @loss_pool_consumption_by_cp ||= MeterReading
+                                     .for_period(monthly_period.id)
+                                     .joins(:meter)
+                                     .where(meters: { organization_id: organization.id })
+                                     .where.not(meters: { meter_type: [
+                                       Meter.meter_types[:pump_station],
+                                       Meter.meter_types[:no_loss]
+                                     ] })
+                                     .group("meters.contact_point_id")
+                                     .sum(:consumption)
+                                     .transform_values { |v| to_bd(v) }
+  end
+
+  def loss_pool_consumption_for(cp_id)
+    loss_pool_consumption_by_cp[cp_id] || ZERO
+  end
+
   # --- Total loss (unit-wide) ----------------------------------------------
   # Σ(normal + public_meter) readings for meters belonging to this organization.
-  # Pump-station meters are NOT in the loss pool (they're billed separately).
+  # Pump-station and no_loss meters are NOT in the loss pool — kept consistent
+  # with loss_pool_consumption_by_cp so that the per-CP map sums to this total.
   def total_meter_consumption_in_unit
     @total_meter_consumption_in_unit ||= to_bd(
       MeterReading
         .for_period(monthly_period.id)
         .joins(:meter)
         .where(meters: { organization_id: organization.id })
-        .where.not(meters: { meter_type: Meter.meter_types[:pump_station] })
+        .where.not(meters: { meter_type: [
+          Meter.meter_types[:pump_station],
+          Meter.meter_types[:no_loss]
+        ] })
+        .sum(:consumption)
+    )
+  end
+
+  # Σ(no_loss) readings — meters at the substation that don't go through
+  # internal lines, so their kW must be removed from supply BEFORE computing
+  # internal-line loss (they don't contribute to the loss pool).
+  def no_loss_consumption_in_unit
+    @no_loss_consumption_in_unit ||= to_bd(
+      MeterReading
+        .for_period(monthly_period.id)
+        .joins(:meter)
+        .where(meters: { organization_id: organization.id,
+                         meter_type: Meter.meter_types[:no_loss] })
         .sum(:consumption)
     )
   end
@@ -137,7 +178,7 @@ class CalculationEngine
       if supply.blank?
         ZERO
       else
-        diff = to_bd(supply) - total_meter_consumption_in_unit
+        diff = to_bd(supply) - no_loss_consumption_in_unit - total_meter_consumption_in_unit
         diff.negative? ? ZERO : diff
       end
   end
@@ -245,7 +286,7 @@ class CalculationEngine
 
   # =================================================== deductions + usage + bill
 
-  def apply_deductions_usage_and_billing(row, sum_total_standard)
+  def apply_deductions_usage_and_billing(row)
     cp = row[:contact_point]
     total_standard = row[:total_standard_kw]
     personnel_count = to_bd(row[:total_personnel])
@@ -255,9 +296,13 @@ class CalculationEngine
     div_public = total_standard * division_public_rate
     unit_public = total_standard * unit_public_rate
 
+    # Tổn hao phân bổ theo tỷ lệ kW công tơ (normal + public_meter)
+    # đầu mối / tổng kW công tơ đơn vị. Đầu mối không có công tơ → loss = 0.
+    cp_loss_pool = loss_pool_consumption_for(cp.id)
+    total_loss_pool = total_meter_consumption_in_unit
     loss =
-      if sum_total_standard.positive? && total_unit_loss.positive?
-        total_unit_loss * total_standard / sum_total_standard
+      if total_loss_pool.positive? && total_unit_loss.positive?
+        total_unit_loss * cp_loss_pool / total_loss_pool
       else
         ZERO
       end

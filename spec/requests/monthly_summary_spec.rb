@@ -199,18 +199,18 @@ RSpec.describe "MonthlySummary", type: :request do
     end
 
     context "data correctness" do
-      it "displays over_under_kw absolute value in deficit column" do
+      it "displays over_under_kw absolute value in surplus column (negative = tiết kiệm)" do
         sign_in admin_unit_a
         get monthly_summary_path(period_id: period.id)
-        # calc_a.over_under_kw = -215 → deficit column shows "215.00" (absolute, no minus)
+        # calc_a.over_under_kw = -215 (negative = thừa/surplus) → surplus column shows "215.00" (absolute, no minus)
         expect(response.body).to include("215.00")
         expect(response.body).not_to include("-215.00")
       end
 
-      it "displays total_amount absolute value without decimal places in deficit column" do
+      it "displays total_amount absolute value without decimal places in surplus column (negative amount = thừa)" do
         sign_in admin_unit_a
         get monthly_summary_path(period_id: period.id)
-        # calc_a.total_amount = -430_000 → deficit column shows "430,000" (absolute, no minus)
+        # calc_a.total_amount = -430_000 (negative = thừa/surplus) → surplus column shows "430,000" (absolute, no minus)
         expect(response.body).to include("430,000")
         expect(response.body).not_to include("-430,000")
       end
