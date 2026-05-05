@@ -318,7 +318,7 @@ class CalculationEngine
   # {cp_id => total_count} for CPs of one specific org in this period.
   def personnel_by_cp_for_org(pump_station, org_id)
     @personnel_by_cp_for_org ||= {}
-    @personnel_by_cp_for_org[[pump_station.id, org_id]] ||=
+    @personnel_by_cp_for_org[[ pump_station.id, org_id ]] ||=
       Personnel.for_period(monthly_period.id)
                .joins(:contact_point)
                .where(contact_points: { organization_id: org_id })

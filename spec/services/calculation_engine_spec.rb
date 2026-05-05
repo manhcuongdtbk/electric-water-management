@@ -680,7 +680,7 @@ RSpec.describe CalculationEngine do
 
       it "sum across all 6 engine runs equals total consumption (no kW lost)" do
         sum = bd("0")
-        [hq_unit, org_co_quan, org_td18, org_dd2023, org_che_bien, org_tho_xay].each do |org|
+        [ hq_unit, org_co_quan, org_td18, org_dd2023, org_che_bien, org_tho_xay ].each do |org|
           eng = described_class.new(organization: org, monthly_period: period)
           sum += eng.compute.sum { |r| r[:water_pump_actual_kw] }
         end
