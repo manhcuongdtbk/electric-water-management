@@ -14,7 +14,6 @@ Rails 8, PostgreSQL, Tailwind (via tailwindcss-rails, không cần Node), Hotwir
 - Commit message: tiếng Anh
 
 ### Rails conventions
-- Chạy `bin/rubocop` trước khi commit
 - Model validation luôn có, không tin user input
 - Dùng `decimal` cho tất cả cột liên quan tiền và kW — **không dùng float**
 - Không làm tròn số ở bất cứ đâu trong engine tính toán
@@ -23,8 +22,9 @@ Rails 8, PostgreSQL, Tailwind (via tailwindcss-rails, không cần Node), Hotwir
 
 ### Test
 - RSpec + FactoryBot + Shoulda Matchers
-- Engine tính toán (bảng 22 cột) là ưu tiên test cao nhất — test từng cột với dữ liệu thật từ file Excel khách
+- Engine tính toán là ưu tiên test cao nhất — test từng cột với dữ liệu thật từ file Excel khách
 - Chạy `bundle exec rspec` sau mỗi thay đổi logic
+- **KHÔNG cần chạy rubocop local** — CI đã cover
 
 ### Git
 - Branch naming: `m1/feature-name`, `m2/feature-name` (theo milestone)
@@ -42,39 +42,49 @@ Rails 8, PostgreSQL, Tailwind (via tailwindcss-rails, không cần Node), Hotwir
 - `commander` — chỉ huy đơn vị (chỉ xem, không thao tác)
 - `tech` — đội kỹ thuật (quản lý tài khoản, nhật ký, sao lưu & phục hồi)
 
-### Engine tính toán — bảng 22 cột
-- 7 nhóm cấp bậc: 570 / 440 / 305 / 130 / 210 / 110 / 24 kW
-- Bơm nước 2 khái niệm: tiêu chuẩn 9,45 kW/người/tháng (cố định) vs sử dụng thực tế (phân bổ từ trạm bơm theo quân số)
-- 4 khoản trừ: Tiết kiệm (%), Tổn hao (phân bổ theo tỷ lệ kW — trừ khỏi tiêu chuẩn), Công cộng (2 cấp: Sư đoàn + đơn vị), Khác
+### Engine tính toán — bảng 24 cột
+DB lưu 22 cột (`over_under_kw` + `total_amount` signed), view tách thành 24 cột (Thừa/Thiếu riêng).
+
+- 7 nhóm cấp bậc — tên và định mức lấy từ `rank_quotas` trong DB (admin_level1 sửa được qua F21)
+- Bơm nước 2 khái niệm:
+  - **Tiêu chuẩn**: 9,45 kW/người/tháng (cố định theo nghị định)
+  - **Sử dụng thực tế**: phân bổ từ trạm bơm theo mô hình fixed/variable (xem mục dưới)
+- 4 khoản trừ: Tiết kiệm (%), Tổn hao (phân bổ theo tỷ lệ meter_consumption — trừ khỏi tiêu chuẩn), Công cộng (2 cấp: Sư đoàn + đơn vị), Khác
 - Tổn hao nằm trong "Số phải trừ" (trừ khỏi tiêu chuẩn, KHÔNG cộng vào sử dụng)
+- Công tơ `no_loss` (vị trí không tổn hao): loại khỏi loss pool + trừ khỏi supply khi tính tổn hao
 - Đơn giá thay đổi hàng tháng
 
+### Phân bổ bơm nước thực tế — mô hình fixed/variable (PR#72)
+- `pump_station_assignments` gán trạm bơm cho organization, có cột `fixed_pump_percentage` (decimal 5,2, nullable)
+- Organization có `fixed_pump_percentage` (ví dụ 30%) → nhận `tổng_bơm × percentage / 100`, KHÔNG chia theo quân số
+- Organization có `fixed_pump_percentage = nil` → chia phần còn lại theo quân số
+- Quân số của org cố định KHÔNG cộng vào tổng quân số chia phần còn lại
+- `fixed_pump_percentage = 0` → coi là cố định (nhận 0 kW), không tham gia pool variable
+- Tất cả nil → 100% chia theo quân số (backward compatible với logic trước PR#72)
+- Trong nội bộ mỗi org (dù fixed hay variable), kW chia cho contact_points theo quân số
+- Ví dụ tháng 02: tổng bơm 6420 kW, 30% cho "Chỉ huy Sư đoàn + nhà khách" = 1926 kW, 70% còn lại cho 557 người
+- UI: `/pump_stations` — admin_level1 only
+
 ### Database schema chính
-organizations, users, contact_points, meters, personnel, rank_quotas (cột: rank_name, quota_kw, effective_from), monthly_periods, meter_readings, monthly_calculations, unit_configs, pump_stations, contact_point_other_deductions
+organizations, users, contact_points, meters (meter_type: normal/public/pump/no_loss), personnel, rank_quotas (cột: rank_name, quota_kw, effective_from), monthly_periods, meter_readings, monthly_calculations, unit_configs, pump_stations, pump_station_assignments (cột: fixed_pump_percentage — decimal nullable), contact_point_other_deductions
 
 ### Routes & controllers
 - `root` → `dashboard#show` (Dashboard + F12 báo cáo tổng hợp: tháng/quý/năm)
 - `history#show` → F13 tra cứu lịch sử + so sánh cùng kỳ
-- `monthly_summaries#show` → F11 bảng 22 cột (+ CSV export)
+- `monthly_summaries#show` → F11 bảng 24 cột (+ CSV export)
 - CSV export: `respond_to format.csv` trên dashboard, history, monthly_summaries
 - `audit_logs#index` → F19 nhật ký thay đổi (PaperTrail::Version, tech + admin_level1)
 - `monthly_periods#index/edit/update` → F20 đơn giá điện (admin_level1 sửa)
 - `rank_quotas#index/edit/update` → F21 định mức cấp bậc (admin_level1 sửa)
+- `pump_stations#index` + `pump_station_assignments#edit/update` → Phân bổ trạm bơm (admin_level1 only)
 - `backups#index/create/restore/destroy_file` → Sao lưu & phục hồi (tech only, admin_level1 explicit cannot)
 
 ## Milestones
-- M1 (14/4–23/4): ✅ DONE — DB + CRUD khai báo F01–F04 + Docker dev + RSpec 247 specs
-- M2 (21/4–5/5): ✅ DONE — Nhập liệu F05–F07 + Engine F08–F10 + Bảng 22 cột F11 + RSpec 388 specs
-- M3 (2/5–9/5): ✅ DONE — Phân quyền Devise F15–F18 + CanCanCan Ability 4 vai trò + RSpec 546 specs
-- Pre-M4: ✅ DONE — Bug fix + deploy + import + system specs (688 specs)
-- M4: ✅ DONE — Dashboard + F12 báo cáo (tháng/quý/năm) + F13 tra cứu lịch sử + F14 CSV export (771 specs)
-- M5 PR1: ✅ DONE — F20 đơn giá + F21 định mức (PR#55, 786 specs)
-- M5 PR2: ✅ DONE — F19 nhật ký hoạt động (PR#56, 795 specs)
-- M5 PR3: ✅ DONE — Sao lưu & phục hồi + Docker production (PR#58, 836 specs)
-- M6 (17/5–25/5): Bàn giao — staging + fix bug + đào tạo + nghiệm thu
+- M1–M5: DONE — F01–F21 đầy đủ + Docker production + 836 specs tại M5
+- M6: ĐANG LÀM — Bàn giao — fix bug + pump 30/70 + test + nghiệm thu (891 specs)
 
 ## File tham chiếu nghiệp vụ
-- `docs/SCOPE_DOCUMENT_v3.html` — phạm vi dự án đầy đủ (21 chức năng F01–F21)
-- `docs/XAC_NHAN_NGHIEP_VU_v5.html` — nghiệp vụ đã xác nhận
-- `docs/PROJECT_ROADMAP_v3.md` — lộ trình chi tiết từng milestone
+- `docs/SCOPE_DOCUMENT_v3_0_3.html` — phạm vi dự án đầy đủ (21 chức năng F01–F21)
+- `docs/XAC_NHAN_NGHIEP_VU_v5_3_0.html` — nghiệp vụ đã xác nhận
+- `docs/PROJECT_ROADMAP_v3_1.md` — lộ trình chi tiết từng milestone
 - `test/fixtures/files/bang_tinh_thang_02.xlsx` — dữ liệu thật để test engine tính toán
