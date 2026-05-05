@@ -86,5 +86,4 @@ organizations, users, contact_points, meters (meter_type: normal/public/pump/no_
 ## File tham chiếu nghiệp vụ
 - `docs/SCOPE_DOCUMENT_v3_0_3.html` — phạm vi dự án đầy đủ (21 chức năng F01–F21)
 - `docs/XAC_NHAN_NGHIEP_VU_v5_3_0.html` — nghiệp vụ đã xác nhận
-- `docs/PROJECT_ROADMAP_v3_1.md` — lộ trình chi tiết từng milestone
 - `test/fixtures/files/bang_tinh_thang_02.xlsx` — dữ liệu thật để test engine tính toán
