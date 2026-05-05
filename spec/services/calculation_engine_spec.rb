@@ -413,6 +413,53 @@ RSpec.describe CalculationEngine do
         expect(row[:water_pump_actual_kw]).to eq(bd("0"))
       end
     end
+
+    # Nghiệp vụ XAC_NHAN_NGHIEP_VU v5 mục 11 câu 1 (Zalo 21/04/2026):
+    # Một số công tơ đặt tại trạm biến áp không đi qua đường dây nội bộ,
+    # KHÔNG chịu tổn hao đường dây. kW công tơ no_loss phải bị trừ khỏi
+    # supply TRƯỚC khi tính tổn hao, đồng thời không tham gia tử số/mẫu số
+    # phân bổ tổn hao cho các CP khác.
+    context "with no_loss meter (vị trí không tổn hao)" do
+      # Tăng supply lên 850: 850 − 50 (no_loss) − 704 (normal) = 96
+      # → tổng tổn hao đường dây vẫn = 96 (giữ nguyên expected_for cũ).
+      let!(:cp_substation) { create(:contact_point, organization: organization, name: "Tram bien ap", position: 4) }
+      let!(:meter_no_loss) { create(:meter, :no_loss, organization: organization, contact_point: cp_substation, name: "M-NoLoss") }
+      let!(:reading_no_loss) do
+        create(:meter_reading, meter: meter_no_loss, monthly_period: period,
+                               reading_start: 0, reading_end: 50, consumption: 50)
+      end
+      before { unit_config.update!(electricity_supply_kw: bd("850")) }
+
+      it "subtracts no_loss kW from supply before computing total_unit_loss" do
+        # supply 850 − no_loss 50 − meter 704 = 96 → tổng loss vẫn = 96
+        total_loss = engine.compute.sum { |r| r[:loss_deduction_kw] }
+        expect(total_loss).to eq(bd("96"))
+      end
+
+      it "does not include no_loss meter in the loss-allocation denominator" do
+        # mẫu số vẫn = 99 + 105 + 500 = 704 (không có 50 của no_loss)
+        loss = engine.compute.find { |r| r[:contact_point_id] == cp_qluc.id }[:loss_deduction_kw]
+        expect(loss).to eq(bd("96") * bd("105") / bd("704"))
+      end
+
+      it "assigns loss_deduction = 0 for a CP with only a no_loss meter" do
+        row = engine.compute.find { |r| r[:contact_point_id] == cp_substation.id }
+        expect(row[:loss_deduction_kw]).to eq(bd("0"))
+      end
+
+      it "does not include no_loss consumption in meter_usage_kw" do
+        row = engine.compute.find { |r| r[:contact_point_id] == cp_substation.id }
+        expect(row[:meter_usage_kw]).to eq(bd("0"))
+      end
+
+      it "clamps total_unit_loss to 0 when supply < no_loss + total_meter_consumption" do
+        # supply 700 − no_loss 50 − meter 704 = -54 → clamp về 0
+        unit_config.update!(electricity_supply_kw: bd("700"))
+        described_class.new(organization: organization, monthly_period: period).compute.each do |row|
+          expect(row[:loss_deduction_kw]).to eq(bd("0"))
+        end
+      end
+    end
   end
 
   # Matches the "Bảng II" scenario from docs/BANG_22_COT_ANALYSIS.md §3.2:

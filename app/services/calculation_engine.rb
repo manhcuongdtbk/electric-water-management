@@ -9,10 +9,11 @@
 #   * Tiêu chuẩn bơm nước = 9.45 kW/người/tháng (Personnel::WATER_PUMP_RATE).
 #   * "Số phải trừ" gồm: Tiết kiệm, Tổn hao, Công cộng Sư đoàn, Công cộng đơn vị, Khác.
 #     Tổn hao TRỪ khỏi tiêu chuẩn, KHÔNG cộng vào sử dụng.
-#   * Tổn hao toàn đơn vị = điện lực cung cấp − tổng công tơ (normal + public_meter)
-#     trong đơn vị. Phân bổ cho từng đầu mối theo tỷ lệ
+#   * Tổn hao toàn đơn vị = điện lực cung cấp − kW công tơ no_loss
+#     − tổng công tơ (normal + public_meter) trong đơn vị.
+#     Phân bổ cho từng đầu mối theo tỷ lệ
 #     kW công tơ (normal + public_meter) đầu mối / kW công tơ toàn đơn vị.
-#     (Đầu mối không có công tơ → loss = 0.)
+#     (Đầu mối không có công tơ thường → loss = 0; công tơ no_loss không tham gia.)
 #   * Bơm nước thực tế: mỗi trạm bơm phục vụ đơn vị (qua pump_station_assignments)
 #     phân bổ công tơ pump của trạm cho từng đầu mối theo tỷ lệ
 #     quân số đầu mối / tổng quân số trên TẤT CẢ các đơn vị mà trạm bơm phục vụ.
@@ -116,14 +117,18 @@ class CalculationEngine
 
   # --- Loss-pool consumption (per CP) — DB-side group + sum ----------------
   # Used as the numerator for loss allocation. Includes normal + public_meter
-  # (anything that is NOT a pump-station meter). Pump-station meters are
-  # billed separately and don't participate in loss allocation.
+  # only. Pump-station meters are billed separately. No-loss meters are
+  # behind the substation (no internal-line loss) and are subtracted from
+  # supply directly — neither participate in loss allocation.
   def loss_pool_consumption_by_cp
     @loss_pool_consumption_by_cp ||= MeterReading
                                      .for_period(monthly_period.id)
                                      .joins(:meter)
                                      .where(meters: { organization_id: organization.id })
-                                     .where.not(meters: { meter_type: Meter.meter_types[:pump_station] })
+                                     .where.not(meters: { meter_type: [
+                                       Meter.meter_types[:pump_station],
+                                       Meter.meter_types[:no_loss]
+                                     ] })
                                      .group("meters.contact_point_id")
                                      .sum(:consumption)
                                      .transform_values { |v| to_bd(v) }
@@ -135,14 +140,32 @@ class CalculationEngine
 
   # --- Total loss (unit-wide) ----------------------------------------------
   # Σ(normal + public_meter) readings for meters belonging to this organization.
-  # Pump-station meters are NOT in the loss pool (they're billed separately).
+  # Pump-station and no_loss meters are NOT in the loss pool — kept consistent
+  # with loss_pool_consumption_by_cp so that the per-CP map sums to this total.
   def total_meter_consumption_in_unit
     @total_meter_consumption_in_unit ||= to_bd(
       MeterReading
         .for_period(monthly_period.id)
         .joins(:meter)
         .where(meters: { organization_id: organization.id })
-        .where.not(meters: { meter_type: Meter.meter_types[:pump_station] })
+        .where.not(meters: { meter_type: [
+          Meter.meter_types[:pump_station],
+          Meter.meter_types[:no_loss]
+        ] })
+        .sum(:consumption)
+    )
+  end
+
+  # Σ(no_loss) readings — meters at the substation that don't go through
+  # internal lines, so their kW must be removed from supply BEFORE computing
+  # internal-line loss (they don't contribute to the loss pool).
+  def no_loss_consumption_in_unit
+    @no_loss_consumption_in_unit ||= to_bd(
+      MeterReading
+        .for_period(monthly_period.id)
+        .joins(:meter)
+        .where(meters: { organization_id: organization.id,
+                         meter_type: Meter.meter_types[:no_loss] })
         .sum(:consumption)
     )
   end
@@ -155,7 +178,7 @@ class CalculationEngine
       if supply.blank?
         ZERO
       else
-        diff = to_bd(supply) - total_meter_consumption_in_unit
+        diff = to_bd(supply) - no_loss_consumption_in_unit - total_meter_consumption_in_unit
         diff.negative? ? ZERO : diff
       end
   end

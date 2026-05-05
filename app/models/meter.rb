@@ -8,7 +8,7 @@ class Meter < ApplicationRecord
   has_one :pump_station, dependent: :nullify
 
   # Enums
-  enum :meter_type, { normal: 0, public_meter: 1, pump_station: 2 }, validate: true
+  enum :meter_type, { normal: 0, public_meter: 1, pump_station: 2, no_loss: 3 }, validate: true
 
   # Validations
   validates :name, presence: true, length: { maximum: 100 }

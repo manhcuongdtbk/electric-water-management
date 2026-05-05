@@ -12,7 +12,7 @@ RSpec.describe "F02 — Meters", type: :system do
   describe "admin_unit" do
     before { login_as scenario.admin_unit, scope: :user }
 
-    it "creates meters of every type (normal, public, pump_station)" do
+    it "creates meters of every type (normal, public, pump_station, no_loss)" do
       visit contact_point_meters_path(own_cp)
       expect(page).to have_content(I18n.t("meters.index.title"))
 
@@ -38,6 +38,14 @@ RSpec.describe "F02 — Meters", type: :system do
       click_on I18n.t("meters.form.submit_create")
       expect(page).to have_content("Công tơ trạm bơm")
       expect(page).to have_content(I18n.t("meters.meter_types.pump_station"))
+
+      # no_loss
+      click_on I18n.t("meters.index.new_button")
+      fill_in I18n.t("meters.form.name"), with: "Công tơ vị trí không tổn hao"
+      select I18n.t("meters.meter_types.no_loss"), from: I18n.t("meters.form.meter_type")
+      click_on I18n.t("meters.form.submit_create")
+      expect(page).to have_content("Công tơ vị trí không tổn hao")
+      expect(page).to have_content(I18n.t("meters.meter_types.no_loss"))
     end
 
     it "edits an existing meter" do
