@@ -428,6 +428,9 @@ class ImportFeb2026Service
       ps.meter = meter
       ps.save! if ps.new_record? || ps.changed?
 
+      # TODO(M6.x): set fixed_pump_percentage 30 cho org "Chỉ huy f + nhà khách"
+      # sau khi tạo org đó qua admin UI. Hiện tại tất cả assignments là variable
+      # (nil) — engine fallback về behavior 100% theo quân số (giữ Bảng II workaround).
       PumpStationAssignment.find_or_create_by!(pump_station: ps, organization: @organization)
 
       reading = MeterReading.find_or_initialize_by(meter: meter, monthly_period: @period)

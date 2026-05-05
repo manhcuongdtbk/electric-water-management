@@ -1,0 +1,62 @@
+<% content_for :title, t("pump_stations.index.title") %>
+
+<div class="flex items-center justify-between mb-4">
+  <h1 class="text-xl font-semibold text-gray-900"><%= t("pump_stations.index.title") %></h1>
+</div>
+
+<div class="mb-4 rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+  <%= t("pump_stations.index.note") %>
+</div>
+
+<% if @pump_stations.any? %>
+  <% @pump_stations.each do |ps| %>
+    <div class="bg-white rounded-lg border border-gray-200 mb-4 overflow-hidden">
+      <div class="px-4 py-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+        <h2 class="text-base font-medium text-gray-800"><%= ps.name %></h2>
+        <span class="text-xs text-gray-500"><%= ps.organization.name %></span>
+      </div>
+      <% if ps.pump_station_assignments.any? %>
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-2 text-left font-medium text-gray-600"><%= t("pump_station_assignments.index.organization_col") %></th>
+              <th class="px-4 py-2 text-right font-medium text-gray-600"><%= t("pump_station_assignments.index.fixed_pct_col") %></th>
+              <% if can? :update, PumpStationAssignment %>
+                <th class="px-4 py-2 text-center font-medium text-gray-600 w-24">Thao tác</th>
+              <% end %>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <% ps.pump_station_assignments.sort_by { |a| a.organization.position }.each do |asg| %>
+              <tr class="hover:bg-gray-50">
+                <td class="px-4 py-2 text-gray-900"><%= asg.organization.name %></td>
+                <td class="px-4 py-2 text-right">
+                  <% if asg.fixed? %>
+                    <span class="font-medium text-amber-700"><%= number_with_delimiter(asg.fixed_pump_percentage) %>%</span>
+                  <% else %>
+                    <span class="text-gray-400 italic"><%= t("pump_station_assignments.index.variable") %></span>
+                  <% end %>
+                </td>
+                <% if can? :update, PumpStationAssignment %>
+                  <td class="px-4 py-2 text-center">
+                    <%= link_to t("pump_station_assignments.actions.edit"),
+                          edit_pump_station_assignment_path(ps, asg),
+                          class: "text-xs text-amber-600 hover:text-amber-800 font-medium" %>
+                  </td>
+                <% end %>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <div class="px-4 py-3 text-sm text-gray-500 italic">
+          <%= t("pump_station_assignments.index.no_assignments") %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+<% else %>
+  <div class="bg-white rounded-lg border border-gray-200 px-4 py-6 text-sm text-gray-500 italic text-center">
+    <%= t("pump_stations.index.empty") %>
+  </div>
+<% end %>
