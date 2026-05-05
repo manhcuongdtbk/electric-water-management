@@ -1,1 +1,18 @@
 @import "tailwindcss";
+
+/* Pagy pagination */
+.pagy.series-nav {
+  @apply mt-4 flex justify-center items-center gap-1;
+}
+.pagy.series-nav a[href] {
+  @apply px-3 py-1 rounded border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 no-underline;
+}
+.pagy.series-nav a[aria-current="page"] {
+  @apply px-3 py-1 rounded border border-blue-500 bg-blue-600 text-sm text-white font-medium;
+}
+.pagy.series-nav a[role="separator"] {
+  @apply px-3 py-1 text-sm text-gray-400;
+}
+.pagy.series-nav a[aria-disabled="true"][aria-label] {
+  @apply px-3 py-1 rounded border border-gray-200 text-sm text-gray-300 cursor-not-allowed;
+}
