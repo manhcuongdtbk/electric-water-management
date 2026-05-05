@@ -1204,6 +1204,8 @@ totals[:deficit_kw] = calculations.sum { |c| c.over_under_kw < 0 ? -c.over_under
 - Sửa loss allocation để exclude `no_loss` khỏi tử số (= không nhận tổn hao).
 - Update UI `meters/_form` để chọn loại `no_loss`.
 
+✅ RESOLVED — no_loss đã implement. Xem TRANG_THAI_DU_AN v3.8.0.
+
 ### TODO #3 — Công thức phân bổ tổn hao không khớp `13_BUSINESS_RULES` mục 6.2
 
 **`13_BUSINESS_RULES` mục 6.2** ghi:
@@ -1236,6 +1238,8 @@ Hai cách này cho kết quả **khác nhau** trong nhiều trường hợp. Ví
 - (b) Sửa BUSINESS_RULES + glossary theo engine (phân bổ theo tiêu chuẩn).
 
 → Cần xác nhận với khách Anh Thảo qua Zalo. Cho data tháng 02 thật, hai cách có thể cho kết quả khác nhau ~10% trên các đầu mối lớn.
+
+✅ RESOLVED — engine đã sửa từ total_standard ratio sang meter_consumption ratio (commit 9252c02). Xem TRANG_THAI_DU_AN v3.8.0.
 
 ### TODO #4 — `PumpStationAssignment` không hỗ trợ 30/70 split
 

@@ -63,7 +63,7 @@ erDiagram
     meters {
         bigint id PK
         string name
-        integer meter_type "3 loai: normal=0 | public_meter=1 | pump_station=2 (no_loss chua implement - xem TODO 1)"
+        integer meter_type "4 loai: normal=0 | public_meter=1 | pump_station=2 | no_loss=3"
         bigint contact_point_id FK
         bigint organization_id FK
     }
@@ -1133,6 +1133,8 @@ enum :meter_type, { normal: 0, public_meter: 1, pump_station: 2 }, validate: tru
 **Cần quyết định (code):**
 - (a) Chấp nhận 3 loại cho M6 — nghiệp vụ `no_loss` không bắt buộc cho nghiệm thu 25/05.
 - (b) Bổ sung enum + migration thêm `no_loss: 3`, sửa engine — nếu khách yêu cầu trước nghiệm thu.
+
+✅ RESOLVED — no_loss: 3 đã implement (enum, engine, UI, specs). Xem TRANG_THAI_DU_AN v3.8.0.
 
 ### 2. `MeterReading` tên cột không khớp glossary
 

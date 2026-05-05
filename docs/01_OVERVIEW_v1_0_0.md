@@ -4,7 +4,7 @@
 >
 > File này cung cấp bối cảnh tổng thể: dự án giải quyết vấn đề gì, cho ai, bằng công nghệ nào, trong thời gian bao lâu, và cách đọc bộ tài liệu. Đọc file này trước khi đọc bất kỳ file nào khác trong thư mục `docs/`.
 >
-> Thuật ngữ sử dụng trong file này tuân theo `02_GLOSSARY_v1_3_0.md`.
+> Thuật ngữ sử dụng trong file này tuân theo `02_GLOSSARY_v1_4_0.md`.
 
 ---
 
@@ -82,7 +82,7 @@ Cả ba (anh Thảo, anh Hưng, anh Phương) đều senior hơn developer. Giao
 | Pre-M4 — Ổn định | 09/05 → 12/05 | Bug fix, deploy Railway, import data thật tháng 02, system specs | 688 | ✅ |
 | M4 — Báo cáo | 12/05 → 15/05 | Dashboard F12 (tháng/quý/năm), tra cứu lịch sử F13, CSV F14 | 771 | ✅ |
 | M5 — Vận hành | 15/05 → 20/05 | Đơn giá F20, định mức F21, nhật ký F19, sao lưu và phục hồi, Docker production | 836 | ✅ |
-| M6 — Bàn giao | 20/05 → 25/05 | Staging, fix bug, tài liệu, đào tạo, nghiệm thu | 853+ | đang làm |
+| M6 — Bàn giao | 20/05 → 25/05 | Staging, fix bug, tài liệu, đào tạo, nghiệm thu | 859+ | đang làm |
 | Nghỉ lễ | 30/04 → 01/05 | Giải phóng miền Nam + Quốc tế Lao động | — | — |
 | **Mục tiêu khách** | **15/05/2026** | Anh Thảo yêu cầu qua Zalo 21/04 | — | — |
 | **Hard deadline** | **25/05/2026** | Buffer 10 ngày | — | — |
@@ -112,7 +112,7 @@ Lý do và phương án đã bỏ xem `09_DECISIONS_LOG_v1_0_0.md` (khi có).
 | Database | PostgreSQL | Tiêu chuẩn ngành. Hỗ trợ `decimal` tốt cho tính toán kW (dự án dùng BigDecimal, không float). Backup/restore qua `pg_dump`/`pg_restore`. |
 | CSS | Tailwind (via `tailwindcss-rails`) | Tích hợp sẵn Rails 8, không cần Node. Styling nhanh cho 1 developer. |
 | Frontend | Hotwire (Turbo + Stimulus) | Đi kèm Rails 8 mặc định. Turbo xử lý form submit không reload trang. Stimulus xử lý behavior động (thêm/bớt công tơ, tính realtime quân số trên form F03). |
-| Xác thực | Devise | Battle-tested. Module Lockable (khoá sau 5 lần sai — F17), Timeoutable (tự đăng xuất sau 2 giờ — không có F-number riêng, là tính năng Devise tự động), Trackable có sẵn. Tài liệu bảo mật Devise có trọng lượng khi gửi khách quân đội, so với tự code authentication. |
+| Xác thực | Devise | Battle-tested. Module Lockable (khoá sau 5 lần sai — F17), Timeoutable (F18 — tự đăng xuất sau 2 giờ). Custom: `force_password_change` flag (thuộc F16). Trackable có sẵn. Tài liệu bảo mật Devise có trọng lượng khi gửi khách quân đội, so với tự code authentication. |
 | Phân quyền | CanCanCan | 4 vai trò cố định, khoảng 8 model → file Ability khoảng 40–60 dòng, quản lý được. Dùng hash conditions (không blocks) để hỗ trợ `accessible_by` — pattern quan trọng cho scope isolation giữa các đơn vị. Pundit mạnh hơn cho ứng dụng phức tạp nhưng overkill ở đây. |
 | Audit log | PaperTrail | Theo dõi thay đổi trên mọi model có nhập liệu. Ghi `whodunnit` (user ID), `item_type` (model name), giá trị cũ/mới. Lưu trong bảng `versions`. Xem `02_GLOSSARY` mục 10 và 12. |
 | Biểu đồ | Chartkick (Chart.js) | Biểu đồ so sánh tiêu chuẩn và tiêu thụ (F12). Đủ dùng cho dashboard đơn giản. |

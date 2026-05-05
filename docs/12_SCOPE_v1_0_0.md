@@ -75,14 +75,12 @@ Phần mềm tự động tính toán khi có đủ dữ liệu đầu vào. Chi
 | F# | Tên | Mô tả | Vai trò |
 |---|---|---|---|
 | F15 | Quản lý tài khoản người dùng | Tạo, khoá, mở khoá tài khoản. Gán vai trò + đơn vị. Không có đăng ký tự do. | tech |
-| F16 | Đăng nhập bằng tài khoản, mật khẩu | Mỗi người dùng có tài khoản riêng. | Tất cả |
+| F16 | Đăng nhập bằng tài khoản, mật khẩu | Mỗi người dùng có tài khoản riêng. Bắt buộc đổi mật khẩu lần đầu đăng nhập. | Tất cả |
 | F17 | Khoá tài khoản khi nhập sai mật khẩu | Sau 5 lần nhập sai liên tiếp, tài khoản bị khoá. Cần quản trị viên mở lại. | Tự động |
 | F18 | Tự động đăng xuất khi không thao tác | Sau 2 giờ không sử dụng, phiên đăng nhập hết hạn. | Tự động |
 | F19 | Nhật ký thay đổi dữ liệu | Ghi lại mọi thay đổi: ai sửa, sửa gì, lúc nào, giá trị cũ/mới. | tech, admin_level1 (xem) |
 | F20 | Cấu hình đơn giá điện | Nhập đơn giá theo tháng. Giá thay đổi hàng tháng theo quy định. | admin_level1 |
 | F21 | Cấu hình bảng định mức cấp bậc | Sửa tên nhóm cấp bậc và định mức kW khi có nghị định mới. | admin_level1 |
-
-**Bắt buộc đổi mật khẩu lần đầu:** Tài khoản mới phải đổi mật khẩu khi đăng nhập lần đầu (F16, custom flag `force_password_change`). Đây không phải F-number riêng mà là hành vi của F16.
 
 ---
 

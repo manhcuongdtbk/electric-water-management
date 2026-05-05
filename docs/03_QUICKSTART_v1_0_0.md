@@ -8,7 +8,7 @@
 >
 > **Đối tượng đọc:** Developer mới vào project, hoặc developer quay lại sau thời gian dài.
 >
-> Thuật ngữ sử dụng tuân theo `02_GLOSSARY_v1_3_0.md`. Cấu trúc 24 cột bảng tổng hợp xem `13_BUSINESS_RULES_v1_1_0.md` mục 4.
+> Thuật ngữ sử dụng tuân theo `02_GLOSSARY_v1_4_0.md`. Cấu trúc 24 cột bảng tổng hợp xem `13_BUSINESS_RULES_v1_1_0.md` mục 4.
 
 ---
 
@@ -604,6 +604,8 @@ Các sai lệch phát hiện giữa code thực tế và `02_GLOSSARY` / `13_BUS
    - Seed dùng tên đầy đủ theo nghị định gốc, ví dụ nhóm 1 = `"Chỉ huy sư đoàn và tương đương; quân hàm cao nhất là Đại tá"`.
    - Glossary và Business Rules dùng tên rút gọn theo bảng mẫu khách gửi (Zalo 21/04/2026), ví dụ nhóm 1 = `"Chỉ huy Sư đoàn; SQ có trần quân hàm là Đại tá"`.
    - Cần xác định bản nào là chuẩn — nếu glossary đúng thì sửa `db/seeds.rb`, nếu seed đúng thì sửa glossary và business rules.
+
+   ✅ RESOLVED — seeds.rb đã cập nhật tên rank khớp glossary (rank names sync, xem TRANG_THAI_DU_AN v3.8.0).
 
 2. **Schema `MonthlyCalculation` không có cột `surplus_kw` / `deficit_kw` / `surplus_amount` / `deficit_amount`.**
    - `02_GLOSSARY` mục 3.2 và `13_BUSINESS_RULES` mục 4 mô tả 24 cột với 4 cột riêng cho Thừa/Thiếu (kW + đồng).

@@ -40,7 +40,7 @@ Thứ tự đọc theo nhóm chức năng (xem 02_GLOSSARY mục 8 cho mô tả 
 | GET | `/users/sign_in` | `devise/sessions#new` | F16 | Form đăng nhập (custom view tiếng Việt — xem 06 mục 2.2) |
 | POST | `/users/sign_in` | `devise/sessions#create` | F16 | Submit đăng nhập, Rack::Attack throttle 5/phút/IP |
 | DELETE | `/users/sign_out` | `devise/sessions#destroy` | — | Đăng xuất (config `sign_out_via = :delete`) |
-| POST | `/sessions/extend` | `sessions#extend_session` | — | Stimulus `session-timeout` gọi để gia hạn phiên (xem 06 mục 2.5) |
+| POST | `/sessions/extend` | `sessions#extend_session` | — | Stimulus `session-timeout` gọi để gia hạn phiên (xem 06 mục 2.5) — hỗ trợ F18 |
 
 #### B. Khai báo (F01–F04)
 
@@ -111,8 +111,8 @@ Thứ tự đọc theo nhóm chức năng (xem 02_GLOSSARY mục 8 cho mô tả 
 | PATCH | `/users/:id` | `users#update` | F15 |
 | PATCH | `/users/:id/lock` | `users#lock` | F15 |
 | PATCH | `/users/:id/unlock` | `users#unlock` | F15 |
-| GET | `/password_change/edit` | `password_changes#edit` | F18 |
-| PATCH | `/password_change` | `password_changes#update` | F18 |
+| GET | `/password_change/edit` | `password_changes#edit` | F16 |
+| PATCH | `/password_change` | `password_changes#update` | F16 |
 | GET | `/audit_logs` | `audit_logs#index` | F19 |
 | GET | `/monthly_periods` | `monthly_periods#index` | F20 |
 | POST | `/monthly_periods` | `monthly_periods#create` | F20 (mở kỳ mới) |

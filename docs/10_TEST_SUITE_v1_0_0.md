@@ -1116,11 +1116,7 @@ Khi đổi `meter_type` enum (ví dụ thêm `:no_loss`):
 
 ### TODO #1 — Tên file system spec F18 không khớp F-number
 
-**File:** `spec/system/f16_force_password_change_spec.rb`
-
-**Sai lệch:** File tên `f16_*` (= F16 Đăng nhập) nhưng nội dung test **F18 — Bắt buộc đổi mật khẩu lần đầu** (`force_password_change`). F16 (form đăng nhập) đã được test ở `spec/system/devise_sessions_spec.rb`.
-
-**Đề xuất:** Rename file thành `spec/system/f18_force_password_change_spec.rb` để khớp 02_GLOSSARY mục 8.5. Đồng thời rename `spec/system/f18_session_timeout_spec.rb` (đang test session timeout — không có F-number riêng theo glossary, là tính năng Devise Timeoutable) thành `spec/system/session_timeout_spec.rb` hoặc giữ nguyên nếu coi session timeout là phần của F16. Quyết định: ưu tiên đổi để tránh nhầm lẫn cho người mới đọc spec.
+✅ NOT AN ISSUE — `f16_force_password_change_spec.rb` ĐÚNG vì force password change thuộc F16 theo SCOPE_DOCUMENT. `f18_session_timeout_spec.rb` ĐÚNG vì timeout = F18. Không cần rename.
 
 ### TODO #2 — Tên rank trong factory không khớp 02_GLOSSARY
 
@@ -1142,6 +1138,8 @@ Theo 02_GLOSSARY mục 9, tên đầy đủ phải là:
 Định mức (`quota_kw`) thì khớp glossary (570/440/305/130/210/110/24).
 
 **Đề xuất:** Cập nhật factory để khớp tên glossary. Ảnh hưởng: ~30 spec assertion có dùng `rank_name` text — cần sửa hoặc dùng id thay vì text. Đây là task low-risk, làm trong slot consolidation tài liệu.
+
+✅ RESOLVED — factory đã cập nhật tên rank + thêm surplus/deficit traits. Xem TRANG_THAI_DU_AN v3.8.0.
 
 ### TODO #3 — Sign convention `over_under_kw` trong factory không có trait
 

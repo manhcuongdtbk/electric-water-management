@@ -143,7 +143,7 @@ end
 
 `UsersController#lock` thì ngược lại: chặn mọi lần admin manual khóa admin_level1 cuối cùng — vì hành động này luôn là nhầm hoặc cố ý gây hại, không có lý do hợp lệ.
 
-### 2.4 F18 — Bắt buộc đổi mật khẩu lần đầu
+### 2.4 Bắt buộc đổi mật khẩu lần đầu (hành vi thuộc F16)
 
 **Cột DB:** `users.force_password_change boolean default true not null` (xem 04_DATABASE_MODELS mục 2.2).
 
@@ -195,7 +195,7 @@ end
 
 `bypass_sign_in` (Devise helper) refresh session sau khi password đổi — không có nó, Devise tự đăng xuất user vì authenticatable_salt rotate.
 
-### 2.5 Session timeout (Timeoutable)
+### 2.5 F18 — Tự động đăng xuất khi không thao tác (Timeoutable)
 
 **Config:** `config.timeout_in = 2.hours` (`config/initializers/devise.rb:194`). Lịch sử: PR#22 ban đầu set 30 phút, PR#27 (`d0fbcb5`) tăng lên 2 giờ vì khách quân đội cần thời gian dài hơn để xử lý số liệu.
 
