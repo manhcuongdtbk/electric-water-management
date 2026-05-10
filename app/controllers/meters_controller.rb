@@ -64,6 +64,10 @@ class MetersController < ApplicationController
   end
 
   def meter_params
-    params.require(:meter).permit(:name, :meter_type, :serial_number, :notes, :position)
+    attrs = params.require(:meter).permit(:name, :meter_type, :serial_number, :notes, :position)
+    # Pump-station meters belong to a PumpStation, not a contact point. Reject
+    # the value at the controller layer — model validation is the safety net.
+    attrs[:meter_type] = nil if attrs[:meter_type] == "pump_station"
+    attrs
   end
 end
