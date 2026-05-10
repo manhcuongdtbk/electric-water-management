@@ -64,6 +64,14 @@ vi:
         organization: "Đơn vị"
         pump_station: "Trạm bơm"
         pump_station_id: "Trạm bơm"
+      pump_station:
+        name: "Tên trạm bơm"
+        first_meter_name: "Tên công tơ đầu tiên"
+        first_meter_serial_number: "Số hiệu công tơ đầu tiên"
+      pump_station_assignment:
+        organization: "Đơn vị được phân bổ"
+        organization_id: "Đơn vị được phân bổ"
+        fixed_pump_percentage: "Tỷ lệ cố định (%)"
       unit_config:
         savings_rate: "Tỷ lệ tiết kiệm"
         division_public_rate: "Tỷ lệ công cộng Sư đoàn"
@@ -176,8 +184,27 @@ vi:
       updated: "Cập nhật đơn giá thành công."
     rank_quotas:
       updated: "Cập nhật định mức thành công. Hãy tính lại các kỳ bị ảnh hưởng."
+    pump_stations:
+      created: "Tạo trạm bơm thành công."
+      updated: "Cập nhật trạm bơm thành công."
+      destroyed: "Xoá trạm bơm thành công."
+      destroy_failed: "Không thể xoá trạm bơm."
+      cannot_destroy_with_readings: "Không thể xoá trạm bơm đã có dữ liệu chỉ số. Dữ liệu lịch sử được bảo toàn."
+    pump_station_meters:
+      created: "Thêm công tơ trạm bơm thành công."
+      updated: "Cập nhật công tơ trạm bơm thành công."
+      destroyed: "Xoá công tơ trạm bơm thành công."
+      destroy_failed: "Không thể xoá công tơ trạm bơm."
+      cannot_destroy_with_readings: "Không thể xoá công tơ đã có dữ liệu chỉ số. Dữ liệu lịch sử được bảo toàn."
+      cannot_destroy_last_meter: "Không thể xoá công tơ cuối cùng. Trạm bơm phải có ít nhất 1 công tơ."
     pump_station_assignments:
+      created: "Đã gán đơn vị vào trạm bơm. Hãy tính lại các kỳ bị ảnh hưởng."
       updated: "Cập nhật phân bổ trạm bơm thành công. Hãy tính lại các kỳ bị ảnh hưởng."
+      destroyed: "Đã bỏ gán đơn vị khỏi trạm bơm. Hãy tính lại các kỳ bị ảnh hưởng."
+      destroy_failed: "Không thể bỏ gán đơn vị khỏi trạm bơm."
+    pump_station_readings:
+      saved: "Lưu chỉ số công tơ trạm bơm thành công."
+      period_locked: "Kỳ này đã khóa, không thể chỉnh sửa chỉ số."
     unit_configs:
       division_updated: "Cập nhật cấu hình Sư đoàn thành công."
       unit_updated: "Cập nhật cấu hình đơn vị thành công."
@@ -494,7 +521,8 @@ vi:
     config_section: "Cấu hình hệ thống"
     monthly_periods: "Đơn giá điện"
     rank_quotas: "Định mức cấp bậc"
-    pump_stations: "Phân bổ trạm bơm"
+    pump_stations: "Trạm bơm"
+    pump_station_readings: "Chỉ số trạm bơm"
     organizations: "Quản lý đơn vị"
     audit_logs: "Nhật ký hoạt động"
     backups: "Sao lưu dữ liệu"
@@ -653,25 +681,99 @@ vi:
 
   pump_stations:
     index:
-      title: "Phân bổ điện trạm bơm"
+      title: "Quản lý trạm bơm nước"
       note: "Đặt phần trăm cố định (ví dụ 30%) cho đầu mối hưởng riêng. Phần còn lại sẽ chia cho các đơn vị khác theo quân số. Tổng các tỷ lệ cố định trên cùng một trạm bơm không được vượt quá 100%."
-      empty: "Chưa có trạm bơm nào."
+      empty: "Chưa có trạm bơm nào. Bấm \"Thêm trạm bơm\" để bắt đầu."
+      new_button: "Thêm trạm bơm"
+      readings_link: "Nhập chỉ số công tơ"
+      meters_section: "Công tơ"
+      assignments_section: "Đơn vị được phân bổ"
+      add_meter: "Thêm công tơ"
+      add_assignment: "Thêm đơn vị"
+      no_meters: "Trạm bơm này chưa có công tơ nào."
+    new:
+      title: "Thêm trạm bơm mới"
+      pump_station_section: "Thông tin trạm bơm"
+      first_meter_section: "Công tơ đầu tiên"
+      first_meter_hint: "Trạm bơm phải có ít nhất 1 công tơ. Nhập thông tin công tơ đầu tiên — có thể thêm/sửa/xoá thêm các công tơ khác sau."
+    edit:
+      title: "Sửa trạm bơm"
+    form:
+      name: "Tên trạm bơm"
+      first_meter_name: "Tên công tơ"
+      first_meter_serial_number: "Số hiệu (tùy chọn)"
+      submit_create: "Tạo trạm bơm"
+      submit_update: "Lưu thay đổi"
+      cancel: "Hủy"
+    actions:
+      edit: "Sửa"
+      delete: "Xoá"
+      delete_confirm: "Bạn có chắc muốn xoá trạm bơm này? Cả công tơ và phân bổ đơn vị cũng sẽ bị xoá."
+
+  pump_station_meters:
+    index:
+      meter_name_col: "Tên công tơ"
+      serial_col: "Số hiệu"
+      notes_col: "Ghi chú"
+      actions_col: "Thao tác"
+    new:
+      title: "Thêm công tơ vào %{pump_station}"
+    edit:
+      title: "Sửa công tơ %{meter}"
+    form:
+      name: "Tên công tơ"
+      serial_number: "Số hiệu (tùy chọn)"
+      notes: "Ghi chú"
+      position: "Thứ tự hiển thị"
+      submit_create: "Thêm công tơ"
+      submit_update: "Lưu thay đổi"
+      cancel: "Hủy"
+    actions:
+      edit: "Sửa"
+      delete: "Xoá"
+      delete_confirm: "Bạn có chắc muốn xoá công tơ này?"
 
   pump_station_assignments:
     index:
       organization_col: "Đơn vị"
       fixed_pct_col: "Tỷ lệ cố định"
+      actions_col: "Thao tác"
       variable: "Theo quân số"
       no_assignments: "Trạm bơm này chưa được gán cho đơn vị nào."
+    new:
+      title: "Gán đơn vị vào %{pump_station}"
+      no_available_orgs: "Tất cả đơn vị cấp 2 đã được gán vào trạm bơm này."
     edit:
       title: "Sửa phân bổ trạm bơm"
     form:
+      organization: "Đơn vị"
+      organization_prompt: "— Chọn đơn vị —"
       fixed_pump_percentage: "Tỷ lệ cố định (%)"
       fixed_pump_percentage_hint: "Để trống nếu đơn vị tham gia chia theo quân số. Để 0 nếu cố định nhận 0 kW (vẫn không tham gia chia theo quân số)."
+      submit_create: "Gán đơn vị"
+      submit_update: "Lưu phân bổ"
       submit: "Lưu phân bổ"
       cancel: "Hủy"
     actions:
       edit: "Sửa"
+      delete: "Bỏ gán"
+      delete_confirm: "Bạn có chắc muốn bỏ gán đơn vị này khỏi trạm bơm?"
+
+  pump_station_readings:
+    show:
+      title: "Nhập chỉ số công tơ trạm bơm"
+    period_select: "Kỳ tính toán"
+    no_period: "Chưa có kỳ nào. Vui lòng tạo kỳ tính toán trước."
+    no_meters: "Chưa có trạm bơm nào hoặc trạm bơm chưa có công tơ."
+    period_locked: "Kỳ này đã khóa, không thể chỉnh sửa chỉ số."
+    errors_header: "Có lỗi xảy ra, vui lòng kiểm tra lại:"
+    save_all: "Lưu tất cả"
+    table:
+      meter_name: "Tên công tơ"
+      serial_number: "Số hiệu"
+      reading_start: "Đầu kỳ"
+      reading_end: "Cuối kỳ"
+      consumption: "Sử dụng (kWh)"
 
   csv:
     export_button: "Xuất CSV"

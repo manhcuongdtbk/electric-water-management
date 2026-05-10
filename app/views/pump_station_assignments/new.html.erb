@@ -1,0 +1,30 @@
+<% content_for :title, t("pump_station_assignments.new.title", pump_station: @pump_station.name) %>
+
+<div class="mb-6 flex items-center gap-2 text-sm text-gray-500">
+  <%= link_to t("pump_stations.index.title"), pump_stations_path, class: "hover:underline" %>
+  <span>/</span>
+  <span class="text-gray-900"><%= t("pump_station_assignments.new.title", pump_station: @pump_station.name) %></span>
+</div>
+
+<div class="bg-white rounded-lg border border-gray-200 p-6 max-w-md">
+  <h1 class="text-xl font-semibold text-gray-900 mb-1">
+    <%= t("pump_station_assignments.new.title", pump_station: @pump_station.name) %>
+  </h1>
+
+  <% if @available_organizations.any? %>
+    <div class="mt-4">
+      <%= render "form",
+            pump_station: @pump_station,
+            assignment: @assignment,
+            available_organizations: @available_organizations %>
+    </div>
+  <% else %>
+    <p class="mt-4 text-sm text-gray-600 italic">
+      <%= t("pump_station_assignments.new.no_available_orgs") %>
+    </p>
+    <div class="mt-4">
+      <%= link_to t("pump_station_assignments.form.cancel"), pump_stations_path,
+            class: "text-sm text-gray-600 hover:underline" %>
+    </div>
+  <% end %>
+</div>

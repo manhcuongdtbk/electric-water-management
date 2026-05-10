@@ -1,0 +1,13 @@
+<% content_for :title, t("pump_station_meters.edit.title", meter: @meter.name) %>
+
+<div class="mb-6 flex items-center gap-2 text-sm text-gray-500">
+  <%= link_to t("pump_stations.index.title"), pump_stations_path, class: "hover:underline" %>
+  <span>/</span>
+  <span class="text-gray-900"><%= t("pump_station_meters.edit.title", meter: @meter.name) %></span>
+</div>
+
+<h1 class="text-xl font-semibold text-gray-900 mb-6">
+  <%= t("pump_station_meters.edit.title", meter: @meter.name) %>
+</h1>
+
+<%= render "form", pump_station: @pump_station, meter: @meter %>
