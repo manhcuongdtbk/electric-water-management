@@ -67,9 +67,9 @@ RSpec.describe CalculationEngine do
   let!(:reading_tac_huan) { create(:meter_reading, meter: meter_tac_huan, monthly_period: period, reading_start: 0, reading_end: 500, consumption: 500) }
 
   # Pump station — 1 trạm bơm phục vụ organization, tổng điện 1000 kW.
-  let!(:pump_meter)  { create(:meter, :pump_station, organization: division, contact_point: nil, name: "M-Pump") }
+  let!(:pump_station) { create(:pump_station, organization: division, name: "TB 1") }
+  let!(:pump_meter)  { create(:meter, :pump_station, organization: division, contact_point: nil, pump_station: pump_station, name: "M-Pump") }
   let!(:pump_reading) { create(:meter_reading, meter: pump_meter, monthly_period: period, reading_start: 0, reading_end: 1000, consumption: 1000) }
-  let!(:pump_station) { create(:pump_station, organization: division, meter: pump_meter, name: "TB 1") }
   let!(:pump_assignment) { create(:pump_station_assignment, pump_station: pump_station, organization: organization) }
 
   # Unit config — tỷ lệ % + electricity supply.
@@ -763,6 +763,27 @@ RSpec.describe CalculationEngine do
         truong = engine.compute.find { |r| r[:contact_point_id] == cp_truong.id }
         expect(truong[:water_pump_actual_kw]).to eq(bd("1000") * bd("1") / bd("5"))
       end
+    end
+  end
+
+  # PumpStation→Meter is 1-many: a station may have several physical meters.
+  # Engine sums consumption across all meters of the station for the period.
+  describe "multiple meters per pump station" do
+    let!(:second_pump_meter) do
+      create(:meter, :pump_station, organization: division,
+                                    contact_point: nil, pump_station: pump_station,
+                                    name: "M-Pump-2")
+    end
+    let!(:second_pump_reading) do
+      create(:meter_reading, meter: second_pump_meter, monthly_period: period,
+                             reading_start: 0, reading_end: 500, consumption: 500)
+    end
+
+    it "sums consumption across all meters (1000 + 500 = 1500), allocated by personnel" do
+      # All 5 personnel in our organization → full pool (no fixed assignments).
+      # cp_truong has 1/5 of personnel.
+      truong = engine.compute.find { |r| r[:contact_point_id] == cp_truong.id }
+      expect(truong[:water_pump_actual_kw]).to eq(bd("1500") * bd("1") / bd("5"))
     end
   end
 end

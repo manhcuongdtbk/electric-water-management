@@ -18,6 +18,8 @@ FactoryBot.define do
 
     trait :pump_station do
       meter_type { :pump_station }
+      contact_point { nil }
+      pump_station { association(:pump_station, organization: organization) }
     end
 
     trait :no_loss do
