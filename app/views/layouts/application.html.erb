@@ -106,7 +106,7 @@
                 <%= t("nav.history") %>
               <% end %>
             <% end %>
-            <% if can?(:read, MonthlyPeriod) || can?(:read, RankQuota) %>
+            <% if can?(:read, MonthlyPeriod) || can?(:read, RankQuota) || can?(:manage, Organization) %>
               <div class="px-3 pt-3 pb-1 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                 <%= t("nav.config_section") %>
               </div>
@@ -135,6 +135,15 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                   </svg>
                   <%= t("nav.pump_stations") %>
+                <% end %>
+              <% end %>
+              <% if can? :manage, Organization %>
+                <%= link_to organizations_path,
+                      class: "flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-colors #{controller_name == 'organizations' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}" do %>
+                  <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                  <%= t("nav.organizations") %>
                 <% end %>
               <% end %>
             <% end %>

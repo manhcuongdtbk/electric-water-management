@@ -17,11 +17,14 @@ class Organization < ApplicationRecord
 
   # Validations
   validates :code, presence: true, uniqueness: true, length: { maximum: 20 }
-  validates :name, presence: true, length: { maximum: 100 }
+  validates :name, presence: true, uniqueness: true, length: { maximum: 100 }
   validates :level, presence: true
   validates :position, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validate :parent_must_be_division, if: -> { level == "unit" && parent_id.present? }
   validate :division_has_no_parent, if: -> { level == "division" }
+
+  # Callbacks
+  before_destroy :prevent_destroy_division
 
   # Scopes
   scope :ordered, -> { order(:position, :name) }
@@ -37,5 +40,12 @@ class Organization < ApplicationRecord
 
   def division_has_no_parent
     errors.add(:parent_id, :present) if parent_id.present?
+  end
+
+  def prevent_destroy_division
+    return if level == "unit"
+
+    errors.add(:base, :cannot_destroy_division)
+    throw(:abort)
   end
 end

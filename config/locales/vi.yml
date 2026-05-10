@@ -27,6 +27,10 @@ vi:
             base:
               last_admin_lock: "Không thể khóa quản trị viên cấp 1 cuối cùng đang hoạt động."
               last_admin_destroy: "Không thể xóa quản trị viên cấp 1 cuối cùng đang hoạt động."
+        organization:
+          attributes:
+            base:
+              cannot_destroy_division: "Không thể xoá đơn vị cấp Sư đoàn."
         meter:
           attributes:
             contact_point_id:
@@ -75,6 +79,11 @@ vi:
         consumption: "Sử dụng"
         meter: "Công tơ"
         monthly_period: "Kỳ tính toán"
+      organization:
+        name: "Tên đơn vị"
+        code: "Mã viết tắt"
+        position: "Thứ tự hiển thị"
+        parent: "Đơn vị cha"
 
   errors:
     messages:
@@ -186,6 +195,13 @@ vi:
       restore_failed: "Phục hồi thất bại: %{error}"
       deleted: "Đã xóa file sao lưu."
       delete_failed: "Xóa thất bại: %{error}"
+    organizations:
+      created: "Tạo đơn vị thành công."
+      updated: "Cập nhật đơn vị thành công."
+      destroyed: "Xoá đơn vị thành công."
+      cannot_destroy_with_data: "Không thể xoá đơn vị đang có dữ liệu. Hãy xoá dữ liệu liên quan trước."
+      cannot_destroy_division: "Không thể xoá đơn vị cấp Sư đoàn."
+      destroy_failed: "Không thể xoá đơn vị."
 
   contact_points:
     index:
@@ -479,6 +495,7 @@ vi:
     monthly_periods: "Đơn giá điện"
     rank_quotas: "Định mức cấp bậc"
     pump_stations: "Phân bổ trạm bơm"
+    organizations: "Quản lý đơn vị"
     audit_logs: "Nhật ký hoạt động"
     backups: "Sao lưu dữ liệu"
 
@@ -716,3 +733,33 @@ vi:
       actions:
         restore: "Phục hồi"
         delete: "Xóa"
+
+  organizations:
+    index:
+      title: "Quản lý đơn vị cấp 2"
+      new_button: "Thêm đơn vị"
+      columns:
+        stt: "STT"
+        name: "Tên đơn vị"
+        code: "Mã"
+        position: "Thứ tự"
+        contact_points_count: "Số đầu mối"
+        users_count: "Số tài khoản"
+        actions: "Thao tác"
+      empty: "Chưa có đơn vị cấp 2 nào. Bấm \"Thêm đơn vị\" để tạo mới."
+    new:
+      title: "Thêm đơn vị mới"
+    edit:
+      title: "Sửa đơn vị"
+    form:
+      name: "Tên đơn vị"
+      code: "Mã viết tắt"
+      code_hint: "Dùng tham chiếu nội bộ — ví dụ TR101, DH30"
+      position: "Thứ tự hiển thị"
+      submit_create: "Thêm đơn vị"
+      submit_update: "Lưu thay đổi"
+      cancel: "Hủy"
+    actions:
+      edit: "Sửa"
+      delete: "Xoá"
+      delete_confirm: "Bạn có chắc muốn xoá đơn vị này?"
