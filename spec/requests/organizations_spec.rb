@@ -233,15 +233,11 @@ RSpec.describe "Organizations", type: :request do
         expect(flash[:alert]).to eq(I18n.t("flash.organizations.cannot_destroy_with_data"))
       end
 
-      it "blocks destroying a division via model callback" do
-        # Fresh division with no related data so the controller short-circuit
-        # (related_data_exists?) does not fire, exercising the model callback.
+      it "returns 404 when targeting a division (controller scopes to units)" do
         fresh_division = create(:organization, :division)
-        expect {
-          delete organization_path(fresh_division)
-        }.not_to change(Organization, :count)
+        delete organization_path(fresh_division)
+        expect(response).to have_http_status(:not_found)
         expect(Organization.exists?(fresh_division.id)).to be true
-        expect(flash[:alert]).to be_present
       end
     end
 

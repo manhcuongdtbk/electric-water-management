@@ -50,7 +50,10 @@ class OrganizationsController < ApplicationController
   end
 
   def set_organization
-    @organization = Organization.find(params[:id])
+    # Controller scope is intentionally limited to level-2 units. The division
+    # is managed by seeds and is not editable / destroyable here, even by
+    # admin_level1.
+    @organization = Organization.units.find(params[:id])
   end
 
   def next_position
