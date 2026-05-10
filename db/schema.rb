@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_05_145720) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_10_120002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -58,11 +58,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_05_145720) do
     t.text "notes"
     t.bigint "organization_id", null: false
     t.integer "position", default: 0
+    t.bigint "pump_station_id"
     t.string "serial_number"
     t.datetime "updated_at", null: false
     t.index ["contact_point_id"], name: "index_meters_on_contact_point_id"
     t.index ["meter_type"], name: "index_meters_on_meter_type"
     t.index ["organization_id"], name: "index_meters_on_organization_id"
+    t.index ["pump_station_id"], name: "index_meters_on_pump_station_id"
     t.index ["serial_number"], name: "index_meters_on_serial_number"
   end
 
@@ -157,11 +159,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_05_145720) do
 
   create_table "pump_stations", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.bigint "meter_id"
     t.string "name", null: false
     t.bigint "organization_id", null: false
     t.datetime "updated_at", null: false
-    t.index ["meter_id"], name: "index_pump_stations_on_meter_id"
     t.index ["organization_id"], name: "index_pump_stations_on_organization_id"
   end
 
@@ -238,6 +238,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_05_145720) do
   add_foreign_key "meter_readings", "monthly_periods"
   add_foreign_key "meters", "contact_points"
   add_foreign_key "meters", "organizations"
+  add_foreign_key "meters", "pump_stations"
   add_foreign_key "monthly_calculations", "contact_points"
   add_foreign_key "monthly_calculations", "monthly_periods"
   add_foreign_key "monthly_periods", "users", column: "locked_by_id"
@@ -246,7 +247,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_05_145720) do
   add_foreign_key "personnel", "monthly_periods"
   add_foreign_key "pump_station_assignments", "organizations"
   add_foreign_key "pump_station_assignments", "pump_stations"
-  add_foreign_key "pump_stations", "meters"
   add_foreign_key "pump_stations", "organizations"
   add_foreign_key "unit_configs", "monthly_periods"
   add_foreign_key "unit_configs", "organizations"
