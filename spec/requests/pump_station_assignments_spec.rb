@@ -121,4 +121,114 @@ RSpec.describe "PumpStationAssignments", type: :request do
       end
     end
   end
+
+  describe "GET /pump_stations/:pump_station_id/assignments/new" do
+    let(:other_unit) { create(:organization, level: :unit, parent: division) }
+
+    context "as admin_level1" do
+      before { sign_in admin1 }
+
+      it "renders new form with available units" do
+        other_unit
+        get new_pump_station_assignment_path(pump_station)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include(other_unit.name)
+        expect(response.body).not_to include(">#{org.name}<") # already assigned
+      end
+    end
+
+    context "as admin_unit" do
+      before { sign_in admin_unit }
+
+      it "is forbidden" do
+        get new_pump_station_assignment_path(pump_station)
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
+  describe "POST /pump_stations/:pump_station_id/assignments" do
+    let(:other_unit) { create(:organization, level: :unit, parent: division) }
+    let(:create_params) do
+      {
+        pump_station_assignment: {
+          organization_id: other_unit.id,
+          fixed_pump_percentage: "25"
+        }
+      }
+    end
+
+    context "as admin_level1" do
+      before { sign_in admin1 }
+
+      it "creates the assignment" do
+        other_unit
+        expect {
+          post pump_station_assignments_path(pump_station), params: create_params
+        }.to change(PumpStationAssignment, :count).by(1)
+
+        new_assignment = PumpStationAssignment.last
+        expect(new_assignment.organization).to eq(other_unit)
+        expect(new_assignment.fixed_pump_percentage).to eq(BigDecimal("25"))
+        expect(response).to redirect_to(pump_stations_path)
+      end
+
+      it "creates with nil percentage (variable)" do
+        other_unit
+        params = create_params.deep_merge(pump_station_assignment: { fixed_pump_percentage: "" })
+        post pump_station_assignments_path(pump_station), params: params
+        expect(PumpStationAssignment.last.fixed_pump_percentage).to be_nil
+      end
+
+      it "rejects duplicate (pump_station_id, organization_id)" do
+        params = create_params.deep_merge(pump_station_assignment: { organization_id: org.id })
+        expect {
+          post pump_station_assignments_path(pump_station), params: params
+        }.not_to change(PumpStationAssignment, :count)
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+
+      it "rejects out-of-range percentage" do
+        other_unit
+        params = create_params.deep_merge(pump_station_assignment: { fixed_pump_percentage: "150" })
+        expect {
+          post pump_station_assignments_path(pump_station), params: params
+        }.not_to change(PumpStationAssignment, :count)
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+    end
+
+    context "as admin_unit" do
+      before { sign_in admin_unit }
+
+      it "is forbidden" do
+        other_unit
+        post pump_station_assignments_path(pump_station), params: create_params
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
+  describe "DELETE /pump_stations/:pump_station_id/assignments/:id" do
+    context "as admin_level1" do
+      before { sign_in admin1 }
+
+      it "destroys the assignment" do
+        expect {
+          delete pump_station_assignment_path(pump_station, assignment)
+        }.to change(PumpStationAssignment, :count).by(-1)
+        expect(response).to redirect_to(pump_stations_path)
+      end
+    end
+
+    context "as admin_unit" do
+      before { sign_in admin_unit }
+
+      it "is forbidden" do
+        delete pump_station_assignment_path(pump_station, assignment)
+        expect(response).to redirect_to(root_path)
+        expect(PumpStationAssignment.exists?(assignment.id)).to be true
+      end
+    end
+  end
 end
