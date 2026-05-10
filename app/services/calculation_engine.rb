@@ -288,8 +288,13 @@ class CalculationEngine
   end
 
   def pump_station_consumption(pump_station)
+    # Use .meters.map(&:id) (not .meter_ids) so we read straight from the
+    # collection preloaded by `pump_stations_serving_unit` — no extra query.
+    meter_ids = pump_station.meters.map(&:id)
+    return ZERO if meter_ids.empty?
+
     to_bd(
-      MeterReading.where(meter_id: pump_station.meter_ids,
+      MeterReading.where(meter_id: meter_ids,
                          monthly_period_id: monthly_period.id).sum(:consumption)
     )
   end

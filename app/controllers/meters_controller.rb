@@ -65,9 +65,13 @@ class MetersController < ApplicationController
 
   def meter_params
     attrs = params.require(:meter).permit(:name, :meter_type, :serial_number, :notes, :position)
-    # Pump-station meters belong to a PumpStation, not a contact point. Reject
-    # the value at the controller layer — model validation is the safety net.
-    attrs[:meter_type] = nil if attrs[:meter_type] == "pump_station"
+    # Pump-station meters belong to a PumpStation, not a contact point. Null out
+    # any meter_type not on the contact-point form whitelist — covers the form's
+    # "pump_station" string, the JSON API's integer 2, and any future enum
+    # surprises. Missing key is left untouched so partial updates still work.
+    if attrs.key?(:meter_type) && !Meter::CONTACT_POINT_FORM_TYPES.include?(attrs[:meter_type].to_s)
+      attrs[:meter_type] = nil
+    end
     attrs
   end
 end

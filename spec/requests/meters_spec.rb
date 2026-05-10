@@ -229,6 +229,15 @@ RSpec.describe "Meters", type: :request do
         }.not_to change(Meter, :count)
         expect(response).to have_http_status(:unprocessable_entity)
       end
+
+      it "rejects pump_station posted as the integer enum value (defends against JSON / form '2')" do
+        sign_in admin_unit_a
+        expect {
+          post contact_point_meters_path(cp_a),
+               params: { meter: { name: "CT bom 3", meter_type: "2" } }
+        }.not_to change(Meter, :count)
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
     end
   end
 
