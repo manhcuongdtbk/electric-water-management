@@ -3,38 +3,17 @@
 # The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
 
 # ============================================================
-# Master data — all environments
+# Master data — required in every environment
 # ============================================================
+#
+# Production-essential: 1 division, 7 rank quotas, 1 monthly period for the
+# current month, 1 admin_level1 user, 1 tech user. Level-2 units are NOT seeded
+# here — admin_level1 creates them through the web UI (/organizations).
 
 division = Organization.find_or_create_by!(code: "SD") do |org|
   org.name     = "Sư đoàn"
   org.level    = :division
   org.position = 0
-end
-
-units = [
-  { code: "SDB",   name: "Sư đoàn bộ",    position: 1 },
-  { code: "TR101", name: "Trung đoàn 101", position: 2 },
-  { code: "TR18",  name: "Trung đoàn 18",  position: 3 },
-  { code: "TR95",  name: "Trung đoàn 95",  position: 4 },
-  { code: "TD14",  name: "Tiểu đoàn 14",   position: 5 },
-  { code: "TD15",  name: "Tiểu đoàn 15",   position: 6 },
-  { code: "TD16",  name: "Tiểu đoàn 16",   position: 7 },
-  { code: "TD17",  name: "Tiểu đoàn 17",   position: 8 },
-  { code: "TD18",  name: "Tiểu đoàn 18",   position: 9 },
-  { code: "TD24",  name: "Tiểu đoàn 24",   position: 10 },
-  { code: "TD25",  name: "Tiểu đoàn 25",   position: 11 },
-  { code: "DH26",  name: "Đại đội 26",     position: 12 },
-  { code: "DH29",  name: "Đại đội 29",     position: 13 }
-]
-
-units.each do |attrs|
-  Organization.find_or_create_by!(code: attrs[:code]) do |org|
-    org.name      = attrs[:name]
-    org.level     = :unit
-    org.parent    = division
-    org.position  = attrs[:position]
-  end
 end
 
 puts "Organizations: #{Organization.count} records"
@@ -62,23 +41,69 @@ end
 puts "RankQuotas: #{RankQuota.count} records"
 
 # ============================================================
-# Demo/production users — all environments except test
-# Dev users — all password: admin123
-# Seed idempotent: rails db:seed restores all users even when DB already has data
+# Production-essential users + current period — every env except test
 # ============================================================
-
+#
+# Two seeded accounts (admin@example.com, tech@example.com) bootstrap a fresh
+# install. Both are created with `force_password_change: true` so the deployer
+# must rotate the default password (admin123) on first sign-in.
 unless Rails.env.test?
-  sdb  = Organization.find_by!(code: "SDB")
-  tr101 = Organization.find_by!(code: "TR101")
+  today = Date.current
+  MonthlyPeriod.find_or_create_by!(year: today.year, month: today.month) do |mp|
+    mp.unit_price = nil # admin_level1 sets it later via F20
+  end
+
+  puts "MonthlyPeriods: #{MonthlyPeriod.count} records"
+
+  essential_users = [
+    { email: "admin@example.com", full_name: "Quản trị viên", role: :admin_level1, org: division },
+    { email: "tech@example.com",  full_name: "Kỹ thuật",      role: :tech,         org: division }
+  ]
+
+  essential_users.each do |attrs|
+    user = User.find_or_initialize_by(email: attrs[:email])
+    user.full_name = attrs[:full_name]
+    user.role      = attrs[:role]
+    user.organization = attrs[:org]
+    if user.new_record?
+      user.password              = "admin123"
+      user.password_confirmation = "admin123"
+      user.force_password_change = true
+    end
+    user.save!
+  end
+
+  puts "Essential users: #{essential_users.count} records"
+end
+
+# ============================================================
+# Demo / test accounts — development only (or when explicitly requested)
+# ============================================================
+#
+# These accounts depend on level-2 units that production no longer seeds.
+# We materialise the units inside this block so dev / staging keep working.
+# Gate: Rails.env.development? OR ENV["SEED_TEST_ACCOUNTS"] == "true".
+if Rails.env.development? || ENV["SEED_TEST_ACCOUNTS"] == "true"
+  sdb = Organization.find_or_create_by!(code: "SDB") do |org|
+    org.name     = "Sư đoàn bộ"
+    org.level    = :unit
+    org.parent   = division
+    org.position = 1
+  end
+
+  tr101 = Organization.find_or_create_by!(code: "TR101") do |org|
+    org.name     = "Trung đoàn 101"
+    org.level    = :unit
+    org.parent   = division
+    org.position = 2
+  end
 
   dev_users = [
-    { email: "admin@example.com",        full_name: "Quản trị viên",      role: :admin_level1, org: division },
     { email: "test_admin1@example.com",  full_name: "Quản trị viên 2",    role: :admin_level1, org: division },
     { email: "admin_unit@example.com",   full_name: "Quản trị đơn vị",    role: :admin_unit,   org: sdb },
     { email: "admin_unit_a@example.com", full_name: "Quản trị đơn vị A",  role: :admin_unit,   org: tr101 },
     { email: "commander@example.com",    full_name: "Chỉ huy",            role: :commander,    org: sdb },
     { email: "commander_a@example.com",  full_name: "Chỉ huy A",          role: :commander,    org: tr101 },
-    { email: "tech@example.com",         full_name: "Kỹ thuật",           role: :tech,         org: division },
     { email: "test_adminunit@example.com", full_name: "Quản trị đơn vị B", role: :admin_unit,  org: tr101 }
   ]
 
@@ -93,9 +118,9 @@ unless Rails.env.test?
     user.save!
   end
 
-  puts "Users: #{User.count} records"
+  puts "Dev users: #{dev_users.count} records seeded"
 
-  # Test accounts for development
+  # Test accounts (PR#64) — `cuong` and `thy` smoke-test personas
   test_users = [
     { email: "cuong_admin1@test.local",    full_name: "Cường - QTV cấp 1",    role: :admin_level1, org: division },
     { email: "cuong_unit@test.local",      full_name: "Cường - QTV đơn vị",   role: :admin_unit,   org: sdb },

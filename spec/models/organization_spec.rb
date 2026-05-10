@@ -19,6 +19,7 @@ RSpec.describe Organization, type: :model do
     it { is_expected.to validate_uniqueness_of(:code) }
     it { is_expected.to validate_length_of(:code).is_at_most(20) }
     it { is_expected.to validate_presence_of(:name) }
+    it { is_expected.to validate_uniqueness_of(:name) }
     it { is_expected.to validate_length_of(:name).is_at_most(100) }
     it { is_expected.to validate_presence_of(:level) }
 
@@ -75,6 +76,21 @@ RSpec.describe Organization, type: :model do
 
     it ".by_parent filters by parent_id" do
       expect(Organization.by_parent(division.id)).to include(unit1, unit2)
+    end
+  end
+
+  describe "before_destroy :prevent_destroy_division" do
+    it "blocks destroying a division" do
+      division = create(:organization, :division)
+      expect(division.destroy).to be false
+      expect(Organization.exists?(division.id)).to be true
+      expect(division.errors[:base]).to be_present
+    end
+
+    it "allows destroying a unit with no related data" do
+      division = create(:organization, :division)
+      unit = create(:organization, :unit, parent: division)
+      expect { unit.destroy }.to change(Organization.units, :count).by(-1)
     end
   end
 end

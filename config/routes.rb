@@ -46,6 +46,8 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :organizations, only: [ :index, :new, :create, :edit, :update, :destroy ]
+
   resources :backups, only: [ :index, :create ] do
     collection do
       post :restore
