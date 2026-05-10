@@ -22,9 +22,10 @@ Rails 8, PostgreSQL, Tailwind (via tailwindcss-rails, không cần Node), Hotwir
 
 ### Test
 - RSpec + FactoryBot + Shoulda Matchers
-- Engine tính toán là ưu tiên test cao nhất — test từng cột với dữ liệu thật từ file Excel khách
+- Engine tính toán là ưu tiên test cao nhất
 - Chạy `bundle exec rspec` sau mỗi thay đổi logic
 - **KHÔNG cần chạy rubocop local** — CI đã cover
+- File bảng tính tháng 2 (`bang_tinh_thang_02.xlsx`) tính theo bảng mẫu cũ — **KHÔNG dùng làm nguồn test** cho engine hiện tại. Cần kịch bản test mới (số liệu tự đặt, tính tay theo công thức bảng mẫu mới)
 
 ### Git
 - Branch naming: `m1/feature-name`, `m2/feature-name` (theo milestone)
@@ -33,12 +34,18 @@ Rails 8, PostgreSQL, Tailwind (via tailwindcss-rails, không cần Node), Hotwir
 ## Cấu trúc nghiệp vụ
 
 ### 2 cấp tổ chức (phẳng, chỉ dùng parent_id)
-- Cấp 1: Sư đoàn (1 đơn vị)
+- Cấp 1: Sư đoàn (1 đơn vị) — không có đầu mối, không có công tơ, chỉ quản lý và cấu hình
 - Cấp 2: 13 đơn vị trực thuộc (Sư đoàn bộ, Trung đoàn 101, 18, 95, Tiểu đoàn 14/15/16/17/18/24/25, Đại đội 26/29)
 
+### Đồng hồ tổng dùng chung
+- Nhiều đơn vị cấp 2 có thể dùng chung 1 đồng hồ tổng điện lực (ví dụ: Cơ quan SDB + TĐ18 + ĐĐ20-23 chung 1 đồng hồ tổng)
+- **admin_level1 nhập số điện lực** (F05), không phải admin_unit
+- Tổn hao tính trên toàn bộ khu vực dùng chung đồng hồ tổng, không phải per-đơn vị
+- ⚠️ Code hiện tại chưa có khái niệm "khu vực dùng chung đồng hồ tổng" — cần thiết kế lại (xem TONG_KET_CHAT_RA_SOAT_THIET_KE.md mục V.A.1)
+
 ### 4 vai trò người dùng
-- `admin_level1` — quản trị viên cấp 1 (Ban Doanh trại Sư đoàn)
-- `admin_unit` — quản trị viên đơn vị (cấp 2)
+- `admin_level1` — quản trị viên cấp 1 (Ban Doanh trại Sư đoàn): quản lý toàn hệ thống, thêm bớt đơn vị, cấu hình, xem tất cả, **nhập số điện lực (F05)**, phân bổ bơm, mở khoá tháng cũ, nhật ký
+- `admin_unit` — quản trị viên đơn vị (cấp 2): khai báo đầu mối/công tơ/quân số, nhập chỉ số công tơ hàng tháng, cấu hình công cộng đơn vị và cột Khác, chỉ đơn vị mình
 - `commander` — chỉ huy đơn vị (chỉ xem, không thao tác)
 - `tech` — đội kỹ thuật (quản lý tài khoản, nhật ký, sao lưu & phục hồi)
 
@@ -47,23 +54,40 @@ DB lưu 22 cột (`over_under_kw` + `total_amount` signed), view tách thành 24
 
 - 7 nhóm cấp bậc — tên và định mức lấy từ `rank_quotas` trong DB (admin_level1 sửa được qua F21)
 - Bơm nước 2 khái niệm:
-  - **Tiêu chuẩn**: 9,45 kW/người/tháng (cố định theo nghị định)
+  - **Tiêu chuẩn**: 9,45 kW/người/tháng (cố định theo Nghị định 02)
   - **Sử dụng thực tế**: phân bổ từ trạm bơm theo mô hình fixed/variable (xem mục dưới)
 - 4 khoản trừ: Tiết kiệm (%), Tổn hao (phân bổ theo tỷ lệ meter_consumption — trừ khỏi tiêu chuẩn), Công cộng (2 cấp: Sư đoàn + đơn vị), Khác
 - Tổn hao nằm trong "Số phải trừ" (trừ khỏi tiêu chuẩn, KHÔNG cộng vào sử dụng)
-- Công tơ `no_loss` (vị trí không tổn hao): loại khỏi loss pool + trừ khỏi supply khi tính tổn hao
 - Đơn giá thay đổi hàng tháng
 
-### Phân bổ bơm nước thực tế — mô hình fixed/variable (PR#72)
-- `pump_station_assignments` gán trạm bơm cho organization, có cột `fixed_pump_percentage` (decimal 5,2, nullable)
-- Organization có `fixed_pump_percentage` (ví dụ 30%) → nhận `tổng_bơm × percentage / 100`, KHÔNG chia theo quân số
-- Organization có `fixed_pump_percentage = nil` → chia phần còn lại theo quân số
-- Quân số của org cố định KHÔNG cộng vào tổng quân số chia phần còn lại
+### Công tơ — 4 loại
+- `normal` → đầu mối sinh hoạt, trong bản thu tiền, tham gia loss pool
+- `no_loss` → đầu mối sinh hoạt, tính sử dụng bình thường, engine trừ khỏi supply + loại khỏi loss pool khi tính tổn hao
+- `public_meter` → đầu mối công cộng, không trong bản thu tiền, tham gia loss pool
+- `pump_station` → trạm bơm (KHÔNG thuộc đầu mối), contact_point = nil, **tham gia loss pool**
+
+### Tính tổn hao — tính trên khu vực dùng chung đồng hồ tổng
+- A = số điện lực (đồng hồ tổng) − tổng kW công tơ no_loss = supply đã điều chỉnh
+- B = tổng kW tất cả công tơ sử dụng trong khu vực (**bao gồm pump**, không gồm no_loss)
+- Tổn hao = A − B
+- Phân bổ: tổn hao công tơ X = tổn hao × (kW công tơ X ÷ B)
+- ⚠️ Code hiện tại có thể đang tính per-đơn vị và exclude pump khỏi loss pool — cần verify và sửa
+
+### Phân bổ bơm nước thực tế — mô hình fixed/variable
+- Phân bổ cho **nhóm đối tượng** (KHÔNG phải đơn vị cấp 2). Nhóm đối tượng có 3 loại:
+  - Đơn vị cấp 2 (trỏ tới Organization, quân số = tổng quân số đầu mối)
+  - Đầu mối đặc biệt (trỏ tới ContactPoint, quân số từ khai báo)
+  - Nhóm công tác (model mới — tên + quân số nhập tay, không thuộc đơn vị hay đầu mối)
+- Tổng bơm phân bổ = sử dụng trạm bơm + tổn hao trạm bơm (**bao gồm tổn hao**)
+- `PumpStationAssignment` gán trạm bơm cho nhóm đối tượng, có cột `fixed_pump_percentage` (decimal, nullable)
+- Nhóm có `fixed_pump_percentage` (ví dụ 30%) → nhận `tổng_bơm × percentage / 100`, KHÔNG chia theo quân số
+- Nhóm có `fixed_pump_percentage = nil` → chia phần còn lại theo quân số
+- Quân số nhóm cố định KHÔNG cộng vào tổng quân số chia phần còn lại
 - `fixed_pump_percentage = 0` → coi là cố định (nhận 0 kW), không tham gia pool variable
-- Tất cả nil → 100% chia theo quân số (backward compatible với logic trước PR#72)
-- Trong nội bộ mỗi org (dù fixed hay variable), kW chia cho contact_points theo quân số
-- Ví dụ tháng 02: tổng bơm 6420 kW, 30% cho "Chỉ huy Sư đoàn + nhà khách" = 1926 kW, 70% còn lại cho 557 người
+- Tất cả nil → 100% chia theo quân số
+- Ví dụ tháng 02: tổng bơm 6420 kW (= sử dụng 6152 + tổn hao 268), 30% cho "Chỉ huy f + nhà khách" = 1926 kW, 70% còn lại chia cho 557 người
 - UI: `/pump_stations` — admin_level1 only
+- ⚠️ Code hiện tại gán cho Organization, chưa hỗ trợ 3 loại nhóm đối tượng — cần thiết kế lại (xem TONG_KET mục V.A.3)
 
 ### Database schema chính
 organizations, users, contact_points, meters (meter_type: normal/public/pump/no_loss), personnel, rank_quotas (cột: rank_name, quota_kw, effective_from), monthly_periods, meter_readings, monthly_calculations, unit_configs, pump_stations, pump_station_assignments (cột: fixed_pump_percentage — decimal nullable), contact_point_other_deductions
@@ -80,10 +104,10 @@ organizations, users, contact_points, meters (meter_type: normal/public/pump/no_
 - `backups#index/create/restore/destroy_file` → Sao lưu & phục hồi (tech only, admin_level1 explicit cannot)
 
 ## Milestones
-- M1–M5: DONE — F01–F21 đầy đủ + Docker production + 836 specs tại M5
-- M6: ĐANG LÀM — Bàn giao — fix bug + pump 30/70 + test + nghiệm thu (891 specs)
+- M1–M5: DONE — F01–F21 đầy đủ + Docker production
+- M6: ĐANG LÀM — Rà soát thiết kế + fix + test + bàn giao. Xem TONG_KET_CHAT_RA_SOAT_THIET_KE.md mục V cho danh sách cần fix
 
 ## File tham chiếu nghiệp vụ
 - `docs/SCOPE_DOCUMENT_v3_0_3.html` — phạm vi dự án đầy đủ (21 chức năng F01–F21)
 - `docs/XAC_NHAN_NGHIEP_VU_v5_3_0.html` — nghiệp vụ đã xác nhận
-- `test/fixtures/files/bang_tinh_thang_02.xlsx` — dữ liệu thật để test engine tính toán
+- `TONG_KET_CHAT_RA_SOAT_THIET_KE.md` — phát hiện sai thiết kế gốc + trạng thái fix (đọc trước khi làm M6)
