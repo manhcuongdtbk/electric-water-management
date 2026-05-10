@@ -19,7 +19,7 @@ Rails.application.routes.draw do
 
   resources :rank_quotas, only: [ :index, :edit, :update ]
 
-  resources :pump_stations do
+  resources :pump_stations, except: [ :show ] do
     resources :meters, only: [ :new, :create, :edit, :update, :destroy ],
               controller: "pump_station_meters"
     resources :assignments, only: [ :new, :create, :edit, :update, :destroy ],
