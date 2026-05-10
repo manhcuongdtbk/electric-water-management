@@ -34,8 +34,10 @@ class Meter < ApplicationRecord
   def pump_station_assignment_consistency
     if pump_station?
       errors.add(:contact_point_id, :must_be_blank_for_pump_station) if contact_point_id.present?
-      errors.add(:pump_station_id, :required_for_pump_station) if pump_station_id.blank?
-    elsif pump_station_id.present?
+      # Use the association object instead of the FK so validation passes during
+      # nested creation (parent + child built together, parent has no id yet).
+      errors.add(:pump_station_id, :required_for_pump_station) if pump_station.blank?
+    elsif pump_station_id.present? || pump_station.present?
       errors.add(:pump_station_id, :only_for_pump_station_type)
     end
   end
