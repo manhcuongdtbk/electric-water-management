@@ -413,6 +413,9 @@ class ImportFeb2026Service
       cs = to_decimal(cell(SHEET_METERS, row, 3))
       consumption = to_decimal(cell(SHEET_METERS, row, 7))
 
+      ps = PumpStation.find_or_initialize_by(organization: @organization, name: ps_spec[:name])
+      ps.save! if ps.new_record? || ps.changed?
+
       # meter_type included in the lookup so we never accidentally convert a
       # pre-existing :normal meter with the same name.
       meter = Meter.find_or_initialize_by(
@@ -421,12 +424,9 @@ class ImportFeb2026Service
         meter_type: :pump_station
       )
       meter.contact_point = nil
+      meter.pump_station = ps
       meter.position = row
       meter.save! if meter.new_record? || meter.changed?
-
-      ps = PumpStation.find_or_initialize_by(organization: @organization, name: ps_spec[:name])
-      ps.meter = meter
-      ps.save! if ps.new_record? || ps.changed?
 
       # TODO(M6.x): set fixed_pump_percentage 30 cho org "Chỉ huy f + nhà khách"
       # sau khi tạo org đó qua admin UI. Hiện tại tất cả assignments là variable

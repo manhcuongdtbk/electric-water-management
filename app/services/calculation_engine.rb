@@ -280,14 +280,23 @@ class CalculationEngine
       if ps_ids.empty?
         []
       else
-        PumpStation.where(id: ps_ids).where.not(meter_id: nil).to_a
+        # Eager-load :meters so pump_station_consumption can read meter_ids
+        # off the preloaded collection without firing a query per station.
+        PumpStation.where(id: ps_ids).includes(:meters).select { |ps| ps.meters.any? }
       end
     end
   end
 
   def pump_station_consumption(pump_station)
-    reading = MeterReading.find_by(meter_id: pump_station.meter_id, monthly_period_id: monthly_period.id)
-    to_bd(reading&.consumption)
+    # Use .meters.map(&:id) (not .meter_ids) so we read straight from the
+    # collection preloaded by `pump_stations_serving_unit` — no extra query.
+    meter_ids = pump_station.meters.map(&:id)
+    return ZERO if meter_ids.empty?
+
+    to_bd(
+      MeterReading.where(meter_id: meter_ids,
+                         monthly_period_id: monthly_period.id).sum(:consumption)
+    )
   end
 
   def pump_station_assignments_for(pump_station)

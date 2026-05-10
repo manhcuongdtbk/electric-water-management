@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe PumpStation, type: :model do
   describe "associations" do
     it { is_expected.to belong_to(:organization) }
-    it { is_expected.to belong_to(:meter).optional }
+    it { is_expected.to have_many(:meters).dependent(:destroy) }
     it { is_expected.to have_many(:pump_station_assignments) }
     it { is_expected.to have_many(:served_organizations).through(:pump_station_assignments).source(:organization) }
   end
@@ -11,9 +11,16 @@ RSpec.describe PumpStation, type: :model do
   describe "validations" do
     it { is_expected.to validate_presence_of(:name) }
     it { is_expected.to validate_length_of(:name).is_at_most(100) }
+  end
 
-    it "is valid without a meter" do
-      expect(build(:pump_station, meter: nil)).to be_valid
+  describe "destroy cascade" do
+    it "destroys its meters when destroyed" do
+      ps = create(:pump_station)
+      m1 = create(:meter, :pump_station, organization: ps.organization, pump_station: ps)
+      m2 = create(:meter, :pump_station, organization: ps.organization, pump_station: ps)
+
+      expect { ps.destroy! }.to change(Meter, :count).by(-2)
+      expect(Meter.where(id: [ m1.id, m2.id ])).to be_empty
     end
   end
 end

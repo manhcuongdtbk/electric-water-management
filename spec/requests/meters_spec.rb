@@ -151,12 +151,12 @@ RSpec.describe "Meters", type: :request do
       it "creates a meter for any contact_point" do
         sign_in admin1
         expect {
-          post contact_point_meters_path(cp_b), params: { meter: { name: "Công tơ B1", meter_type: "pump_station" } }
+          post contact_point_meters_path(cp_b), params: { meter: { name: "Công tơ B1", meter_type: "no_loss" } }
         }.to change(Meter, :count).by(1)
 
         meter = Meter.last
         expect(meter.organization).to eq(org_b)
-        expect(meter.meter_type).to eq("pump_station")
+        expect(meter.meter_type).to eq("no_loss")
       end
     end
 
@@ -203,13 +203,40 @@ RSpec.describe "Meters", type: :request do
         expect(response).to have_http_status(:unprocessable_entity)
       end
 
-      it "accepts all valid meter_types" do
+      it "accepts every type selectable in the contact-point form" do
         sign_in admin_unit_a
-        %w[normal public_meter pump_station].each_with_index do |type, i|
+        Meter::CONTACT_POINT_FORM_TYPES.each_with_index do |type, i|
           expect {
             post contact_point_meters_path(cp_a), params: { meter: { name: "CT #{i}", meter_type: type } }
           }.to change(Meter, :count).by(1)
         end
+      end
+
+      it "rejects pump_station even when posted directly (controller filter)" do
+        sign_in admin_unit_a
+        expect {
+          post contact_point_meters_path(cp_a),
+               params: { meter: { name: "CT bom", meter_type: "pump_station" } }
+        }.not_to change(Meter, :count)
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+
+      it "rejects pump_station for admin_level1 too — pump-station meters do not belong to a contact_point" do
+        sign_in admin1
+        expect {
+          post contact_point_meters_path(cp_b),
+               params: { meter: { name: "CT bom 2", meter_type: "pump_station" } }
+        }.not_to change(Meter, :count)
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+
+      it "rejects pump_station posted as the integer enum value (defends against JSON / form '2')" do
+        sign_in admin_unit_a
+        expect {
+          post contact_point_meters_path(cp_a),
+               params: { meter: { name: "CT bom 3", meter_type: "2" } }
+        }.not_to change(Meter, :count)
+        expect(response).to have_http_status(:unprocessable_entity)
       end
     end
   end

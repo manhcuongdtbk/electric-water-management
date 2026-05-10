@@ -87,6 +87,10 @@ RSpec.describe ImportFeb2026Service do
 
       pump_meters = Meter.where(organization: sdb, meter_type: :pump_station)
       expect(pump_meters.count).to eq(3)
+      # Each pump station has exactly one meter wired up via the new 1-many FK.
+      PumpStation.where(organization: sdb).each do |ps|
+        expect(ps.meters.count).to eq(1)
+      end
 
       total = MeterReading.where(meter: pump_meters, monthly_period: MonthlyPeriod.last).sum(:consumption)
       # Sheet1 rows 145+146+147 raw usage: 3086+2158+908 = 6152 (before loss allocation)

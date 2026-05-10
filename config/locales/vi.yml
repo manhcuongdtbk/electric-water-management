@@ -27,6 +27,13 @@ vi:
             base:
               last_admin_lock: "Không thể khóa quản trị viên cấp 1 cuối cùng đang hoạt động."
               last_admin_destroy: "Không thể xóa quản trị viên cấp 1 cuối cùng đang hoạt động."
+        meter:
+          attributes:
+            contact_point_id:
+              must_be_blank_for_pump_station: "không được điền cho công tơ loại Trạm bơm"
+            pump_station_id:
+              required_for_pump_station: "bắt buộc khi loại công tơ là Trạm bơm"
+              only_for_pump_station_type: "chỉ áp dụng cho công tơ loại Trạm bơm"
     attributes:
       user:
         full_name: "Họ tên"
@@ -49,7 +56,10 @@ vi:
         position: "Thứ tự hiển thị"
         notes: "Ghi chú"
         contact_point: "Đầu mối"
+        contact_point_id: "Đầu mối"
         organization: "Đơn vị"
+        pump_station: "Trạm bơm"
+        pump_station_id: "Trạm bơm"
       unit_config:
         savings_rate: "Tỷ lệ tiết kiệm"
         division_public_rate: "Tỷ lệ công cộng Sư đoàn"
@@ -233,7 +243,7 @@ vi:
     form:
       name: "Tên công tơ"
       meter_type: "Loại công tơ"
-      meter_type_hint: "Thường: xuất hiện trong bản thu tiền. Công cộng & Trạm bơm: không xuất hiện."
+      meter_type_hint: "Thường: xuất hiện trong bản thu tiền. Công cộng: không xuất hiện. Vị trí không tổn hao: được trừ khỏi nguồn cung cấp trước khi tính tổn hao."
       serial_number: "Số hiệu (tùy chọn)"
       notes: "Ghi chú"
       position: "Thứ tự hiển thị"
