@@ -34,8 +34,10 @@ class Ability
     can :recalculate, MonthlyCalculation, contact_point: { organization_id: org_id }
 
     can :read, UnitConfig, organization_id: org_id
-    can :update_unit_config,        UnitConfig, organization_id: org_id
-    can :update_electricity_supply, UnitConfig, organization_id: org_id
+    can :update_unit_config, UnitConfig, organization_id: org_id
+
+    can :read, MainMeter,        organizations: { id: org_id }
+    can :read, MainMeterReading, main_meter: { organizations: { id: org_id } }
 
     can :read, MonthlyPeriod
     can :read, RankQuota
@@ -50,6 +52,9 @@ class Ability
     can :read, MeterReading,       meter: { organization_id: org_id }
     can :read, MonthlyCalculation, contact_point: { organization_id: org_id }
     can :read, UnitConfig,         organization_id: org_id
+
+    can :read, MainMeter,        organizations: { id: org_id }
+    can :read, MainMeterReading, main_meter: { organizations: { id: org_id } }
 
     can :read, MonthlyPeriod
     can :read, RankQuota

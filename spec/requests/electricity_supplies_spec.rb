@@ -1,14 +1,17 @@
 require "rails_helper"
 
 RSpec.describe "ElectricitySupplies", type: :request do
-  let(:division) { create(:organization, :division) }
-  let(:org_a)    { create(:organization, :unit, parent: division) }
-  let(:org_b)    { create(:organization, :unit, parent: division) }
+  let(:division)   { create(:organization, :division) }
+  let(:main_meter_a) { create(:main_meter, name: "Zone A") }
+  let(:main_meter_b) { create(:main_meter, name: "Zone B") }
+  let(:org_a)      { create(:organization, :unit, parent: division, main_meter: main_meter_a) }
+  let(:org_b)      { create(:organization, :unit, parent: division, main_meter: main_meter_b) }
+  let(:orphan_org) { create(:organization, :unit, parent: division, main_meter: nil) }
 
   let(:admin1)       { create(:user, :admin_level1, organization: division) }
   let(:admin_unit_a) { create(:user, :admin_unit,   organization: org_a) }
-  let(:admin_unit_b) { create(:user, :admin_unit,   organization: org_b) }
   let(:commander)    { create(:user, :commander,    organization: org_a) }
+  let(:orphan_admin) { create(:user, :admin_unit,   organization: orphan_org) }
   let(:tech_user)    { create(:user, :tech,          organization: org_a) }
 
   let!(:period)  { create(:monthly_period, year: 2026, month: 2) }
@@ -19,48 +22,57 @@ RSpec.describe "ElectricitySupplies", type: :request do
   # ---------------------------------------------------------------------------
   describe "GET /electricity_supply" do
     context "as admin_unit" do
-      it "returns ok" do
+      it "returns ok and shows their zone read-only" do
+        create(:main_meter_reading, main_meter: main_meter_a, monthly_period: period,
+               electricity_supply_kw: 11_111)
         sign_in admin_unit_a
         get electricity_supply_path(period_id: period.id)
         expect(response).to have_http_status(:ok)
+        expect(response.body).to include(main_meter_a.name)
+        expect(response.body).to include("11,111.00")
       end
 
-      it "shows only their own org data" do
-        create(:unit_config, organization: org_b, monthly_period: period,
-               electricity_supply_kw: 5000)
+      it "does not render the submit form (read-only)" do
         sign_in admin_unit_a
         get electricity_supply_path(period_id: period.id)
-        # org_b's data should not appear
-        expect(response.body).not_to include(org_b.name)
+        expect(response.body).not_to include(I18n.t("electricity_supplies.section_input.submit"))
       end
 
-      # Regression lock: set_target_org forces admin_unit to current_user.organization
-      # regardless of params[:org_id]. If someone refactors set_target_org to honor
-      # the param for all roles, this test catches the cross-org leak.
-      it "ignores params[:org_id] and uses own org config" do
-        create(:unit_config, organization: org_a, monthly_period: period,
+      # Regression: admin_unit cannot peek at a different zone by passing main_meter_id.
+      it "ignores params[:main_meter_id] and uses own zone" do
+        create(:main_meter_reading, main_meter: main_meter_a, monthly_period: period,
                electricity_supply_kw: 11_111)
-        create(:unit_config, organization: org_b, monthly_period: period,
+        create(:main_meter_reading, main_meter: main_meter_b, monthly_period: period,
                electricity_supply_kw: 22_222)
         sign_in admin_unit_a
-        get electricity_supply_path(period_id: period.id, org_id: org_b.id)
-        expect(response.body).to include("11111")
-        expect(response.body).not_to include("22222")
+        get electricity_supply_path(period_id: period.id, main_meter_id: main_meter_b.id)
+        expect(response.body).to include("11,111.00")
+        expect(response.body).not_to include("22,222.00")
+      end
+
+      it "shows no-main-meter notice when org has no main_meter" do
+        sign_in orphan_admin
+        get electricity_supply_path(period_id: period.id)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include(I18n.t("electricity_supplies.no_main_meter"))
       end
     end
 
     context "as admin_level1" do
-      it "returns ok with org selector" do
+      it "returns ok with main meter selector" do
+        main_meter_a
         sign_in admin1
         get electricity_supply_path(period_id: period.id)
         expect(response).to have_http_status(:ok)
+        expect(response.body).to include(I18n.t("electricity_supplies.main_meter_select"))
       end
 
-      it "can view a specific org via org_id param" do
+      it "can view a specific zone via main_meter_id param" do
+        main_meter_b
         sign_in admin1
-        get electricity_supply_path(period_id: period.id, org_id: org_b.id)
+        get electricity_supply_path(period_id: period.id, main_meter_id: main_meter_b.id)
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include(org_b.name)
+        expect(response.body).to include(main_meter_b.name)
       end
     end
 
@@ -69,6 +81,7 @@ RSpec.describe "ElectricitySupplies", type: :request do
         sign_in commander
         get electricity_supply_path(period_id: period.id)
         expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include(I18n.t("electricity_supplies.section_input.submit"))
       end
     end
 
@@ -99,8 +112,8 @@ RSpec.describe "ElectricitySupplies", type: :request do
     end
 
     context "history display" do
-      it "shows past periods' entries for own org" do
-        create(:unit_config, organization: org_a, monthly_period: period2,
+      it "shows past periods' entries for own zone" do
+        create(:main_meter_reading, main_meter: main_meter_a, monthly_period: period2,
                electricity_supply_kw: 3500)
         sign_in admin_unit_a
         get electricity_supply_path(period_id: period.id)
@@ -108,17 +121,8 @@ RSpec.describe "ElectricitySupplies", type: :request do
       end
 
       it "excludes the currently selected period from history" do
-        create(:unit_config, organization: org_a, monthly_period: period,
+        create(:main_meter_reading, main_meter: main_meter_a, monthly_period: period,
                electricity_supply_kw: 9999)
-        sign_in admin_unit_a
-        # period2 is the only other period; no past configs with supply set → empty
-        get electricity_supply_path(period_id: period.id)
-        expect(response.body).to include(I18n.t("electricity_supplies.section_history.empty"))
-      end
-
-      it "does not show nil-supply configs in history table" do
-        create(:unit_config, organization: org_a, monthly_period: period2,
-               electricity_supply_kw: nil)
         sign_in admin_unit_a
         get electricity_supply_path(period_id: period.id)
         expect(response.body).to include(I18n.t("electricity_supplies.section_history.empty"))
@@ -131,67 +135,78 @@ RSpec.describe "ElectricitySupplies", type: :request do
   # ---------------------------------------------------------------------------
   describe "PATCH /electricity_supply" do
     let(:valid_params) do
-      { period_id: period.id, electricity_supply: { electricity_supply_kw: "12345.67" } }
+      { period_id: period.id, main_meter_id: main_meter_a.id,
+        electricity_supply: { electricity_supply_kw: "12345.67" } }
     end
 
-    context "as admin_unit" do
-      it "creates unit_config with electricity_supply_kw and redirects" do
-        sign_in admin_unit_a
+    context "as admin_level1" do
+      it "creates main_meter_reading for the selected zone and redirects" do
+        sign_in admin1
         expect {
           patch electricity_supply_path, params: valid_params
-        }.to change(UnitConfig, :count).by(1)
+        }.to change(MainMeterReading, :count).by(1)
 
-        config = UnitConfig.find_by(organization: org_a, monthly_period: period)
-        expect(config.electricity_supply_kw).to eq(BigDecimal("12345.67"))
-        expect(response).to redirect_to(electricity_supply_path(period_id: period.id, org_id: nil))
+        reading = MainMeterReading.find_by(main_meter: main_meter_a, monthly_period: period)
+        expect(reading.electricity_supply_kw).to eq(BigDecimal("12345.67"))
+        expect(response).to redirect_to(
+          electricity_supply_path(period_id: period.id, main_meter_id: main_meter_a.id.to_s)
+        )
       end
 
-      it "updates existing unit_config" do
-        existing = create(:unit_config, organization: org_a, monthly_period: period,
+      it "updates existing main_meter_reading" do
+        existing = create(:main_meter_reading, main_meter: main_meter_a, monthly_period: period,
                           electricity_supply_kw: 1000)
-        sign_in admin_unit_a
+        sign_in admin1
         expect {
           patch electricity_supply_path, params: valid_params
-        }.not_to change(UnitConfig, :count)
+        }.not_to change(MainMeterReading, :count)
 
         expect(existing.reload.electricity_supply_kw).to eq(BigDecimal("12345.67"))
       end
 
-      it "cannot update another org's data" do
-        sign_in admin_unit_a
-        params = valid_params.merge(org_id: org_b.id)
-        patch electricity_supply_path, params: params
+      it "defaults to first main_meter when no main_meter_id given, and preserves it" do
+        main_meter_a
+        main_meter_b
+        sign_in admin1
+        # No main_meter_id — controller defaults to MainMeter.ordered.first.
+        patch electricity_supply_path,
+              params: { period_id: period.id, electricity_supply: { electricity_supply_kw: "555" } }
 
-        # org_b should have no config (admin_unit_a's org is org_a, not org_b)
-        config_b = UnitConfig.find_by(organization: org_b, monthly_period: period)
-        expect(config_b).to be_nil
+        first_meter = MainMeter.ordered.first
+        reading = MainMeterReading.find_by(main_meter: first_meter, monthly_period: period)
+        expect(reading.electricity_supply_kw).to eq(BigDecimal("555"))
+        expect(response).to redirect_to(
+          electricity_supply_path(period_id: period.id, main_meter_id: first_meter.id.to_s)
+        )
       end
     end
 
-    context "as admin_level1" do
-      it "can update any org via org_id param and stays on that org" do
-        sign_in admin1
-        params = valid_params.merge(org_id: org_b.id)
-        patch electricity_supply_path, params: params
-
-        config = UnitConfig.find_by(organization: org_b, monthly_period: period)
-        expect(config.electricity_supply_kw).to eq(BigDecimal("12345.67"))
-        expect(response).to redirect_to(electricity_supply_path(period_id: period.id, org_id: org_b.id.to_s))
-      end
-
-      it "defaults to first org when no org_id given, and preserves it in redirect" do
-        # Force unit orgs to exist so set_target_org can find a first org
-        org_a
-        org_b
-        sign_in admin1
-        # No org_id in params — defaults to first unit org
+    context "as admin_unit" do
+      it "is denied — cannot write electricity supply" do
+        sign_in admin_unit_a
         patch electricity_supply_path, params: valid_params
 
-        first_org = Organization.units.ordered.first
-        config = UnitConfig.find_by(organization: first_org, monthly_period: period)
-        expect(config.electricity_supply_kw).to eq(BigDecimal("12345.67"))
-        # redirect preserves the first org so UI stays stable
-        expect(response).to redirect_to(electricity_supply_path(period_id: period.id, org_id: first_org.id.to_s))
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
+        expect(MainMeterReading.find_by(main_meter: main_meter_a, monthly_period: period)).to be_nil
+      end
+
+      it "is denied even when targeting their own zone explicitly" do
+        # Even with their own main_meter_id, admin_unit lacks :update on MainMeterReading.
+        sign_in admin_unit_a
+        patch electricity_supply_path,
+              params: valid_params.merge(main_meter_id: main_meter_a.id)
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.access_denied"))
+      end
+
+      it "redirects to no-main-meter alert when org has no zone" do
+        sign_in orphan_admin
+        patch electricity_supply_path,
+              params: { period_id: period.id,
+                        electricity_supply: { electricity_supply_kw: "100" } }
+        expect(response).to redirect_to(electricity_supply_path)
+        expect(flash[:alert]).to eq(I18n.t("electricity_supplies.no_main_meter"))
       end
     end
 

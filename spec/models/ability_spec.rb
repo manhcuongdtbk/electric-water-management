@@ -21,8 +21,16 @@ RSpec.describe Ability do
   let(:config_a)    { create(:unit_config, organization: unit_a, monthly_period: period) }
   let(:config_b)    { create(:unit_config, organization: unit_b, monthly_period: period) }
   let(:division_config) { create(:unit_config, organization: division, monthly_period: period) }
-  let(:main_meter)  { create(:main_meter) }
+  let(:main_meter)       { create(:main_meter) }
+  let(:other_main_meter) { create(:main_meter) }
   let(:main_meter_reading) { create(:main_meter_reading, main_meter: main_meter, monthly_period: period) }
+  let(:other_main_meter_reading) { create(:main_meter_reading, main_meter: other_main_meter, monthly_period: period) }
+
+  # F05 zone access — admin_unit/commander get read on the MainMeter their org belongs to.
+  before do
+    unit_a.update!(main_meter: main_meter)
+    unit_b.update!(main_meter: other_main_meter)
+  end
 
   context "when user is nil" do
     let(:user) { nil }
@@ -47,8 +55,6 @@ RSpec.describe Ability do
     it { is_expected.to be_able_to(:manage, config_a) }
     it { is_expected.to be_able_to(:manage, division_config) }
     it { is_expected.not_to be_able_to(:update_unit_config, config_a) }
-    it { is_expected.to be_able_to(:update_electricity_supply, config_a) }
-    it { is_expected.to be_able_to(:update_electricity_supply, config_b) }
     it { is_expected.to be_able_to(:manage, User.new) }
     it { is_expected.to be_able_to(:manage, MonthlyPeriod.new) }
     it { is_expected.to be_able_to(:manage, RankQuota.new) }
@@ -77,8 +83,6 @@ RSpec.describe Ability do
 
     it { is_expected.to be_able_to(:read, config_a) }
     it { is_expected.to be_able_to(:update_unit_config, config_a) }
-    it { is_expected.to be_able_to(:update_electricity_supply, config_a) }
-    it { is_expected.not_to be_able_to(:update_electricity_supply, config_b) }
     it { is_expected.not_to be_able_to(:update, config_a) }
     it { is_expected.not_to be_able_to(:update, division_config) }
     it { is_expected.not_to be_able_to(:read, config_b) }
@@ -86,8 +90,12 @@ RSpec.describe Ability do
     it { is_expected.not_to be_able_to(:manage, User.new) }
     it { is_expected.not_to be_able_to(:manage, MonthlyPeriod.new) }
     it { is_expected.not_to be_able_to(:manage, RankQuota.new) }
+    it { is_expected.to be_able_to(:read, main_meter) }
+    it { is_expected.not_to be_able_to(:read, other_main_meter) }
     it { is_expected.not_to be_able_to(:manage, main_meter) }
-    it { is_expected.not_to be_able_to(:read, main_meter) }
+    it { is_expected.to be_able_to(:read, main_meter_reading) }
+    it { is_expected.not_to be_able_to(:read, other_main_meter_reading) }
+    it { is_expected.not_to be_able_to(:update, main_meter_reading) }
   end
 
   context "when user is commander of unit_a" do
@@ -117,8 +125,13 @@ RSpec.describe Ability do
 
     it { is_expected.to be_able_to(:read, config_a) }
     it { is_expected.not_to be_able_to(:update_unit_config, config_a) }
-    it { is_expected.not_to be_able_to(:update_electricity_supply, config_a) }
     it { is_expected.not_to be_able_to(:update, config_a) }
+
+    it { is_expected.to be_able_to(:read, main_meter) }
+    it { is_expected.not_to be_able_to(:read, other_main_meter) }
+    it { is_expected.not_to be_able_to(:manage, main_meter) }
+    it { is_expected.to be_able_to(:read, main_meter_reading) }
+    it { is_expected.not_to be_able_to(:update, main_meter_reading) }
 
     it { is_expected.not_to be_able_to(:manage, User.new) }
     it { is_expected.not_to be_able_to(:manage, MonthlyPeriod.new) }

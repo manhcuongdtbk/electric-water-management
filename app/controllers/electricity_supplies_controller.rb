@@ -1,23 +1,22 @@
 class ElectricitySuppliesController < ApplicationController
   before_action :set_period
-  before_action :set_target_org
+  before_action :set_target_main_meter
 
   def show
-    authorize! :read, UnitConfig
-    set_config
+    authorize! :read, MainMeter
+    set_reading
     @history = load_history
   end
 
   def update
-    authorize! :update_electricity_supply, UnitConfig
-
     return redirect_to electricity_supply_path, alert: t("electricity_supplies.no_period") if @period.nil?
-    return redirect_to electricity_supply_path, alert: t("electricity_supplies.no_org") if @target_org.nil?
+    return redirect_to electricity_supply_path, alert: t("electricity_supplies.no_main_meter") if @target_main_meter.nil?
 
-    set_config
+    set_reading
+    authorize! :update, @reading
 
-    if @config.update(electricity_supply_kw: supply_kw_param)
-      redirect_to electricity_supply_path(period_id: @period.id, org_id: effective_org_id),
+    if @reading.update(electricity_supply_kw: supply_kw_param)
+      redirect_to electricity_supply_path(period_id: @period.id, main_meter_id: effective_main_meter_id),
                   notice: t("flash.electricity_supplies.updated")
     else
       @history = load_history
@@ -36,48 +35,47 @@ class ElectricitySuppliesController < ApplicationController
     end
   end
 
-  def set_target_org
+  def set_target_main_meter
     if current_user.admin_level1?
-      @all_orgs = Organization.units.ordered
-      @target_org = if params[:org_id].present?
-        @all_orgs.find_by(id: params[:org_id])
+      @all_main_meters = MainMeter.ordered
+      @target_main_meter = if params[:main_meter_id].present?
+        @all_main_meters.find_by(id: params[:main_meter_id])
       else
-        @all_orgs.first
+        @all_main_meters.first
       end
     else
-      @target_org = current_user.organization
+      @target_main_meter = current_user.organization&.main_meter
     end
   end
 
-  def set_config
-    return unless @target_org && @period
+  def set_reading
+    return unless @target_main_meter && @period
 
-    @config = UnitConfig.find_or_initialize_by(
-      organization: @target_org,
+    @reading = MainMeterReading.find_or_initialize_by(
+      main_meter: @target_main_meter,
       monthly_period: @period
     )
   end
 
   def load_history
-    return [] unless @target_org && @period
+    return [] unless @target_main_meter && @period
 
-    org_ids = current_user.admin_level1? ? @all_orgs.map(&:id) : [ @target_org.id ]
+    scope = current_user.admin_level1? ? @all_main_meters : [ @target_main_meter ]
 
-    UnitConfig
-      .includes(:monthly_period, :organization)
-      .where(organization_id: org_ids)
-      .where.not(electricity_supply_kw: nil)
+    MainMeterReading
+      .includes(:monthly_period, :main_meter)
+      .where(main_meter: scope)
       .where.not(monthly_period: @period)
       .joins(:monthly_period)
       .order("monthly_periods.year DESC, monthly_periods.month DESC")
   end
 
-  # For admin_level1 defaulting to first org (no org_id param), preserve the
-  # selected org in the redirect so the form stays on the same org after save.
-  def effective_org_id
+  # For admin_level1 defaulting to first main_meter (no main_meter_id param), preserve the
+  # selected zone in the redirect so the form stays on the same zone after save.
+  def effective_main_meter_id
     return nil unless current_user.admin_level1?
 
-    params[:org_id].presence || @target_org&.id
+    params[:main_meter_id].presence || @target_main_meter&.id
   end
 
   def supply_kw_param
