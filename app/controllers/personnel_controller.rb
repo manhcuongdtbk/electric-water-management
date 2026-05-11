@@ -88,8 +88,7 @@ class PersonnelController < ApplicationController
 
     @personnel = @contact_point.personnel_records
                                .find_or_initialize_by(monthly_period: @period)
-    date = Date.new(@period.year, @period.month, 1)
-    @rank_quotas = RankQuota.current_quotas_for(date)
+    @rank_quotas = RankQuota.current_quotas
   end
 
   def personnel_params

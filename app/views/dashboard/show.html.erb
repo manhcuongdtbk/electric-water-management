@@ -110,20 +110,20 @@
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
     <div class="bg-white rounded-lg border border-gray-200 p-4">
       <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1"><%= t("dashboard.metrics.total_standard") %></p>
-      <p class="text-2xl font-bold text-blue-600"><%= number_with_delimiter(@total_standard.to_i) %></p>
+      <p class="text-2xl font-bold text-blue-600"><%= format_number_vn(@total_standard) %></p>
       <p class="text-xs text-gray-400 mt-0.5"><%= t("dashboard.metrics.unit_kw") %></p>
     </div>
 
     <div class="bg-white rounded-lg border border-gray-200 p-4">
       <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1"><%= t("dashboard.metrics.total_usage") %></p>
-      <p class="text-2xl font-bold text-green-600"><%= number_with_delimiter(@total_usage.to_i) %></p>
+      <p class="text-2xl font-bold text-green-600"><%= format_number_vn(@total_usage) %></p>
       <p class="text-xs text-gray-400 mt-0.5"><%= t("dashboard.metrics.unit_kw") %></p>
     </div>
 
     <div class="bg-white rounded-lg border border-gray-200 p-4">
       <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1"><%= t("dashboard.metrics.difference") %></p>
       <p class="text-2xl font-bold <%= @difference >= 0 ? 'text-gray-800' : 'text-red-600' %>">
-        <%= number_with_delimiter(@difference.to_i) %>
+        <%= format_number_vn(@difference) %>
       </p>
       <p class="text-xs text-gray-400 mt-0.5"><%= t("dashboard.metrics.unit_kw") %></p>
     </div>
@@ -141,6 +141,7 @@
 
     <% if @view_type == "year" %>
       <%= line_chart @chart_data,
+            thousands: ".", decimal: ",", precision: 2,
             height: "320px",
             id: "dashboard-year-chart",
             library: {
@@ -150,6 +151,7 @@
 
     <% elsif @view_type == "quarter" %>
       <%= bar_chart @chart_data,
+            thousands: ".", decimal: ",", precision: 2,
             height: "320px",
             id: "dashboard-quarter-chart",
             library: {
@@ -160,6 +162,7 @@
     <% else %>
       <div data-chart-usage-colors="<%= @usage_colors.to_json %>">
         <%= bar_chart @chart_data,
+              thousands: ".", decimal: ",", precision: 2,
               colors: [ "rgba(59,130,246,0.8)", "rgba(34,197,94,0.8)" ],
               height: "320px",
               id: "dashboard-bar-chart",
@@ -234,12 +237,12 @@
                   </span>
                 <% end %>
               </td>
-              <td class="px-4 py-3 text-sm text-right text-gray-700"><%= number_with_delimiter(row[:standard].to_i) %></td>
+              <td class="px-4 py-3 text-sm text-right text-gray-700"><%= format_number_vn(row[:standard]) %></td>
               <td class="px-4 py-3 text-sm text-right <%= row[:over] ? 'text-red-600 font-medium' : 'text-gray-700' %>">
-                <%= number_with_delimiter(row[:usage].to_i) %>
+                <%= format_number_vn(row[:usage]) %>
               </td>
               <td class="px-4 py-3 text-sm text-right <%= row[:diff] < 0 ? 'text-red-600 font-medium' : 'text-gray-700' %>">
-                <%= number_with_delimiter(row[:diff].to_i) %>
+                <%= format_number_vn(row[:diff]) %>
               </td>
             </tr>
           <% end %>

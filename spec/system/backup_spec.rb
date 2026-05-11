@@ -29,7 +29,7 @@ RSpec.describe "Sao lưu dữ liệu", type: :system do
     it "hiển thị danh sách file backup với kích thước dễ đọc" do
       visit backups_path
       expect(page).to have_content("backup_20260423_120000.dump")
-      expect(page).to have_content("1 MB")
+      expect(page).to have_content("1,0 MB")
     end
 
     it "hiển thị cảnh báo phục hồi" do

@@ -91,7 +91,7 @@
         <th class="px-2 py-2 text-center font-medium border border-slate-600 bg-red-700" colspan="6">
           <%= t("monthly_summary.groups.deductions") %>
         </th>
-        <th class="px-2 py-2 text-center font-medium border border-slate-600 bg-purple-700" colspan="6">
+        <th class="px-2 py-2 text-center font-medium border border-slate-600 bg-purple-700" colspan="8">
           <%= t("monthly_summary.groups.result") %>
         </th>
       </tr>
@@ -141,6 +141,12 @@
           <%= t("monthly_summary.columns.remaining_standard_kw") %>
         </th>
         <th class="px-2 py-2 text-right font-medium border border-slate-500 bg-purple-600 whitespace-nowrap min-w-[60px]">
+          <%= t("monthly_summary.columns.meter_usage_kw") %>
+        </th>
+        <th class="px-2 py-2 text-right font-medium border border-slate-500 bg-purple-600 whitespace-nowrap min-w-[60px]">
+          <%= t("monthly_summary.columns.water_pump_actual_kw") %>
+        </th>
+        <th class="px-2 py-2 text-right font-medium border border-slate-500 bg-purple-600 whitespace-nowrap min-w-[60px]">
           <%= t("monthly_summary.columns.total_usage_kw") %>
         </th>
         <th class="px-2 py-2 text-right font-medium border border-slate-500 bg-purple-600 whitespace-nowrap min-w-[60px]">
@@ -167,7 +173,7 @@
           <%# Rank kW columns %>
           <% (1..7).each do |i| %>
             <td class="px-2 py-2 text-right font-mono text-gray-800 border-r border-gray-100">
-              <%= number_with_precision(calc.public_send(:"rank#{i}_kw"), precision: 2, delimiter: ",") %>
+              <%= number_with_precision(calc.public_send(:"rank#{i}_kw"), precision: 2) %>
             </td>
           <% end %>
           <%# Total personnel %>
@@ -176,53 +182,59 @@
           </td>
           <%# Tiêu chuẩn group %>
           <td class="px-2 py-2 text-right font-mono text-gray-800 border-r border-gray-100">
-            <%= number_with_precision(calc.rank_standard_total_kw, precision: 2, delimiter: ",") %>
+            <%= number_with_precision(calc.rank_standard_total_kw, precision: 2) %>
           </td>
           <td class="px-2 py-2 text-right font-mono text-gray-800 border-r border-gray-100">
-            <%= number_with_precision(calc.water_pump_standard_kw, precision: 2, delimiter: ",") %>
+            <%= number_with_precision(calc.water_pump_standard_kw, precision: 2) %>
           </td>
           <td class="px-2 py-2 text-right font-mono font-semibold text-gray-900 border-r border-gray-200">
-            <%= number_with_precision(calc.total_standard_kw, precision: 2, delimiter: ",") %>
+            <%= number_with_precision(calc.total_standard_kw, precision: 2) %>
           </td>
           <%# Số phải trừ group %>
           <td class="px-2 py-2 text-right font-mono text-gray-800 border-r border-gray-100">
-            <%= number_with_precision(calc.savings_deduction_kw, precision: 2, delimiter: ",") %>
+            <%= number_with_precision(calc.savings_deduction_kw, precision: 2) %>
           </td>
           <td class="px-2 py-2 text-right font-mono text-gray-800 border-r border-gray-100">
-            <%= number_with_precision(calc.loss_deduction_kw, precision: 2, delimiter: ",") %>
+            <%= number_with_precision(calc.loss_deduction_kw, precision: 2) %>
           </td>
           <td class="px-2 py-2 text-right font-mono text-gray-800 border-r border-gray-100">
-            <%= number_with_precision(calc.division_public_deduction_kw, precision: 2, delimiter: ",") %>
+            <%= number_with_precision(calc.division_public_deduction_kw, precision: 2) %>
           </td>
           <td class="px-2 py-2 text-right font-mono text-gray-800 border-r border-gray-100">
-            <%= number_with_precision(calc.unit_public_deduction_kw, precision: 2, delimiter: ",") %>
+            <%= number_with_precision(calc.unit_public_deduction_kw, precision: 2) %>
           </td>
           <td class="px-2 py-2 text-right font-mono text-gray-800 border-r border-gray-100">
-            <%= number_with_precision(calc.other_deduction_kw, precision: 2, delimiter: ",") %>
+            <%= number_with_precision(calc.other_deduction_kw, precision: 2) %>
           </td>
           <td class="px-2 py-2 text-right font-mono font-semibold text-gray-900 border-r border-gray-200">
-            <%= number_with_precision(calc.total_deduction_kw, precision: 2, delimiter: ",") %>
+            <%= number_with_precision(calc.total_deduction_kw, precision: 2) %>
           </td>
           <%# Kết quả group %>
           <td class="px-2 py-2 text-right font-mono text-gray-800 border-r border-gray-100">
-            <%= number_with_precision(calc.remaining_standard_kw, precision: 2, delimiter: ",") %>
+            <%= number_with_precision(calc.remaining_standard_kw, precision: 2) %>
           </td>
           <td class="px-2 py-2 text-right font-mono text-gray-800 border-r border-gray-100">
-            <%= number_with_precision(calc.total_usage_kw, precision: 2, delimiter: ",") %>
+            <%= number_with_precision(calc.meter_usage_kw, precision: 2) %>
+          </td>
+          <td class="px-2 py-2 text-right font-mono text-gray-800 border-r border-gray-100">
+            <%= number_with_precision(calc.water_pump_actual_kw, precision: 2) %>
+          </td>
+          <td class="px-2 py-2 text-right font-mono text-gray-800 border-r border-gray-100">
+            <%= number_with_precision(calc.total_usage_kw, precision: 2) %>
           </td>
           <% ou = calc.over_under_kw %>
           <td class="px-2 py-2 text-right font-mono font-semibold border-r border-gray-100 text-green-600">
-            <%= number_with_precision(ou.abs, precision: 2, delimiter: ",") if ou < 0 %>
+            <%= number_with_precision(ou.abs, precision: 2) if ou < 0 %>
           </td>
           <td class="px-2 py-2 text-right font-mono font-semibold border-r border-gray-100 text-red-600">
-            <%= number_with_precision(ou, precision: 2, delimiter: ",") if ou > 0 %>
+            <%= number_with_precision(ou, precision: 2) if ou > 0 %>
           </td>
           <% amt = calc.total_amount %>
           <td class="px-2 py-2 text-right font-mono font-semibold border-r border-gray-100 text-green-700">
-            <%= number_with_precision(amt.abs, precision: 0, delimiter: ",") if amt < 0 %>
+            <%= number_with_precision(amt.abs, precision: 0) if amt < 0 %>
           </td>
           <td class="px-2 py-2 text-right font-mono font-semibold text-red-700">
-            <%= number_with_precision(amt, precision: 0, delimiter: ",") if amt > 0 %>
+            <%= number_with_precision(amt, precision: 0) if amt > 0 %>
           </td>
         </tr>
       <% end %>
@@ -237,56 +249,62 @@
           </td>
           <% (1..7).each do |i| %>
             <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-200">
-              <%= number_with_precision(@totals[:"rank#{i}_kw"], precision: 2, delimiter: ",") %>
+              <%= number_with_precision(@totals[:"rank#{i}_kw"], precision: 2) %>
             </td>
           <% end %>
           <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-300">
             <%= number_with_delimiter(@totals[:total_personnel]) %>
           </td>
           <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-200">
-            <%= number_with_precision(@totals[:living_standard_kw], precision: 2, delimiter: ",") %>
+            <%= number_with_precision(@totals[:living_standard_kw], precision: 2) %>
           </td>
           <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-200">
-            <%= number_with_precision(@totals[:water_pump_standard_kw], precision: 2, delimiter: ",") %>
+            <%= number_with_precision(@totals[:water_pump_standard_kw], precision: 2) %>
           </td>
           <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-300">
-            <%= number_with_precision(@totals[:total_standard_kw], precision: 2, delimiter: ",") %>
+            <%= number_with_precision(@totals[:total_standard_kw], precision: 2) %>
           </td>
           <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-200">
-            <%= number_with_precision(@totals[:savings_deduction_kw], precision: 2, delimiter: ",") %>
+            <%= number_with_precision(@totals[:savings_deduction_kw], precision: 2) %>
           </td>
           <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-200">
-            <%= number_with_precision(@totals[:loss_deduction_kw], precision: 2, delimiter: ",") %>
+            <%= number_with_precision(@totals[:loss_deduction_kw], precision: 2) %>
           </td>
           <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-200">
-            <%= number_with_precision(@totals[:division_public_deduction_kw], precision: 2, delimiter: ",") %>
+            <%= number_with_precision(@totals[:division_public_deduction_kw], precision: 2) %>
           </td>
           <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-200">
-            <%= number_with_precision(@totals[:unit_public_deduction_kw], precision: 2, delimiter: ",") %>
+            <%= number_with_precision(@totals[:unit_public_deduction_kw], precision: 2) %>
           </td>
           <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-200">
-            <%= number_with_precision(@totals[:other_deduction_kw], precision: 2, delimiter: ",") %>
+            <%= number_with_precision(@totals[:other_deduction_kw], precision: 2) %>
           </td>
           <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-300">
-            <%= number_with_precision(@totals[:total_deduction_kw], precision: 2, delimiter: ",") %>
+            <%= number_with_precision(@totals[:total_deduction_kw], precision: 2) %>
           </td>
           <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-200">
-            <%= number_with_precision(@totals[:remaining_standard_kw], precision: 2, delimiter: ",") %>
+            <%= number_with_precision(@totals[:remaining_standard_kw], precision: 2) %>
           </td>
           <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-200">
-            <%= number_with_precision(@totals[:total_usage_kw], precision: 2, delimiter: ",") %>
+            <%= number_with_precision(@totals[:meter_usage_kw], precision: 2) %>
+          </td>
+          <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-200">
+            <%= number_with_precision(@totals[:water_pump_actual_kw], precision: 2) %>
+          </td>
+          <td class="px-2 py-2 text-right font-mono text-gray-900 border-r border-gray-200">
+            <%= number_with_precision(@totals[:total_usage_kw], precision: 2) %>
           </td>
           <td class="px-2 py-2 text-right font-mono font-semibold border-r border-gray-200 text-green-700">
-            <%= number_with_precision(@totals[:surplus_kw], precision: 2, delimiter: ",") if @totals[:surplus_kw] > 0 %>
+            <%= number_with_precision(@totals[:surplus_kw], precision: 2) if @totals[:surplus_kw] > 0 %>
           </td>
           <td class="px-2 py-2 text-right font-mono font-semibold border-r border-gray-200 text-red-700">
-            <%= number_with_precision(@totals[:deficit_kw], precision: 2, delimiter: ",") if @totals[:deficit_kw] > 0 %>
+            <%= number_with_precision(@totals[:deficit_kw], precision: 2) if @totals[:deficit_kw] > 0 %>
           </td>
           <td class="px-2 py-2 text-right font-mono font-semibold border-r border-gray-200 text-green-700">
-            <%= number_with_precision(@totals[:surplus_amount], precision: 0, delimiter: ",") if @totals[:surplus_amount] > 0 %>
+            <%= number_with_precision(@totals[:surplus_amount], precision: 0) if @totals[:surplus_amount] > 0 %>
           </td>
           <td class="px-2 py-2 text-right font-mono font-semibold text-red-700">
-            <%= number_with_precision(@totals[:deficit_amount], precision: 0, delimiter: ",") if @totals[:deficit_amount] > 0 %>
+            <%= number_with_precision(@totals[:deficit_amount], precision: 0) if @totals[:deficit_amount] > 0 %>
           </td>
         </tr>
       </tfoot>
@@ -297,7 +315,7 @@
 <%# Unit price note %>
 <% if @period&.unit_price.present? %>
   <p class="mt-3 text-xs text-gray-500">
-    <%= t("monthly_summary.unit_price_note", price: number_with_precision(@period.unit_price, precision: 0, delimiter: ","), period: @period.label) %>
+    <%= t("monthly_summary.unit_price_note", price: number_with_precision(@period.unit_price, precision: 0), period: @period.label) %>
   </p>
 <% end %>
 

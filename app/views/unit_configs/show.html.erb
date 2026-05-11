@@ -229,7 +229,7 @@
                           <span data-role="other-result">
                             <%# Precompute initial result %>
                             <% initial_kw = current_type == "factor_per_person" ? current_value.to_f * personnel_count : current_value.to_f %>
-                            <%= number_with_precision(initial_kw, precision: 2, delimiter: ",") %>
+                            <%= number_with_precision(initial_kw, precision: 2) %>
                           </span>
                           <span class="text-xs text-gray-400 ml-0.5">kW</span>
                         </td>
@@ -291,7 +291,7 @@
                   <td class="px-4 py-3 text-center font-mono text-gray-700"><%= current_value %></td>
                   <td class="px-4 py-3 text-center font-mono text-gray-700">
                     <% result_kw = current_type == "factor_per_person" ? current_value.to_f * personnel_count : current_value.to_f %>
-                    <%= number_with_precision(result_kw, precision: 2, delimiter: ",") %> kW
+                    <%= number_with_precision(result_kw, precision: 2) %> kW
                   </td>
                 </tr>
               <% end %>

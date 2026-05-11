@@ -188,12 +188,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_12_120000) do
 
   create_table "rank_quotas", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.date "effective_from", null: false
     t.decimal "quota_kw", precision: 10, scale: 2, null: false
     t.integer "rank_group", null: false
     t.string "rank_name", null: false
     t.datetime "updated_at", null: false
-    t.index ["rank_group", "effective_from"], name: "index_rank_quotas_on_rank_group_and_effective_from", unique: true
+    t.index ["rank_group"], name: "index_rank_quotas_on_rank_group", unique: true
   end
 
   create_table "unit_configs", force: :cascade do |t|

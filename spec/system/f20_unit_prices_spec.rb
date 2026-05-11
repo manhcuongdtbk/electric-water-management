@@ -10,7 +10,7 @@ RSpec.describe "F20 — Đơn giá điện", type: :system do
       visit monthly_periods_path
       expect(page).to have_content(I18n.t("monthly_periods.index.title"))
       expect(page).to have_content(scenario.period.label)
-      expect(page).to have_content("2,000")
+      expect(page).to have_content("2.000")
     end
 
     it "sửa đơn giá thành công" do

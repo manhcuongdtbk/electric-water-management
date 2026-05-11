@@ -5,7 +5,7 @@
 #
 # Tuân thủ nghiệp vụ v5 (docs/XAC_NHAN_NGHIEP_VU_v5.html):
 #
-#   * 7 nhóm cấp bậc, lấy định mức từ RankQuota (effective_at period start).
+#   * 7 nhóm cấp bậc, lấy định mức từ RankQuota (1 row per rank_group).
 #   * Tiêu chuẩn bơm nước = 9.45 kW/người/tháng (Personnel::WATER_PUMP_RATE).
 #   * "Số phải trừ" gồm: Tiết kiệm, Tổn hao, Công cộng Sư đoàn, Công cộng đơn vị, Khác.
 #     Tổn hao TRỪ khỏi tiêu chuẩn, KHÔNG cộng vào sử dụng.
@@ -103,12 +103,9 @@ class CalculationEngine
   end
 
   def rank_quotas
-    @rank_quotas ||= begin
-      effective_date = Date.new(monthly_period.year, monthly_period.month, 1)
-      RankQuota::RANK_GROUPS.each_with_object({}) do |group, hash|
-        quota = RankQuota.for_rank(group).effective_at(effective_date).first
-        hash[group] = quota&.quota_kw || ZERO
-      end
+    @rank_quotas ||= RankQuota::RANK_GROUPS.each_with_object({}) do |group, hash|
+      quota = RankQuota.for_rank(group).first
+      hash[group] = quota&.quota_kw || ZERO
     end
   end
 

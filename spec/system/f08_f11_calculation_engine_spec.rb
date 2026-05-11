@@ -91,8 +91,8 @@ RSpec.describe "F08-F11 — Calculation engine + 24-column summary", type: :syst
       # Contact point row + totals row both rendered with seeded values
       expect(page).to have_content(cp.name)
       expect(page).to have_content(I18n.t("monthly_summary.total_row"))
-      expect(page).to have_content("9,320.00")  # total_standard_kw
-      expect(page).to have_content("174,000")   # deficit_amount (over_under_kw: 87 positive = deficit)
+      expect(page).to have_content("9.320,00")  # total_standard_kw
+      expect(page).to have_content("174.000")   # deficit_amount (over_under_kw: 87 positive = deficit)
     end
 
     it "shows deficit column value and empty surplus when over_under_kw > 0" do
@@ -105,12 +105,12 @@ RSpec.describe "F08-F11 — Calculation engine + 24-column summary", type: :syst
       visit monthly_summary_path(period_id: scenario.period.id)
 
       within("tbody") do
-        expect(page).to have_content("87.00")
-        expect(page).to have_content("174,000")
+        expect(page).to have_content("87,00")
+        expect(page).to have_content("174.000")
       end
       # Surplus cells must be empty (positive = deficit, shown in red)
-      expect(page).not_to have_css("td.text-green-600", text: "87.00")
-      expect(page).not_to have_css("td.text-green-700", text: "174,000")
+      expect(page).not_to have_css("td.text-green-600", text: "87,00")
+      expect(page).not_to have_css("td.text-green-700", text: "174.000")
     end
 
     it "shows surplus column with absolute value and empty deficit when over_under_kw < 0" do
@@ -123,12 +123,12 @@ RSpec.describe "F08-F11 — Calculation engine + 24-column summary", type: :syst
       visit monthly_summary_path(period_id: scenario.period.id)
 
       within("tbody") do
-        expect(page).to have_content("87.00")
-        expect(page).to have_content("174,000")
+        expect(page).to have_content("87,00")
+        expect(page).to have_content("174.000")
       end
       # Deficit cells must be empty (negative = surplus, shown in green)
-      expect(page).not_to have_css("td.text-red-600", text: "87.00")
-      expect(page).not_to have_css("td.text-red-700", text: "174,000")
+      expect(page).not_to have_css("td.text-red-600", text: "87,00")
+      expect(page).not_to have_css("td.text-red-700", text: "174.000")
     end
 
     it "shows empty surplus and deficit cells when over_under_kw == 0" do
@@ -161,10 +161,10 @@ RSpec.describe "F08-F11 — Calculation engine + 24-column summary", type: :syst
       visit monthly_summary_path(period_id: scenario.period.id)
 
       within("tfoot") do
-        expect(page).to have_content("100.00")   # surplus_kw total
-        expect(page).to have_content("40.00")    # deficit_kw total
-        expect(page).to have_content("200,000")  # surplus_amount total
-        expect(page).to have_content("80,000")   # deficit_amount total
+        expect(page).to have_content("100,00")   # surplus_kw total
+        expect(page).to have_content("40,00")    # deficit_kw total
+        expect(page).to have_content("200.000")  # surplus_amount total
+        expect(page).to have_content("80.000")   # deficit_amount total
       end
     end
 
@@ -177,8 +177,8 @@ RSpec.describe "F08-F11 — Calculation engine + 24-column summary", type: :syst
       login_as scenario.admin_unit, scope: :user
       visit monthly_summary_path(period_id: scenario.period.id)
 
-      expect(page).to have_css("td.text-red-600", text: "87.00")
-      expect(page).to have_css("td.text-red-700", text: "174,000")
+      expect(page).to have_css("td.text-red-600", text: "87,00")
+      expect(page).to have_css("td.text-red-700", text: "174.000")
       expect(page).not_to have_css("td.text-green-600", text: /\S/)
       expect(page).not_to have_css("td.text-green-700", text: /\S/)
     end
@@ -192,8 +192,8 @@ RSpec.describe "F08-F11 — Calculation engine + 24-column summary", type: :syst
       login_as scenario.admin_unit, scope: :user
       visit monthly_summary_path(period_id: scenario.period.id)
 
-      expect(page).to have_css("td.text-green-600", text: "87.00")
-      expect(page).to have_css("td.text-green-700", text: "174,000")
+      expect(page).to have_css("td.text-green-600", text: "87,00")
+      expect(page).to have_css("td.text-green-700", text: "174.000")
       expect(page).not_to have_css("td.text-red-600", text: /\S/)
       expect(page).not_to have_css("td.text-red-700", text: /\S/)
     end

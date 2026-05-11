@@ -29,7 +29,7 @@ RSpec.describe "ElectricitySupplies", type: :request do
         get electricity_supply_path(period_id: period.id)
         expect(response).to have_http_status(:ok)
         expect(response.body).to include(main_meter_a.name)
-        expect(response.body).to include("11,111.00")
+        expect(response.body).to include("11.111,00")
       end
 
       it "does not render the submit form (read-only)" do
@@ -46,8 +46,8 @@ RSpec.describe "ElectricitySupplies", type: :request do
                electricity_supply_kw: 22_222)
         sign_in admin_unit_a
         get electricity_supply_path(period_id: period.id, main_meter_id: main_meter_b.id)
-        expect(response.body).to include("11,111.00")
-        expect(response.body).not_to include("22,222.00")
+        expect(response.body).to include("11.111,00")
+        expect(response.body).not_to include("22.222,00")
       end
 
       it "shows no-main-meter notice when org has no main_meter" do
@@ -117,7 +117,7 @@ RSpec.describe "ElectricitySupplies", type: :request do
                electricity_supply_kw: 3500)
         sign_in admin_unit_a
         get electricity_supply_path(period_id: period.id)
-        expect(response.body).to include("3,500.00")
+        expect(response.body).to include("3.500,00")
       end
 
       it "excludes the currently selected period from history" do
