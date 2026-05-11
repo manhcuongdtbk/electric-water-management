@@ -51,6 +51,8 @@ Rails.application.routes.draw do
 
   resources :organizations, only: [ :index, :new, :create, :edit, :update, :destroy ]
 
+  resources :main_meters, except: [ :show ]
+
   resources :backups, only: [ :index, :create ] do
     collection do
       post :restore

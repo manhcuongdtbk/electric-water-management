@@ -21,6 +21,8 @@ RSpec.describe Ability do
   let(:config_a)    { create(:unit_config, organization: unit_a, monthly_period: period) }
   let(:config_b)    { create(:unit_config, organization: unit_b, monthly_period: period) }
   let(:division_config) { create(:unit_config, organization: division, monthly_period: period) }
+  let(:main_meter)  { create(:main_meter) }
+  let(:main_meter_reading) { create(:main_meter_reading, main_meter: main_meter, monthly_period: period) }
 
   context "when user is nil" do
     let(:user) { nil }
@@ -50,6 +52,8 @@ RSpec.describe Ability do
     it { is_expected.to be_able_to(:manage, User.new) }
     it { is_expected.to be_able_to(:manage, MonthlyPeriod.new) }
     it { is_expected.to be_able_to(:manage, RankQuota.new) }
+    it { is_expected.to be_able_to(:manage, main_meter) }
+    it { is_expected.to be_able_to(:manage, main_meter_reading) }
     it { is_expected.not_to be_able_to(:manage, :backup) }
   end
 
@@ -82,6 +86,8 @@ RSpec.describe Ability do
     it { is_expected.not_to be_able_to(:manage, User.new) }
     it { is_expected.not_to be_able_to(:manage, MonthlyPeriod.new) }
     it { is_expected.not_to be_able_to(:manage, RankQuota.new) }
+    it { is_expected.not_to be_able_to(:manage, main_meter) }
+    it { is_expected.not_to be_able_to(:read, main_meter) }
   end
 
   context "when user is commander of unit_a" do
