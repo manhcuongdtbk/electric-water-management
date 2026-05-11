@@ -38,7 +38,7 @@ module SystemSpecHelpers
     create(:unit_config,
            organization: scenario.unit, monthly_period: scenario.period,
            savings_rate: 0.05, division_public_rate: 0.10,
-           unit_public_rate: 0.0, electricity_supply_kw: 50_000)
+           unit_public_rate: 0.0)
     cp
   end
 

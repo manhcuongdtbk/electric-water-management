@@ -53,14 +53,14 @@ RSpec.describe "CalculationEngine zone-loss + pump pool (integration)" do
     create(:unit_config,
            organization: dva, monthly_period: period,
            savings_rate: bd("0.05"), division_public_rate: bd("0.10"),
-           unit_public_rate: bd("0"), electricity_supply_kw: nil)
+           unit_public_rate: bd("0"))
   end
 
   let!(:cfg_dvb) do
     create(:unit_config,
            organization: dvb, monthly_period: period,
            savings_rate: bd("0.05"), division_public_rate: bd("0.10"),
-           unit_public_rate: bd("0"), electricity_supply_kw: nil)
+           unit_public_rate: bd("0"))
   end
 
   # DVA contact points + personnel + meters
