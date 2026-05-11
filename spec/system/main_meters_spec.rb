@@ -77,6 +77,16 @@ RSpec.describe "MainMeters management", type: :system do
       expect(old_mm.reload.organizations).to be_empty
     end
 
+    it "ghi nhật ký (paper_trail) cho Organization khi gán vào khu vực mới" do
+      mm = create(:main_meter, name: "Khu vực X", code: "MM-X")
+      expect {
+        visit edit_main_meter_path(mm)
+        check scenario.unit.name
+        click_on I18n.t("main_meters.form.submit_update")
+        expect(page).to have_content(I18n.t("flash.main_meters.updated"))
+      }.to change { PaperTrail::Version.where(item_type: "Organization", item_id: scenario.unit.id).count }.by(1)
+    end
+
     it "xoá khu vực không có reading → các đơn vị bị tách khỏi khu vực" do
       mm = create(:main_meter)
       scenario.unit.update!(main_meter: mm)

@@ -77,9 +77,17 @@ class MainMetersController < ApplicationController
   # newly selected unit is attached. Stealing a unit from another main meter
   # is allowed (the previous link is overwritten) — admin_level1 is trusted
   # to manage zone membership.
+  #
+  # Uses `update!` per record (not `update_all`) so paper_trail logs the FK
+  # change on each Organization — F19 audit log must see who moved which unit
+  # into which zone. paper_trail no-ops when the value is unchanged, so calling
+  # update! on an already-linked org is safe and produces no spurious version.
   def assign_organizations(main_meter, requested_ids)
-    Organization.where(main_meter_id: main_meter.id).where.not(id: requested_ids)
-                .update_all(main_meter_id: nil)
-    Organization.units.where(id: requested_ids).update_all(main_meter_id: main_meter.id)
+    Organization.where(main_meter_id: main_meter.id).where.not(id: requested_ids).each do |org|
+      org.update!(main_meter_id: nil)
+    end
+    Organization.units.where(id: requested_ids).each do |org|
+      org.update!(main_meter_id: main_meter.id)
+    end
   end
 end

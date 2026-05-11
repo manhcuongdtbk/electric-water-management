@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe MainMeter, type: :model do
   describe "associations" do
-    it { is_expected.to have_many(:organizations).dependent(:nullify) }
+    it { is_expected.to have_many(:organizations) }
     it { is_expected.to have_many(:main_meter_readings).dependent(:destroy) }
     it { is_expected.to have_many(:monthly_periods).through(:main_meter_readings) }
   end
@@ -72,6 +72,14 @@ RSpec.describe MainMeter, type: :model do
       org = create(:organization, :unit, parent: div, main_meter: mm)
       mm.destroy!
       expect(org.reload.main_meter_id).to be_nil
+    end
+
+    it "records a paper_trail version on each detached organization" do
+      mm  = create(:main_meter)
+      div = create(:organization, :division)
+      org = create(:organization, :unit, parent: div, main_meter: mm)
+      expect { mm.destroy! }
+        .to change { PaperTrail::Version.where(item_type: "Organization", item_id: org.id).count }.by(1)
     end
   end
 end
