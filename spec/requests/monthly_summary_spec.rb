@@ -198,6 +198,22 @@ RSpec.describe "MonthlySummary", type: :request do
       end
     end
 
+    context "scope: đầu mối công cộng không xuất hiện trong bảng thu tiền" do
+      let!(:cp_public) { create(:contact_point, organization: org_a, name: "CP Đèn đường") }
+      let!(:m_public)  { create(:meter, :public_meter, organization: org_a, contact_point: cp_public) }
+      let!(:calc_public) do
+        create(:monthly_calculation, contact_point: cp_public, monthly_period: period,
+               total_personnel: 0, over_under_kw: 26, total_amount: 52_000)
+      end
+
+      it "ẩn đầu mối công cộng khỏi response" do
+        sign_in admin_unit_a
+        get monthly_summary_path(period_id: period.id)
+        expect(response.body).to include(cp_a.name)
+        expect(response.body).not_to include(cp_public.name)
+      end
+    end
+
     context "data correctness" do
       it "displays over_under_kw absolute value in surplus column (negative = tiết kiệm)" do
         sign_in admin_unit_a

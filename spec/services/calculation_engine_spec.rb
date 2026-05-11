@@ -76,14 +76,24 @@ RSpec.describe CalculationEngine do
   let!(:pump_reading) { create(:meter_reading, meter: pump_meter, monthly_period: period, reading_start: 0, reading_end: 1000, consumption: 1000) }
   let!(:pump_assignment) { create(:pump_station_assignment, pump_station: pump_station, organization: organization) }
 
-  # Unit config — tỷ lệ % only. Supply comes from MainMeterReading (1800)
+  # Config split per nghiệp vụ: Division row carries savings_rate +
+  # division_public_rate (admin_level1), Unit row carries unit_public_rate +
+  # other_deduction (admin_unit). Supply comes from MainMeterReading (1800)
   # → loss = 1800 − 0 − (704 CP + 1000 pump) = 96 (same target value as before).
+  let!(:division_config) do
+    create(:unit_config,
+           organization: division,
+           monthly_period: period,
+           savings_rate: savings_rate,
+           division_public_rate: div_public_rate,
+           unit_public_rate: nil)
+  end
   let!(:unit_config) do
     create(:unit_config,
            organization: organization,
            monthly_period: period,
-           savings_rate: savings_rate,
-           division_public_rate: div_public_rate,
+           savings_rate: nil,
+           division_public_rate: nil,
            unit_public_rate: unit_public_rate,
            other_deduction_type: :fixed_kw,
            other_deduction_value: bd("0"))
@@ -379,11 +389,14 @@ RSpec.describe CalculationEngine do
       end
     end
 
-    context "unit with no UnitConfig record" do
-      before { unit_config.destroy! }
+    context "with no UnitConfig records at all (neither Division nor Unit)" do
+      before do
+        unit_config.destroy!
+        division_config.destroy!
+      end
 
       it "treats all rates as zero (no savings/public/other deduction)" do
-        results = engine.compute
+        results = described_class.new(organization: organization, monthly_period: period).compute
         row = results.find { |r| r[:contact_point_id] == cp_truong.id }
         expect(row[:savings_deduction_kw]).to eq(bd("0"))
         expect(row[:division_public_deduction_kw]).to eq(bd("0"))
@@ -461,9 +474,11 @@ RSpec.describe CalculationEngine do
         expect(row[:loss_deduction_kw]).to eq(bd("0"))
       end
 
-      it "does not include no_loss consumption in meter_usage_kw" do
+      it "includes no_loss consumption in meter_usage_kw (still billed)" do
+        # no_loss only escapes the LOSS POOL; its consumption is real and must
+        # be billed like any sinh-hoạt reading.
         row = engine.compute.find { |r| r[:contact_point_id] == cp_substation.id }
-        expect(row[:meter_usage_kw]).to eq(bd("0"))
+        expect(row[:meter_usage_kw]).to eq(bd("50"))
       end
 
       it "clamps total_zone_loss to 0 when supply < no_loss + B" do
@@ -802,6 +817,64 @@ RSpec.describe CalculationEngine do
       # cp_truong has 1/5 of personnel.
       truong = engine.compute.find { |r| r[:contact_point_id] == cp_truong.id }
       expect(truong[:water_pump_actual_kw]).to eq(bd("1500") * bd("1") / bd("5"))
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # Regression: engine reads savings_rate + division_public_rate from the
+  # Division-level UnitConfig (admin_level1's row), not the Unit-level row.
+  # The UI for /unit_configs writes these two rates to the division's record.
+  # ---------------------------------------------------------------------------
+  describe "config lookup across Division and Unit rows" do
+    let(:total_standard_truong) { bd("115") + bd("9.45") } # rank1=1 → 115 + 1×9.45
+
+    context "when both rates live on the Division row" do
+      it "applies savings_rate from the Division UnitConfig" do
+        truong = engine.compute.find { |r| r[:contact_point_id] == cp_truong.id }
+        expect(truong[:savings_deduction_kw]).to eq(total_standard_truong * bd("0.05"))
+      end
+
+      it "applies division_public_rate from the Division UnitConfig" do
+        truong = engine.compute.find { |r| r[:contact_point_id] == cp_truong.id }
+        expect(truong[:division_public_deduction_kw]).to eq(total_standard_truong * bd("0.10"))
+      end
+    end
+
+    context "when only the Unit row is present (Division row missing)" do
+      before { division_config.destroy! }
+
+      it "yields zero savings_deduction" do
+        truong = described_class.new(organization: organization, monthly_period: period).compute
+                                .find { |r| r[:contact_point_id] == cp_truong.id }
+        expect(truong[:savings_deduction_kw]).to eq(bd("0"))
+      end
+
+      it "yields zero division_public_deduction" do
+        truong = described_class.new(organization: organization, monthly_period: period).compute
+                                .find { |r| r[:contact_point_id] == cp_truong.id }
+        expect(truong[:division_public_deduction_kw]).to eq(bd("0"))
+      end
+    end
+
+    context "when rates are misplaced on the Unit row (legacy data)" do
+      before do
+        division_config.update!(savings_rate: nil, division_public_rate: nil)
+        unit_config.update!(savings_rate: bd("0.05"), division_public_rate: bd("0.10"))
+      end
+
+      it "ignores them — engine looks ONLY at the Division row" do
+        truong = described_class.new(organization: organization, monthly_period: period).compute
+                                .find { |r| r[:contact_point_id] == cp_truong.id }
+        expect(truong[:savings_deduction_kw]).to eq(bd("0"))
+        expect(truong[:division_public_deduction_kw]).to eq(bd("0"))
+      end
+    end
+
+    it "still reads unit_public_rate from the Unit's own UnitConfig" do
+      unit_config.update!(unit_public_rate: bd("0.07"))
+      truong = described_class.new(organization: organization, monthly_period: period).compute
+                              .find { |r| r[:contact_point_id] == cp_truong.id }
+      expect(truong[:unit_public_deduction_kw]).to eq(total_standard_truong * bd("0.07"))
     end
   end
 end

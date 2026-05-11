@@ -35,9 +35,15 @@ module SystemSpecHelpers
     create(:meter_reading,
            meter: meter, monthly_period: scenario.period,
            reading_start: 100, reading_end: 500, consumption: 400)
+    # Division config carries savings_rate + division_public_rate (admin_level1).
+    # Unit config carries unit_public_rate (admin_unit). Engine reads from both.
+    create(:unit_config,
+           organization: scenario.division, monthly_period: scenario.period,
+           savings_rate: 0.05, division_public_rate: 0.10,
+           unit_public_rate: nil)
     create(:unit_config,
            organization: scenario.unit, monthly_period: scenario.period,
-           savings_rate: 0.05, division_public_rate: 0.10,
+           savings_rate: nil, division_public_rate: nil,
            unit_public_rate: 0.0)
     cp
   end

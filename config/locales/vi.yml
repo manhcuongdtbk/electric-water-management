@@ -527,6 +527,8 @@ vi:
       other_deduction_kw: "Khác"
       total_deduction_kw: "Tổng trừ"
       remaining_standard_kw: "TC còn lại"
+      meter_usage_kw: "Sử dụng đồng hồ (kW)"
+      water_pump_actual_kw: "Bơm nước TT (kW)"
       total_usage_kw: "Sử dụng"
       over_under_kw: "Chênh lệch"
       total_amount: "Thành tiền (đ)"
