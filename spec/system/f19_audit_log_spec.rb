@@ -98,4 +98,33 @@ RSpec.describe "F19 — Nhật ký hoạt động", type: :system do
       expect(page).to have_content(I18n.t("flash.access_denied"))
     end
   end
+
+  describe "Vietnamese attribute labels (verifies new vi.yml activerecord.attributes blocks)" do
+    before { login_as scenario.tech, scope: :user }
+
+    it "Personnel rankN_count → 'Số người nhóm N'" do
+      cp = create(:contact_point, organization: scenario.unit)
+      personnel = create(:personnel, contact_point: cp, monthly_period: scenario.period)
+      PaperTrail.request(whodunnit: scenario.admin_unit.id) { personnel.update!(rank3_count: 5) }
+
+      visit audit_logs_path
+      expect(page).to have_content("Số người nhóm 3")
+      expect(page).not_to have_content("Rank3 count")
+    end
+
+    it "MonthlyPeriod unit_price → 'Đơn giá (đ/kW)'" do
+      PaperTrail.request(whodunnit: scenario.admin_level1.id) { scenario.period.update!(unit_price: 2500) }
+
+      visit audit_logs_path
+      expect(page).to have_content("Đơn giá (đ/kW)")
+      expect(page).not_to have_content("Unit price")
+    end
+
+    it "Organization name → 'Tên đơn vị'" do
+      PaperTrail.request(whodunnit: scenario.admin_level1.id) { scenario.unit.update!(name: "Đơn vị X") }
+
+      visit audit_logs_path
+      expect(page).to have_content("Tên đơn vị")
+    end
+  end
 end

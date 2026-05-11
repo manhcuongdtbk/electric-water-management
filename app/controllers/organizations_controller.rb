@@ -70,6 +70,6 @@ class OrganizationsController < ApplicationController
   end
 
   def organization_params
-    params.require(:organization).permit(:name, :code, :position)
+    params.require(:organization).permit(:name, :position)
   end
 end

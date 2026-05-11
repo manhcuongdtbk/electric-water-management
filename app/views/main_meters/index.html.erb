@@ -14,7 +14,6 @@
       <tr>
         <th class="px-4 py-3 text-left font-medium text-gray-600 w-10"><%= t("main_meters.index.columns.stt") %></th>
         <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("main_meters.index.columns.name") %></th>
-        <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("main_meters.index.columns.code") %></th>
         <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("main_meters.index.columns.organizations") %></th>
         <th class="px-4 py-3 text-right font-medium text-gray-600"><%= t("main_meters.index.columns.position") %></th>
         <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("main_meters.index.columns.actions") %></th>
@@ -26,7 +25,6 @@
           <tr class="hover:bg-gray-50">
             <td class="px-4 py-3 text-gray-500"><%= idx + 1 %></td>
             <td class="px-4 py-3 font-medium text-gray-900"><%= main_meter.name %></td>
-            <td class="px-4 py-3 text-gray-700"><%= main_meter.code %></td>
             <td class="px-4 py-3 text-gray-700">
               <% if main_meter.organizations.any? %>
                 <%= main_meter.organizations.map(&:name).join(", ") %>
@@ -49,7 +47,7 @@
         <% end %>
       <% else %>
         <tr>
-          <td colspan="6" class="px-4 py-8 text-center text-gray-400"><%= t("main_meters.index.empty") %></td>
+          <td colspan="5" class="px-4 py-8 text-center text-gray-400"><%= t("main_meters.index.empty") %></td>
         </tr>
       <% end %>
     </tbody>

@@ -37,8 +37,8 @@ RSpec.describe "CalculationEngine zone-loss + pump pool (integration)" do
 
   let(:division)    { create(:organization, :division) }
   let(:main_meter)  { create(:main_meter, name: "Khu vuc A") }
-  let(:dva)         { create(:organization, level: :unit, parent: division, code: "DVA", name: "DVA", main_meter: main_meter) }
-  let(:dvb)         { create(:organization, level: :unit, parent: division, code: "DVB", name: "DVB", main_meter: main_meter) }
+  let(:dva)         { create(:organization, level: :unit, parent: division, name: "DVA", main_meter: main_meter) }
+  let(:dvb)         { create(:organization, level: :unit, parent: division, name: "DVB", main_meter: main_meter) }
   let(:period)      { create(:monthly_period, year: 2026, month: 4, unit_price: bd("2336.4")) }
 
   let!(:rank_quotas) { (1..7).map { |g| create(:rank_quota, :"rank#{g}") } }
@@ -200,7 +200,7 @@ RSpec.describe "CalculationEngine zone-loss + pump pool (integration)" do
   end
 
   describe "org with no MainMeter (no supply available)" do
-    let(:solo_org) { create(:organization, level: :unit, parent: division, code: "SOLO", main_meter: nil) }
+    let(:solo_org) { create(:organization, level: :unit, parent: division, main_meter: nil) }
     # solo_org reuses cfg_division (same parent). No unit-level config needed —
     # unit_public_rate defaults to ZERO when missing.
     let!(:cp_solo) { create(:contact_point, organization: solo_org, name: "Solo CP") }

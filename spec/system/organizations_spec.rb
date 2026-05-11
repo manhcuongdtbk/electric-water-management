@@ -19,12 +19,11 @@ RSpec.describe "Organizations management", type: :system do
       click_on I18n.t("organizations.index.new_button")
 
       fill_in I18n.t("organizations.form.name"), with: "Đại đội 30"
-      fill_in I18n.t("organizations.form.code"), with: "DH30"
       click_on I18n.t("organizations.form.submit_create")
 
       expect(page).to have_current_path(organizations_path)
       expect(page).to have_content(I18n.t("flash.organizations.created"))
-      created = Organization.find_by!(code: "DH30")
+      created = Organization.find_by!(name: "Đại đội 30")
       expect(created.level).to eq("unit")
       expect(created.parent).to eq(scenario.division)
     end
@@ -32,7 +31,6 @@ RSpec.describe "Organizations management", type: :system do
     it "validation: tên đơn vị trùng → lỗi" do
       visit new_organization_path
       fill_in I18n.t("organizations.form.name"), with: scenario.unit.name
-      fill_in I18n.t("organizations.form.code"), with: "OTHER"
       click_on I18n.t("organizations.form.submit_create")
 
       expect(page).to have_content(I18n.t("errors.messages.taken"))

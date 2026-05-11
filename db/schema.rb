@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_11_184641) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_12_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -49,13 +49,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_184641) do
   end
 
   create_table "main_meters", force: :cascade do |t|
-    t.string "code", null: false
     t.datetime "created_at", null: false
     t.string "name", null: false
     t.text "notes"
     t.integer "position", default: 0
     t.datetime "updated_at", null: false
-    t.index ["code"], name: "index_main_meters_on_code", unique: true
     t.index ["name"], name: "index_main_meters_on_name", unique: true
   end
 
@@ -138,7 +136,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_184641) do
   end
 
   create_table "organizations", force: :cascade do |t|
-    t.string "code", null: false
     t.datetime "created_at", null: false
     t.integer "level", default: 2, null: false
     t.bigint "main_meter_id"
@@ -146,10 +143,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_184641) do
     t.bigint "parent_id"
     t.integer "position", default: 0
     t.datetime "updated_at", null: false
-    t.index ["code"], name: "index_organizations_on_code", unique: true
+    t.index ["level", "name"], name: "index_organizations_on_level_and_name", unique: true
     t.index ["level"], name: "index_organizations_on_level"
     t.index ["main_meter_id"], name: "index_organizations_on_main_meter_id"
-    t.index ["name"], name: "index_organizations_on_name", unique: true
     t.index ["parent_id"], name: "index_organizations_on_parent_id"
   end
 
