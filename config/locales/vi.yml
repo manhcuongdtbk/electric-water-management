@@ -38,6 +38,15 @@ vi:
             pump_station_id:
               required_for_pump_station: "bắt buộc khi loại công tơ là Trạm bơm"
               only_for_pump_station_type: "chỉ áp dụng cho công tơ loại Trạm bơm"
+        work_group:
+          attributes:
+            owner_organization:
+              must_be_division: "phải là Sư đoàn"
+        pump_station_assignment:
+          attributes:
+            assignable:
+              must_be_unit_level: "phải là đơn vị cấp 2"
+              must_be_in_unit_org: "đầu mối phải thuộc đơn vị cấp 2"
     attributes:
       user:
         full_name: "Họ tên"
@@ -69,9 +78,16 @@ vi:
         first_meter_name: "Tên công tơ đầu tiên"
         first_meter_serial_number: "Số hiệu công tơ đầu tiên"
       pump_station_assignment:
-        organization: "Đơn vị được phân bổ"
-        organization_id: "Đơn vị được phân bổ"
+        assignable: "Nhóm đối tượng"
+        assignable_type: "Loại nhóm đối tượng"
+        assignable_id: "Nhóm đối tượng"
         fixed_pump_percentage: "Tỷ lệ cố định (%)"
+      work_group:
+        name: "Tên nhóm công tác"
+        personnel_count: "Quân số"
+        position: "Thứ tự hiển thị"
+        notes: "Ghi chú"
+        owner_organization: "Sư đoàn quản lý"
       unit_config:
         savings_rate: "Tỷ lệ tiết kiệm"
         division_public_rate: "Tỷ lệ công cộng Sư đoàn"
@@ -198,10 +214,16 @@ vi:
       cannot_destroy_with_readings: "Không thể xoá công tơ đã có dữ liệu chỉ số. Dữ liệu lịch sử được bảo toàn."
       cannot_destroy_last_meter: "Không thể xoá công tơ cuối cùng. Trạm bơm phải có ít nhất 1 công tơ."
     pump_station_assignments:
-      created: "Đã gán đơn vị vào trạm bơm. Hãy tính lại các kỳ bị ảnh hưởng."
+      created: "Đã gán nhóm đối tượng vào trạm bơm. Hãy tính lại các kỳ bị ảnh hưởng."
       updated: "Cập nhật phân bổ trạm bơm thành công. Hãy tính lại các kỳ bị ảnh hưởng."
-      destroyed: "Đã bỏ gán đơn vị khỏi trạm bơm. Hãy tính lại các kỳ bị ảnh hưởng."
-      destroy_failed: "Không thể bỏ gán đơn vị khỏi trạm bơm."
+      destroyed: "Đã bỏ gán nhóm đối tượng khỏi trạm bơm. Hãy tính lại các kỳ bị ảnh hưởng."
+      destroy_failed: "Không thể bỏ gán nhóm đối tượng khỏi trạm bơm."
+    work_groups:
+      created: "Tạo nhóm công tác thành công."
+      updated: "Cập nhật nhóm công tác thành công."
+      destroyed: "Xoá nhóm công tác thành công."
+      destroy_failed: "Không thể xoá nhóm công tác."
+      cannot_destroy_with_assignments: "Không thể xoá nhóm công tác đang được phân bổ trạm bơm. Hãy bỏ gán trước."
     pump_station_readings:
       saved: "Lưu chỉ số công tơ trạm bơm thành công."
       period_locked: "Kỳ này đã khóa, không thể chỉnh sửa chỉ số."
@@ -528,6 +550,7 @@ vi:
     rank_quotas: "Định mức cấp bậc"
     pump_stations: "Trạm bơm"
     pump_station_readings: "Chỉ số trạm bơm"
+    work_groups: "Nhóm công tác"
     organizations: "Quản lý đơn vị"
     main_meters: "Khu vực đồng hồ tổng"
     audit_logs: "Nhật ký hoạt động"
@@ -741,29 +764,72 @@ vi:
 
   pump_station_assignments:
     index:
-      organization_col: "Đơn vị"
+      recipient_col: "Nhóm phân bổ"
       fixed_pct_col: "Tỷ lệ cố định"
       actions_col: "Thao tác"
       variable: "Theo quân số"
-      no_assignments: "Trạm bơm này chưa được gán cho đơn vị nào."
+      no_assignments: "Trạm bơm này chưa được gán cho nhóm đối tượng nào."
+    type_badge:
+      organization: "Đơn vị"
+      contact_point: "Đầu mối"
+      work_group: "Nhóm công tác"
     new:
-      title: "Gán đơn vị vào %{pump_station}"
-      no_available_orgs: "Tất cả đơn vị cấp 2 đã được gán vào trạm bơm này."
+      title: "Gán nhóm đối tượng vào %{pump_station}"
+      no_available_assignables: "Tất cả nhóm đối tượng đã được gán vào trạm bơm này."
     edit:
       title: "Sửa phân bổ trạm bơm"
     form:
+      assignable_type: "Loại nhóm đối tượng"
+      assignable_type_organization: "Đơn vị cấp 2"
+      assignable_type_contact_point: "Đầu mối đặc biệt"
+      assignable_type_work_group: "Nhóm công tác"
       organization: "Đơn vị"
       organization_prompt: "— Chọn đơn vị —"
+      contact_point: "Đầu mối"
+      contact_point_prompt: "— Chọn đầu mối —"
+      work_group: "Nhóm công tác"
+      work_group_prompt: "— Chọn nhóm công tác —"
       fixed_pump_percentage: "Tỷ lệ cố định (%)"
-      fixed_pump_percentage_hint: "Để trống nếu đơn vị tham gia chia theo quân số. Để 0 nếu cố định nhận 0 kW (vẫn không tham gia chia theo quân số)."
-      submit_create: "Gán đơn vị"
+      fixed_pump_percentage_hint: "Để trống nếu chia theo quân số. Để 0 nếu cố định nhận 0 kW (vẫn không tham gia chia theo quân số)."
+      submit_create: "Gán nhóm đối tượng"
       submit_update: "Lưu phân bổ"
       submit: "Lưu phân bổ"
       cancel: "Hủy"
     actions:
       edit: "Sửa"
       delete: "Bỏ gán"
-      delete_confirm: "Bạn có chắc muốn bỏ gán đơn vị này khỏi trạm bơm?"
+      delete_confirm: "Bạn có chắc muốn bỏ gán nhóm đối tượng này khỏi trạm bơm?"
+
+  work_groups:
+    index:
+      title: "Quản lý nhóm công tác"
+      subtitle: "Nhóm công tác là tập hợp người lao động (VD: Thợ xây, Trạm chế biến) không thuộc đơn vị hay đầu mối nào, nhưng được phân bổ điện bơm theo quân số."
+      new_button: "Thêm nhóm công tác"
+      empty: "Chưa có nhóm công tác nào."
+      columns:
+        stt: "STT"
+        name: "Tên nhóm"
+        personnel_count: "Quân số"
+        notes: "Ghi chú"
+        position: "Thứ tự"
+        actions: "Thao tác"
+    new:
+      title: "Thêm nhóm công tác"
+    edit:
+      title: "Sửa nhóm công tác"
+    form:
+      name: "Tên nhóm công tác"
+      personnel_count: "Quân số (người)"
+      personnel_count_hint: "Quân số nhập tay. Không thay đổi theo tháng — nếu cần điều chỉnh hãy cập nhật giá trị tại đây."
+      notes: "Ghi chú"
+      position: "Thứ tự hiển thị"
+      submit_create: "Tạo nhóm công tác"
+      submit_update: "Lưu thay đổi"
+      cancel: "Hủy"
+    actions:
+      edit: "Sửa"
+      delete: "Xoá"
+      delete_confirm: "Bạn có chắc muốn xoá nhóm công tác này?"
 
   pump_station_readings:
     show:

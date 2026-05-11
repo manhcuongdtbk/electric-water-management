@@ -13,14 +13,84 @@
 
   <div class="space-y-4">
     <% if assignment.new_record? %>
-      <div>
-        <%= f.label :organization_id, t("pump_station_assignments.form.organization"),
-              class: "block text-sm font-medium text-gray-700 mb-1" %>
-        <%= f.select :organization_id,
-              options_from_collection_for_select(available_organizations, :id, :name, assignment.organization_id),
-              { include_blank: t("pump_station_assignments.form.organization_prompt") },
-              class: "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500",
-              required: true %>
+      <%
+        selected_type  = assignment.assignable_type.presence || "Organization"
+        orgs           = available_assignables[:organizations]
+        contact_points = available_assignables[:contact_points]
+        work_groups    = available_assignables[:work_groups]
+      %>
+      <div data-controller="assignable-type-picker">
+        <span class="block text-sm font-medium text-gray-700 mb-1">
+          <%= t("pump_station_assignments.form.assignable_type") %>
+        </span>
+        <div class="flex flex-wrap gap-3 mb-3">
+          <% [
+            [ "Organization",  t("pump_station_assignments.form.assignable_type_organization") ],
+            [ "ContactPoint",  t("pump_station_assignments.form.assignable_type_contact_point") ],
+            [ "WorkGroup",     t("pump_station_assignments.form.assignable_type_work_group") ]
+          ].each do |value, label| %>
+            <label class="inline-flex items-center gap-2 text-sm">
+              <%= f.radio_button :assignable_type, value,
+                    checked: selected_type == value,
+                    data: { assignable_type_picker_target: "radio",
+                            action: "change->assignable-type-picker#typeChanged" },
+                    class: "text-blue-600 focus:ring-blue-500" %>
+              <span><%= label %></span>
+            </label>
+          <% end %>
+        </div>
+
+        <div data-assignable-type-picker-target="field"
+             data-assignable-type="Organization"
+             class="<%= 'hidden' if selected_type != 'Organization' %>">
+          <%= f.label :assignable_id, t("pump_station_assignments.form.organization"),
+                class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= f.select :assignable_id,
+                options_from_collection_for_select(orgs, :id, :name,
+                                                   selected_type == "Organization" ? assignment.assignable_id : nil),
+                { include_blank: t("pump_station_assignments.form.organization_prompt") },
+                class: "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500",
+                disabled: selected_type != "Organization",
+                required: selected_type == "Organization" %>
+        </div>
+
+        <div data-assignable-type-picker-target="field"
+             data-assignable-type="ContactPoint"
+             class="<%= 'hidden' if selected_type != 'ContactPoint' %>">
+          <%= label_tag "pump_station_assignment_assignable_id_cp",
+                t("pump_station_assignments.form.contact_point"),
+                class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= select_tag "pump_station_assignment[assignable_id]",
+                options_from_collection_for_select(
+                  contact_points,
+                  :id,
+                  ->(cp) { "#{cp.name} — #{cp.organization.name}" },
+                  selected_type == "ContactPoint" ? assignment.assignable_id : nil
+                ),
+                id: "pump_station_assignment_assignable_id_cp",
+                include_blank: t("pump_station_assignments.form.contact_point_prompt"),
+                class: "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500",
+                disabled: selected_type != "ContactPoint",
+                required: selected_type == "ContactPoint" %>
+        </div>
+
+        <div data-assignable-type-picker-target="field"
+             data-assignable-type="WorkGroup"
+             class="<%= 'hidden' if selected_type != 'WorkGroup' %>">
+          <%= label_tag "pump_station_assignment_assignable_id_wg",
+                t("pump_station_assignments.form.work_group"),
+                class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= select_tag "pump_station_assignment[assignable_id]",
+                options_from_collection_for_select(
+                  work_groups, :id, :name,
+                  selected_type == "WorkGroup" ? assignment.assignable_id : nil
+                ),
+                id: "pump_station_assignment_assignable_id_wg",
+                include_blank: t("pump_station_assignments.form.work_group_prompt"),
+                class: "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500",
+                disabled: selected_type != "WorkGroup",
+                required: selected_type == "WorkGroup" %>
+        </div>
       </div>
     <% end %>
 

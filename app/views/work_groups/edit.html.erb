@@ -1,0 +1,14 @@
+<% content_for :title, t("work_groups.edit.title") %>
+
+<div class="mb-6 flex items-center gap-2 text-sm text-gray-500">
+  <%= link_to t("work_groups.index.title"), work_groups_path, class: "hover:underline" %>
+  <span>/</span>
+  <span class="text-gray-900"><%= t("work_groups.edit.title") %></span>
+</div>
+
+<div class="bg-white rounded-lg border border-gray-200 p-6">
+  <h1 class="text-xl font-semibold text-gray-900 mb-1"><%= t("work_groups.edit.title") %></h1>
+  <p class="text-sm text-gray-500 mb-6"><%= @work_group.name %></p>
+
+  <%= render "form", work_group: @work_group %>
+</div>

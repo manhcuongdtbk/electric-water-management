@@ -75,7 +75,8 @@ RSpec.describe "Pump stations management", type: :system do
       click_on I18n.t("pump_station_assignments.form.submit_create")
 
       expect(page).to have_content(I18n.t("flash.pump_station_assignments.created"))
-      asg = ps.pump_station_assignments.find_by(organization: scenario.unit)
+      asg = ps.pump_station_assignments.find_by(assignable_type: "Organization",
+                                                assignable_id: scenario.unit.id)
       expect(asg).to be_present
       expect(asg.fixed_pump_percentage).to eq(BigDecimal("30"))
 

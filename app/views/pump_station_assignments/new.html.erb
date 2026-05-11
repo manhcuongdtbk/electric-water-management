@@ -11,16 +11,19 @@
     <%= t("pump_station_assignments.new.title", pump_station: @pump_station.name) %>
   </h1>
 
-  <% if @available_organizations.any? %>
+  <%
+    any_available = @available_assignables.values.any?(&:any?)
+  %>
+  <% if any_available %>
     <div class="mt-4">
       <%= render "form",
             pump_station: @pump_station,
             assignment: @assignment,
-            available_organizations: @available_organizations %>
+            available_assignables: @available_assignables %>
     </div>
   <% else %>
     <p class="mt-4 text-sm text-gray-600 italic">
-      <%= t("pump_station_assignments.new.no_available_orgs") %>
+      <%= t("pump_station_assignments.new.no_available_assignables") %>
     </p>
     <div class="mt-4">
       <%= link_to t("pump_station_assignments.form.cancel"), pump_stations_path,

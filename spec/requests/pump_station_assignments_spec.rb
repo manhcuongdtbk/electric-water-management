@@ -152,7 +152,8 @@ RSpec.describe "PumpStationAssignments", type: :request do
     let(:create_params) do
       {
         pump_station_assignment: {
-          organization_id: other_unit.id,
+          assignable_type: "Organization",
+          assignable_id: other_unit.id,
           fixed_pump_percentage: "25"
         }
       }
@@ -161,16 +162,42 @@ RSpec.describe "PumpStationAssignments", type: :request do
     context "as admin_level1" do
       before { sign_in admin1 }
 
-      it "creates the assignment" do
+      it "creates an Organization assignment" do
         other_unit
         expect {
           post pump_station_assignments_path(pump_station), params: create_params
         }.to change(PumpStationAssignment, :count).by(1)
 
         new_assignment = PumpStationAssignment.last
-        expect(new_assignment.organization).to eq(other_unit)
+        expect(new_assignment.assignable).to eq(other_unit)
         expect(new_assignment.fixed_pump_percentage).to eq(BigDecimal("25"))
         expect(response).to redirect_to(pump_stations_path)
+      end
+
+      it "creates a ContactPoint assignment (đầu mối đặc biệt)" do
+        cp = create(:contact_point, organization: other_unit)
+        params = create_params.deep_merge(pump_station_assignment: {
+                                            assignable_type: "ContactPoint",
+                                            assignable_id: cp.id,
+                                            fixed_pump_percentage: "30"
+                                          })
+        expect {
+          post pump_station_assignments_path(pump_station), params: params
+        }.to change(PumpStationAssignment, :count).by(1)
+        expect(PumpStationAssignment.last.assignable).to eq(cp)
+      end
+
+      it "creates a WorkGroup assignment (nhóm công tác)" do
+        wg = create(:work_group, owner_organization: division)
+        params = create_params.deep_merge(pump_station_assignment: {
+                                            assignable_type: "WorkGroup",
+                                            assignable_id: wg.id,
+                                            fixed_pump_percentage: ""
+                                          })
+        expect {
+          post pump_station_assignments_path(pump_station), params: params
+        }.to change(PumpStationAssignment, :count).by(1)
+        expect(PumpStationAssignment.last.assignable).to eq(wg)
       end
 
       it "creates with nil percentage (variable)" do
@@ -180,8 +207,8 @@ RSpec.describe "PumpStationAssignments", type: :request do
         expect(PumpStationAssignment.last.fixed_pump_percentage).to be_nil
       end
 
-      it "rejects duplicate (pump_station_id, organization_id)" do
-        params = create_params.deep_merge(pump_station_assignment: { organization_id: org.id })
+      it "rejects duplicate (pump_station_id, assignable_type, assignable_id)" do
+        params = create_params.deep_merge(pump_station_assignment: { assignable_id: org.id })
         expect {
           post pump_station_assignments_path(pump_station), params: params
         }.not_to change(PumpStationAssignment, :count)

@@ -10,8 +10,9 @@ class Organization < ApplicationRecord
   has_many :meters, dependent: :restrict_with_error
   has_many :unit_configs, dependent: :destroy
   has_many :pump_stations, dependent: :restrict_with_error
-  has_many :pump_station_assignments, dependent: :destroy
-  has_many :served_by_pump_stations, through: :pump_station_assignments, source: :pump_station
+  has_many :pump_station_assignments, as: :assignable, dependent: :destroy
+  has_many :owned_work_groups, class_name: "WorkGroup",
+           foreign_key: :owner_organization_id, dependent: :restrict_with_error
 
   # Enums
   enum :level, { division: 1, unit: 2 }, validate: true

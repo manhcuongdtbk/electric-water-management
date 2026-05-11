@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe PumpStationAssignment, type: :model do
   describe "associations" do
     it { is_expected.to belong_to(:pump_station) }
-    it { is_expected.to belong_to(:organization) }
+    it { is_expected.to belong_to(:assignable) }
   end
 
   it "has paper_trail enabled" do
@@ -14,20 +14,61 @@ RSpec.describe PumpStationAssignment, type: :model do
   describe "validations" do
     subject { build(:pump_station_assignment) }
 
-    it { is_expected.to validate_uniqueness_of(:pump_station_id).scoped_to(:organization_id) }
+    it { is_expected.to validate_inclusion_of(:assignable_type).in_array(%w[Organization ContactPoint WorkGroup]) }
 
-    it "prevents duplicate assignment" do
-      ps = create(:pump_station)
-      org = create(:organization)
-      create(:pump_station_assignment, pump_station: ps, organization: org)
-      dup = build(:pump_station_assignment, pump_station: ps, organization: org)
+    it "prevents duplicate assignment for same pump and same assignable" do
+      ps  = create(:pump_station)
+      unit = create(:organization, :unit)
+      create(:pump_station_assignment, pump_station: ps, assignable: unit)
+      dup = build(:pump_station_assignment, pump_station: ps, assignable: unit)
       expect(dup).not_to be_valid
+    end
+
+    it "allows same Organization id and ContactPoint id on same pump (different types)" do
+      ps   = create(:pump_station)
+      unit = create(:organization, :unit)
+      cp   = create(:contact_point, organization: unit)
+      # Force the ContactPoint id to equal the Organization id is impossible
+      # in this scenario, but the scope on assignable_type means the two coexist
+      # regardless.
+      create(:pump_station_assignment, pump_station: ps, assignable: unit)
+      asg = build(:pump_station_assignment, pump_station: ps, assignable: cp)
+      expect(asg).to be_valid
     end
 
     it { is_expected.to validate_numericality_of(:fixed_pump_percentage)
                           .is_greater_than_or_equal_to(0)
                           .is_less_than_or_equal_to(100)
                           .allow_nil }
+
+    it "rejects division-level Organization as assignable" do
+      ps  = create(:pump_station)
+      div = create(:organization, :division)
+      asg = build(:pump_station_assignment, pump_station: ps, assignable: div)
+      expect(asg).not_to be_valid
+      expect(asg.errors[:assignable]).to be_present
+    end
+
+    it "accepts unit-level Organization as assignable" do
+      ps   = create(:pump_station)
+      unit = create(:organization, :unit)
+      asg  = build(:pump_station_assignment, pump_station: ps, assignable: unit)
+      expect(asg).to be_valid
+    end
+
+    it "accepts ContactPoint whose organization is unit-level" do
+      ps  = create(:pump_station)
+      cp  = create(:contact_point, organization: create(:organization, :unit))
+      asg = build(:pump_station_assignment, pump_station: ps, assignable: cp)
+      expect(asg).to be_valid
+    end
+
+    it "accepts WorkGroup as assignable" do
+      ps = create(:pump_station)
+      wg = create(:work_group)
+      asg = build(:pump_station_assignment, pump_station: ps, assignable: wg)
+      expect(asg).to be_valid
+    end
   end
 
   describe "#fixed?" do
@@ -41,6 +82,31 @@ RSpec.describe PumpStationAssignment, type: :model do
 
     it "is true when fixed_pump_percentage is positive" do
       expect(build(:pump_station_assignment, fixed_pump_percentage: 30).fixed?).to be true
+    end
+  end
+
+  describe "scopes" do
+    let(:ps)   { create(:pump_station) }
+    let(:unit) { create(:organization, :unit) }
+    let(:cp)   { create(:contact_point, organization: unit) }
+    let(:wg)   { create(:work_group) }
+
+    before do
+      create(:pump_station_assignment, pump_station: ps, assignable: unit)
+      create(:pump_station_assignment, pump_station: ps, assignable: cp)
+      create(:pump_station_assignment, pump_station: ps, assignable: wg)
+    end
+
+    it "for_organizations returns only Organization assignments" do
+      result = PumpStationAssignment.for_organizations([ unit.id ])
+      expect(result.pluck(:assignable_type).uniq).to eq([ "Organization" ])
+      expect(result.pluck(:assignable_id)).to eq([ unit.id ])
+    end
+
+    it "for_assignable returns matching type and id" do
+      result = PumpStationAssignment.for_assignable("WorkGroup", wg.id)
+      expect(result.count).to eq(1)
+      expect(result.first.assignable).to eq(wg)
     end
   end
 end
