@@ -6,7 +6,6 @@ class MainMeter < ApplicationRecord
   has_many :monthly_periods, through: :main_meter_readings
 
   validates :name, presence: true, uniqueness: true, length: { maximum: 100 }
-  validates :code, presence: true, uniqueness: true, length: { maximum: 20 }
   validates :position, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :notes, length: { maximum: 1000 }, allow_blank: true
 
