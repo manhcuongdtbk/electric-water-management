@@ -25,14 +25,6 @@ RSpec.describe UnitConfig, type: :model do
       expect(config).to be_valid
     end
 
-    it "rejects negative electricity_supply_kw" do
-      expect(build(:unit_config, electricity_supply_kw: -1)).not_to be_valid
-    end
-
-    it "allows nil electricity_supply_kw" do
-      expect(build(:unit_config, electricity_supply_kw: nil)).to be_valid
-    end
-
     it "rejects negative other_deduction_value" do
       expect(build(:unit_config, other_deduction_value: -1)).not_to be_valid
     end

@@ -369,11 +369,8 @@ RSpec.describe CalculationEngine do
       end
     end
 
-    context "zone with no supply (no MainMeterReading and no UnitConfig fallback)" do
-      before do
-        main_meter_reading.destroy!
-        unit_config.update!(electricity_supply_kw: nil)
-      end
+    context "zone with no supply (no MainMeterReading)" do
+      before { main_meter_reading.destroy! }
 
       it "treats total_zone_loss as zero (loss_deduction = 0 for all)" do
         results = engine.compute

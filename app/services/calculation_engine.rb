@@ -16,8 +16,8 @@
 #       Phân bổ công tơ X: tổn hao × (kW công tơ X ÷ B)
 #     Pump tham gia loss pool (nằm trong B); tổn hao pump cộng vào pump pool phân bổ:
 #       pump pool = pump consumption + pump_loss_share
-#     Fallback: nếu org chưa được gán MainMeter, supply lấy từ UnitConfig.electricity_supply_kw
-#     và zone = [organization.id] (giữ tương thích cho seed/migration).
+#     Khi org chưa được gán MainMeter (zone = [organization.id]), supply không xác định
+#     → tổn hao = 0.
 #   * Bơm nước thực tế: mỗi trạm bơm phục vụ đơn vị (qua pump_station_assignments)
 #     phân bổ pump pool cho từng đầu mối theo tỷ lệ
 #     quân số đầu mối / tổng quân số trên TẤT CẢ các đơn vị mà trạm bơm phục vụ.
@@ -214,12 +214,10 @@ class CalculationEngine
     )
   end
 
-  # Supply: MainMeterReading first, UnitConfig as fallback for orgs not yet
-  # migrated into a zone.
+  # Supply lấy từ MainMeterReading. Org chưa gán MainMeter → nil → tổn hao = 0.
   def zone_supply_kw
     return @zone_supply_kw if defined?(@zone_supply_kw)
-    @zone_supply_kw = main_meter&.supply_kw_for(monthly_period) ||
-                      unit_config&.electricity_supply_kw
+    @zone_supply_kw = main_meter&.supply_kw_for(monthly_period)
   end
 
   def total_zone_loss
