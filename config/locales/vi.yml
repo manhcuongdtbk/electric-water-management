@@ -13,6 +13,16 @@ vi:
       long: "%d/%m/%Y"
 
   activerecord:
+    models:
+      pump_station_assignment:
+        one: "phân bổ trạm bơm"
+        other: "phân bổ trạm bơm"
+      work_group:
+        one: "nhóm công tác"
+        other: "nhóm công tác"
+      pump_station:
+        one: "trạm bơm"
+        other: "trạm bơm"
     errors:
       messages:
         record_invalid: "Dữ liệu không hợp lệ: %{errors}"
@@ -716,9 +726,9 @@ vi:
       new_button: "Thêm trạm bơm"
       readings_link: "Nhập chỉ số công tơ"
       meters_section: "Công tơ"
-      assignments_section: "Đơn vị được phân bổ"
+      assignments_section: "Nhóm phân bổ"
       add_meter: "Thêm công tơ"
-      add_assignment: "Thêm đơn vị"
+      add_assignment: "Thêm phân bổ"
       no_meters: "Trạm bơm này chưa có công tơ nào."
     new:
       title: "Thêm trạm bơm mới"

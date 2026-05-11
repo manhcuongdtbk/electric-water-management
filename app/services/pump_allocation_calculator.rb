@@ -89,19 +89,21 @@ class PumpAllocationCalculator
   # Zone = unit-level Organization served by this pump (directly or via a
   # ContactPoint), expanded to all orgs sharing the same MainMeter.
   def zone_org_ids
-    @zone_org_ids ||= begin
-      org_ids = assignments.flat_map { |a| seed_org_ids(a) }.uniq
-      return [] if org_ids.empty?
+    return @zone_org_ids if defined?(@zone_org_ids)
 
-      mm_ids = Organization.where(id: org_ids).where.not(main_meter_id: nil)
-                           .pluck(:main_meter_id).uniq
-
-      if mm_ids.empty?
-        org_ids
+    org_ids = assignments.flat_map { |a| seed_org_ids(a) }.uniq
+    @zone_org_ids =
+      if org_ids.empty?
+        []
       else
-        Organization.where(main_meter_id: mm_ids).pluck(:id)
+        mm_ids = Organization.where(id: org_ids).where.not(main_meter_id: nil)
+                             .pluck(:main_meter_id).uniq
+        if mm_ids.empty?
+          org_ids
+        else
+          Organization.where(main_meter_id: mm_ids).pluck(:id)
+        end
       end
-    end
   end
 
   def seed_org_ids(assignment)
@@ -112,13 +114,21 @@ class PumpAllocationCalculator
     end
   end
 
+  # Supply for the zone = Σ supply across every distinct MainMeter present
+  # in the zone. Pumps assigned across two zones therefore see the combined
+  # supply, matching what `loss_pool_consumption_in_zone` sums over the same
+  # zone. Returns nil only if no MainMeterReading exists for any meter.
   def zone_supply_kw(zone)
-    mm_id = Organization.where(id: zone).where.not(main_meter_id: nil)
-                        .pick(:main_meter_id)
-    return nil unless mm_id
+    mm_ids = Organization.where(id: zone).where.not(main_meter_id: nil)
+                         .distinct.pluck(:main_meter_id)
+    return nil if mm_ids.empty?
 
-    main_meter = MainMeter.find_by(id: mm_id)
-    main_meter&.supply_kw_for(monthly_period)
+    readings = MainMeter.where(id: mm_ids).filter_map do |mm|
+      mm.supply_kw_for(monthly_period)
+    end
+    return nil if readings.empty?
+
+    readings.sum { |kw| to_bd(kw) }
   end
 
   def no_loss_consumption_in_zone(zone)
