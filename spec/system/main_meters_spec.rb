@@ -17,12 +17,11 @@ RSpec.describe "MainMeters management", type: :system do
     end
 
     it "tạo khu vực mới + gán đơn vị thành công" do
-      other_unit = create(:organization, :unit, parent: scenario.division, name: "Tiểu đoàn 18", code: "TD18")
+      other_unit = create(:organization, :unit, parent: scenario.division, name: "Tiểu đoàn 18")
       visit main_meters_path
       click_on I18n.t("main_meters.index.new_button")
 
       fill_in I18n.t("main_meters.form.name"), with: "Khu vực Cơ quan SĐB"
-      fill_in I18n.t("main_meters.form.code"), with: "MM-SDB"
       check scenario.unit.name
       check other_unit.name
       click_on I18n.t("main_meters.form.submit_create")
@@ -30,16 +29,15 @@ RSpec.describe "MainMeters management", type: :system do
       expect(page).to have_current_path(main_meters_path)
       expect(page).to have_content(I18n.t("flash.main_meters.created"))
 
-      mm = MainMeter.find_by!(code: "MM-SDB")
+      mm = MainMeter.find_by!(name: "Khu vực Cơ quan SĐB")
       expect(mm.organizations).to contain_exactly(scenario.unit, other_unit)
     end
 
-    it "validation: mã trùng → lỗi" do
-      create(:main_meter, code: "DUPE")
+    it "validation: tên trùng → lỗi" do
+      create(:main_meter, name: "Khu vực trùng")
       visit new_main_meter_path
 
-      fill_in I18n.t("main_meters.form.name"), with: "Khu vực mới"
-      fill_in I18n.t("main_meters.form.code"), with: "DUPE"
+      fill_in I18n.t("main_meters.form.name"), with: "Khu vực trùng"
       click_on I18n.t("main_meters.form.submit_create")
 
       expect(page).to have_content(I18n.t("errors.messages.taken"))
@@ -47,9 +45,9 @@ RSpec.describe "MainMeters management", type: :system do
     end
 
     it "sửa khu vực + thay đổi đơn vị thành công" do
-      mm = create(:main_meter, name: "Khu vực A", code: "MM-A")
+      mm = create(:main_meter, name: "Khu vực A")
       scenario.unit.update!(main_meter: mm)
-      other_unit = create(:organization, :unit, parent: scenario.division, name: "Đơn vị B", code: "UB")
+      other_unit = create(:organization, :unit, parent: scenario.division, name: "Đơn vị B")
 
       visit edit_main_meter_path(mm)
       uncheck scenario.unit.name
@@ -63,9 +61,9 @@ RSpec.describe "MainMeters management", type: :system do
     end
 
     it "gán đơn vị đang thuộc khu vực khác → chuyển sang khu vực mới (cảnh báo hiển thị)" do
-      old_mm = create(:main_meter, name: "Khu vực cũ", code: "MM-OLD")
+      old_mm = create(:main_meter, name: "Khu vực cũ")
       scenario.unit.update!(main_meter: old_mm)
-      new_mm = create(:main_meter, name: "Khu vực mới", code: "MM-NEW")
+      new_mm = create(:main_meter, name: "Khu vực mới")
 
       visit edit_main_meter_path(new_mm)
       expect(page).to have_content(I18n.t("main_meters.form.org_in_other", main_meter: old_mm.name))
@@ -78,7 +76,7 @@ RSpec.describe "MainMeters management", type: :system do
     end
 
     it "ghi nhật ký (paper_trail) cho Organization khi gán vào khu vực mới" do
-      mm = create(:main_meter, name: "Khu vực X", code: "MM-X")
+      mm = create(:main_meter, name: "Khu vực X")
       expect {
         visit edit_main_meter_path(mm)
         check scenario.unit.name

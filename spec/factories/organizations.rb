@@ -1,6 +1,5 @@
 FactoryBot.define do
   factory :organization do
-    sequence(:code) { |n| "ORG#{n.to_s.rjust(3, '0')}" }
     sequence(:name) { |n| "Organization #{n}" }
     level { :unit }
     position { 0 }
@@ -8,7 +7,6 @@ FactoryBot.define do
     trait :division do
       level { :division }
       parent { nil }
-      sequence(:code) { |n| "DIV#{n.to_s.rjust(3, '0')}" }
       sequence(:name) { |n| "Division #{n}" }
     end
 

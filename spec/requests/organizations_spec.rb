@@ -73,7 +73,7 @@ RSpec.describe "Organizations", type: :request do
 
   describe "POST /organizations" do
     let(:valid_params) do
-      { organization: { name: "Đại đội 30", code: "DH30", position: 14 } }
+      { organization: { name: "Đại đội 30", position: 14 } }
     end
 
     context "as admin_level1" do
@@ -85,16 +85,16 @@ RSpec.describe "Organizations", type: :request do
         }.to change(Organization.units, :count).by(1)
 
         expect(response).to redirect_to(organizations_path)
-        created = Organization.find_by!(code: "DH30")
+        created = Organization.find_by!(name: "Đại đội 30")
         expect(created.level).to eq("unit")
         expect(created.parent).to eq(division)
       end
 
       it "ignores user-supplied level/parent params" do
         post organizations_path, params: {
-          organization: { name: "Hack division", code: "HD1", level: "division", parent_id: nil }
+          organization: { name: "Hack division", level: "division", parent_id: nil }
         }
-        created = Organization.find_by!(code: "HD1")
+        created = Organization.find_by!(name: "Hack division")
         expect(created.level).to eq("unit")
         expect(created.parent).to eq(division)
       end
@@ -108,7 +108,7 @@ RSpec.describe "Organizations", type: :request do
       end
 
       it "re-renders form when name is missing" do
-        post organizations_path, params: { organization: { name: "", code: "X1" } }
+        post organizations_path, params: { organization: { name: "" } }
         expect(response).to have_http_status(:unprocessable_entity)
       end
     end
@@ -144,7 +144,7 @@ RSpec.describe "Organizations", type: :request do
 
       it "updates name and position" do
         patch organization_path(unit_org),
-              params: { organization: { name: "Tên mới", code: unit_org.code, position: 99 } }
+              params: { organization: { name: "Tên mới", position: 99 } }
         expect(response).to redirect_to(organizations_path)
         expect(unit_org.reload.name).to eq("Tên mới")
         expect(unit_org.reload.position).to eq(99)
@@ -153,7 +153,7 @@ RSpec.describe "Organizations", type: :request do
       it "re-renders on duplicate name" do
         other = create(:organization, :unit, name: "Trùng tên", parent: division)
         patch organization_path(unit_org),
-              params: { organization: { name: other.name, code: unit_org.code } }
+              params: { organization: { name: other.name } }
         expect(response).to have_http_status(:unprocessable_entity)
       end
     end
@@ -162,7 +162,7 @@ RSpec.describe "Organizations", type: :request do
       it "is forbidden" do
         sign_in admin_unit
         patch organization_path(unit_org),
-              params: { organization: { name: "Hacked", code: unit_org.code } }
+              params: { organization: { name: "Hacked" } }
         expect(response).to redirect_to(root_path)
         expect(unit_org.reload.name).not_to eq("Hacked")
       end
