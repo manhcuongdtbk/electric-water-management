@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_10_133455) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_11_024521) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -35,6 +35,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_10_133455) do
     t.datetime "updated_at", null: false
     t.index ["organization_id", "name"], name: "index_contact_points_on_organization_id_and_name", unique: true
     t.index ["organization_id"], name: "index_contact_points_on_organization_id"
+  end
+
+  create_table "main_meter_readings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.decimal "electricity_supply_kw", precision: 12, scale: 2, null: false
+    t.bigint "main_meter_id", null: false
+    t.bigint "monthly_period_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["main_meter_id", "monthly_period_id"], name: "idx_main_meter_readings_on_meter_and_period", unique: true
+    t.index ["main_meter_id"], name: "index_main_meter_readings_on_main_meter_id"
+    t.index ["monthly_period_id"], name: "index_main_meter_readings_on_monthly_period_id"
+  end
+
+  create_table "main_meters", force: :cascade do |t|
+    t.string "code", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.text "notes"
+    t.integer "position", default: 0
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_main_meters_on_code", unique: true
+    t.index ["name"], name: "index_main_meters_on_name", unique: true
   end
 
   create_table "meter_readings", force: :cascade do |t|
@@ -119,12 +141,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_10_133455) do
     t.string "code", null: false
     t.datetime "created_at", null: false
     t.integer "level", default: 2, null: false
+    t.bigint "main_meter_id"
     t.string "name", null: false
     t.bigint "parent_id"
     t.integer "position", default: 0
     t.datetime "updated_at", null: false
     t.index ["code"], name: "index_organizations_on_code", unique: true
     t.index ["level"], name: "index_organizations_on_level"
+    t.index ["main_meter_id"], name: "index_organizations_on_main_meter_id"
     t.index ["name"], name: "index_organizations_on_name", unique: true
     t.index ["parent_id"], name: "index_organizations_on_parent_id"
   end
@@ -235,6 +259,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_10_133455) do
   add_foreign_key "contact_point_other_deductions", "contact_points"
   add_foreign_key "contact_point_other_deductions", "monthly_periods"
   add_foreign_key "contact_points", "organizations"
+  add_foreign_key "main_meter_readings", "main_meters"
+  add_foreign_key "main_meter_readings", "monthly_periods"
   add_foreign_key "meter_readings", "meters"
   add_foreign_key "meter_readings", "monthly_periods"
   add_foreign_key "meters", "contact_points"
@@ -243,6 +269,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_10_133455) do
   add_foreign_key "monthly_calculations", "contact_points"
   add_foreign_key "monthly_calculations", "monthly_periods"
   add_foreign_key "monthly_periods", "users", column: "locked_by_id"
+  add_foreign_key "organizations", "main_meters"
   add_foreign_key "organizations", "organizations", column: "parent_id"
   add_foreign_key "personnel", "contact_points"
   add_foreign_key "personnel", "monthly_periods"

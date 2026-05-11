@@ -3,6 +3,7 @@ class Organization < ApplicationRecord
 
   # Associations
   belongs_to :parent, class_name: "Organization", optional: true
+  belongs_to :main_meter, optional: true
   has_many :children, class_name: "Organization", foreign_key: :parent_id, dependent: :restrict_with_error
   has_many :users, dependent: :restrict_with_error
   has_many :contact_points, dependent: :restrict_with_error

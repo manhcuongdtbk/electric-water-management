@@ -153,6 +153,15 @@
                   <%= t("nav.organizations") %>
                 <% end %>
               <% end %>
+              <% if can? :manage, MainMeter %>
+                <%= link_to main_meters_path,
+                      class: "flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-colors #{controller_name == 'main_meters' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}" do %>
+                  <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <%= t("nav.main_meters") %>
+                <% end %>
+              <% end %>
             <% end %>
             <% if can? :manage, User %>
               <%= link_to users_path,
