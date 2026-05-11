@@ -86,8 +86,7 @@ RSpec.describe CalculationEngine do
            division_public_rate: div_public_rate,
            unit_public_rate: unit_public_rate,
            other_deduction_type: :fixed_kw,
-           other_deduction_value: bd("0"),
-           electricity_supply_kw: nil)
+           other_deduction_value: bd("0"))
   end
 
   # -----------------------------------------------------------------------
@@ -369,11 +368,8 @@ RSpec.describe CalculationEngine do
       end
     end
 
-    context "zone with no supply (no MainMeterReading and no UnitConfig fallback)" do
-      before do
-        main_meter_reading.destroy!
-        unit_config.update!(electricity_supply_kw: nil)
-      end
+    context "zone with no supply (no MainMeterReading)" do
+      before { main_meter_reading.destroy! }
 
       it "treats total_zone_loss as zero (loss_deduction = 0 for all)" do
         results = engine.compute

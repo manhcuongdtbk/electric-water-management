@@ -21,9 +21,6 @@ class UnitConfig < ApplicationRecord
             allow_nil: true
   validates :other_deduction_value,
             numericality: { greater_than_or_equal_to: 0 }
-  validates :electricity_supply_kw,
-            numericality: { greater_than_or_equal_to: 0 },
-            allow_nil: true
 
   # Scopes
   scope :for_period, ->(period_id) { where(monthly_period_id: period_id) }

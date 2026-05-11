@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_11_150002) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_11_184641) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -203,7 +203,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_150002) do
   create_table "unit_configs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.decimal "division_public_rate", precision: 5, scale: 4
-    t.decimal "electricity_supply_kw", precision: 12, scale: 2
     t.bigint "monthly_period_id", null: false
     t.bigint "organization_id", null: false
     t.integer "other_deduction_type", default: 0

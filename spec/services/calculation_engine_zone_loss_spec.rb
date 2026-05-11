@@ -53,14 +53,14 @@ RSpec.describe "CalculationEngine zone-loss + pump pool (integration)" do
     create(:unit_config,
            organization: dva, monthly_period: period,
            savings_rate: bd("0.05"), division_public_rate: bd("0.10"),
-           unit_public_rate: bd("0"), electricity_supply_kw: nil)
+           unit_public_rate: bd("0"))
   end
 
   let!(:cfg_dvb) do
     create(:unit_config,
            organization: dvb, monthly_period: period,
            savings_rate: bd("0.05"), division_public_rate: bd("0.10"),
-           unit_public_rate: bd("0"), electricity_supply_kw: nil)
+           unit_public_rate: bd("0"))
   end
 
   # DVA contact points + personnel + meters
@@ -200,12 +200,12 @@ RSpec.describe "CalculationEngine zone-loss + pump pool (integration)" do
     end
   end
 
-  describe "fallback when org has no MainMeter" do
+  describe "org with no MainMeter (no supply available)" do
     let(:solo_org) { create(:organization, level: :unit, parent: division, code: "SOLO", main_meter: nil) }
     let!(:solo_cfg) do
       create(:unit_config, organization: solo_org, monthly_period: period,
              savings_rate: bd("0.05"), division_public_rate: bd("0.10"),
-             unit_public_rate: bd("0"), electricity_supply_kw: bd("1000"))
+             unit_public_rate: bd("0"))
     end
     let!(:cp_solo) { create(:contact_point, organization: solo_org, name: "Solo CP") }
     let!(:p_solo) do
@@ -219,12 +219,10 @@ RSpec.describe "CalculationEngine zone-loss + pump pool (integration)" do
       m
     end
 
-    it "uses UnitConfig.electricity_supply_kw and treats org as its own zone" do
-      # zone = [solo_org.id], B = 400 (no pump assigned to solo_org), supply 1000.
-      # total_zone_loss = 1000 − 0 − 400 = 600. cp_solo's full share = 600.
+    it "computes zero loss (supply unknown without MainMeter)" do
       engine = CalculationEngine.new(organization: solo_org, monthly_period: period)
       row = engine.compute.find { |r| r[:contact_point_id] == cp_solo.id }
-      expect(row[:loss_deduction_kw]).to eq(bd("600"))
+      expect(row[:loss_deduction_kw]).to eq(bd("0"))
     end
   end
 end

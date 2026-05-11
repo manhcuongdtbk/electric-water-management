@@ -53,14 +53,14 @@ RSpec.describe "Pump allocation across 3 nhóm đối tượng (integration)" do
     create(:unit_config,
            organization: dva, monthly_period: period,
            savings_rate: bd("0.05"), division_public_rate: bd("0.10"),
-           unit_public_rate: bd("0"), electricity_supply_kw: nil)
+           unit_public_rate: bd("0"))
   end
 
   let!(:cfg_dvb) do
     create(:unit_config,
            organization: dvb, monthly_period: period,
            savings_rate: bd("0.05"), division_public_rate: bd("0.10"),
-           unit_public_rate: bd("0"), electricity_supply_kw: nil)
+           unit_public_rate: bd("0"))
   end
 
   let!(:a1) { create(:contact_point, organization: dva, name: "A1 Ban Chi huy", position: 1) }
