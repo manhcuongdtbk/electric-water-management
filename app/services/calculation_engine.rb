@@ -81,6 +81,21 @@ class CalculationEngine
     @unit_config ||= UnitConfig.find_by(organization: organization, monthly_period: monthly_period)
   end
 
+  # Division-level UnitConfig holds savings_rate + division_public_rate (set
+  # by admin_level1 on /unit_configs). Unit-level row holds unit_public_rate
+  # + other_deduction_*. Engine runs per-Unit, so reach up to the parent.
+  def division_organization
+    @division_organization ||= organization.unit? ? organization.parent : organization
+  end
+
+  def division_config
+    return @division_config if defined?(@division_config)
+
+    @division_config = division_organization &&
+                       UnitConfig.find_by(organization: division_organization,
+                                          monthly_period: monthly_period)
+  end
+
   def personnel_by_cp
     @personnel_by_cp ||= Personnel.for_period(monthly_period.id)
                                   .where(contact_point_id: contact_point_ids)
@@ -105,12 +120,20 @@ class CalculationEngine
   end
 
   # --- Meter usage (per CP) — DB-side group + sum ---------------------------
+  # Includes normal + no_loss. no_loss meters belong to "đầu mối sinh hoạt"
+  # whose usage must be billed; they're only excluded from the loss pool
+  # (handled separately by `no_loss_consumption_in_zone`).
   def meter_usage_by_cp
     @meter_usage_by_cp ||= MeterReading
                            .for_period(monthly_period.id)
                            .joins(:meter)
-                           .where(meters: { organization_id: organization.id,
-                                            meter_type: Meter.meter_types[:normal] })
+                           .where(meters: {
+                             organization_id: organization.id,
+                             meter_type: [
+                               Meter.meter_types[:normal],
+                               Meter.meter_types[:no_loss]
+                             ]
+                           })
                            .group("meters.contact_point_id")
                            .sum(:consumption)
                            .transform_values { |v| to_bd(v) }
@@ -552,11 +575,11 @@ class CalculationEngine
   # ============================================================ config accessors
 
   def savings_rate
-    @savings_rate ||= to_bd(unit_config&.savings_rate)
+    @savings_rate ||= to_bd(division_config&.savings_rate)
   end
 
   def division_public_rate
-    @division_public_rate ||= to_bd(unit_config&.division_public_rate)
+    @division_public_rate ||= to_bd(division_config&.division_public_rate)
   end
 
   def unit_public_rate

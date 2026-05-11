@@ -49,18 +49,15 @@ RSpec.describe "CalculationEngine zone-loss + pump pool (integration)" do
            electricity_supply_kw: bd("2000"))
   end
 
-  let!(:cfg_dva) do
+  # Division-level config holds savings_rate + division_public_rate (shared
+  # across all units under this division). Unit-level rows would only carry
+  # unit_public_rate / other_deduction; since both test units use rate 0,
+  # omit them — engine returns ZERO when unit_config is missing.
+  let!(:cfg_division) do
     create(:unit_config,
-           organization: dva, monthly_period: period,
+           organization: division, monthly_period: period,
            savings_rate: bd("0.05"), division_public_rate: bd("0.10"),
-           unit_public_rate: bd("0"))
-  end
-
-  let!(:cfg_dvb) do
-    create(:unit_config,
-           organization: dvb, monthly_period: period,
-           savings_rate: bd("0.05"), division_public_rate: bd("0.10"),
-           unit_public_rate: bd("0"))
+           unit_public_rate: nil)
   end
 
   # DVA contact points + personnel + meters
@@ -167,9 +164,11 @@ RSpec.describe "CalculationEngine zone-loss + pump pool (integration)" do
       expect(b1_row[:loss_deduction_kw]).to be_within(tolerance).of(bd("220") * bd("100")  / bd("1680"))   # ≈ 13.095
     end
 
-    it "isolates no_loss meter consumption from meter_usage_kw (A3 = 0)" do
+    it "still bills no_loss meter consumption via meter_usage_kw (A3 = 100)" do
+      # no_loss only escapes the LOSS POOL (no tổn hao share), but its actual
+      # consumption is real and must be billed like any sinh-hoạt reading.
       a3_row = results_dva.find { |r| r[:contact_point_id] == a3.id }
-      expect(a3_row[:meter_usage_kw]).to eq(bd("0"))
+      expect(a3_row[:meter_usage_kw]).to eq(bd("100"))
     end
   end
 
@@ -202,11 +201,8 @@ RSpec.describe "CalculationEngine zone-loss + pump pool (integration)" do
 
   describe "org with no MainMeter (no supply available)" do
     let(:solo_org) { create(:organization, level: :unit, parent: division, code: "SOLO", main_meter: nil) }
-    let!(:solo_cfg) do
-      create(:unit_config, organization: solo_org, monthly_period: period,
-             savings_rate: bd("0.05"), division_public_rate: bd("0.10"),
-             unit_public_rate: bd("0"))
-    end
+    # solo_org reuses cfg_division (same parent). No unit-level config needed —
+    # unit_public_rate defaults to ZERO when missing.
     let!(:cp_solo) { create(:contact_point, organization: solo_org, name: "Solo CP") }
     let!(:p_solo) do
       create(:personnel, contact_point: cp_solo, monthly_period: period,
