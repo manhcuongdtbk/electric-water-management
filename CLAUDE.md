@@ -25,7 +25,7 @@ Rails 8, PostgreSQL, Tailwind (via tailwindcss-rails, không cần Node), Hotwir
 - Engine tính toán là ưu tiên test cao nhất
 - Chạy `bundle exec rspec` sau mỗi thay đổi logic
 - **KHÔNG cần chạy rubocop local** — CI đã cover
-- File bảng tính tháng 2 (`bang_tinh_thang_02.xlsx`) tính theo bảng mẫu cũ — **KHÔNG dùng làm nguồn test** cho engine hiện tại. Cần kịch bản test mới (số liệu tự đặt, tính tay theo công thức bảng mẫu mới)
+- Engine tests dùng factory + fixture nhỏ. Integration spec zone-loss ở `spec/services/calculation_engine_zone_loss_spec.rb` (kịch bản số liệu tự đặt, tính tay theo công thức zone-based)
 
 ### Git
 - Branch naming: `m1/feature-name`, `m2/feature-name` (theo milestone)
@@ -41,7 +41,7 @@ Rails 8, PostgreSQL, Tailwind (via tailwindcss-rails, không cần Node), Hotwir
 - Nhiều đơn vị cấp 2 có thể dùng chung 1 đồng hồ tổng điện lực (ví dụ: Cơ quan SDB + TĐ18 + ĐĐ20-23 chung 1 đồng hồ tổng)
 - **admin_level1 nhập số điện lực** (F05), không phải admin_unit
 - Tổn hao tính trên toàn bộ khu vực dùng chung đồng hồ tổng, không phải per-đơn vị
-- ⚠️ Code hiện tại chưa có khái niệm "khu vực dùng chung đồng hồ tổng" — cần thiết kế lại (xem TONG_KET_CHAT_RA_SOAT_THIET_KE.md mục V.A.1)
+- Implemented: MainMeter + MainMeterReading từ PR1, engine zone-loss từ PR2 (m6)
 
 ### 4 vai trò người dùng
 - `admin_level1` — quản trị viên cấp 1 (Ban Doanh trại Sư đoàn): quản lý toàn hệ thống, thêm bớt đơn vị, cấu hình, xem tất cả, **nhập số điện lực (F05)**, phân bổ bơm, mở khoá tháng cũ, nhật ký
@@ -71,7 +71,7 @@ DB lưu 22 cột (`over_under_kw` + `total_amount` signed), view tách thành 24
 - B = tổng kW tất cả công tơ sử dụng trong khu vực (**bao gồm pump**, không gồm no_loss)
 - Tổn hao = A − B
 - Phân bổ: tổn hao công tơ X = tổn hao × (kW công tơ X ÷ B)
-- ⚠️ Code hiện tại có thể đang tính per-đơn vị và exclude pump khỏi loss pool — cần verify và sửa
+- Implemented in CalculationEngine via zone_org_ids + zone_pump_meter_ids (PR2). Pump tham gia loss pool và pump_loss_share cộng vào pump pool phân bổ
 
 ### Phân bổ bơm nước thực tế — mô hình fixed/variable
 - Phân bổ cho **nhóm đối tượng** (KHÔNG phải đơn vị cấp 2). Nhóm đối tượng có 3 loại:
