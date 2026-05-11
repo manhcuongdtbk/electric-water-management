@@ -1,13 +1,17 @@
 require "rails_helper"
 
-# F05 — Nhập số điện lực (electricity_supply) cho đơn vị + period hiện tại.
+# F05 — admin_level1 nhập số điện lực (MainMeterReading) per khu vực (MainMeter).
+# admin_unit + commander chỉ xem (read-only); tech bị chuyển sang /users.
 RSpec.describe "F05 — Electricity supply", type: :system do
   let(:scenario) { setup_basic_scenario }
+  let(:main_meter) { create(:main_meter, name: "Khu vực A") }
 
-  describe "admin_unit" do
-    before { login_as scenario.admin_unit, scope: :user }
+  before { scenario.unit.update!(main_meter: main_meter) }
 
-    it "saves the total kWh supplied for the current period" do
+  describe "admin_level1" do
+    before { login_as scenario.admin_level1, scope: :user }
+
+    it "saves the total kWh supplied for the current period and zone" do
       visit electricity_supply_path
       expect(page).to have_content(I18n.t("electricity_supplies.show.title"))
 
@@ -18,15 +22,39 @@ RSpec.describe "F05 — Electricity supply", type: :system do
       field = find("input[name='electricity_supply[electricity_supply_kw]']")
       expect(field.value.to_f).to eq(50_000.0)
 
-      config = UnitConfig.find_by!(organization: scenario.unit, monthly_period: scenario.period)
-      expect(config.electricity_supply_kw.to_f).to eq(50_000.0)
+      reading = MainMeterReading.find_by!(main_meter: main_meter, monthly_period: scenario.period)
+      expect(reading.electricity_supply_kw.to_f).to eq(50_000.0)
+    end
+  end
+
+  describe "admin_unit" do
+    before do
+      create(:main_meter_reading,
+             main_meter: main_meter, monthly_period: scenario.period,
+             electricity_supply_kw: 12_345)
+      login_as scenario.admin_unit, scope: :user
+    end
+
+    it "sees the value in a read-only view with no save button" do
+      visit electricity_supply_path
+      expect(page).to have_content(I18n.t("electricity_supplies.show.title"))
+      expect(page).to have_content(main_meter.name)
+      expect(page).not_to have_css("input[name='electricity_supply[electricity_supply_kw]']")
+      expect(page).not_to have_button(I18n.t("electricity_supplies.section_input.submit"))
+      expect(page).to have_content("12,345.00")
+    end
+
+    it "shows no-main-meter notice when their org is not assigned a zone" do
+      scenario.unit.update!(main_meter: nil)
+      visit electricity_supply_path
+      expect(page).to have_content(I18n.t("electricity_supplies.no_main_meter"))
     end
   end
 
   describe "commander" do
     it "sees the value in a read-only view with no save button" do
-      create(:unit_config,
-             organization: scenario.unit, monthly_period: scenario.period,
+      create(:main_meter_reading,
+             main_meter: main_meter, monthly_period: scenario.period,
              electricity_supply_kw: 12_345)
       login_as scenario.commander, scope: :user
 

@@ -2,17 +2,15 @@ require "rails_helper"
 
 # F08 + F09 + F10 — Engine tính toán bảng 22 cột.
 #
-# Test inputs are taken from test/fixtures/files/bang_tinh_thang_02.xlsx
-# (real customer data, Feb 2026). But expected values are RECOMPUTED according
-# to nghiệp vụ v5 (docs/XAC_NHAN_NGHIEP_VU_v5.html + docs/BANG_22_COT_ANALYSIS.md):
+# Per nghiệp vụ v5 (docs/XAC_NHAN_NGHIEP_VU_v5.html + docs/BANG_22_COT_ANALYSIS.md):
 #
-#   * Water pump standard uses 9.45 kW/person/month (NOT Excel's 6.3)
+#   * Water pump standard uses 9.45 kW/person/month
 #   * Loss (tổn hao) is subtracted from standard, NOT added to usage
-#   * Loss allocation uses METER CONSUMPTION ratio (NOT standard ratio):
-#     cp_loss = total_unit_loss × (cp_meter_consumption / total_meter_consumption)
-#
-# Other inputs (personnel counts, rank quotas, rate %, meter readings, pump
-# station totals) are taken verbatim from the Excel file.
+#   * Loss is zone-wide (per shared MainMeter), with pump in B:
+#       B = Σ(normal + public_meter) in zone + Σ pump serving zone
+#       total_zone_loss = supply − Σ no_loss − B
+#       cp_loss = total_zone_loss × (cp_meter_kW / B)
+#       pump_loss_share = total_zone_loss × (pump_kW / B)  → inflates pump pool
 #
 # All arithmetic is done in BigDecimal with NO rounding in intermediate steps.
 RSpec.describe CalculationEngine do
@@ -40,8 +38,14 @@ RSpec.describe CalculationEngine do
   #    với RankQuota seed tương ứng để engine sinh ra đúng số sinh hoạt.)
   # -----------------------------------------------------------------------
   let(:division)    { create(:organization, :division) }
-  let(:organization) { create(:organization, level: :unit, parent: division) }
+  let(:main_meter)  { create(:main_meter, name: "Zone fixture") }
+  let(:organization) { create(:organization, level: :unit, parent: division, main_meter: main_meter) }
   let(:period)      { create(:monthly_period, year: 2026, month: 2, unit_price: unit_price) }
+  let!(:main_meter_reading) do
+    create(:main_meter_reading,
+           main_meter: main_meter, monthly_period: period,
+           electricity_supply_kw: bd("1800"))
+  end
 
   let!(:rank_quota1) { create(:rank_quota, rank_group: 1, rank_name: "3*/4*",   quota_kw: bd("115"), effective_from: Date.new(2024, 1, 1)) }
   let!(:rank_quota2) { create(:rank_quota, rank_group: 2, rank_name: "1*/2*",   quota_kw: bd("38"),  effective_from: Date.new(2024, 1, 1)) }
@@ -72,8 +76,8 @@ RSpec.describe CalculationEngine do
   let!(:pump_reading) { create(:meter_reading, meter: pump_meter, monthly_period: period, reading_start: 0, reading_end: 1000, consumption: 1000) }
   let!(:pump_assignment) { create(:pump_station_assignment, pump_station: pump_station, organization: organization) }
 
-  # Unit config — tỷ lệ % + electricity supply.
-  # Điện lực cung cấp: đủ để tạo ra 96 kW tổn hao sau khi trừ công tơ thường (704 kW).
+  # Unit config — tỷ lệ % only. Supply comes from MainMeterReading (1800)
+  # → loss = 1800 − 0 − (704 CP + 1000 pump) = 96 (same target value as before).
   let!(:unit_config) do
     create(:unit_config,
            organization: organization,
@@ -83,7 +87,7 @@ RSpec.describe CalculationEngine do
            unit_public_rate: unit_public_rate,
            other_deduction_type: :fixed_kw,
            other_deduction_value: bd("0"),
-           electricity_supply_kw: bd("800"))
+           electricity_supply_kw: nil)
   end
 
   # -----------------------------------------------------------------------
@@ -93,13 +97,16 @@ RSpec.describe CalculationEngine do
   # TB Q.Luc:     rank2=1, rank4=1 → 38 + 11 = 49 kW; pump_std = 2 × 9.45 = 18.90; total_std = 67.90
   # Ban Tac Huan: rank2=2 → 76 kW; pump_std = 2 × 9.45 = 18.90; total_std = 94.90
   # Total personnel org = 1 + 2 + 2 = 5
-  # Total meter consumption (normal + public) = 99 + 105 + 500 = 704
-  # Total unit loss = 800 − 704 = 96
-  # Total pump energy served = 1000
-  let(:total_meter_consumption) { bd("704") }   # 99 + 105 + 500 (loss-pool denominator)
+  # Loss-pool B = Σ CP meters (99+105+500=704) + pump (1000) = 1704 (zone-wide)
+  # total_zone_loss = supply 1800 − no_loss 0 − B 1704 = 96
+  # pump_loss_share = 96 × 1000/1704
+  # pump_pool = 1000 + pump_loss_share
+  let(:total_meter_consumption) { bd("1704") }
   let(:total_org_people)        { bd("5") }
-  let(:total_unit_loss)         { bd("96") }
-  let(:total_pump)              { bd("1000") }
+  let(:total_zone_loss)         { bd("96") }
+  let(:pump_consumption)        { bd("1000") }
+  let(:pump_loss_share)         { total_zone_loss * pump_consumption / total_meter_consumption }
+  let(:pump_pool)               { pump_consumption + pump_loss_share }
 
   def expected_for(rank_total_kw:, personnel_count:, meter_usage:)
     rank_total = bd(rank_total_kw)
@@ -110,16 +117,17 @@ RSpec.describe CalculationEngine do
     total_standard      = rank_total + water_pump_standard
 
     savings       = total_standard * savings_rate
-    # Loss allocated by meter-consumption ratio (v3+ rule).
-    # Test fixture has only normal meters → cp_meter_consumption = meter_usage.
-    loss          = total_unit_loss * meter / total_meter_consumption
+    # Loss allocated by zone-wide meter-kW ratio (PR2 zone-loss rule).
+    # Test fixture: CP meters only → cp_meter_consumption = meter_usage.
+    loss          = total_zone_loss * meter / total_meter_consumption
     div_public    = total_standard * div_public_rate
     unit_public   = total_standard * unit_public_rate
     other         = bd("0")
     total_deduct  = savings + loss + div_public + unit_public + other
     remaining_std = total_standard - total_deduct
 
-    pump_actual = total_pump * people / total_org_people
+    # Pump pool absorbs its own share of zone loss before personnel-ratio split.
+    pump_actual = pump_pool * people / total_org_people
     total_usage = meter + pump_actual
 
     over_under   = total_usage - remaining_std
@@ -193,9 +201,14 @@ RSpec.describe CalculationEngine do
         expect(result_for(cp_tac_huan)[:loss_deduction_kw]).to eq(expected_tac_huan[:loss_deduction_kw])
       end
 
-      it "sum of loss_deduction across contact points equals total_unit_loss" do
-        total_loss_allocated = results.sum { |r| r[:loss_deduction_kw] }
-        expect(total_loss_allocated).to eq(total_unit_loss)
+      it "CP loss + pump_loss_share sums to total_zone_loss" do
+        cp_loss     = results.sum { |r| r[:loss_deduction_kw] }
+        pump_actual = results.sum { |r| r[:water_pump_actual_kw] }
+        # pump_pool = consumption + share → share = pump_actual_total − consumption.
+        # (All pump consumption flows to this org's CPs since the single pump
+        # assignment in the fixture targets this org.)
+        # Tolerance to absorb BigDecimal precision drift across multiple divisions.
+        expect(cp_loss + (pump_actual - pump_consumption)).to be_within(bd("0.0001")).of(total_zone_loss)
       end
 
       it "division public = total_standard × 10%" do
@@ -268,9 +281,9 @@ RSpec.describe CalculationEngine do
       end
 
       it "does NOT round intermediate calculations (e.g. loss allocation has many decimals)" do
-        # 96 × 105 / 704 is irrational in decimal — many digits.
+        # 96 × 105 / 1704 is irrational in decimal — many digits.
         raw = result_for(cp_qluc)[:loss_deduction_kw]
-        expected_raw = bd("96") * bd("105") / bd("704")
+        expected_raw = bd("96") * bd("105") / bd("1704")
         expect(raw).to eq(expected_raw)
       end
     end
@@ -356,10 +369,13 @@ RSpec.describe CalculationEngine do
       end
     end
 
-    context "unit with no electricity_supply_kw configured" do
-      before { unit_config.update!(electricity_supply_kw: nil) }
+    context "zone with no supply (no MainMeterReading and no UnitConfig fallback)" do
+      before do
+        main_meter_reading.destroy!
+        unit_config.update!(electricity_supply_kw: nil)
+      end
 
-      it "treats total_unit_loss as zero (loss_deduction = 0 for all)" do
+      it "treats total_zone_loss as zero (loss_deduction = 0 for all)" do
         results = engine.compute
         results.each do |row|
           expect(row[:loss_deduction_kw]).to eq(bd("0"))
@@ -370,14 +386,14 @@ RSpec.describe CalculationEngine do
     context "unit with no UnitConfig record" do
       before { unit_config.destroy! }
 
-      it "treats all rates as zero (no savings/public/loss deduction)" do
+      it "treats all rates as zero (no savings/public/other deduction)" do
         results = engine.compute
         row = results.find { |r| r[:contact_point_id] == cp_truong.id }
         expect(row[:savings_deduction_kw]).to eq(bd("0"))
         expect(row[:division_public_deduction_kw]).to eq(bd("0"))
         expect(row[:unit_public_deduction_kw]).to eq(bd("0"))
-        expect(row[:loss_deduction_kw]).to eq(bd("0"))
         expect(row[:other_deduction_kw]).to eq(bd("0"))
+        # loss is supply-derived (still has MainMeterReading 1800) → non-zero.
       end
     end
 
@@ -420,26 +436,28 @@ RSpec.describe CalculationEngine do
     # supply TRƯỚC khi tính tổn hao, đồng thời không tham gia tử số/mẫu số
     # phân bổ tổn hao cho các CP khác.
     context "with no_loss meter (vị trí không tổn hao)" do
-      # Tăng supply lên 850: 850 − 50 (no_loss) − 704 (normal) = 96
-      # → tổng tổn hao đường dây vẫn = 96 (giữ nguyên expected_for cũ).
+      # Tăng supply lên 1850: 1850 − 50 (no_loss) − 1704 (B) = 96
+      # → tổng tổn hao zone vẫn = 96 (giữ nguyên expected_for cũ).
       let!(:cp_substation) { create(:contact_point, organization: organization, name: "Tram bien ap", position: 4) }
       let!(:meter_no_loss) { create(:meter, :no_loss, organization: organization, contact_point: cp_substation, name: "M-NoLoss") }
       let!(:reading_no_loss) do
         create(:meter_reading, meter: meter_no_loss, monthly_period: period,
                                reading_start: 0, reading_end: 50, consumption: 50)
       end
-      before { unit_config.update!(electricity_supply_kw: bd("850")) }
+      before { main_meter_reading.update!(electricity_supply_kw: bd("1850")) }
 
-      it "subtracts no_loss kW from supply before computing total_unit_loss" do
-        # supply 850 − no_loss 50 − meter 704 = 96 → tổng loss vẫn = 96
-        total_loss = engine.compute.sum { |r| r[:loss_deduction_kw] }
-        expect(total_loss).to eq(bd("96"))
+      it "subtracts no_loss kW from supply before computing total_zone_loss" do
+        # supply 1850 − no_loss 50 − B 1704 = 96. CP loss + pump_loss_share = 96.
+        results = engine.compute
+        cp_loss     = results.sum { |r| r[:loss_deduction_kw] }
+        pump_actual = results.sum { |r| r[:water_pump_actual_kw] }
+        expect(cp_loss + (pump_actual - pump_consumption)).to be_within(bd("0.0001")).of(bd("96"))
       end
 
       it "does not include no_loss meter in the loss-allocation denominator" do
-        # mẫu số vẫn = 99 + 105 + 500 = 704 (không có 50 của no_loss)
+        # mẫu số B = 99 + 105 + 500 + 1000 = 1704 (không có 50 của no_loss)
         loss = engine.compute.find { |r| r[:contact_point_id] == cp_qluc.id }[:loss_deduction_kw]
-        expect(loss).to eq(bd("96") * bd("105") / bd("704"))
+        expect(loss).to eq(bd("96") * bd("105") / bd("1704"))
       end
 
       it "assigns loss_deduction = 0 for a CP with only a no_loss meter" do
@@ -452,9 +470,9 @@ RSpec.describe CalculationEngine do
         expect(row[:meter_usage_kw]).to eq(bd("0"))
       end
 
-      it "clamps total_unit_loss to 0 when supply < no_loss + total_meter_consumption" do
-        # supply 700 − no_loss 50 − meter 704 = -54 → clamp về 0
-        unit_config.update!(electricity_supply_kw: bd("700"))
+      it "clamps total_zone_loss to 0 when supply < no_loss + B" do
+        # supply 700 − no_loss 50 − B 1704 = -1054 → clamp về 0
+        main_meter_reading.update!(electricity_supply_kw: bd("700"))
         described_class.new(organization: organization, monthly_period: period).compute.each do |row|
           expect(row[:loss_deduction_kw]).to eq(bd("0"))
         end
@@ -464,9 +482,9 @@ RSpec.describe CalculationEngine do
 
   # Matches the "Bảng II" scenario from docs/BANG_22_COT_ANALYSIS.md §3.2:
   # a single pump station serves several units. Each served CP's share is
-  # consumption × cp_people / (Σ people across ALL served orgs).
+  # pump_pool × cp_people / (Σ people across ALL served orgs).
   describe "multi-unit pump allocation (real Excel 'Bảng II' case)" do
-    let(:other_unit) { create(:organization, level: :unit, parent: division) }
+    let(:other_unit) { create(:organization, level: :unit, parent: division, main_meter: main_meter) }
 
     let!(:cp_other) { create(:contact_point, organization: other_unit, name: "CP Other") }
     let!(:p_other) do
@@ -475,35 +493,33 @@ RSpec.describe CalculationEngine do
              rank5_count: 0, rank6_count: 0, rank7_count: 0)
     end
 
-    # Assign the SAME pump station to the other unit as well.
+    # Assign the SAME pump station to the other unit as well (so both share the pool).
     let!(:extra_assignment) { create(:pump_station_assignment, pump_station: pump_station, organization: other_unit) }
 
     it "distributes a shared pump station proportionally across all served orgs" do
       # Served total = 5 (organization) + 5 (other_unit) = 10
-      # Pump consumption = 1000
-      # cp_truong (1 person) → 1000 × 1 / 10 = 100
-      # cp_qluc   (2 people) → 1000 × 2 / 10 = 200
-      # cp_tac_huan (2 ppl) → 1000 × 2 / 10 = 200
+      # Pump pool = 1000 + 96×1000/1704 (both orgs in zone → pump_loss_share applies)
+      # cp_truong (1) → pump_pool × 1 / 10
       results = engine.compute
       t    = results.find { |r| r[:contact_point_id] == cp_truong.id }
       q    = results.find { |r| r[:contact_point_id] == cp_qluc.id }
       h    = results.find { |r| r[:contact_point_id] == cp_tac_huan.id }
 
-      expect(t[:water_pump_actual_kw]).to eq(bd("100"))
-      expect(q[:water_pump_actual_kw]).to eq(bd("200"))
-      expect(h[:water_pump_actual_kw]).to eq(bd("200"))
+      expect(t[:water_pump_actual_kw]).to eq(pump_pool * bd("1") / bd("10"))
+      expect(q[:water_pump_actual_kw]).to eq(pump_pool * bd("2") / bd("10"))
+      expect(h[:water_pump_actual_kw]).to eq(pump_pool * bd("2") / bd("10"))
 
-      # Sum across our unit = 500; the other 500 kW stays with the other unit.
+      # This org gets 5/10 of the pool (its 5 people out of 10 total served).
       sum_for_unit = results.sum { |r| r[:water_pump_actual_kw] }
-      expect(sum_for_unit).to eq(bd("500"))
+      expect(sum_for_unit).to eq(pump_pool * bd("5") / bd("10"))
     end
 
-    it "running the engine on the OTHER unit also gets its fair share (500 kW)" do
+    it "running the engine on the OTHER unit also gets its fair share" do
       other_engine = described_class.new(organization: other_unit, monthly_period: period)
       results = other_engine.compute
       other   = results.find { |r| r[:contact_point_id] == cp_other.id }
-      # cp_other has 5 people; total served = 10; consumption = 1000
-      expect(other[:water_pump_actual_kw]).to eq(bd("500"))
+      # cp_other has 5 people; total served = 10
+      expect(other[:water_pump_actual_kw]).to eq(pump_pool * bd("5") / bd("10"))
     end
   end
 
@@ -511,6 +527,10 @@ RSpec.describe CalculationEngine do
   # Một số đầu mối hưởng tỷ lệ cố định trên consumption của trạm bơm; phần còn lại
   # chia cho các orgs khác theo quân số.
   describe "30/70 pump allocation (M6)" do
+    # Pump allocation only — disable zone supply so pump_loss_share = 0 and the
+    # pump pool equals raw consumption (matches the 30/70 examples in the docs).
+    before { main_meter_reading.destroy! }
+
     let(:hq_unit)   { create(:organization, level: :unit, parent: division, name: "Chi huy F + nha khach") }
     let(:other_a)   { create(:organization, level: :unit, parent: division, name: "Other A") }
 
@@ -570,10 +590,12 @@ RSpec.describe CalculationEngine do
       end
     end
 
-    # Dữ liệu thật từ Excel "bang tinh dien thao thang 02 — THU CO QUAN" Sheet1 rows 162–170.
-    # consumption stored as decimal(12,2) → use scale-2 value (6420.197 → 6420.20 sau khi vào DB).
-    context "Excel real-data Feb 2026 (consumption 6420.20, fixed 30%, 5 variable orgs sum 557 ppl)" do
-      let(:total) { bd("6420.20") }
+    # Bảng II scenario: 1 fixed HQ (30%) + 5 variable orgs sharing 70% by personnel.
+    # Personnel mix matches the Feb 2026 historical case (251+149+109+18+30=557).
+    # Pump consumption 6152 = customer's typical zone usage; loss is disabled at
+    # this describe-level so pump pool equals raw consumption.
+    context "1 fixed (30%) + 5 variable orgs sharing 70%, total personnel 557" do
+      let(:total) { bd("6152") }
 
       let(:org_co_quan)     { create(:organization, level: :unit, parent: division, name: "Co quan SDB") }
       let(:org_td18)        { create(:organization, level: :unit, parent: division, name: "Tieu doan 18 (real)") }
@@ -637,41 +659,41 @@ RSpec.describe CalculationEngine do
         pump_assignment.destroy!
       end
 
-      it "HQ org receives 6420.20 × 30/100 = 1926.06" do
+      it "HQ org receives 6152 × 30/100" do
         hq_engine = described_class.new(organization: hq_unit, monthly_period: period)
         row = hq_engine.compute.find { |r| r[:contact_point_id] == cp_hq.id }
         expect(row[:water_pump_actual_kw]).to eq(total * bd("30") / bd("100"))
       end
 
-      it "Cơ quan SĐB (251 ng) receives (6420.20 × 70/100) × 251/557" do
+      it "Cơ quan SĐB (251 ng) receives (6152 × 70/100) × 251/557" do
         eng = described_class.new(organization: org_co_quan, monthly_period: period)
         row = eng.compute.find { |r| r[:contact_point_id] == cp_co_quan.id }
         pool = total * bd("70") / bd("100")
         expect(row[:water_pump_actual_kw]).to eq(pool * bd("251") / variable_total)
       end
 
-      it "Tiểu đoàn 18 (149 ng) receives (6420.20 × 70/100) × 149/557" do
+      it "Tiểu đoàn 18 (149 ng) receives (6152 × 70/100) × 149/557" do
         eng = described_class.new(organization: org_td18, monthly_period: period)
         row = eng.compute.find { |r| r[:contact_point_id] == cp_td18.id }
         pool = total * bd("70") / bd("100")
         expect(row[:water_pump_actual_kw]).to eq(pool * bd("149") / variable_total)
       end
 
-      it "Đại đội 20,23 (109 ng) receives (6420.20 × 70/100) × 109/557" do
+      it "Đại đội 20,23 (109 ng) receives (6152 × 70/100) × 109/557" do
         eng = described_class.new(organization: org_dd2023, monthly_period: period)
         row = eng.compute.find { |r| r[:contact_point_id] == cp_dd2023.id }
         pool = total * bd("70") / bd("100")
         expect(row[:water_pump_actual_kw]).to eq(pool * bd("109") / variable_total)
       end
 
-      it "Trạm chế biến (18 ng) receives (6420.20 × 70/100) × 18/557" do
+      it "Trạm chế biến (18 ng) receives (6152 × 70/100) × 18/557" do
         eng = described_class.new(organization: org_che_bien, monthly_period: period)
         row = eng.compute.find { |r| r[:contact_point_id] == cp_che_bien.id }
         pool = total * bd("70") / bd("100")
         expect(row[:water_pump_actual_kw]).to eq(pool * bd("18") / variable_total)
       end
 
-      it "Thợ xây (30 ng) receives (6420.20 × 70/100) × 30/557" do
+      it "Thợ xây (30 ng) receives (6152 × 70/100) × 30/557" do
         eng = described_class.new(organization: org_tho_xay, monthly_period: period)
         row = eng.compute.find { |r| r[:contact_point_id] == cp_tho_xay.id }
         pool = total * bd("70") / bd("100")

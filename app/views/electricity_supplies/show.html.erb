@@ -4,7 +4,7 @@
   <h1 class="text-xl font-semibold text-gray-900"><%= t("electricity_supplies.show.title") %></h1>
 </div>
 
-<%# Period selector %>
+<%# Period + main meter selectors %>
 <% if @periods.any? %>
   <div class="mb-6 flex flex-wrap items-end gap-4">
     <div>
@@ -12,19 +12,19 @@
             class: "block text-sm font-medium text-gray-700 mb-1" %>
       <%= select_tag :period_id,
             options_from_collection_for_select(@periods, :id, :label, @period&.id),
-            data: { base_url: electricity_supply_path, org_id: @target_org&.id },
-            onchange: "var url = this.dataset.baseUrl + '?period_id=' + this.value; if (this.dataset.orgId) url += '&org_id=' + this.dataset.orgId; window.location.href = url;",
+            data: { base_url: electricity_supply_path, main_meter_id: @target_main_meter&.id },
+            onchange: "var url = this.dataset.baseUrl + '?period_id=' + this.value; if (this.dataset.mainMeterId) url += '&main_meter_id=' + this.dataset.mainMeterId; window.location.href = url;",
             class: "border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" %>
     </div>
 
-    <% if current_user.admin_level1? && @all_orgs.any? %>
+    <% if current_user.admin_level1? && @all_main_meters.any? %>
       <div>
-        <%= label_tag :org_id, t("electricity_supplies.org_select"),
+        <%= label_tag :main_meter_id, t("electricity_supplies.main_meter_select"),
               class: "block text-sm font-medium text-gray-700 mb-1" %>
-        <%= select_tag :org_id,
-              options_from_collection_for_select(@all_orgs, :id, :name, @target_org&.id),
+        <%= select_tag :main_meter_id,
+              options_from_collection_for_select(@all_main_meters, :id, :name, @target_main_meter&.id),
               data: { period_id: @period&.id, base_url: electricity_supply_path },
-              onchange: "window.location.href = this.dataset.baseUrl + '?period_id=' + this.dataset.periodId + '&org_id=' + this.value",
+              onchange: "window.location.href = this.dataset.baseUrl + '?period_id=' + this.dataset.periodId + '&main_meter_id=' + this.value",
               class: "border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" %>
       </div>
     <% end %>
@@ -35,9 +35,9 @@
   <div class="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
     <%= t("electricity_supplies.no_period") %>
   </div>
-<% elsif @target_org.nil? %>
+<% elsif @target_main_meter.nil? %>
   <div class="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
-    <%= t("electricity_supplies.no_org") %>
+    <%= t("electricity_supplies.no_main_meter") %>
   </div>
 <% else %>
 
@@ -45,16 +45,16 @@
 <div class="bg-white rounded-lg border border-gray-200 mb-6">
   <div class="px-5 py-4 border-b border-gray-100">
     <h2 class="text-base font-semibold text-gray-900">
-      <%= t("electricity_supplies.section_input.title", period: @period.label, org: @target_org.name) %>
+      <%= t("electricity_supplies.section_input.title", period: @period.label, main_meter: @target_main_meter.name) %>
     </h2>
     <p class="text-xs text-gray-500 mt-0.5"><%= t("electricity_supplies.section_input.subtitle") %></p>
   </div>
 
   <div class="px-5 py-4">
-    <% if can? :update_electricity_supply, UnitConfig %>
+    <% if can? :update, @reading %>
       <%= form_with url: electricity_supply_path, method: :patch do %>
         <%= hidden_field_tag :period_id, @period.id %>
-        <%= hidden_field_tag :org_id, @target_org.id if current_user.admin_level1? %>
+        <%= hidden_field_tag :main_meter_id, @target_main_meter.id %>
 
         <div class="flex items-end gap-4">
           <div>
@@ -63,15 +63,15 @@
                   class: "block text-sm font-medium text-gray-700 mb-1" %>
             <div class="flex items-center gap-2">
               <%= number_field_tag "electricity_supply[electricity_supply_kw]",
-                    @config.electricity_supply_kw,
+                    @reading.electricity_supply_kw,
                     min: 0, step: "any",
                     id: "electricity_supply_electricity_supply_kw",
                     class: "w-48 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500",
                     placeholder: "0.00" %>
               <span class="text-sm text-gray-500">kWh</span>
             </div>
-            <% if @config.errors[:electricity_supply_kw].any? %>
-              <p class="mt-1 text-xs text-red-600"><%= @config.errors[:electricity_supply_kw].first %></p>
+            <% if @reading.errors[:electricity_supply_kw].any? %>
+              <p class="mt-1 text-xs text-red-600"><%= @reading.errors[:electricity_supply_kw].first %></p>
             <% end %>
           </div>
 
@@ -83,12 +83,12 @@
       <% end %>
 
     <% else %>
-      <%# commander: read-only %>
+      <%# admin_unit / commander: read-only %>
       <div class="flex items-center gap-3">
         <span class="text-sm text-gray-600"><%= t("electricity_supplies.section_input.field_label") %>:</span>
-        <% if @config.electricity_supply_kw.present? %>
+        <% if @reading.electricity_supply_kw.present? %>
           <span class="text-sm font-semibold text-gray-900 font-mono">
-            <%= number_with_precision(@config.electricity_supply_kw, precision: 2, delimiter: ",") %> kWh
+            <%= number_with_precision(@reading.electricity_supply_kw, precision: 2, delimiter: ",") %> kWh
           </span>
         <% else %>
           <span class="text-sm text-gray-400 italic"><%= t("electricity_supplies.not_entered") %></span>
@@ -111,21 +111,21 @@
           <thead class="bg-gray-50">
             <tr>
               <% if current_user.admin_level1? %>
-                <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("electricity_supplies.section_history.col_org") %></th>
+                <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("electricity_supplies.section_history.col_main_meter") %></th>
               <% end %>
               <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("electricity_supplies.section_history.col_period") %></th>
               <th class="px-4 py-3 text-right font-medium text-gray-600"><%= t("electricity_supplies.section_history.col_kw") %></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
-            <% @history.each do |cfg| %>
+            <% @history.each do |reading| %>
               <tr class="hover:bg-gray-50">
                 <% if current_user.admin_level1? %>
-                  <td class="px-4 py-3 text-gray-900"><%= cfg.organization.name %></td>
+                  <td class="px-4 py-3 text-gray-900"><%= reading.main_meter.name %></td>
                 <% end %>
-                <td class="px-4 py-3 text-gray-700"><%= cfg.monthly_period.label %></td>
+                <td class="px-4 py-3 text-gray-700"><%= reading.monthly_period.label %></td>
                 <td class="px-4 py-3 text-right font-mono text-gray-900">
-                  <%= number_with_precision(cfg.electricity_supply_kw, precision: 2, delimiter: ",") %>
+                  <%= number_with_precision(reading.electricity_supply_kw, precision: 2, delimiter: ",") %>
                   <span class="text-xs text-gray-400 ml-0.5">kWh</span>
                 </td>
               </tr>

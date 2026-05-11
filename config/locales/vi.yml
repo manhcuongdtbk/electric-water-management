@@ -373,18 +373,18 @@ vi:
     show:
       title: "Nhập số điện lực (đồng hồ tổng)"
     period_select: "Kỳ tính toán"
-    org_select: "Đơn vị"
+    main_meter_select: "Khu vực (đồng hồ tổng)"
     no_period: "Chưa có kỳ nào. Vui lòng tạo kỳ tính toán trước."
-    no_org: "Không tìm thấy đơn vị."
+    no_main_meter: "Đơn vị chưa được gán khu vực đồng hồ tổng, liên hệ admin cấp 1."
     not_entered: "Chưa nhập"
     section_input:
-      title: "Kỳ %{period} — %{org}"
-      subtitle: "Nhập tổng số kWh điện lực cấp cho đơn vị trong kỳ."
+      title: "Kỳ %{period} — Khu vực %{main_meter}"
+      subtitle: "Nhập tổng số kWh điện lực cấp cho khu vực trong kỳ."
       field_label: "Số điện lực cấp (kWh)"
       submit: "Lưu"
     section_history:
       title: "Lịch sử đã nhập"
-      col_org: "Đơn vị"
+      col_main_meter: "Khu vực"
       col_period: "Kỳ"
       col_kw: "Số điện lực (kWh)"
       empty: "Chưa có dữ liệu."
