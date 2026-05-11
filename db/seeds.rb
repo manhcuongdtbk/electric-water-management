@@ -10,8 +10,7 @@
 # current month, 1 admin_level1 user, 1 tech user. Level-2 units are NOT seeded
 # here — admin_level1 creates them through the web UI (/organizations).
 
-division = Organization.find_or_create_by!(code: "SD") do |org|
-  org.name     = "Sư đoàn"
+division = Organization.find_or_create_by!(name: "Sư đoàn") do |org|
   org.level    = :division
   org.position = 0
 end
@@ -84,15 +83,13 @@ end
 # We materialise the units inside this block so dev / staging keep working.
 # Gate: Rails.env.development? OR ENV["SEED_TEST_ACCOUNTS"] == "true".
 if Rails.env.development? || ENV["SEED_TEST_ACCOUNTS"] == "true"
-  sdb = Organization.find_or_create_by!(code: "SDB") do |org|
-    org.name     = "Sư đoàn bộ"
+  sdb = Organization.find_or_create_by!(name: "Sư đoàn bộ") do |org|
     org.level    = :unit
     org.parent   = division
     org.position = 1
   end
 
-  tr101 = Organization.find_or_create_by!(code: "TR101") do |org|
-    org.name     = "Trung đoàn 101"
+  tr101 = Organization.find_or_create_by!(name: "Trung đoàn 101") do |org|
     org.level    = :unit
     org.parent   = division
     org.position = 2

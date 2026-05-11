@@ -65,7 +65,7 @@ class MainMetersController < ApplicationController
   end
 
   def main_meter_params
-    params.require(:main_meter).permit(:name, :code, :notes, :position)
+    params.require(:main_meter).permit(:name, :notes, :position)
   end
 
   def organization_ids_param
