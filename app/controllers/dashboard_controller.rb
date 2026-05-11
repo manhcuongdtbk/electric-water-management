@@ -65,8 +65,8 @@ class DashboardController < ApplicationController
   def load_month_data
     @calculations = fetch_calculations_for_period(@period.id)
     build_month_metrics
-    build_month_chart_data
     build_month_table_data
+    build_month_chart_data
   end
 
   def fetch_calculations_for_period(period_id)
@@ -95,9 +95,9 @@ class DashboardController < ApplicationController
   end
 
   def build_month_chart_data
-    labels        = @calculations.map { |c| c.contact_point.name }
-    standard_vals = @calculations.to_h { |c| [ c.contact_point.name, c.total_standard_kw.to_f ] }
-    usage_vals    = @calculations.to_h { |c| [ c.contact_point.name, c.total_usage_kw.to_f ] }
+    labels        = @table_rows.map { |r| r[:name] }
+    standard_vals = @table_rows.to_h { |r| [ r[:name], r[:standard].to_f ] }
+    usage_vals    = @table_rows.to_h { |r| [ r[:name], r[:usage].to_f ] }
 
     @chart_data = [
       { name: t("dashboard.chart.standard"), data: standard_vals },
@@ -107,6 +107,8 @@ class DashboardController < ApplicationController
     @usage_colors = labels.map do |lbl|
       (usage_vals[lbl] || 0) > (standard_vals[lbl] || 0) ? "rgba(239,68,68,0.85)" : "rgba(34,197,94,0.85)"
     end
+
+    @chart_height_px = [ [ @table_rows.size * 45, 320 ].max, 1200 ].min
   end
 
   def build_month_table_data
@@ -272,6 +274,12 @@ class DashboardController < ApplicationController
       @table_rows.each do |row|
         csv << [ row[:name], row[:standard].to_f, row[:usage].to_f, row[:diff].to_f ]
       end
+      csv << [
+        t("dashboard.table.total_row"),
+        @total_standard.to_f,
+        @total_usage.to_f,
+        @difference.to_f
+      ]
     end
   end
 

@@ -12,12 +12,12 @@
   <table class="min-w-full divide-y divide-gray-200 text-sm">
     <thead class="bg-gray-50">
       <tr>
-        <th class="px-4 py-3 text-center font-medium text-gray-600 w-12">STT</th>
+        <th class="px-4 py-3 text-center font-medium text-gray-600 w-12"><%= t("common.table.stt") %></th>
         <th class="px-4 py-3 text-center font-medium text-gray-600 w-16"><%= t("rank_quotas.index.rank_group_col") %></th>
         <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("rank_quotas.index.rank_name_col") %></th>
         <th class="px-4 py-3 text-right font-medium text-gray-600"><%= t("rank_quotas.index.quota_kw_col") %></th>
         <% if can? :manage, RankQuota %>
-          <th class="px-4 py-3 text-center font-medium text-gray-600">Thao tác</th>
+          <th class="px-4 py-3 text-center font-medium text-gray-600"><%= t("common.table.actions") %></th>
         <% end %>
       </tr>
     </thead>

@@ -315,7 +315,7 @@
 <%# Unit price note %>
 <% if @period&.unit_price.present? %>
   <p class="mt-3 text-xs text-gray-500">
-    <%= t("monthly_summary.unit_price_note", price: number_with_precision(@period.unit_price, precision: 0), period: @period.label) %>
+    <%= t("monthly_summary.unit_price_note", price: number_with_precision(@period.unit_price, precision: 2), period: @period.label) %>
   </p>
 <% end %>
 

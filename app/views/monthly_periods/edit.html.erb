@@ -12,7 +12,7 @@
 
 <div class="bg-white rounded-lg border border-gray-200 p-6 max-w-md">
   <h1 class="text-xl font-semibold text-gray-900 mb-1"><%= t("monthly_periods.edit.title") %></h1>
-  <p class="text-sm text-gray-500 mb-6">Kỳ <%= @monthly_period.label %></p>
+  <p class="text-sm text-gray-500 mb-6"><%= t("monthly_periods.index.period_col") %> <%= @monthly_period.label %></p>
 
   <%= form_with model: @monthly_period do |f| %>
     <% if @monthly_period.errors.any? %>

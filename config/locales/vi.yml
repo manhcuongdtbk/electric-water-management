@@ -1,6 +1,14 @@
 vi:
   app_name: "Phần mềm Quản lý Điện Nước"
 
+  common:
+    table:
+      stt: "STT"
+      actions: "Thao tác"
+    search:
+      submit: "Tìm kiếm"
+      clear: "Xóa bộ lọc"
+
   number:
     format:
       delimiter: "."
@@ -370,7 +378,7 @@ vi:
 
   contact_points:
     index:
-      title: "Danh sách đầu mối"
+      title: "Đầu mối"
       new_button: "Thêm đầu mối"
       filter_org: "Lọc theo đơn vị"
       all_orgs: "Tất cả đơn vị"
@@ -472,7 +480,7 @@ vi:
 
   unit_configs:
     show:
-      title: "Cấu hình tỷ lệ và cột Khác"
+      title: "Cấu hình"
     period_select: "Kỳ tính toán"
     no_period: "Chưa có kỳ nào. Vui lòng tạo kỳ tính toán trước."
     errors_header: "Có lỗi xảy ra:"
@@ -504,7 +512,7 @@ vi:
 
   electricity_supplies:
     show:
-      title: "Nhập số điện lực (đồng hồ tổng)"
+      title: "Nhập số điện lực"
     period_select: "Kỳ tính toán"
     main_meter_select: "Khu vực (đồng hồ tổng)"
     no_period: "Chưa có kỳ nào. Vui lòng tạo kỳ tính toán trước."
@@ -524,7 +532,7 @@ vi:
 
   meter_readings:
     show:
-      title: "Nhập chỉ số công tơ đầu kỳ / cuối kỳ"
+      title: "Chỉ số công tơ"
     period_select: "Kỳ tính toán"
     org_select: "Đơn vị"
     no_period: "Chưa có kỳ nào. Vui lòng tạo kỳ tính toán trước."
@@ -579,7 +587,8 @@ vi:
     new:
       title: "Mở kỳ tính toán mới"
     index:
-      title: "Quản lý đơn giá điện"
+      title: "Đơn giá điện"
+      period_col: "Kỳ"
       unit_price_col: "Đơn giá (đ/kWh)"
       locked_col: "Trạng thái"
       not_set: "(chưa nhập)"
@@ -656,7 +665,7 @@ vi:
     personnel_review: "Soát lại quân số"
     monthly_summary: "Bảng tổng hợp"
     history: "Tra cứu lịch sử"
-    users: "Quản lý tài khoản"
+    users: "Tài khoản"
     sign_out: "Đăng xuất"
     config_section: "Cấu hình hệ thống"
     monthly_periods: "Đơn giá điện"
@@ -664,14 +673,14 @@ vi:
     pump_stations: "Trạm bơm"
     pump_station_readings: "Chỉ số trạm bơm"
     work_groups: "Nhóm công tác"
-    organizations: "Quản lý đơn vị"
+    organizations: "Đơn vị"
     main_meters: "Khu vực đồng hồ tổng"
     audit_logs: "Nhật ký hoạt động"
     backups: "Sao lưu dữ liệu"
 
   users:
     index:
-      title: "Quản lý tài khoản"
+      title: "Tài khoản"
       new_button: "Thêm tài khoản"
       columns:
         stt: "STT"
@@ -725,8 +734,8 @@ vi:
     metrics:
       total_standard: "Tổng tiêu chuẩn"
       total_usage: "Tổng sử dụng"
-      difference: "Chênh lệch"
-      over_count: "Đầu mối vượt tiêu chuẩn"
+      difference: "Tổng chênh lệch"
+      over_count: "Tổng đầu mối vượt tiêu chuẩn"
       unit_kw: "kW"
       unit_count: "đầu mối"
     chart:
@@ -740,6 +749,7 @@ vi:
       usage: "Sử dụng (kW)"
       difference: "Chênh lệch (kW)"
       over_badge: "Vượt"
+      total_row: "Tổng cộng"
     tabs:
       month: "Tháng"
       quarter: "Quý"
@@ -755,7 +765,7 @@ vi:
 
   history:
     show:
-      title: "Tra cứu lịch sử điện"
+      title: "Tra cứu lịch sử"
       no_contact_points: "Đơn vị chưa có đầu mối nào."
       no_period: "Không có kỳ tính toán cho tháng/năm đã chọn."
       no_data: "Chưa có dữ liệu tính toán cho kỳ này."
@@ -805,7 +815,7 @@ vi:
 
   rank_quotas:
     index:
-      title: "Quản lý định mức cấp bậc"
+      title: "Định mức cấp bậc"
       rank_group_col: "Nhóm"
       rank_name_col: "Tên cấp bậc"
       quota_kw_col: "Định mức (kW/người/tháng)"
@@ -822,7 +832,7 @@ vi:
 
   pump_stations:
     index:
-      title: "Quản lý trạm bơm nước"
+      title: "Trạm bơm"
       note: "Đặt phần trăm cố định (ví dụ 30%) cho đầu mối hưởng riêng. Phần còn lại sẽ chia cho các đơn vị khác theo quân số. Tổng các tỷ lệ cố định trên cùng một trạm bơm không được vượt quá 100%."
       empty: "Chưa có trạm bơm nào. Bấm \"Thêm trạm bơm\" để bắt đầu."
       new_button: "Thêm trạm bơm"
@@ -914,7 +924,7 @@ vi:
 
   work_groups:
     index:
-      title: "Quản lý nhóm công tác"
+      title: "Nhóm công tác"
       subtitle: "Nhóm công tác là tập hợp người lao động (VD: Thợ xây, Trạm chế biến) không thuộc đơn vị hay đầu mối nào, nhưng được phân bổ điện bơm theo quân số."
       new_button: "Thêm nhóm công tác"
       empty: "Chưa có nhóm công tác nào."
@@ -964,7 +974,7 @@ vi:
 
   audit_log:
     index:
-      title: "Nhật ký thay đổi dữ liệu"
+      title: "Nhật ký hoạt động"
       filter_user: "Người thao tác"
       filter_all_users: "Tất cả"
       filter_item_type: "Loại dữ liệu"
@@ -1022,7 +1032,7 @@ vi:
 
   organizations:
     index:
-      title: "Quản lý đơn vị cấp 2"
+      title: "Đơn vị"
       new_button: "Thêm đơn vị"
       columns:
         stt: "STT"
@@ -1049,7 +1059,7 @@ vi:
 
   main_meters:
     index:
-      title: "Khu vực đồng hồ tổng điện lực"
+      title: "Khu vực đồng hồ tổng"
       subtitle: "Mỗi khu vực là một đồng hồ tổng vật lý. Nhiều đơn vị cấp 2 có thể dùng chung một đồng hồ tổng."
       new_button: "Thêm khu vực"
       columns:

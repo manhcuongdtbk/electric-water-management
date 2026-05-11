@@ -1,13 +1,9 @@
 module ApplicationHelper
-  HISTORY_INTEGER_COLS = %i[total_personnel unit_price total_amount].freeze
+  HISTORY_INTEGER_COLS = %i[total_personnel total_amount].freeze
 
   def format_number_vn(val, precision: 2)
     return "—" if val.nil?
     number_with_precision(val, precision: precision)
-  end
-
-  def format_amount_vn(val)
-    format_number_vn(val, precision: 0)
   end
 
   def format_history_value(calc, col)
