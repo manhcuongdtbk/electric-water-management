@@ -5,7 +5,7 @@ class PumpStationsController < ApplicationController
   def index
     @pump_stations = PumpStation
                        .includes(:organization, :meters,
-                                 pump_station_assignments: :organization)
+                                 pump_station_assignments: :assignable)
                        .ordered
   end
 

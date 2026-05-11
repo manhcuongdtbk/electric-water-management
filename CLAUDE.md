@@ -74,23 +74,24 @@ DB lưu 22 cột (`over_under_kw` + `total_amount` signed), view tách thành 24
 - Implemented in CalculationEngine via zone_org_ids + zone_pump_meter_ids (PR2). Pump tham gia loss pool và pump_loss_share cộng vào pump pool phân bổ
 
 ### Phân bổ bơm nước thực tế — mô hình fixed/variable
-- Phân bổ cho **nhóm đối tượng** (KHÔNG phải đơn vị cấp 2). Nhóm đối tượng có 3 loại:
-  - Đơn vị cấp 2 (trỏ tới Organization, quân số = tổng quân số đầu mối)
-  - Đầu mối đặc biệt (trỏ tới ContactPoint, quân số từ khai báo)
-  - Nhóm công tác (model mới — tên + quân số nhập tay, không thuộc đơn vị hay đầu mối)
+- Phân bổ cho **nhóm đối tượng** (KHÔNG phải đơn vị cấp 2). Nhóm đối tượng có 3 loại (đã implement PR m6 polymorphic):
+  - Đơn vị cấp 2 — `PumpStationAssignment.assignable = Organization`, quân số = Σ personnel các CP trong Org
+  - Đầu mối đặc biệt — `assignable = ContactPoint`, quân số = personnel của CP đó
+  - Nhóm công tác — `assignable = WorkGroup` (model mới: tên + personnel_count nhập tay + owner_organization = Sư đoàn)
 - Tổng bơm phân bổ = sử dụng trạm bơm + tổn hao trạm bơm (**bao gồm tổn hao**)
-- `PumpStationAssignment` gán trạm bơm cho nhóm đối tượng, có cột `fixed_pump_percentage` (decimal, nullable)
+- `PumpStationAssignment` polymorphic (`assignable_type, assignable_id`) + `fixed_pump_percentage` (decimal, nullable)
 - Nhóm có `fixed_pump_percentage` (ví dụ 30%) → nhận `tổng_bơm × percentage / 100`, KHÔNG chia theo quân số
 - Nhóm có `fixed_pump_percentage = nil` → chia phần còn lại theo quân số
-- Quân số nhóm cố định KHÔNG cộng vào tổng quân số chia phần còn lại
 - `fixed_pump_percentage = 0` → coi là cố định (nhận 0 kW), không tham gia pool variable
 - Tất cả nil → 100% chia theo quân số
-- Ví dụ tháng 02: tổng bơm 6420 kW (= sử dụng 6152 + tổn hao 268), 30% cho "Chỉ huy f + nhà khách" = 1926 kW, 70% còn lại chia cho 557 người
-- UI: `/pump_stations` — admin_level1 only
-- ⚠️ Code hiện tại gán cho Organization, chưa hỗ trợ 3 loại nhóm đối tượng — cần thiết kế lại (xem TONG_KET mục V.A.3)
+- Sum fixed > 100 → clamp 100 (variable_pool = 0); fixed slots giữ raw % (admin chọn đúng)
+- Engine `CalculationEngine#compute_pump_allocations` resolve qua `headcount_for(assignable)` cho 3 loại. WorkGroup share NOT persisted to MonthlyCalculation (không có CP); F10 báo cáo dùng `PumpAllocationCalculator` (org-agnostic, full breakdown {Org, CP, WG}).
+- A1 đếm 2 lần: nếu CP A1 fixed 30% và DVA Org variable → A1 nhận cả 2 (CP fixed + variable từ DVA share). Cố ý — admin chọn assignment, engine không de-duplicate.
+- Ví dụ tháng 02: tổng bơm 6420 kW (= sử dụng 6152 + tổn hao 268), 30% cho "Chỉ huy f + nhà khách" = 1926 kW, 70% còn lại chia cho 557 người (gồm Đơn vị + WG "Thợ xây" "Trạm chế biến")
+- UI: `/pump_stations` form 2-step picker (radio loại + select instance, Stimulus `assignable_type_picker_controller`); `/work_groups` CRUD — admin_level1 only
 
 ### Database schema chính
-organizations, users, contact_points, meters (meter_type: normal/public/pump/no_loss), personnel, rank_quotas (cột: rank_name, quota_kw, effective_from), monthly_periods, meter_readings, monthly_calculations, unit_configs, pump_stations, pump_station_assignments (cột: fixed_pump_percentage — decimal nullable), contact_point_other_deductions
+organizations, users, contact_points, meters (meter_type: normal/public/pump/no_loss), personnel, rank_quotas (cột: rank_name, quota_kw, effective_from), monthly_periods, meter_readings, monthly_calculations, unit_configs, main_meters + main_meter_readings, pump_stations, pump_station_assignments (cột: `assignable_type, assignable_id, fixed_pump_percentage`), work_groups (name, personnel_count, position, notes, owner_organization_id), contact_point_other_deductions
 
 ### Routes & controllers
 - `root` → `dashboard#show` (Dashboard + F12 báo cáo tổng hợp: tháng/quý/năm)
@@ -100,7 +101,8 @@ organizations, users, contact_points, meters (meter_type: normal/public/pump/no_
 - `audit_logs#index` → F19 nhật ký thay đổi (PaperTrail::Version, tech + admin_level1)
 - `monthly_periods#index/edit/update` → F20 đơn giá điện (admin_level1 sửa)
 - `rank_quotas#index/edit/update` → F21 định mức cấp bậc (admin_level1 sửa)
-- `pump_stations#index` + `pump_station_assignments#edit/update` → Phân bổ trạm bơm (admin_level1 only)
+- `pump_stations#index` + `pump_station_assignments#new/edit/update/destroy` → Phân bổ trạm bơm cho 3 loại nhóm đối tượng (admin_level1 only)
+- `work_groups#index/new/create/edit/update/destroy` → Quản lý nhóm công tác (admin_level1 only)
 - `backups#index/create/restore/destroy_file` → Sao lưu & phục hồi (tech only, admin_level1 explicit cannot)
 
 ## Milestones

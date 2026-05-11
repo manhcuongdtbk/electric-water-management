@@ -91,15 +91,15 @@
           <table class="min-w-full text-sm">
             <thead>
               <tr class="text-left text-xs text-gray-500">
-                <th class="py-1 pr-3 font-medium"><%= t("pump_station_assignments.index.organization_col") %></th>
+                <th class="py-1 pr-3 font-medium"><%= t("pump_station_assignments.index.recipient_col") %></th>
                 <th class="py-1 pr-3 font-medium text-right"><%= t("pump_station_assignments.index.fixed_pct_col") %></th>
                 <th class="py-1 font-medium text-right w-32"><%= t("pump_station_assignments.index.actions_col") %></th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-              <% ps.pump_station_assignments.sort_by { |a| a.organization.position }.each do |asg| %>
+              <% ps.pump_station_assignments.sort_by { |a| pump_station_assignment_sort_key(a) }.each do |asg| %>
                 <tr>
-                  <td class="py-1.5 pr-3 text-gray-900"><%= asg.organization.name %></td>
+                  <td class="py-1.5 pr-3"><%= pump_station_assignments_target_label(asg) %></td>
                   <td class="py-1.5 pr-3 text-right">
                     <% if asg.fixed? %>
                       <span class="font-medium text-amber-700"><%= number_with_delimiter(asg.fixed_pump_percentage) %>%</span>

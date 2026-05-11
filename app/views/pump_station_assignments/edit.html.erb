@@ -9,11 +9,11 @@
 <div class="bg-white rounded-lg border border-gray-200 p-6 max-w-md">
   <h1 class="text-xl font-semibold text-gray-900 mb-1"><%= t("pump_station_assignments.edit.title") %></h1>
   <p class="text-sm text-gray-500 mb-6">
-    <%= @pump_station.name %> · <%= @assignment.organization.name %>
+    <%= @pump_station.name %> · <%= pump_station_assignments_target_label(@assignment) %>
   </p>
 
   <%= render "form",
         pump_station: @pump_station,
         assignment: @assignment,
-        available_organizations: [] %>
+        available_assignables: { organizations: [], contact_points: [], work_groups: [] } %>
 </div>

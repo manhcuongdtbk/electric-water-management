@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_11_024521) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_11_150002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -172,13 +172,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_024521) do
   end
 
   create_table "pump_station_assignments", force: :cascade do |t|
+    t.bigint "assignable_id", null: false
+    t.string "assignable_type", null: false
     t.datetime "created_at", null: false
     t.decimal "fixed_pump_percentage", precision: 5, scale: 2
-    t.bigint "organization_id", null: false
     t.bigint "pump_station_id", null: false
     t.datetime "updated_at", null: false
-    t.index ["organization_id"], name: "index_pump_station_assignments_on_organization_id"
-    t.index ["pump_station_id", "organization_id"], name: "idx_pump_assignments_on_station_and_org", unique: true
+    t.index ["pump_station_id", "assignable_type", "assignable_id"], name: "idx_pump_assignments_on_station_and_assignable", unique: true
     t.index ["pump_station_id"], name: "index_pump_station_assignments_on_pump_station_id"
   end
 
@@ -256,6 +256,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_024521) do
     t.index ["whodunnit"], name: "index_versions_on_whodunnit"
   end
 
+  create_table "work_groups", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.text "notes"
+    t.bigint "owner_organization_id", null: false
+    t.integer "personnel_count", default: 0, null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["owner_organization_id", "name"], name: "idx_work_groups_on_owner_and_name", unique: true
+    t.index ["owner_organization_id"], name: "index_work_groups_on_owner_organization_id"
+  end
+
   add_foreign_key "contact_point_other_deductions", "contact_points"
   add_foreign_key "contact_point_other_deductions", "monthly_periods"
   add_foreign_key "contact_points", "organizations"
@@ -273,10 +285,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_024521) do
   add_foreign_key "organizations", "organizations", column: "parent_id"
   add_foreign_key "personnel", "contact_points"
   add_foreign_key "personnel", "monthly_periods"
-  add_foreign_key "pump_station_assignments", "organizations"
   add_foreign_key "pump_station_assignments", "pump_stations"
   add_foreign_key "pump_stations", "organizations"
   add_foreign_key "unit_configs", "monthly_periods"
   add_foreign_key "unit_configs", "organizations"
   add_foreign_key "users", "organizations"
+  add_foreign_key "work_groups", "organizations", column: "owner_organization_id"
 end

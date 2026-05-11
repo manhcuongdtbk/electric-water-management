@@ -27,6 +27,8 @@ Rails.application.routes.draw do
   end
   resource :pump_station_readings, only: [ :show, :update ]
 
+  resources :work_groups, except: [ :show ]
+
   resources :contact_points do
     resource :personnel, only: [ :show, :update ], controller: :personnel do
       patch :toggle_review

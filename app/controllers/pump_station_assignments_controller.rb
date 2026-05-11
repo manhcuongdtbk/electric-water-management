@@ -5,7 +5,7 @@ class PumpStationAssignmentsController < ApplicationController
 
   def new
     @assignment = @pump_station.pump_station_assignments.new
-    @available_organizations = available_organizations
+    @available_assignables = available_assignables
   end
 
   def create
@@ -13,7 +13,7 @@ class PumpStationAssignmentsController < ApplicationController
     if @assignment.save
       redirect_to pump_stations_path, notice: t("flash.pump_station_assignments.created")
     else
-      @available_organizations = available_organizations
+      @available_assignables = available_assignables
       render :new, status: :unprocessable_entity
     end
   end
@@ -54,15 +54,31 @@ class PumpStationAssignmentsController < ApplicationController
   end
 
   def create_assignment_params
-    params.require(:pump_station_assignment).permit(:organization_id, :fixed_pump_percentage)
+    params.require(:pump_station_assignment)
+          .permit(:assignable_type, :assignable_id, :fixed_pump_percentage)
   end
 
   def update_assignment_params
     params.require(:pump_station_assignment).permit(:fixed_pump_percentage)
   end
 
-  def available_organizations
-    assigned_org_ids = @pump_station.pump_station_assignments.pluck(:organization_id)
-    Organization.units.ordered.where.not(id: assigned_org_ids)
+  # Build available pickers for each assignable type, excluding records
+  # already assigned to this pump station.
+  def available_assignables
+    taken_ids_by_type = @pump_station.pump_station_assignments
+      .pluck(:assignable_type, :assignable_id)
+      .group_by(&:first)
+      .transform_values { |arr| arr.map(&:last) }
+
+    {
+      organizations: Organization.units.ordered
+                                 .where.not(id: taken_ids_by_type["Organization"] || []),
+      contact_points: ContactPoint
+                        .joins(:organization)
+                        .where(organizations: { level: Organization.levels[:unit] })
+                        .order("organizations.position, contact_points.position, contact_points.name")
+                        .where.not(id: taken_ids_by_type["ContactPoint"] || []),
+      work_groups: WorkGroup.ordered.where.not(id: taken_ids_by_type["WorkGroup"] || [])
+    }
   end
 end

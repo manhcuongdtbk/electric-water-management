@@ -9,7 +9,6 @@ class PumpStation < ApplicationRecord
   belongs_to :organization
   has_many :meters, dependent: :destroy
   has_many :pump_station_assignments, dependent: :destroy
-  has_many :served_organizations, through: :pump_station_assignments, source: :organization
 
   # Validations
   validates :name, presence: true, length: { maximum: 100 }
