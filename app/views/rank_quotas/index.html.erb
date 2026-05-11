@@ -16,7 +16,6 @@
         <th class="px-4 py-3 text-center font-medium text-gray-600 w-16"><%= t("rank_quotas.index.rank_group_col") %></th>
         <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("rank_quotas.index.rank_name_col") %></th>
         <th class="px-4 py-3 text-right font-medium text-gray-600"><%= t("rank_quotas.index.quota_kw_col") %></th>
-        <th class="px-4 py-3 text-center font-medium text-gray-600"><%= t("rank_quotas.index.effective_from_col") %></th>
         <% if can? :manage, RankQuota %>
           <th class="px-4 py-3 text-center font-medium text-gray-600">Thao tác</th>
         <% end %>
@@ -30,9 +29,6 @@
           <td class="px-4 py-3 text-gray-900"><%= quota.rank_name %></td>
           <td class="px-4 py-3 text-right font-medium text-gray-900">
             <%= number_with_delimiter(quota.quota_kw) %> kW
-          </td>
-          <td class="px-4 py-3 text-center text-gray-600">
-            <%= l(quota.effective_from, format: :default) %>
           </td>
           <% if can? :manage, RankQuota %>
             <td class="px-4 py-3 text-center">

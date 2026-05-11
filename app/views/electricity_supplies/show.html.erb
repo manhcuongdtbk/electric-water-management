@@ -88,7 +88,7 @@
         <span class="text-sm text-gray-600"><%= t("electricity_supplies.section_input.field_label") %>:</span>
         <% if @reading.electricity_supply_kw.present? %>
           <span class="text-sm font-semibold text-gray-900 font-mono">
-            <%= number_with_precision(@reading.electricity_supply_kw, precision: 2, delimiter: ",") %> kWh
+            <%= number_with_precision(@reading.electricity_supply_kw, precision: 2) %> kWh
           </span>
         <% else %>
           <span class="text-sm text-gray-400 italic"><%= t("electricity_supplies.not_entered") %></span>
@@ -125,7 +125,7 @@
                 <% end %>
                 <td class="px-4 py-3 text-gray-700"><%= reading.monthly_period.label %></td>
                 <td class="px-4 py-3 text-right font-mono text-gray-900">
-                  <%= number_with_precision(reading.electricity_supply_kw, precision: 2, delimiter: ",") %>
+                  <%= number_with_precision(reading.electricity_supply_kw, precision: 2) %>
                   <span class="text-xs text-gray-400 ml-0.5">kWh</span>
                 </td>
               </tr>

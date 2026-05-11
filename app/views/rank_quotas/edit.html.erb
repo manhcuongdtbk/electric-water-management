@@ -8,7 +8,7 @@
 
 <div class="bg-white rounded-lg border border-gray-200 p-6 max-w-md">
   <h1 class="text-xl font-semibold text-gray-900 mb-1"><%= t("rank_quotas.edit.title") %></h1>
-  <p class="text-sm text-gray-500 mb-6">Nhóm <%= @rank_quota.rank_group %> — hiệu lực từ <%= l(@rank_quota.effective_from, format: :default) %></p>
+  <p class="text-sm text-gray-500 mb-6">Nhóm <%= @rank_quota.rank_group %></p>
 
   <%= form_with model: @rank_quota, url: rank_quota_path(@rank_quota), method: :patch do |f| %>
     <% if @rank_quota.errors.any? %>

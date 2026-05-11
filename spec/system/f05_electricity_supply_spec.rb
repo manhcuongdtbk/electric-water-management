@@ -41,7 +41,7 @@ RSpec.describe "F05 — Electricity supply", type: :system do
       expect(page).to have_content(main_meter.name)
       expect(page).not_to have_css("input[name='electricity_supply[electricity_supply_kw]']")
       expect(page).not_to have_button(I18n.t("electricity_supplies.section_input.submit"))
-      expect(page).to have_content("12,345.00")
+      expect(page).to have_content("12.345,00")
     end
 
     it "shows no-main-meter notice when their org is not assigned a zone" do

@@ -32,9 +32,9 @@ RSpec.describe "F12 — Dashboard", type: :system do
       expect(page).to have_content(I18n.t("dashboard.metrics.difference"))
       expect(page).to have_content(I18n.t("dashboard.metrics.over_count"))
       # total_standard = 5000, total_usage = 4000, diff = 1000, over_count = 0
-      expect(page).to have_content("5,000")
-      expect(page).to have_content("4,000")
-      expect(page).to have_content("1,000")
+      expect(page).to have_content("5.000,00")
+      expect(page).to have_content("4.000,00")
+      expect(page).to have_content("1.000,00")
     end
 
     it "renders chart container" do
@@ -86,8 +86,8 @@ RSpec.describe "F12 — Dashboard", type: :system do
 
     it "shows own unit data with correct values" do
       visit root_path
-      expect(page).to have_content("5,000")
-      expect(page).to have_content("4,000")
+      expect(page).to have_content("5.000,00")
+      expect(page).to have_content("4.000,00")
       expect(page).to have_content(contact_point.name)
     end
   end
@@ -101,7 +101,7 @@ RSpec.describe "F12 — Dashboard", type: :system do
     it "has no org dropdown and sees own unit data" do
       visit root_path
       expect(page).not_to have_select("org_id")
-      expect(page).to have_content("5,000")
+      expect(page).to have_content("5.000,00")
       expect(page).to have_content(contact_point.name)
     end
   end
@@ -156,8 +156,8 @@ RSpec.describe "F12 — Dashboard", type: :system do
       login_as scenario.admin_unit, scope: :user
       visit dashboard_path(period_id: period2.id)
 
-      expect(page).to have_content("7,777")
-      expect(page).not_to have_content("5,000")
+      expect(page).to have_content("7.777,00")
+      expect(page).not_to have_content("5.000,00")
     end
   end
 
@@ -236,8 +236,8 @@ RSpec.describe "F12 — Dashboard", type: :system do
       visit dashboard_path(view_type: "quarter", year: 2026, quarter: 1)
       # standard: 3000 (Jan) + 5000 (Feb) = 8000
       # usage:    2500 (Jan) + 4000 (Feb) = 6500
-      expect(page).to have_content("8,000")
-      expect(page).to have_content("6,500")
+      expect(page).to have_content("8.000,00")
+      expect(page).to have_content("6.500,00")
     end
 
     it "renders chart container for quarter view" do
@@ -256,7 +256,7 @@ RSpec.describe "F12 — Dashboard", type: :system do
       login_as scenario.admin_level1, scope: :user
       visit dashboard_path(view_type: "quarter", year: 2026, quarter: 1)
       expect(page).to have_select("org_id")
-      expect(page).to have_content("8,000")
+      expect(page).to have_content("8.000,00")
     end
   end
 
@@ -286,8 +286,8 @@ RSpec.describe "F12 — Dashboard", type: :system do
       login_as scenario.admin_unit, scope: :user
       visit dashboard_path(view_type: "year", year: 2026)
       # standard: 3000 + 5000 = 8000, usage: 2500 + 4000 = 6500
-      expect(page).to have_content("8,000")
-      expect(page).to have_content("6,500")
+      expect(page).to have_content("8.000,00")
+      expect(page).to have_content("6.500,00")
     end
 
     it "renders line chart container for year view" do

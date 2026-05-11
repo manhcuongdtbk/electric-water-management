@@ -28,10 +28,8 @@ rank_names = {
   7 => "Hạ sĩ quan, binh sĩ"
 }
 
-effective_from = Date.new(2024, 1, 1)
-
 RankQuota::STANDARD_QUOTAS.each do |group, quota_kw|
-  RankQuota.find_or_create_by!(rank_group: group, effective_from: effective_from) do |rq|
+  RankQuota.find_or_create_by!(rank_group: group) do |rq|
     rq.rank_name = rank_names[group]
     rq.quota_kw  = quota_kw
   end

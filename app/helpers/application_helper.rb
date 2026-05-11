@@ -1,13 +1,19 @@
 module ApplicationHelper
   HISTORY_INTEGER_COLS = %i[total_personnel unit_price total_amount].freeze
 
+  def format_number_vn(val, precision: 2)
+    return "—" if val.nil?
+    number_with_precision(val, precision: precision)
+  end
+
+  def format_amount_vn(val)
+    format_number_vn(val, precision: 0)
+  end
+
   def format_history_value(calc, col)
     val = calc.public_send(col)
-    if HISTORY_INTEGER_COLS.include?(col)
-      number_with_precision(val, precision: 0, delimiter: ",")
-    else
-      number_with_precision(val, precision: 2, delimiter: ",")
-    end
+    precision = HISTORY_INTEGER_COLS.include?(col) ? 0 : 2
+    number_with_precision(val, precision: precision)
   end
 
   def rank_names

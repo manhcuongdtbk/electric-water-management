@@ -18,27 +18,25 @@ class RankQuota < ApplicationRecord
   # Validations
   validates :rank_group, presence: true,
             inclusion: { in: RANK_GROUPS },
-            uniqueness: { scope: :effective_from }
+            uniqueness: true
   validates :rank_name, presence: true, length: { maximum: 100 }
   validates :quota_kw, presence: true,
             numericality: { greater_than: 0 }
-  validates :effective_from, presence: true
 
   # Scopes
-  scope :ordered, -> { order(:rank_group, :effective_from) }
+  scope :ordered, -> { order(:rank_group) }
   scope :for_rank, ->(group) { where(rank_group: group) }
-  scope :effective_at, ->(date) { where("effective_from <= ?", date).order(effective_from: :desc) }
 
-  def self.current_quotas_for(date = Date.current)
+  def self.current_quotas
     RANK_GROUPS.each_with_object({}) do |group, hash|
-      quota = for_rank(group).effective_at(date).first
+      quota = for_rank(group).first
       hash[group] = quota&.quota_kw
     end
   end
 
-  def self.current_names(date = Date.current)
+  def self.current_names
     RANK_GROUPS.each_with_object({}) do |group, hash|
-      quota = for_rank(group).effective_at(date).first
+      quota = for_rank(group).first
       hash[group] = quota&.rank_name || "Nhóm #{group}"
     end
   end

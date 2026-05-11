@@ -47,10 +47,10 @@ RSpec.describe CalculationEngine do
            electricity_supply_kw: bd("1800"))
   end
 
-  let!(:rank_quota1) { create(:rank_quota, rank_group: 1, rank_name: "3*/4*",   quota_kw: bd("115"), effective_from: Date.new(2024, 1, 1)) }
-  let!(:rank_quota2) { create(:rank_quota, rank_group: 2, rank_name: "1*/2*",   quota_kw: bd("38"),  effective_from: Date.new(2024, 1, 1)) }
-  let!(:rank_quota3) { create(:rank_quota, rank_group: 3, rank_name: "Cap uy",  quota_kw: bd("28"),  effective_from: Date.new(2024, 1, 1)) }
-  let!(:rank_quota4) { create(:rank_quota, rank_group: 4, rank_name: "HSQ-CS",  quota_kw: bd("11"),  effective_from: Date.new(2024, 1, 1)) }
+  let!(:rank_quota1) { create(:rank_quota, rank_group: 1, rank_name: "3*/4*",   quota_kw: bd("115")) }
+  let!(:rank_quota2) { create(:rank_quota, rank_group: 2, rank_name: "1*/2*",   quota_kw: bd("38")) }
+  let!(:rank_quota3) { create(:rank_quota, rank_group: 3, rank_name: "Cap uy",  quota_kw: bd("28")) }
+  let!(:rank_quota4) { create(:rank_quota, rank_group: 4, rank_name: "HSQ-CS",  quota_kw: bd("11")) }
 
   let!(:cp_truong)    { create(:contact_point, organization: organization, name: "TMP Truong",   position: 1) }
   let!(:cp_qluc)      { create(:contact_point, organization: organization, name: "TB Q.Luc",     position: 2) }

@@ -45,8 +45,8 @@ RSpec.describe "F13 — Tra cứu lịch sử điện", type: :system do
     it "shows the detail table values from current calc" do
       visit history_path(contact_point_id: scenario.contact_point.id, year: 2026, month: 2)
       within("[data-testid='detail-table']") do
-        expect(page).to have_content("9,320.00")
-        expect(page).to have_content("7,450.00")
+        expect(page).to have_content("9.320,00")
+        expect(page).to have_content("7.450,00")
       end
     end
 

@@ -128,10 +128,10 @@
                   </td>
                 <% else %>
                   <td class="px-4 py-3 text-right font-mono text-gray-900">
-                    <%= reading.reading_start.present? ? number_with_precision(reading.reading_start, precision: 2, delimiter: ",") : "—" %>
+                    <%= reading.reading_start.present? ? number_with_precision(reading.reading_start, precision: 2) : "—" %>
                   </td>
                   <td class="px-4 py-3 text-right font-mono text-gray-900">
-                    <%= reading.reading_end.present? ? number_with_precision(reading.reading_end, precision: 2, delimiter: ",") : "—" %>
+                    <%= reading.reading_end.present? ? number_with_precision(reading.reading_end, precision: 2) : "—" %>
                   </td>
                 <% end %>
 
@@ -139,12 +139,12 @@
                   <% if can_write %>
                     <span data-meter-reading-target="consumption"
                           class="font-mono text-gray-900">
-                      <%= reading.consumption.present? ? number_with_precision(reading.consumption, precision: 2, delimiter: ",") : "—" %>
+                      <%= reading.consumption.present? ? number_with_precision(reading.consumption, precision: 2) : "—" %>
                     </span>
                     <span class="text-xs text-gray-400 ml-0.5">kWh</span>
                   <% else %>
                     <span class="font-mono text-gray-900">
-                      <%= reading.consumption.present? ? number_with_precision(reading.consumption, precision: 2, delimiter: ",") : "—" %>
+                      <%= reading.consumption.present? ? number_with_precision(reading.consumption, precision: 2) : "—" %>
                     </span>
                     <span class="text-xs text-gray-400 ml-0.5">kWh</span>
                   <% end %>

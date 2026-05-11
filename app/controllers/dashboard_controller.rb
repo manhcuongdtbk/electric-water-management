@@ -70,7 +70,11 @@ class DashboardController < ApplicationController
   end
 
   def fetch_calculations_for_period(period_id)
-    scope = MonthlyCalculation.for_period(period_id).ordered.preload(:contact_point)
+    scope = MonthlyCalculation
+              .for_period(period_id)
+              .excluding_public_meter_only_cps
+              .ordered
+              .preload(:contact_point)
     apply_org_scope(scope)
   end
 

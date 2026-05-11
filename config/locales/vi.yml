@@ -1,6 +1,30 @@
 vi:
   app_name: "Phần mềm Quản lý Điện Nước"
 
+  number:
+    format:
+      delimiter: "."
+      separator: ","
+      precision: 2
+      strip_insignificant_zeros: false
+    currency:
+      format:
+        unit: "đ"
+        format: "%n %u"
+        delimiter: "."
+        separator: ","
+        precision: 0
+    percentage:
+      format:
+        delimiter: "."
+        separator: ","
+        precision: 2
+    human:
+      format:
+        delimiter: "."
+        separator: ","
+        precision: 2
+
   time:
     formats:
       default: "%d/%m/%Y %H:%M"
@@ -593,19 +617,19 @@ vi:
     columns:
       stt: "STT"
       contact_point: "Tên đầu mối"
-      total_personnel: "Tổng QS"
+      total_personnel: "Tổng quân số"
       living_standard_kw: "Sinh hoạt"
       water_pump_standard_kw: "Bơm nước"
-      total_standard_kw: "Tổng TC"
+      total_standard_kw: "Tổng tiêu chuẩn"
       savings_deduction_kw: "Tiết kiệm của Bộ"
       loss_deduction_kw: "Tổn hao"
       division_public_deduction_kw: "Công cộng dùng chung Sư đoàn"
       unit_public_deduction_kw: "Công cộng dùng chung của đơn vị"
       other_deduction_kw: "Khác"
       total_deduction_kw: "Tổng trừ"
-      remaining_standard_kw: "TC còn lại"
-      meter_usage_kw: "Sử dụng đồng hồ (kW)"
-      water_pump_actual_kw: "Bơm nước TT (kW)"
+      remaining_standard_kw: "Tiêu chuẩn còn lại"
+      meter_usage_kw: "Sử dụng công tơ"
+      water_pump_actual_kw: "Bơm nước thực tế"
       total_usage_kw: "Sử dụng"
       over_under_kw: "Chênh lệch"
       total_amount: "Thành tiền (đ)"
@@ -754,8 +778,8 @@ vi:
       no_prior_data: "Không có dữ liệu năm trước (%{year}/%{month}) để so sánh."
     columns:
       total_personnel: "Tổng quân số"
-      water_pump_standard_kw: "Bơm nước TC (kW)"
-      water_pump_actual_kw: "Bơm nước TT (kW)"
+      water_pump_standard_kw: "Bơm nước tiêu chuẩn (kW)"
+      water_pump_actual_kw: "Bơm nước thực tế (kW)"
       total_standard_kw: "Tổng tiêu chuẩn (kW)"
       total_usage_kw: "Tổng sử dụng (kW)"
       total_deduction_kw: "Tổng trừ (kW)"
@@ -764,7 +788,7 @@ vi:
       division_public_deduction_kw: "Công cộng Sư đoàn (kW)"
       unit_public_deduction_kw: "Công cộng đơn vị (kW)"
       other_deduction_kw: "Khác (kW)"
-      meter_usage_kw: "Sử dụng đồng hồ (kW)"
+      meter_usage_kw: "Sử dụng công tơ (kW)"
       over_under_kw: "Chênh lệch (kW)"
       unit_price: "Đơn giá (đ/kWh)"
       total_amount: "Thành tiền (đ)"
@@ -785,7 +809,6 @@ vi:
       rank_group_col: "Nhóm"
       rank_name_col: "Tên cấp bậc"
       quota_kw_col: "Định mức (kW/người/tháng)"
-      effective_from_col: "Ngày hiệu lực"
       note: "Thay đổi định mức ảnh hưởng toàn bộ kỳ tính toán. Hãy tính lại các kỳ bị ảnh hưởng sau khi lưu."
     edit:
       title: "Sửa định mức"

@@ -8,8 +8,7 @@ RSpec.describe RankQuota, type: :model do
     it { is_expected.to validate_presence_of(:rank_name) }
     it { is_expected.to validate_length_of(:rank_name).is_at_most(100) }
     it { is_expected.to validate_presence_of(:quota_kw) }
-    it { is_expected.to validate_presence_of(:effective_from) }
-    it { is_expected.to validate_uniqueness_of(:rank_group).scoped_to(:effective_from) }
+    it { is_expected.to validate_uniqueness_of(:rank_group) }
 
     it "rejects quota_kw <= 0" do
       expect(build(:rank_quota, quota_kw: 0)).not_to be_valid
@@ -27,41 +26,20 @@ RSpec.describe RankQuota, type: :model do
       end
     end
 
-    it "prevents duplicate rank_group for same effective_from" do
-      create(:rank_quota, rank_group: 1, effective_from: Date.new(2024, 1, 1))
-      dup = build(:rank_quota, rank_group: 1, effective_from: Date.new(2024, 1, 1))
+    it "prevents duplicate rank_group" do
+      create(:rank_quota, rank_group: 1)
+      dup = build(:rank_quota, rank_group: 1)
       expect(dup).not_to be_valid
     end
-
-    it "allows same rank_group with different effective_from" do
-      create(:rank_quota, rank_group: 1, effective_from: Date.new(2024, 1, 1))
-      newer = build(:rank_quota, rank_group: 1, effective_from: Date.new(2025, 1, 1))
-      expect(newer).to be_valid
-    end
   end
 
-  describe ".effective_at" do
-    let!(:old_quota) { create(:rank_quota, rank_group: 1, quota_kw: 500, effective_from: Date.new(2023, 1, 1)) }
-    let!(:new_quota) { create(:rank_quota, rank_group: 1, quota_kw: 570, effective_from: Date.new(2024, 1, 1)) }
-
-    it "returns most recent quota effective by given date" do
-      result = RankQuota.for_rank(1).effective_at(Date.new(2024, 6, 1)).first
-      expect(result).to eq(new_quota)
-    end
-
-    it "returns older quota before newer effective_from" do
-      result = RankQuota.for_rank(1).effective_at(Date.new(2023, 6, 1)).first
-      expect(result).to eq(old_quota)
-    end
-  end
-
-  describe ".current_quotas_for" do
+  describe ".current_quotas" do
     before do
       (1..7).each { |g| create(:rank_quota, :"rank#{g}") }
     end
 
     it "returns a hash with all 7 rank groups" do
-      result = RankQuota.current_quotas_for(Date.new(2026, 1, 1))
+      result = RankQuota.current_quotas
       expect(result.keys.sort).to eq((1..7).to_a)
       expect(result[1]).to eq(570)
       expect(result[7]).to eq(24)
@@ -74,20 +52,20 @@ RSpec.describe RankQuota, type: :model do
     end
 
     it "returns a hash with keys 1..7" do
-      result = RankQuota.current_names(Date.new(2026, 1, 1))
+      result = RankQuota.current_names
       expect(result.keys.sort).to eq((1..7).to_a)
     end
 
-    it "returns rank_name from the most recent effective record" do
-      create(:rank_quota, rank_group: 1, rank_name: "Ten moi", quota_kw: 570,
-                          effective_from: Date.new(2025, 1, 1))
-      result = RankQuota.current_names(Date.new(2026, 1, 1))
+    it "returns rank_name from existing record" do
+      RankQuota.where(rank_group: 1).delete_all
+      create(:rank_quota, rank_group: 1, rank_name: "Ten moi", quota_kw: 570)
+      result = RankQuota.current_names
       expect(result[1]).to eq("Ten moi")
     end
 
     it "falls back to 'Nhóm N' when no record exists for a group" do
       RankQuota.where(rank_group: 3).delete_all
-      result = RankQuota.current_names(Date.new(2026, 1, 1))
+      result = RankQuota.current_names
       expect(result[3]).to eq("Nhóm 3")
     end
   end

@@ -94,10 +94,10 @@ RSpec.describe "MonthlySummary", type: :request do
         expect(body).to include(I18n.t("monthly_summary.groups.result"))
       end
 
-      it "shows formatted kW values with comma delimiter" do
+      it "shows formatted kW values with Vietnamese delimiter (dot thousands, comma decimal)" do
         sign_in admin_unit_a
         get monthly_summary_path(period_id: period.id)
-        expect(response.body).to include("1,140.00")
+        expect(response.body).to include("1.140,00")
       end
 
       it "shows the total row" do
@@ -119,6 +119,29 @@ RSpec.describe "MonthlySummary", type: :request do
         rank_quotas.each do |rq|
           expect(body).to include(rq.rank_name)
         end
+      end
+
+      # Việc 4a: tên cột không viết tắt
+      it "uses full column names (no abbreviations like Tổng QS / Tổng TC / TC còn lại / Bơm nước TT)" do
+        sign_in admin_unit_a
+        get monthly_summary_path(period_id: period.id)
+        body = response.body
+        expect(body).to include("Tổng quân số")
+        expect(body).to include("Tổng tiêu chuẩn")
+        expect(body).to include("Tiêu chuẩn còn lại")
+        expect(body).not_to match(/>Tổng QS</)
+        expect(body).not_to match(/>Tổng TC</)
+        expect(body).not_to match(/>TC còn lại</)
+        expect(body).not_to match(/>Bơm nước TT/)
+      end
+
+      # Việc 4b: 2 cột mới trong UI bảng tổng hợp
+      it "shows new columns 'Sử dụng công tơ' and 'Bơm nước thực tế' in the result group" do
+        sign_in admin_unit_a
+        get monthly_summary_path(period_id: period.id)
+        body = response.body
+        expect(body).to include("Sử dụng công tơ")
+        expect(body).to include("Bơm nước thực tế")
       end
     end
 
@@ -218,17 +241,17 @@ RSpec.describe "MonthlySummary", type: :request do
       it "displays over_under_kw absolute value in surplus column (negative = tiết kiệm)" do
         sign_in admin_unit_a
         get monthly_summary_path(period_id: period.id)
-        # calc_a.over_under_kw = -215 (negative = thừa/surplus) → surplus column shows "215.00" (absolute, no minus)
-        expect(response.body).to include("215.00")
-        expect(response.body).not_to include("-215.00")
+        # calc_a.over_under_kw = -215 (negative = thừa/surplus) → surplus column shows "215,00" (absolute, no minus)
+        expect(response.body).to include("215,00")
+        expect(response.body).not_to include("-215,00")
       end
 
       it "displays total_amount absolute value without decimal places in surplus column (negative amount = thừa)" do
         sign_in admin_unit_a
         get monthly_summary_path(period_id: period.id)
-        # calc_a.total_amount = -430_000 (negative = thừa/surplus) → surplus column shows "430,000" (absolute, no minus)
-        expect(response.body).to include("430,000")
-        expect(response.body).not_to include("-430,000")
+        # calc_a.total_amount = -430_000 (negative = thừa/surplus) → surplus column shows "430.000" (absolute, no minus)
+        expect(response.body).to include("430.000")
+        expect(response.body).not_to include("-430.000")
       end
 
       it "totals row sums total_personnel across all contact points" do
@@ -281,6 +304,42 @@ RSpec.describe "MonthlySummary", type: :request do
         get monthly_summary_path(period_id: period.id)
         expect(response).to have_http_status(:ok)
       end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # GET /monthly_summary.csv (Việc 4c: đồng bộ với UI)
+  # ---------------------------------------------------------------------------
+  describe "GET /monthly_summary.csv" do
+    it "returns CSV with full column headers in UI order (no abbreviations, includes 2 new cols)" do
+      sign_in admin_unit_a
+      get monthly_summary_path(format: :csv, period_id: period.id)
+      expect(response).to have_http_status(:ok)
+      body = response.body.force_encoding("UTF-8").sub(/\A\xEF\xBB\xBF/, "")
+      headers = CSV.parse_line(body.lines.first.chomp)
+
+      # Spot-check: all full names present, no abbreviations
+      expect(headers).to include("Tổng quân số", "Tổng tiêu chuẩn", "Tiêu chuẩn còn lại",
+                                 "Sử dụng công tơ", "Bơm nước thực tế", "Sử dụng")
+      expect(headers).not_to include("Tổng QS", "Tổng TC", "TC còn lại", "Bơm nước TT")
+
+      # Order check: meter_usage_kw + water_pump_actual_kw are between
+      # remaining_standard_kw and total_usage_kw — same as UI.
+      idx_remain = headers.index("Tiêu chuẩn còn lại")
+      idx_meter  = headers.index("Sử dụng công tơ")
+      idx_pump   = headers.index("Bơm nước thực tế")
+      idx_total  = headers.index("Sử dụng")
+      expect([ idx_remain, idx_meter, idx_pump, idx_total ]).to eq([ idx_remain, idx_remain + 1, idx_remain + 2, idx_remain + 3 ])
+    end
+
+    it "outputs raw decimals (dot decimal, no thousands delimiter) for data rows" do
+      sign_in admin_unit_a
+      get monthly_summary_path(format: :csv, period_id: period.id)
+      body = response.body.force_encoding("UTF-8")
+      # calc_a.water_pump_actual_kw = 350 → CSV raw "350.0"
+      expect(body).to match(/(?:^|,)350\.0(?:,|\r|\n)/)
+      # No VN-formatted numbers in CSV (e.g. "1.140,00" or "430.000,00")
+      expect(body).not_to include("1.140,00")
     end
   end
 

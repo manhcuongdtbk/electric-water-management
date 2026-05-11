@@ -83,8 +83,8 @@ RSpec.describe "F14 — Xuất CSV", type: :request do
 
       it "có header tiếng Việt cho cột meter_usage_kw và water_pump_actual_kw, không có Translation missing" do
         get monthly_summary_path(format: :csv, period_id: period.id)
-        expect(response.body).to include("Sử dụng đồng hồ (kW)")
-        expect(response.body).to include("Bơm nước TT (kW)")
+        expect(response.body).to include("Sử dụng công tơ")
+        expect(response.body).to include("Bơm nước thực tế")
         expect(response.body).not_to include("translation missing")
         expect(response.body).not_to include("Translation missing")
       end

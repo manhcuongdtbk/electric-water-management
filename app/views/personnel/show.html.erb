@@ -80,7 +80,7 @@
                   <%= rank_names[i] %>
                 </td>
                 <td class="px-4 py-3 text-center text-gray-700 font-mono">
-                  <%= number_with_precision(@rank_quotas[i] || 0, precision: 0, delimiter: ",") %>
+                  <%= number_with_precision(@rank_quotas[i] || 0, precision: 0) %>
                 </td>
                 <td class="px-4 py-3 text-center">
                   <%= f.number_field :"rank#{i}_count",
