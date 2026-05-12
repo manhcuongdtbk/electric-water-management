@@ -39,7 +39,7 @@ RSpec.describe CalculationEngine do
   # -----------------------------------------------------------------------
   let(:division)    { create(:organization, :division) }
   let(:main_meter)  { create(:main_meter, name: "Zone fixture") }
-  let(:organization) { create(:organization, level: :unit, parent: division, main_meter: main_meter) }
+  let(:organization) { create(:organization, level: :unit, parent: division, main_meter: main_meter, zone: main_meter.zone) }
   let(:period)      { create(:monthly_period, year: 2026, month: 2, unit_price: unit_price) }
   let!(:main_meter_reading) do
     create(:main_meter_reading,
@@ -495,7 +495,7 @@ RSpec.describe CalculationEngine do
   # a single pump station serves several units. Each served CP's share is
   # pump_pool × cp_people / (Σ people across ALL served orgs).
   describe "multi-unit pump allocation (real Excel 'Bảng II' case)" do
-    let(:other_unit) { create(:organization, level: :unit, parent: division, main_meter: main_meter) }
+    let(:other_unit) { create(:organization, level: :unit, parent: division, main_meter: main_meter, zone: main_meter.zone) }
 
     let!(:cp_other) { create(:contact_point, organization: other_unit, name: "CP Other") }
     let!(:p_other) do

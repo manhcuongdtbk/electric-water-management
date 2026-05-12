@@ -2,8 +2,14 @@ require "rails_helper"
 
 RSpec.describe Organization, type: :model do
   describe "associations" do
+    # Use a division subject so the conditional `validates :zone, presence:
+    # true, if: unit?` doesn't fight the shoulda `belong_to(:zone).optional`
+    # matcher (the matcher unsets zone and expects validity).
+    subject { build(:organization, :division) }
+
     it { is_expected.to belong_to(:parent).class_name("Organization").optional }
     it { is_expected.to belong_to(:main_meter).optional }
+    it { is_expected.to belong_to(:zone).optional }
     it { is_expected.to have_many(:children).class_name("Organization").with_foreign_key(:parent_id) }
     it { is_expected.to have_many(:users) }
     it { is_expected.to have_many(:contact_points) }
@@ -45,6 +51,13 @@ RSpec.describe Organization, type: :model do
       org = build(:organization, :unit, parent: unit_parent)
       expect(org).not_to be_valid
       expect(org.errors[:parent_id]).to be_present
+    end
+
+    it "allows zone to be blank for any level (form-flow does not yet enforce it)" do
+      div = create(:organization, :division)
+      unit = build(:organization, :unit, parent: div, zone: nil)
+      expect(unit).to be_valid
+      expect(build(:organization, :division, zone: nil)).to be_valid
     end
   end
 

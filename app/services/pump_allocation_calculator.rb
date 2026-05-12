@@ -87,7 +87,7 @@ class PumpAllocationCalculator
   end
 
   # Zone = unit-level Organization served by this pump (directly or via a
-  # ContactPoint), expanded to all orgs sharing the same MainMeter.
+  # ContactPoint), expanded to all orgs sharing the same Zone.
   def zone_org_ids
     return @zone_org_ids if defined?(@zone_org_ids)
 
@@ -96,12 +96,12 @@ class PumpAllocationCalculator
       if org_ids.empty?
         []
       else
-        mm_ids = Organization.where(id: org_ids).where.not(main_meter_id: nil)
-                             .pluck(:main_meter_id).uniq
-        if mm_ids.empty?
+        zone_ids = Organization.where(id: org_ids).where.not(zone_id: nil)
+                               .pluck(:zone_id).uniq
+        if zone_ids.empty?
           org_ids
         else
-          Organization.where(main_meter_id: mm_ids).pluck(:id)
+          Organization.where(zone_id: zone_ids).pluck(:id)
         end
       end
   end
@@ -118,12 +118,12 @@ class PumpAllocationCalculator
   # in the zone. Pumps assigned across two zones therefore see the combined
   # supply, matching what `loss_pool_consumption_in_zone` sums over the same
   # zone. Returns nil only if no MainMeterReading exists for any meter.
-  def zone_supply_kw(zone)
-    mm_ids = Organization.where(id: zone).where.not(main_meter_id: nil)
-                         .distinct.pluck(:main_meter_id)
-    return nil if mm_ids.empty?
+  def zone_supply_kw(zone_org_ids)
+    zone_ids = Organization.where(id: zone_org_ids).where.not(zone_id: nil)
+                           .distinct.pluck(:zone_id)
+    return nil if zone_ids.empty?
 
-    readings = MainMeter.where(id: mm_ids).filter_map do |mm|
+    readings = MainMeter.where(zone_id: zone_ids).filter_map do |mm|
       mm.supply_kw_for(monthly_period)
     end
     return nil if readings.empty?
