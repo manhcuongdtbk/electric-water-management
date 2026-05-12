@@ -222,7 +222,7 @@ RSpec.describe "MonthlySummary", type: :request do
     end
 
     context "scope: đầu mối công cộng không xuất hiện trong bảng thu tiền" do
-      let!(:cp_public) { create(:contact_point, organization: org_a, name: "CP Đèn đường") }
+      let!(:cp_public) { create(:contact_point, :communal, organization: org_a, name: "CP Đèn đường") }
       let!(:m_public)  { create(:meter, :public_meter, organization: org_a, contact_point: cp_public) }
       let!(:calc_public) do
         create(:monthly_calculation, contact_point: cp_public, monthly_period: period,

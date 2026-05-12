@@ -40,7 +40,7 @@ RSpec.describe "Dashboard", type: :request do
     # trong trang chủ (tương tự F11 đã fix ở PR#85). Engine vẫn lưu dữ liệu để capture
     # public consumption nhưng UI thanh toán không nên hiển thị.
     context "scope: đầu mối công cộng không xuất hiện trên trang chủ" do
-      let!(:cp_public)  { create(:contact_point, organization: org_a, name: "CP Đèn đường") }
+      let!(:cp_public)  { create(:contact_point, :communal, organization: org_a, name: "CP Đèn đường") }
       let!(:m_public)   { create(:meter, :public_meter, organization: org_a, contact_point: cp_public) }
       let!(:calc_public) do
         create(:monthly_calculation, contact_point: cp_public, monthly_period: period,

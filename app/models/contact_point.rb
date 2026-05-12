@@ -9,6 +9,9 @@ class ContactPoint < ApplicationRecord
   has_many :other_deductions, class_name: "ContactPointOtherDeduction", dependent: :destroy
   has_many :pump_station_assignments, as: :assignable, dependent: :destroy
 
+  # Enums
+  enum :contact_point_type, { residential: 0, communal: 1 }, validate: true
+
   # Validations
   validates :name, presence: true, length: { maximum: 100 },
             uniqueness: { scope: :organization_id }
@@ -21,7 +24,7 @@ class ContactPoint < ApplicationRecord
   scope :by_group, ->(group) { where(group_name: group) }
 
   def self.ransackable_attributes(_auth_object = nil)
-    %w[name group_name organization_id position created_at updated_at]
+    %w[name group_name organization_id position contact_point_type created_at updated_at]
   end
 
   def self.ransackable_associations(_auth_object = nil)

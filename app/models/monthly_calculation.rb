@@ -26,18 +26,11 @@ class MonthlyCalculation < ApplicationRecord
   scope :by_organization, ->(org_id) { joins(:contact_point).where(contact_points: { organization_id: org_id }) }
   scope :ordered, -> { joins(:contact_point).order("contact_points.position", "contact_points.name") }
 
-  # Exclude CPs whose meters are ALL public_meter — those are "đầu mối công cộng",
-  # not part of the billing table per CLAUDE.md. Engine still persists rows for
-  # them (to capture public consumption context); this is a presentation-only
-  # filter. CPs with zero meters are kept (they may still carry personnel + standard).
-  scope :excluding_public_meter_only_cps, -> {
-    public_t = Meter.meter_types[:public_meter]
-    public_only_cp_ids = Meter
-                         .where.not(contact_point_id: nil)
-                         .group(:contact_point_id)
-                         .having("MIN(meter_type) = ? AND MAX(meter_type) = ?", public_t, public_t)
-                         .pluck(:contact_point_id)
-    public_only_cp_ids.empty? ? all : where.not(contact_point_id: public_only_cp_ids)
+  # Exclude CPs flagged `communal` ("đầu mối công cộng") — they don't appear in
+  # the billing table per CLAUDE.md. Engine still persists rows for them (so
+  # public consumption context is captured); this is a presentation-only filter.
+  scope :excluding_communal_cps, -> {
+    joins(:contact_point).where.not(contact_points: { contact_point_type: :communal })
   }
 
   def rank_standard_total_kw

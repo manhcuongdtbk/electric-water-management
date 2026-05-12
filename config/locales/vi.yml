@@ -104,6 +104,10 @@ vi:
         position: "Thứ tự hiển thị"
         organization: "Đơn vị"
         organization_id: "Đơn vị"
+        contact_point_type: "Loại đầu mối"
+        contact_point_types:
+          residential: "Sinh hoạt"
+          communal: "Công cộng"
       meter:
         name: "Tên công tơ"
         meter_type: "Loại công tơ"
@@ -405,6 +409,7 @@ vi:
       position: "Thứ tự hiển thị"
       organization: "Đơn vị"
       organization_prompt: "— Chọn đơn vị —"
+      contact_point_type_hint: "Sinh hoạt: hiển thị trong bảng thu tiền. Công cộng: chỉ tính khoản trừ, không thu tiền."
       submit_create: "Thêm đầu mối"
       submit_update: "Lưu thay đổi"
     actions:
