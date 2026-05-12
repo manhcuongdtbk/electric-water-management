@@ -2,7 +2,8 @@ require "rails_helper"
 
 RSpec.describe PumpStation, type: :model do
   describe "associations" do
-    it { is_expected.to belong_to(:organization) }
+    it { is_expected.to belong_to(:zone) }
+    it { is_expected.to belong_to(:organization).optional }
     it { is_expected.to have_many(:meters).dependent(:destroy) }
     it { is_expected.to have_many(:pump_station_assignments) }
   end

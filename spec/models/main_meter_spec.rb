@@ -2,7 +2,8 @@ require "rails_helper"
 
 RSpec.describe MainMeter, type: :model do
   describe "associations" do
-    it { is_expected.to have_many(:organizations) }
+    it { is_expected.to belong_to(:zone) }
+    it { is_expected.to have_many(:organizations).through(:zone) }
     it { is_expected.to have_many(:main_meter_readings).dependent(:destroy) }
     it { is_expected.to have_many(:monthly_periods).through(:main_meter_readings) }
   end
@@ -62,21 +63,22 @@ RSpec.describe MainMeter, type: :model do
     end
   end
 
-  describe "organization detachment on destroy" do
-    it "nullifies organizations linked to it" do
-      mm  = create(:main_meter)
-      div = create(:organization, :division)
-      org = create(:organization, :unit, parent: div, main_meter: mm)
-      mm.destroy!
-      expect(org.reload.main_meter_id).to be_nil
+  describe "destroy" do
+    it "is allowed when no readings exist" do
+      mm = create(:main_meter)
+      expect { mm.destroy! }.to change(MainMeter, :count).by(-1)
     end
 
-    it "records a paper_trail version on each detached organization" do
-      mm  = create(:main_meter)
-      div = create(:organization, :division)
-      org = create(:organization, :unit, parent: div, main_meter: mm)
-      expect { mm.destroy! }
-        .to change { PaperTrail::Version.where(item_type: "Organization", item_id: org.id).count }.by(1)
+    it "leaves the zone and its organizations intact" do
+      zone = create(:zone)
+      mm   = create(:main_meter, zone: zone)
+      div  = create(:organization, :division)
+      org  = create(:organization, :unit, parent: div, zone: zone)
+
+      mm.destroy!
+
+      expect(Zone.exists?(zone.id)).to be true
+      expect(org.reload.zone_id).to eq(zone.id)
     end
   end
 end

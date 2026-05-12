@@ -1,7 +1,8 @@
 class MainMeter < ApplicationRecord
   has_paper_trail
 
-  has_many :organizations
+  belongs_to :zone
+  has_many :organizations, through: :zone
   has_many :main_meter_readings, dependent: :destroy
   has_many :monthly_periods, through: :main_meter_readings
 
@@ -9,10 +10,16 @@ class MainMeter < ApplicationRecord
   validates :position, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :notes, length: { maximum: 1000 }, allow_blank: true
 
-  # Detach linked organizations through `update!` so paper_trail records the FK
-  # change on each Organization. `dependent: :nullify` would issue a bulk UPDATE
-  # that bypasses Rails callbacks, leaving F19 audit log blind to the change.
-  before_destroy :detach_organizations
+  # Temporary compat shim until the controller refactor adds an explicit zone
+  # picker: when a MainMeter is created without one, auto-create a same-named
+  # Zone. Matches the current 1:1 MainMeter↔Zone reality from migration.
+  before_validation :ensure_zone, on: :create
+
+  # The `organizations.main_meter_id` FK still exists this PR; without an
+  # explicit nullify, destroying a MainMeter that has orgs pointing at it via
+  # that legacy column raises PG::ForeignKeyViolation. Drop along with the
+  # column in the controller-refactor PR.
+  before_destroy :detach_legacy_organizations
 
   scope :ordered, -> { order(:position, :name) }
 
@@ -26,7 +33,16 @@ class MainMeter < ApplicationRecord
 
   private
 
-  def detach_organizations
-    organizations.each { |org| org.update!(main_meter_id: nil) }
+  def ensure_zone
+    return if zone.present?
+    return if name.blank?
+
+    self.zone = Zone.find_or_create_by!(name: name)
+  end
+
+  def detach_legacy_organizations
+    Organization.where(main_meter_id: id).find_each do |org|
+      org.update!(main_meter_id: nil)
+    end
   end
 end

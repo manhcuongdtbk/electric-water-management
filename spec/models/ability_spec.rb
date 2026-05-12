@@ -27,9 +27,12 @@ RSpec.describe Ability do
   let(:other_main_meter_reading) { create(:main_meter_reading, main_meter: other_main_meter, monthly_period: period) }
 
   # F05 zone access — admin_unit/commander get read on the MainMeter their org belongs to.
+  # The ability hash query (MainMeter, organizations: { id: org_id }) walks the
+  # `has_many :organizations, through: :zone` association, so the unit must share
+  # the meter's zone — the legacy main_meter_id link alone is no longer enough.
   before do
-    unit_a.update!(main_meter: main_meter)
-    unit_b.update!(main_meter: other_main_meter)
+    unit_a.update!(main_meter: main_meter, zone: main_meter.zone)
+    unit_b.update!(main_meter: other_main_meter, zone: other_main_meter.zone)
   end
 
   context "when user is nil" do

@@ -141,14 +141,14 @@ class CalculationEngine
   end
 
   # --- Zone resolution -----------------------------------------------------
-  # Org may belong to a MainMeter (shared zone). If not, zone = [org.id] for
-  # backward compat with pre-PR1 seeds / specs.
-  def main_meter
-    @main_meter ||= organization.main_meter
+  # Org belongs to a Zone (multiple orgs can share a zone). If the org has no
+  # zone (e.g. seed/spec data), fall back to a single-org "zone" of itself.
+  def zone
+    @zone ||= organization.zone
   end
 
   def zone_org_ids
-    @zone_org_ids ||= main_meter ? main_meter.organizations.pluck(:id) : [ organization.id ]
+    @zone_org_ids ||= zone ? zone.organizations.pluck(:id) : [ organization.id ]
   end
 
   # Pump meters serving the zone — resolved via PumpStationAssignment so that
@@ -234,10 +234,19 @@ class CalculationEngine
     )
   end
 
-  # Supply lấy từ MainMeterReading. Org chưa gán MainMeter → nil → tổn hao = 0.
+  # Supply = Σ supply across every MainMeter in the zone. Returns nil when the
+  # zone has no MainMeterReading at all (→ loss = 0). Sums multi-meter zones so
+  # the engine matches PumpAllocationCalculator and is ready for the future
+  # case of a zone with >1 main meter.
   def zone_supply_kw
     return @zone_supply_kw if defined?(@zone_supply_kw)
-    @zone_supply_kw = main_meter&.supply_kw_for(monthly_period)
+    @zone_supply_kw =
+      if zone.nil?
+        nil
+      else
+        readings = zone.main_meters.filter_map { |mm| mm.supply_kw_for(monthly_period) }
+        readings.empty? ? nil : readings.sum { |kw| to_bd(kw) }
+      end
   end
 
   def total_zone_loss

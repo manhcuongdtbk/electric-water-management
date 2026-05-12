@@ -4,6 +4,7 @@ class Organization < ApplicationRecord
   # Associations
   belongs_to :parent, class_name: "Organization", optional: true
   belongs_to :main_meter, optional: true
+  belongs_to :zone, optional: true
   has_many :children, class_name: "Organization", foreign_key: :parent_id, dependent: :restrict_with_error
   has_many :users, dependent: :restrict_with_error
   has_many :contact_points, dependent: :restrict_with_error
@@ -28,6 +29,10 @@ class Organization < ApplicationRecord
 
   # Callbacks
   before_destroy :prevent_destroy_division
+  # Compat shim until the controller refactor removes `main_meter_id`: keep
+  # `zone_id` in lockstep with the legacy FK so anything written via
+  # `update!(main_meter_id:)` automatically lands in the right zone too.
+  before_save :sync_zone_from_main_meter, if: :main_meter_id_changed?
 
   # Scopes
   scope :ordered, -> { order(:position, :name) }
@@ -50,5 +55,9 @@ class Organization < ApplicationRecord
 
     errors.add(:base, :cannot_destroy_division)
     throw(:abort)
+  end
+
+  def sync_zone_from_main_meter
+    self.zone_id = main_meter&.zone_id
   end
 end
