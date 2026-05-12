@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_12_212658) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_12_224138) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -27,12 +27,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_12_212658) do
   end
 
   create_table "contact_points", force: :cascade do |t|
+    t.integer "contact_point_type", default: 0, null: false
     t.datetime "created_at", null: false
     t.string "group_name"
     t.string "name", null: false
     t.bigint "organization_id", null: false
     t.integer "position", default: 0
     t.datetime "updated_at", null: false
+    t.index ["contact_point_type"], name: "index_contact_points_on_contact_point_type"
     t.index ["organization_id", "name"], name: "index_contact_points_on_organization_id_and_name", unique: true
     t.index ["organization_id"], name: "index_contact_points_on_organization_id"
   end
@@ -77,6 +79,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_12_212658) do
     t.datetime "created_at", null: false
     t.integer "meter_type", default: 0, null: false
     t.string "name", null: false
+    t.boolean "no_loss", default: false, null: false
     t.text "notes"
     t.bigint "organization_id", null: false
     t.integer "position", default: 0

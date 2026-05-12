@@ -135,17 +135,18 @@ class PumpAllocationCalculator
     to_bd(
       MeterReading.for_period(monthly_period.id)
                   .joins(:meter)
-                  .where(meters: { organization_id: zone,
-                                   meter_type: Meter.meter_types[:no_loss] })
+                  .where(meters: { organization_id: zone })
+                  .merge(Meter.no_loss)
                   .sum(:consumption)
     )
   end
 
   def loss_pool_consumption_in_zone(zone)
-    cp_meter_ids = Meter.where(
-      organization_id: zone,
-      meter_type: [ Meter.meter_types[:normal], Meter.meter_types[:public_meter] ]
-    ).pluck(:id)
+    cp_meter_ids = Meter
+      .where(organization_id: zone,
+             meter_type: [ Meter.meter_types[:normal], Meter.meter_types[:public_meter] ])
+      .merge(Meter.with_loss)
+      .pluck(:id)
 
     zone_pump_ids = pump_meter_ids_in_zone(zone)
     meter_ids = (cp_meter_ids + zone_pump_ids).uniq

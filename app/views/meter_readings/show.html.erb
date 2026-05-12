@@ -107,6 +107,7 @@
                 </td>
                 <td class="px-4 py-3 text-gray-600">
                   <%= t("meters.meter_types.#{meter.meter_type}") %>
+                  <%= meter_no_loss_badge(meter) %>
                 </td>
 
                 <% if can_write %>

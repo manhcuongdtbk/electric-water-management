@@ -34,42 +34,30 @@ RSpec.describe MonthlyCalculation, type: :model do
       expect(MonthlyCalculation.by_organization(org.id)).not_to include(c2)
     end
 
-    describe ".excluding_public_meter_only_cps" do
+    describe ".excluding_communal_cps" do
       let(:org) { create(:organization) }
-      let(:cp_normal_only)  { create(:contact_point, organization: org, name: "Normal only") }
-      let(:cp_mixed)        { create(:contact_point, organization: org, name: "Mixed") }
-      let(:cp_public_only)  { create(:contact_point, organization: org, name: "Public only") }
-      let(:cp_no_meters)    { create(:contact_point, organization: org, name: "No meters") }
+      let(:cp_residential_a) { create(:contact_point, :residential, organization: org, name: "Residential A") }
+      let(:cp_residential_b) { create(:contact_point, :residential, organization: org, name: "Residential B") }
+      let(:cp_communal)      { create(:contact_point, :communal,    organization: org, name: "Communal") }
 
       before do
-        create(:meter, :normal,        organization: org, contact_point: cp_normal_only)
-        create(:meter, :normal,        organization: org, contact_point: cp_mixed)
-        create(:meter, :public_meter,  organization: org, contact_point: cp_mixed)
-        create(:meter, :public_meter,  organization: org, contact_point: cp_public_only)
-
-        @calc_normal_only = create(:monthly_calculation, contact_point: cp_normal_only)
-        @calc_mixed       = create(:monthly_calculation, contact_point: cp_mixed)
-        @calc_public_only = create(:monthly_calculation, contact_point: cp_public_only)
-        @calc_no_meters   = create(:monthly_calculation, contact_point: cp_no_meters)
+        @calc_residential_a = create(:monthly_calculation, contact_point: cp_residential_a)
+        @calc_residential_b = create(:monthly_calculation, contact_point: cp_residential_b)
+        @calc_communal      = create(:monthly_calculation, contact_point: cp_communal)
       end
 
-      it "keeps CPs whose meters include at least one non-public_meter" do
-        expect(MonthlyCalculation.excluding_public_meter_only_cps)
-          .to include(@calc_normal_only, @calc_mixed)
+      it "keeps CPs flagged as residential" do
+        expect(MonthlyCalculation.excluding_communal_cps)
+          .to include(@calc_residential_a, @calc_residential_b)
       end
 
-      it "excludes CPs whose meters are all public_meter" do
-        expect(MonthlyCalculation.excluding_public_meter_only_cps)
-          .not_to include(@calc_public_only)
+      it "excludes CPs flagged as communal" do
+        expect(MonthlyCalculation.excluding_communal_cps).not_to include(@calc_communal)
       end
 
-      it "keeps CPs with zero meters (may still carry personnel + standard)" do
-        expect(MonthlyCalculation.excluding_public_meter_only_cps).to include(@calc_no_meters)
-      end
-
-      it "is a no-op when no public_meter exists at all" do
-        Meter.where(meter_type: :public_meter).destroy_all
-        expect(MonthlyCalculation.excluding_public_meter_only_cps.count)
+      it "is a no-op when no communal CP exists" do
+        ContactPoint.communal.destroy_all
+        expect(MonthlyCalculation.excluding_communal_cps.count)
           .to eq(MonthlyCalculation.count)
       end
     end

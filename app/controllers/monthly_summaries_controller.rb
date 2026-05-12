@@ -92,7 +92,7 @@ class MonthlySummariesController < ApplicationController
     MonthlyCalculation
       .by_organization(@target_org.id)
       .for_period(@period.id)
-      .excluding_public_meter_only_cps
+      .excluding_communal_cps
       .ordered
       .includes(:contact_point)
   end

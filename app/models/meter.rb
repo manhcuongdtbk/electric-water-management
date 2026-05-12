@@ -5,7 +5,7 @@ class Meter < ApplicationRecord
   # contact point. `pump_station` is excluded — those meters belong to a
   # PumpStation (managed via the pump-station admin UI), not to a contact
   # point.
-  CONTACT_POINT_FORM_TYPES = %w[normal public_meter no_loss].freeze
+  CONTACT_POINT_FORM_TYPES = %w[normal public_meter].freeze
 
   # Associations
   belongs_to :organization
@@ -14,7 +14,7 @@ class Meter < ApplicationRecord
   has_many :meter_readings, dependent: :destroy
 
   # Enums
-  enum :meter_type, { normal: 0, public_meter: 1, pump_station: 2, no_loss: 3 }, validate: true
+  enum :meter_type, { normal: 0, public_meter: 1, pump_station: 2 }, validate: true
 
   # Validations
   validates :name, presence: true, length: { maximum: 100 }
@@ -28,6 +28,10 @@ class Meter < ApplicationRecord
   scope :ordered, -> { order(:position, :name) }
   scope :by_organization, ->(org_id) { where(organization_id: org_id) }
   scope :by_type, ->(type) { where(meter_type: type) }
+  # Shared by CalculationEngine + PumpAllocationCalculator. Inline `where(no_loss: ...)`
+  # in either engine drifts the two apart; route through these scopes instead.
+  scope :no_loss,   -> { where(no_loss: true) }
+  scope :with_loss, -> { where(no_loss: false) }
 
   private
 

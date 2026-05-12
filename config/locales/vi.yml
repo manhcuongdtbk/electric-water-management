@@ -104,9 +104,14 @@ vi:
         position: "Thứ tự hiển thị"
         organization: "Đơn vị"
         organization_id: "Đơn vị"
+        contact_point_type: "Loại đầu mối"
+        contact_point_types:
+          residential: "Sinh hoạt"
+          communal: "Công cộng"
       meter:
         name: "Tên công tơ"
         meter_type: "Loại công tơ"
+        no_loss: "Không tổn hao"
         serial_number: "Số hiệu"
         position: "Thứ tự hiển thị"
         notes: "Ghi chú"
@@ -404,6 +409,7 @@ vi:
       position: "Thứ tự hiển thị"
       organization: "Đơn vị"
       organization_prompt: "— Chọn đơn vị —"
+      contact_point_type_hint: "Sinh hoạt: hiển thị trong bảng thu tiền. Công cộng: chỉ tính khoản trừ, không thu tiền."
       submit_create: "Thêm đầu mối"
       submit_update: "Lưu thay đổi"
     actions:
@@ -432,12 +438,14 @@ vi:
     form:
       name: "Tên công tơ"
       meter_type: "Loại công tơ"
-      meter_type_hint: "Thường: xuất hiện trong bản thu tiền. Công cộng: không xuất hiện. Vị trí không tổn hao: được trừ khỏi nguồn cung cấp trước khi tính tổn hao."
+      meter_type_hint: "Thường: xuất hiện trong bản thu tiền. Công cộng: không xuất hiện."
+      no_loss_hint: "Đánh dấu công tơ đặt tại trạm biến áp — kW được trừ khỏi nguồn cung cấp trước khi tính tổn hao toàn khu vực."
       serial_number: "Số hiệu (tùy chọn)"
       notes: "Ghi chú"
       position: "Thứ tự hiển thị"
       submit_create: "Thêm công tơ"
       submit_update: "Lưu thay đổi"
+    no_loss_badge: "Không tổn hao"
     meter_types:
       normal: "Thường"
       public_meter: "Công cộng"

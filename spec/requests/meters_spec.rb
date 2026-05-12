@@ -151,12 +151,14 @@ RSpec.describe "Meters", type: :request do
       it "creates a meter for any contact_point" do
         sign_in admin1
         expect {
-          post contact_point_meters_path(cp_b), params: { meter: { name: "Công tơ B1", meter_type: "no_loss" } }
+          post contact_point_meters_path(cp_b),
+               params: { meter: { name: "Công tơ B1", meter_type: "normal", no_loss: "1" } }
         }.to change(Meter, :count).by(1)
 
         meter = Meter.last
         expect(meter.organization).to eq(org_b)
-        expect(meter.meter_type).to eq("no_loss")
+        expect(meter.meter_type).to eq("normal")
+        expect(meter.no_loss).to be(true)
       end
     end
 

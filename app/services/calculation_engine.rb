@@ -11,7 +11,8 @@
 #     Tổn hao TRỪ khỏi tiêu chuẩn, KHÔNG cộng vào sử dụng.
 #   * Tổn hao tính trên TOÀN KHU VỰC dùng chung đồng hồ tổng (MainMeter zone):
 #       A = MainMeterReading.electricity_supply_kw − Σ công tơ no_loss trong zone
-#       B = Σ công tơ (normal + public_meter) trong zone + Σ công tơ pump phục vụ zone
+#       B = Σ công tơ có tổn hao (normal + public_meter, no_loss = false) trong zone
+#           + Σ công tơ pump phục vụ zone
 #       Tổn hao zone = A − B
 #       Phân bổ công tơ X: tổn hao × (kW công tơ X ÷ B)
 #     Pump tham gia loss pool (nằm trong B); tổn hao pump cộng vào pump pool phân bổ:
@@ -117,19 +118,18 @@ class CalculationEngine
   end
 
   # --- Meter usage (per CP) — DB-side group + sum ---------------------------
-  # Includes normal + no_loss. no_loss meters belong to "đầu mối sinh hoạt"
-  # whose usage must be billed; they're only excluded from the loss pool
-  # (handled separately by `no_loss_consumption_in_zone`).
+  # Only `normal` meters bill into the CP usage column. `no_loss` is now an
+  # orthogonal boolean (not a separate meter_type), so this filter naturally
+  # includes both lossy and non-lossy residential meters — they all belong to
+  # đầu mối sinh hoạt and their kW is billed. The no_loss flag only changes
+  # whether a meter participates in the loss pool, not whether it's billed.
   def meter_usage_by_cp
     @meter_usage_by_cp ||= MeterReading
                            .for_period(monthly_period.id)
                            .joins(:meter)
                            .where(meters: {
                              organization_id: organization.id,
-                             meter_type: [
-                               Meter.meter_types[:normal],
-                               Meter.meter_types[:no_loss]
-                             ]
+                             meter_type: Meter.meter_types[:normal]
                            })
                            .group("meters.contact_point_id")
                            .sum(:consumption)
@@ -180,13 +180,16 @@ class CalculationEngine
     end
   end
 
-  # Loss pool B = CP meters in zone (normal + public_meter) ∪ pump meters serving zone.
-  # No-loss meters are subtracted from supply directly and never enter B.
+  # Loss pool B = CP meters in zone (normal + public_meter, no_loss = false)
+  # ∪ pump meters serving zone. No-loss meters are subtracted from supply
+  # directly and never enter B. After PR#91 no_loss is a boolean on `normal`
+  # meters, so the `Meter.with_loss` scope is required to exclude them.
   def loss_pool_meter_ids
     @loss_pool_meter_ids ||= begin
       cp_ids = Meter
         .where(organization_id: zone_org_ids,
                meter_type: [ Meter.meter_types[:normal], Meter.meter_types[:public_meter] ])
+        .merge(Meter.with_loss)
         .pluck(:id)
       (cp_ids + zone_pump_meter_ids).uniq
     end
@@ -228,8 +231,8 @@ class CalculationEngine
       MeterReading
         .for_period(monthly_period.id)
         .joins(:meter)
-        .where(meters: { organization_id: zone_org_ids,
-                         meter_type: Meter.meter_types[:no_loss] })
+        .where(meters: { organization_id: zone_org_ids })
+        .merge(Meter.no_loss)
         .sum(:consumption)
     )
   end

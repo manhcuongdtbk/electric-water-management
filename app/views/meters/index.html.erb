@@ -47,6 +47,7 @@
               <span class="<%= meter_type_badge_class(meter.meter_type) %>">
                 <%= t("meters.meter_types.#{meter.meter_type}") %>
               </span>
+              <%= meter_no_loss_badge(meter) %>
             </td>
             <td class="px-4 py-3 text-gray-600"><%= meter.serial_number.presence || "—" %></td>
             <td class="px-4 py-3 text-center">
