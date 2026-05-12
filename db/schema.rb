@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_12_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_12_212658) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -54,7 +54,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_12_120000) do
     t.text "notes"
     t.integer "position", default: 0
     t.datetime "updated_at", null: false
+    t.bigint "zone_id", null: false
     t.index ["name"], name: "index_main_meters_on_name", unique: true
+    t.index ["zone_id"], name: "index_main_meters_on_zone_id"
   end
 
   create_table "meter_readings", force: :cascade do |t|
@@ -143,10 +145,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_12_120000) do
     t.bigint "parent_id"
     t.integer "position", default: 0
     t.datetime "updated_at", null: false
+    t.bigint "zone_id"
     t.index ["level", "name"], name: "index_organizations_on_level_and_name", unique: true
     t.index ["level"], name: "index_organizations_on_level"
     t.index ["main_meter_id"], name: "index_organizations_on_main_meter_id"
     t.index ["parent_id"], name: "index_organizations_on_parent_id"
+    t.index ["zone_id"], name: "index_organizations_on_zone_id"
   end
 
   create_table "personnel", force: :cascade do |t|
@@ -183,7 +187,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_12_120000) do
     t.string "name", null: false
     t.bigint "organization_id", null: false
     t.datetime "updated_at", null: false
+    t.bigint "zone_id", null: false
     t.index ["organization_id"], name: "index_pump_stations_on_organization_id"
+    t.index ["zone_id"], name: "index_pump_stations_on_zone_id"
   end
 
   create_table "rank_quotas", force: :cascade do |t|
@@ -262,11 +268,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_12_120000) do
     t.index ["owner_organization_id"], name: "index_work_groups_on_owner_organization_id"
   end
 
+  create_table "zones", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "manager_organization_id"
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["manager_organization_id"], name: "index_zones_on_manager_organization_id"
+    t.index ["name"], name: "index_zones_on_name", unique: true
+  end
+
   add_foreign_key "contact_point_other_deductions", "contact_points"
   add_foreign_key "contact_point_other_deductions", "monthly_periods"
   add_foreign_key "contact_points", "organizations"
   add_foreign_key "main_meter_readings", "main_meters"
   add_foreign_key "main_meter_readings", "monthly_periods"
+  add_foreign_key "main_meters", "zones"
   add_foreign_key "meter_readings", "meters"
   add_foreign_key "meter_readings", "monthly_periods"
   add_foreign_key "meters", "contact_points"
@@ -277,12 +293,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_12_120000) do
   add_foreign_key "monthly_periods", "users", column: "locked_by_id"
   add_foreign_key "organizations", "main_meters"
   add_foreign_key "organizations", "organizations", column: "parent_id"
+  add_foreign_key "organizations", "zones"
   add_foreign_key "personnel", "contact_points"
   add_foreign_key "personnel", "monthly_periods"
   add_foreign_key "pump_station_assignments", "pump_stations"
   add_foreign_key "pump_stations", "organizations"
+  add_foreign_key "pump_stations", "zones"
   add_foreign_key "unit_configs", "monthly_periods"
   add_foreign_key "unit_configs", "organizations"
   add_foreign_key "users", "organizations"
   add_foreign_key "work_groups", "organizations", column: "owner_organization_id"
+  add_foreign_key "zones", "organizations", column: "manager_organization_id"
 end
