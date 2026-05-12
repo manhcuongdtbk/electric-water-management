@@ -12,7 +12,7 @@ RSpec.describe "F02 — Meters", type: :system do
   describe "admin_unit" do
     before { login_as scenario.admin_unit, scope: :user }
 
-    it "creates meters of every selectable type (normal, public, no_loss)" do
+    it "creates meters of both selectable types (normal, public) and toggles no_loss" do
       visit contact_point_meters_path(own_cp)
       expect(page).to have_content(I18n.t("meters.index.title"))
 
@@ -31,13 +31,14 @@ RSpec.describe "F02 — Meters", type: :system do
       expect(page).to have_content("Công tơ công cộng")
       expect(page).to have_content(I18n.t("meters.meter_types.public_meter"))
 
-      # no_loss
+      # normal with no_loss checkbox
       click_on I18n.t("meters.index.new_button")
       fill_in I18n.t("meters.form.name"), with: "Công tơ vị trí không tổn hao"
-      select I18n.t("meters.meter_types.no_loss"), from: I18n.t("meters.form.meter_type")
+      select I18n.t("meters.meter_types.normal"), from: I18n.t("meters.form.meter_type")
+      check I18n.t("activerecord.attributes.meter.no_loss")
       click_on I18n.t("meters.form.submit_create")
       expect(page).to have_content("Công tơ vị trí không tổn hao")
-      expect(page).to have_content(I18n.t("meters.meter_types.no_loss"))
+      expect(page).to have_content(I18n.t("meters.no_loss_badge"))
     end
 
     it "does not list pump_station as a meter type option" do
@@ -47,10 +48,12 @@ RSpec.describe "F02 — Meters", type: :system do
 
       expect(option_texts).to include(
         I18n.t("meters.meter_types.normal"),
-        I18n.t("meters.meter_types.public_meter"),
+        I18n.t("meters.meter_types.public_meter")
+      )
+      expect(option_texts).not_to include(
+        I18n.t("meters.meter_types.pump_station"),
         I18n.t("meters.meter_types.no_loss")
       )
-      expect(option_texts).not_to include(I18n.t("meters.meter_types.pump_station"))
     end
 
     it "edits an existing meter" do

@@ -71,17 +71,26 @@ RSpec.describe Meter, type: :model do
   describe "enums" do
     it {
       is_expected.to define_enum_for(:meter_type)
-        .with_values(normal: 0, public_meter: 1, pump_station: 2, no_loss: 3)
+        .with_values(normal: 0, public_meter: 1, pump_station: 2)
     }
+  end
 
-    it "is valid with meter_type :no_loss" do
-      expect(build(:meter, :no_loss)).to be_valid
+  describe "no_loss attribute" do
+    it "defaults to false" do
+      expect(build(:meter).no_loss).to be(false)
+    end
+
+    it "is valid with no_loss = true on a normal meter (factory trait)" do
+      meter = build(:meter, :no_loss)
+      expect(meter).to be_valid
+      expect(meter.meter_type).to eq("normal")
+      expect(meter.no_loss).to be(true)
     end
   end
 
   describe "CONTACT_POINT_FORM_TYPES" do
     it "lists every type selectable in the contact-point meter form" do
-      expect(Meter::CONTACT_POINT_FORM_TYPES).to eq(%w[normal public_meter no_loss])
+      expect(Meter::CONTACT_POINT_FORM_TYPES).to eq(%w[normal public_meter])
     end
 
     it "excludes pump_station so admin_unit cannot create those via the contact-point form" do
@@ -90,19 +99,30 @@ RSpec.describe Meter, type: :model do
   end
 
   describe "scopes" do
-    let!(:org)    { create(:organization) }
-    let!(:m_norm) { create(:meter, organization: org, meter_type: :normal) }
-    let!(:m_pub)  { create(:meter, organization: org, meter_type: :public_meter) }
-    let!(:m_ps)   { create(:meter, :pump_station) }
+    let!(:org)         { create(:organization) }
+    let!(:m_norm)      { create(:meter, organization: org, meter_type: :normal) }
+    let!(:m_pub)       { create(:meter, organization: org, meter_type: :public_meter) }
+    let!(:m_ps)        { create(:meter, :pump_station) }
+    let!(:m_no_loss)   { create(:meter, :no_loss, organization: org) }
 
     it ".by_organization filters correctly" do
-      expect(Meter.by_organization(org.id)).to include(m_norm, m_pub)
+      expect(Meter.by_organization(org.id)).to include(m_norm, m_pub, m_no_loss)
       expect(Meter.by_organization(org.id)).not_to include(m_ps)
     end
 
     it ".by_type filters by meter_type" do
-      expect(Meter.by_type(:normal)).to include(m_norm)
+      expect(Meter.by_type(:normal)).to include(m_norm, m_no_loss)
       expect(Meter.by_type(:normal)).not_to include(m_pub)
+    end
+
+    it ".no_loss returns only meters with no_loss = true" do
+      expect(Meter.no_loss).to include(m_no_loss)
+      expect(Meter.no_loss).not_to include(m_norm, m_pub, m_ps)
+    end
+
+    it ".with_loss returns only meters with no_loss = false" do
+      expect(Meter.with_loss).to include(m_norm, m_pub, m_ps)
+      expect(Meter.with_loss).not_to include(m_no_loss)
     end
   end
 end

@@ -28,6 +28,15 @@
     <p class="mt-1 text-xs text-gray-500"><%= t("meters.form.meter_type_hint") %></p>
   </div>
 
+  <div class="flex items-start gap-2">
+    <%= f.check_box :no_loss, class: "mt-1" %>
+    <div>
+      <%= f.label :no_loss, t("activerecord.attributes.meter.no_loss"),
+            class: "block text-sm font-medium text-gray-700" %>
+      <p class="text-xs text-gray-500"><%= t("meters.form.no_loss_hint") %></p>
+    </div>
+  </div>
+
   <div>
     <%= f.label :serial_number, t("meters.form.serial_number"),
           class: "block text-sm font-medium text-gray-700 mb-1" %>

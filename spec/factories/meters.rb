@@ -23,7 +23,8 @@ FactoryBot.define do
     end
 
     trait :no_loss do
-      meter_type { :no_loss }
+      meter_type { :normal }
+      no_loss { true }
       association :contact_point
     end
   end
