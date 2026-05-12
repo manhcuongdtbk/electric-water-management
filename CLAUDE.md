@@ -25,7 +25,6 @@ Rails 8, PostgreSQL, Tailwind (via tailwindcss-rails, không cần Node), Hotwir
 - Engine tính toán là ưu tiên test cao nhất
 - Chạy `bundle exec rspec` sau mỗi thay đổi logic
 - **KHÔNG cần chạy rubocop local** — CI đã cover
-- Engine tests dùng factory + fixture nhỏ. Integration spec zone-loss ở `spec/services/calculation_engine_zone_loss_spec.rb` (kịch bản số liệu tự đặt, tính tay theo công thức zone-based)
 
 ### Git
 - Branch naming: `m1/feature-name`, `m2/feature-name` (theo milestone)
@@ -33,83 +32,110 @@ Rails 8, PostgreSQL, Tailwind (via tailwindcss-rails, không cần Node), Hotwir
 
 ## Cấu trúc nghiệp vụ
 
-### 2 cấp tổ chức (phẳng, chỉ dùng parent_id)
+### 3 cấp tổ chức
 - Cấp 1: Sư đoàn (1 đơn vị) — không có đầu mối, không có công tơ, chỉ quản lý và cấu hình
-- Cấp 2: 13 đơn vị trực thuộc (Sư đoàn bộ, Trung đoàn 101, 18, 95, Tiểu đoàn 14/15/16/17/18/24/25, Đại đội 26/29)
+- Cấp 2: 13 đơn vị trực thuộc
+- Cấp 3: Đầu mối (3 loại, xem bên dưới)
 
-### Đồng hồ tổng dùng chung
-- Nhiều đơn vị cấp 2 có thể dùng chung 1 đồng hồ tổng điện lực (ví dụ: Cơ quan SDB + TĐ18 + ĐĐ20-23 chung 1 đồng hồ tổng)
-- **admin_level1 nhập số điện lực** (F05), không phải admin_unit
-- Tổn hao tính trên toàn bộ khu vực dùng chung đồng hồ tổng, không phải per-đơn vị
-- Implemented: MainMeter + MainMeterReading từ PR1, engine zone-loss từ PR2 (m6)
+### Khu vực (Zone)
+Vùng vật lý mà các đơn vị cấp 2 chia sẻ hạ tầng điện và nước. Mỗi khu vực gồm:
+- Công tơ tổng (MainMeter) — hiện tại 1, tương lai có thể nhiều hơn
+- Trạm bơm nước (PumpStation) — có thể nhiều trạm, mỗi trạm có nhiều công tơ
+- Đơn vị cấp 2 (Organization) — có thể nhiều đơn vị cùng chia sẻ
+- Đơn vị quản lý khu vực (manager_organization) — 1 đơn vị cấp 2 được chỉ định nhập liệu hàng tháng
+
+Trường hợp đơn vị có hạ tầng riêng = khu vực chỉ chứa 1 đơn vị.
+
+### Đầu mối — 3 loại (contact_point_type / WorkGroup)
+- `residential` (sinh hoạt) — có công tơ, có quân số > 0, có dòng trong bảng thu tiền
+- `communal` (công cộng) — có công tơ, quân số = 0, không có dòng trong bảng thu tiền
+- WorkGroup (ngoài biên chế) — model riêng, có quân số nhập tay, không có công tơ, không có dòng trong bảng thu tiền, chỉ nhận bơm nước
+
+Đầu mối có thể gộp theo khối (group_name) để hiển thị có cấu trúc.
+
+### Công tơ (Meter) — 3 loại + 1 thuộc tính
+meter_type enum:
+- `normal` — công tơ sinh hoạt, thuộc đầu mối, đo điện sinh hoạt
+- `public_meter` — công tơ công cộng, thuộc đầu mối, đo điện công cộng
+- `pump_station` — công tơ bơm nước, thuộc trạm bơm (contact_point = nil), đo điện bơm nước
+
+no_loss boolean (default: false):
+- Đánh dấu công tơ không tổn hao (đặt tại trạm biến áp)
+- Áp dụng cho bất kỳ loại nào, nhưng thực tế hiện tại chỉ có công tơ sinh hoạt
+
+### 3 loại điện
+- **Điện sinh hoạt** — đo bằng công tơ sinh hoạt, cộng vào tổng sử dụng điện
+- **Điện bơm nước** — đo bằng công tơ bơm nước, phân bổ cho nhóm đối tượng rồi cộng vào tổng sử dụng điện
+- **Điện công cộng** — đo bằng công tơ công cộng, tính khoản trừ công cộng (trừ khỏi tiêu chuẩn)
+
+Tổng sử dụng điện = sử dụng điện sinh hoạt + sử dụng điện bơm nước (không bao gồm điện công cộng).
 
 ### 4 vai trò người dùng
-- `admin_level1` — quản trị viên cấp 1 (Ban Doanh trại Sư đoàn): quản lý toàn hệ thống, thêm bớt đơn vị, cấu hình, xem tất cả, **nhập số điện lực (F05)**, phân bổ bơm, mở khoá tháng cũ, nhật ký
-- `admin_unit` — quản trị viên đơn vị (cấp 2): khai báo đầu mối/công tơ/quân số, nhập chỉ số công tơ hàng tháng, cấu hình công cộng đơn vị và cột Khác, chỉ đơn vị mình
+- `admin_level1` — quản trị viên cấp 1: thiết lập ban đầu (đơn giá, tỷ lệ, định mức), tạo khu vực, gán đơn vị, chỉ định đơn vị quản lý, quản lý tài khoản, mở khóa tháng cũ, nhật ký. Toàn quyền thao tác mọi khu vực.
+- `admin_unit` — quản trị viên đơn vị: khai báo đầu mối/công tơ/quân số/đầu mối ngoài biên chế, nhập chỉ số công tơ hàng tháng, cấu hình công cộng đơn vị và cột Khác. Nếu là đơn vị quản lý khu vực: nhập số công tơ tổng, quản lý trạm bơm, nhập chỉ số trạm bơm, gán phân bổ bơm nước.
 - `commander` — chỉ huy đơn vị (chỉ xem, không thao tác)
 - `tech` — đội kỹ thuật (quản lý tài khoản, nhật ký, sao lưu & phục hồi)
 
-### Engine tính toán — bảng 24 cột
-DB lưu 22 cột (`over_under_kw` + `total_amount` signed), view tách thành 24 cột (Thừa/Thiếu riêng).
+### Engine tính toán — tách 3
 
-- 7 nhóm cấp bậc — tên và định mức lấy từ `rank_quotas` trong DB (admin_level1 sửa được qua F21)
-- Bơm nước 2 khái niệm:
-  - **Tiêu chuẩn**: 9,45 kW/người/tháng (cố định theo Nghị định 02)
-  - **Sử dụng thực tế**: phân bổ từ trạm bơm theo mô hình fixed/variable (xem mục dưới)
-- 4 khoản trừ: Tiết kiệm (%), Tổn hao (phân bổ theo tỷ lệ meter_consumption — trừ khỏi tiêu chuẩn), Công cộng (2 cấp: Sư đoàn + đơn vị), Khác
-- Tổn hao nằm trong "Số phải trừ" (trừ khỏi tiêu chuẩn, KHÔNG cộng vào sử dụng)
-- Đơn giá thay đổi hàng tháng
+**LossCalculator (engine tính tổn hao):**
+- Tính trên toàn khu vực (Zone)
+- A = tổng số điện lực tất cả MainMeter trong zone − tổng sử dụng công tơ no_loss trong zone
+- B = tổng sử dụng tất cả công tơ có tổn hao trong zone (normal + public_meter + pump_station)
+- C = A − B (tổng tổn hao toàn khu vực)
+- Phân bổ: mỗi công tơ có tổn hao nhận = C × (sử dụng công tơ / B)
 
-### Công tơ — 4 loại
-- `normal` → đầu mối sinh hoạt, trong bản thu tiền, tham gia loss pool
-- `no_loss` → đầu mối sinh hoạt, tính sử dụng bình thường, engine trừ khỏi supply + loại khỏi loss pool khi tính tổn hao
-- `public_meter` → đầu mối công cộng, không trong bản thu tiền, tham gia loss pool
-- `pump_station` → trạm bơm (KHÔNG thuộc đầu mối), contact_point = nil, **tham gia loss pool**
+**PumpAllocationCalculator (engine tính bơm nước):**
+- D = Σ(sử dụng điện công tơ bơm nước X + tổn hao công tơ bơm nước X)
+  D là tổng pool bơm nước toàn khu vực.
+- Nhóm đối tượng có tỷ lệ cố định → nhận D × tỷ lệ
+- Phần còn lại (D − tổng phần cố định) chia theo quân số
+- Organization/ContactPointGroup → chia tiếp xuống đầu mối theo quân số
+- Validate: tổng fixed_pump_percentage ≤ 100% per zone
 
-### Tính tổn hao — tính trên khu vực dùng chung đồng hồ tổng
-- A = số điện lực (đồng hồ tổng) − tổng kW công tơ no_loss = supply đã điều chỉnh
-- B = tổng kW tất cả công tơ sử dụng trong khu vực (**bao gồm pump**, không gồm no_loss)
-- Tổn hao = A − B
-- Phân bổ: tổn hao công tơ X = tổn hao × (kW công tơ X ÷ B)
-- Implemented in CalculationEngine via zone_org_ids + zone_pump_meter_ids (PR2). Pump tham gia loss pool và pump_loss_share cộng vào pump pool phân bổ
+**SummaryCalculator (engine tổng hợp):**
+- Per contact_point (đầu mối sinh hoạt):
+  - Tiêu chuẩn = tổng (quân số × định mức) + (tổng quân số × 9,45 bơm nước tiêu chuẩn)
+  - Sử dụng điện sinh hoạt = tổng (cuối kỳ − đầu kỳ) công tơ sinh hoạt
+  - Sử dụng điện bơm nước = phần được phân bổ từ PumpAllocationCalculator
+  - Tổng sử dụng điện = sử dụng điện sinh hoạt + sử dụng điện bơm nước
+  - Các khoản trừ: tiết kiệm, tổn hao, công cộng Sư đoàn, công cộng đơn vị, khác
+  - Tiêu chuẩn còn lại = tiêu chuẩn − các khoản trừ
+  - Chênh lệch = tổng sử dụng điện − tiêu chuẩn còn lại
+  - Thành tiền = chênh lệch × đơn giá
 
-### Phân bổ bơm nước thực tế — mô hình fixed/variable
-- Phân bổ cho **nhóm đối tượng** (KHÔNG phải đơn vị cấp 2). Nhóm đối tượng có 3 loại (đã implement PR m6 polymorphic):
-  - Đơn vị cấp 2 — `PumpStationAssignment.assignable = Organization`, quân số = Σ personnel các CP trong Org
-  - Đầu mối đặc biệt — `assignable = ContactPoint`, quân số = personnel của CP đó
-  - Nhóm công tác — `assignable = WorkGroup` (model mới: tên + personnel_count nhập tay + owner_organization = Sư đoàn)
-- Tổng bơm phân bổ = sử dụng trạm bơm + tổn hao trạm bơm (**bao gồm tổn hao**)
-- `PumpStationAssignment` polymorphic (`assignable_type, assignable_id`) + `fixed_pump_percentage` (decimal, nullable)
-- Nhóm có `fixed_pump_percentage` (ví dụ 30%) → nhận `tổng_bơm × percentage / 100`, KHÔNG chia theo quân số
-- Nhóm có `fixed_pump_percentage = nil` → chia phần còn lại theo quân số
-- `fixed_pump_percentage = 0` → coi là cố định (nhận 0 kW), không tham gia pool variable
-- Tất cả nil → 100% chia theo quân số
-- Sum fixed > 100 → clamp 100 (variable_pool = 0); fixed slots giữ raw % (admin chọn đúng)
-- Engine `CalculationEngine#compute_pump_allocations` resolve qua `headcount_for(assignable)` cho 3 loại. WorkGroup share NOT persisted to MonthlyCalculation (không có CP); F10 báo cáo dùng `PumpAllocationCalculator` (org-agnostic, full breakdown {Org, CP, WG}).
-- A1 đếm 2 lần: nếu CP A1 fixed 30% và DVA Org variable → A1 nhận cả 2 (CP fixed + variable từ DVA share). Cố ý — admin chọn assignment, engine không de-duplicate.
-- Ví dụ tháng 02: tổng bơm 6420 kW (= sử dụng 6152 + tổn hao 268), 30% cho "Chỉ huy f + nhà khách" = 1926 kW, 70% còn lại chia cho 557 người (gồm Đơn vị + WG "Thợ xây" "Trạm chế biến")
-- UI: `/pump_stations` form 2-step picker (radio loại + select instance, Stimulus `assignable_type_picker_controller`); `/work_groups` CRUD — admin_level1 only
+### Nhóm đối tượng nhận bơm nước — 4 loại (PumpStationAssignment, polymorphic)
+- Organization (đơn vị) — quân số = tổng quân số đầu mối, chia tiếp xuống đầu mối theo quân số
+- ContactPointGroup (nhóm đầu mối) — quân số = tổng quân số đầu mối thành viên, chia tiếp xuống thành viên theo quân số
+- ContactPoint (đầu mối lẻ) — quân số = quân số đầu mối đó, nhận trực tiếp
+- WorkGroup (ngoài biên chế) — quân số nhập tay, nhận trực tiếp
+
+Mỗi nhóm có fixed_pump_percentage (decimal, nullable):
+- Có giá trị → nhận D × tỷ lệ (cố định)
+- nil → chia phần còn lại theo quân số
+- 0 → cố định nhận 0, không tham gia pool variable
 
 ### Database schema chính
-organizations, users, contact_points, meters (meter_type: normal/public/pump/no_loss), personnel, rank_quotas (cột: rank_name, quota_kw, effective_from), monthly_periods, meter_readings, monthly_calculations, unit_configs, main_meters + main_meter_readings, pump_stations, pump_station_assignments (cột: `assignable_type, assignable_id, fixed_pump_percentage`), work_groups (name, personnel_count, position, notes, owner_organization_id), contact_point_other_deductions
+zones, organizations, users, contact_points (contact_point_type enum), work_groups, contact_point_groups, contact_point_group_memberships, main_meters, meters (meter_type enum + no_loss boolean), personnel, rank_quotas, monthly_periods, meter_readings, monthly_calculations, unit_configs, pump_stations, pump_station_assignments (fixed_pump_percentage decimal nullable, polymorphic assignable), contact_point_other_deductions
 
 ### Routes & controllers
 - `root` → `dashboard#show` (Dashboard + F12 báo cáo tổng hợp: tháng/quý/năm)
 - `history#show` → F13 tra cứu lịch sử + so sánh cùng kỳ
-- `monthly_summaries#show` → F11 bảng 24 cột (+ CSV export)
+- `monthly_summaries#show` → F11 bảng tổng hợp (+ CSV export), gộp đầu mối theo khối
 - CSV export: `respond_to format.csv` trên dashboard, history, monthly_summaries
 - `audit_logs#index` → F19 nhật ký thay đổi (PaperTrail::Version, tech + admin_level1)
 - `monthly_periods#index/edit/update` → F20 đơn giá điện (admin_level1 sửa)
 - `rank_quotas#index/edit/update` → F21 định mức cấp bậc (admin_level1 sửa)
-- `pump_stations#index` + `pump_station_assignments#new/edit/update/destroy` → Phân bổ trạm bơm cho 3 loại nhóm đối tượng (admin_level1 only)
-- `work_groups#index/new/create/edit/update/destroy` → Quản lý nhóm công tác (admin_level1 only)
+- `zones#index` → Quản lý khu vực (admin_level1 + admin_unit quản lý khu vực)
+- `pump_stations#index` → Quản lý trạm bơm (admin_level1 + admin_unit quản lý khu vực)
+- `pump_station_assignments#edit/update` → Phân bổ trạm bơm (admin_level1 + admin_unit quản lý khu vực)
 - `backups#index/create/restore/destroy_file` → Sao lưu & phục hồi (tech only, admin_level1 explicit cannot)
 
 ## Milestones
 - M1–M5: DONE — F01–F21 đầy đủ + Docker production
-- M6: ĐANG LÀM — Rà soát thiết kế + fix + test + bàn giao. Xem TONG_KET_CHAT_RA_SOAT_THIET_KE.md mục V cho danh sách cần fix
+- M6: ĐANG LÀM — Rà soát thiết kế + refactor + test + bàn giao. Xem TONG_HOP_THIET_KE_HE_THONG_v1_2_0.md cho thiết kế mới đã chốt.
 
-## File tham chiếu nghiệp vụ
-- `docs/SCOPE_DOCUMENT_v3_0_3.html` — phạm vi dự án đầy đủ (21 chức năng F01–F21)
-- `docs/XAC_NHAN_NGHIEP_VU_v5_3_0.html` — nghiệp vụ đã xác nhận
-- `TONG_KET_CHAT_RA_SOAT_THIET_KE.md` — phát hiện sai thiết kế gốc + trạng thái fix (đọc trước khi làm M6)
+## File tham chiếu
+- `docs/TONG_HOP_THIET_KE_HE_THONG_v1_2_0.md` — thiết kế hệ thống đã chốt (nguồn chính, đọc trước khi làm M6)
+- `docs/SCOPE_DOCUMENT_v3_0_3.html` — phạm vi dự án (21 chức năng F01–F21)
+- `docs/XAC_NHAN_NGHIEP_VU_v5_3_0.html` — nghiệp vụ đã xác nhận (lưu ý: mục 4 ghi sai role F05)
