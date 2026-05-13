@@ -1,74 +1,59 @@
 # frozen_string_literal: true
 
-# F08 + F09 + F10 — Engine tính toán bảng 22 cột cho một đơn vị (organization)
-# trong một chu kỳ tháng (monthly_period).
+# SummaryCalculator — phase 3 of engine tách 3.
 #
-# Tuân thủ nghiệp vụ v5 (docs/XAC_NHAN_NGHIEP_VU_v5.html):
+# Per-CP tổng hợp bảng 22 cột: tiêu chuẩn (rank1..7_kw + water_pump_standard)
+# + các khoản trừ (savings, loss, division_public, unit_public, other)
+# + sử dụng (meter + pump) + so sánh + thành tiền.
 #
-#   * 7 nhóm cấp bậc, lấy định mức từ RankQuota (1 row per rank_group).
-#   * Tiêu chuẩn bơm nước = 9.45 kW/người/tháng (Personnel::WATER_PUMP_RATE).
-#   * "Số phải trừ" gồm: Tiết kiệm, Tổn hao, Công cộng Sư đoàn, Công cộng đơn vị, Khác.
-#     Tổn hao TRỪ khỏi tiêu chuẩn, KHÔNG cộng vào sử dụng.
-#   * Tổn hao + bơm nước được tính TOÀN KHU VỰC bởi các service tách rời:
-#       - LossCalculator (zone:, monthly_period:) — tổn hao zone, per-CP + per-pump.
-#       - PumpAllocationCalculator (zone:, monthly_period:, loss_calculator:) —
-#         phân bổ pump pool (consumption + pump_loss_share) theo mô hình 30/70
-#         (M6) cho mọi assignment trong zone, drill xuống tới CP.
-#     Khi org chưa được gán Zone, zone = nil → cả hai service short-circuit về 0.
-#   * Engine orchestration: tổng hợp standard + deductions + usage + billing
-#     per CP, đọc per-CP loss/pump từ 2 service trên qua memoized accessors.
-#   * Mọi phép tính dùng BigDecimal. KHÔNG làm tròn ở bước trung gian.
+# Standalone service: DB lookups (personnel, rank quotas, configs, other
+# deductions, meter usage) đều tự lo. Loss và pump không tính lại — đọc qua
+# injected `loss_results` + `pump_results` từ CalculationOrchestrator.
 #
 # Interface:
 #
-#   engine = CalculationEngine.new(organization:, monthly_period:)
-#   engine.compute  # → Array<Hash> (full-precision BigDecimal, not persisted)
-#   engine.call     # → persists MonthlyCalculation rows (upsert), returns results
+#   summary = SummaryCalculator.new(
+#     organization:   org,
+#     monthly_period: period,
+#     loss_results:   loss_calculator.call,
+#     pump_results:   pump_calculator.call
+#   )
+#   summary.compute(contact_points)  # → Array<Hash> (full-precision BigDecimal)
 #
-# Instance is one-shot: caches are built on first access. Create a new instance
-# if underlying data changed between computations.
-class CalculationEngine
+# Row Hash chứa cả `contact_point:` (CP object) — orchestrator strip trước khi
+# persist. Mọi phép tính dùng BigDecimal, KHÔNG làm tròn trung gian.
+#
+# Instance là one-shot: caches build trên CP list lần đầu gọi `compute`.
+# KHÔNG gọi `compute` 2 lần với CP list khác nhau trên cùng instance —
+# `contact_point_ids`-based caches sẽ stale. Tạo instance mới nếu cần.
+class SummaryCalculator
   ZERO = BigDecimal("0")
   WATER_PUMP_RATE = Personnel::WATER_PUMP_RATE
 
-  attr_reader :organization, :monthly_period
+  attr_reader :organization, :monthly_period, :loss_results, :pump_results
 
-  def initialize(organization:, monthly_period:)
-    @organization = organization
+  def initialize(organization:, monthly_period:, loss_results:, pump_results:)
+    @organization   = organization
     @monthly_period = monthly_period
+    @loss_results   = loss_results
+    @pump_results   = pump_results
   end
 
-  # Compute all 22-column values for every contact point in the organization.
-  # Returns an Array of Hashes — one per contact point — with full-precision
-  # BigDecimal values. Does NOT touch the database.
-  def compute
+  def compute(contact_points)
+    @contact_points = contact_points
     contact_points.map do |cp|
       row = build_standard_row(cp)
       apply_deductions_usage_and_billing(row)
-      row.except(:contact_point)
+      row
     end
-  end
-
-  # Compute and persist results to monthly_calculations (upsert per contact point).
-  # Runs inside a transaction — any validation failure rolls back all rows.
-  def call
-    results = compute
-    ActiveRecord::Base.transaction do
-      results.each { |row| persist(row) }
-    end
-    results
   end
 
   private
 
   # ============================================================ data caching
 
-  def contact_points
-    @contact_points ||= organization.contact_points.ordered.to_a
-  end
-
   def contact_point_ids
-    @contact_point_ids ||= contact_points.map(&:id)
+    @contact_point_ids ||= @contact_points.map(&:id)
   end
 
   def unit_config
@@ -111,7 +96,7 @@ class CalculationEngine
   end
 
   # --- Meter usage (per CP) — DB-side group + sum ---------------------------
-  # Only `normal` meters bill into the CP usage column. `no_loss` is now an
+  # Only `normal` meters bill into the CP usage column. `no_loss` is an
   # orthogonal boolean (not a separate meter_type), so this filter naturally
   # includes both lossy and non-lossy residential meters — they all belong to
   # đầu mối sinh hoạt and their kW is billed. The no_loss flag only changes
@@ -133,54 +118,41 @@ class CalculationEngine
     meter_usage_by_cp[cp_id] || ZERO
   end
 
-  # --- Zone resolution -----------------------------------------------------
-  # Org belongs to a Zone (multiple orgs can share a zone). If the org has no
-  # zone (e.g. seed/spec data), zone is nil and downstream calculators short-
-  # circuit to zero.
-  def zone
-    @zone ||= organization.zone
-  end
-
-  # --- Loss phase (zone-wide tổn hao) — delegated to LossCalculator -------
-  # Loss values (C, B, per-CP numerators, supply) live in LossCalculator.
-  # Engine memoizes the instance + the call() hash so per-CP / per-pump
-  # access stays cheap inside compute().
-  def loss_calculator
-    @loss_calculator ||= LossCalculator.new(zone: zone, monthly_period: monthly_period)
-  end
-
-  def loss_results
-    @loss_results ||= loss_calculator.call
-  end
-
-  # --- Pump phase (zone-wide bơm nước) — delegated to PumpAllocationCalculator
-  # PAC processes every pump station in the zone, partitions each pool by
-  # the 30/70 model (fixed slots first, remaining split by personnel), and
-  # drills Organization / ContactPointGroup shares down to CPs. Engine
-  # only reads per-CP kW for the CPs it persists.
-  def pump_calculator
-    @pump_calculator ||= PumpAllocationCalculator.new(
-      zone:            zone,
-      monthly_period:  monthly_period,
-      loss_calculator: loss_calculator
-    )
-  end
-
-  def pump_results
-    @pump_results ||= pump_calculator.call
-  end
-
-  def pump_allocations_by_cp
-    pump_results[:allocations_by_cp]
-  end
+  # ============================================================ result readers
 
   def pump_actual_for(cp_id)
-    pump_allocations_by_cp[cp_id] || ZERO
+    pump_results[:allocations_by_cp][cp_id] || ZERO
   end
 
-  # --- Misc -----------------------------------------------------------------
+  def loss_deduction_for(cp_id)
+    loss_pool_by_cp = loss_results[:loss_pool_consumption_by_cp]
+    loss_pool_total = loss_results[:loss_pool_consumption_in_zone]
+    total_loss      = loss_results[:total_zone_loss]
+
+    return ZERO unless total_loss&.positive? && loss_pool_total&.positive?
+
+    cp_consumption = loss_pool_by_cp[cp_id] || ZERO
+    return ZERO unless cp_consumption.positive?
+
+    total_loss * cp_consumption / loss_pool_total
+  end
+
+  # ============================================================ config accessors
+
   def unit_price
     @unit_price ||= to_bd(monthly_period.unit_price)
+  end
+
+  def savings_rate
+    @savings_rate ||= to_bd(division_config&.savings_rate)
+  end
+
+  def division_public_rate
+    @division_public_rate ||= to_bd(division_config&.division_public_rate)
+  end
+
+  def unit_public_rate
+    @unit_public_rate ||= to_bd(unit_config&.unit_public_rate)
   end
 
   # ================================================================ standards
@@ -217,24 +189,11 @@ class CalculationEngine
     personnel_count = to_bd(row[:total_personnel])
 
     # --- Số phải trừ ---
-    savings = total_standard * savings_rate
-    div_public = total_standard * division_public_rate
+    savings     = total_standard * savings_rate
+    div_public  = total_standard * division_public_rate
     unit_public = total_standard * unit_public_rate
-
-    # Tổn hao phân bổ theo tỷ lệ kW công tơ của đầu mối / B (zone-wide
-    # loss-pool denominator gồm normal + public_meter + pump). CP không có
-    # công tơ → loss = 0. Pump nhận tổn hao qua pump_loss_share, không qua đây.
-    cp_loss_pool = loss_results[:loss_pool_consumption_by_cp][cp.id] || ZERO
-    b = loss_results[:loss_pool_consumption_in_zone]
-    c = loss_results[:total_zone_loss]
-    loss =
-      if b.positive? && c.positive?
-        c * cp_loss_pool / b
-      else
-        ZERO
-      end
-
-    other = compute_other_deduction(cp, personnel_count)
+    loss        = loss_deduction_for(cp.id)
+    other       = compute_other_deduction(cp, personnel_count)
 
     total_deduction = savings + loss + div_public + unit_public + other
     remaining_standard = total_standard - total_deduction
@@ -275,31 +234,6 @@ class CalculationEngine
     when "factor_per_person" then value * personnel_count
     else ZERO
     end
-  end
-
-  # ============================================================ config accessors
-
-  def savings_rate
-    @savings_rate ||= to_bd(division_config&.savings_rate)
-  end
-
-  def division_public_rate
-    @division_public_rate ||= to_bd(division_config&.division_public_rate)
-  end
-
-  def unit_public_rate
-    @unit_public_rate ||= to_bd(unit_config&.unit_public_rate)
-  end
-
-  # ===================================================================== persist
-
-  def persist(row)
-    calc = MonthlyCalculation.find_or_initialize_by(
-      contact_point_id: row[:contact_point_id],
-      monthly_period_id: row[:monthly_period_id]
-    )
-    calc.assign_attributes(row.except(:contact_point_id, :monthly_period_id))
-    calc.save!
   end
 
   # =================================================================== utilities

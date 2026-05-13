@@ -32,7 +32,7 @@ require "rails_helper"
 #
 # All arithmetic uses BigDecimal; assertions are tolerance-based (0.01 kW)
 # because the divisions are irrational.
-RSpec.describe "CalculationEngine zone-loss + pump pool (integration)" do
+RSpec.describe "CalculationOrchestrator zone-loss + pump pool (integration)" do
   def bd(value) = BigDecimal(value.to_s)
 
   let(:division)    { create(:organization, :division) }
@@ -133,8 +133,8 @@ RSpec.describe "CalculationEngine zone-loss + pump pool (integration)" do
 
   let(:tolerance) { bd("0.01") }
 
-  let(:engine_dva) { CalculationEngine.new(organization: dva, monthly_period: period) }
-  let(:engine_dvb) { CalculationEngine.new(organization: dvb, monthly_period: period) }
+  let(:engine_dva) { CalculationOrchestrator.new(organization: dva, monthly_period: period) }
+  let(:engine_dvb) { CalculationOrchestrator.new(organization: dvb, monthly_period: period) }
 
   describe "zone-wide loss" do
     let(:results_dva) { engine_dva.compute }
@@ -216,7 +216,7 @@ RSpec.describe "CalculationEngine zone-loss + pump pool (integration)" do
     end
 
     it "computes zero loss (supply unknown without MainMeter)" do
-      engine = CalculationEngine.new(organization: solo_org, monthly_period: period)
+      engine = CalculationOrchestrator.new(organization: solo_org, monthly_period: period)
       row = engine.compute.find { |r| r[:contact_point_id] == cp_solo.id }
       expect(row[:loss_deduction_kw]).to eq(bd("0"))
     end

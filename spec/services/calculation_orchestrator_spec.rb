@@ -13,7 +13,7 @@ require "rails_helper"
 #       pump_loss_share = total_zone_loss × (pump_kW / B)  → inflates pump pool
 #
 # All arithmetic is done in BigDecimal with NO rounding in intermediate steps.
-RSpec.describe CalculationEngine do
+RSpec.describe CalculationOrchestrator do
   # -----------------------------------------------------------------------
   # Shorthands
   # -----------------------------------------------------------------------
@@ -880,7 +880,7 @@ RSpec.describe CalculationEngine do
     end
   end
 
-  # Verifies that CalculationEngine wires per-CP pump kW correctly when the
+  # Verifies that CalculationOrchestrator wires per-CP pump kW correctly when the
   # pump phase is delegated to PumpAllocationCalculator. Each scenario sets
   # up two zone-mates (DVA + DVB) sharing one pump station, with one
   # ContactPoint fixed slot, two Organization variable slots, and a
@@ -994,8 +994,8 @@ RSpec.describe CalculationEngine do
     let!(:zasg_wg)  { create(:pump_station_assignment, pump_station: zone_pump_station, assignable: zone_work_group) }
 
     let(:zone_tolerance) { bd("0.01") }
-    let(:engine_dva)     { CalculationEngine.new(organization: dva, monthly_period: zone_period) }
-    let(:engine_dvb)     { CalculationEngine.new(organization: dvb, monthly_period: zone_period) }
+    let(:engine_dva)     { CalculationOrchestrator.new(organization: dva, monthly_period: zone_period) }
+    let(:engine_dvb)     { CalculationOrchestrator.new(organization: dvb, monthly_period: zone_period) }
 
     let(:zone_pump_pool)    { bd("500") + (bd("220") * bd("500") / bd("1680")) }
     let(:zone_variable_pool) { zone_pump_pool * bd("0.70") }
@@ -1092,7 +1092,7 @@ RSpec.describe CalculationEngine do
         # chia xuống A2 (3/4) và A3 (1/4).
         [ zasg_a1, zasg_dva, zasg_dvb, zasg_wg ].each(&:destroy)
 
-        results = CalculationEngine.new(organization: dva, monthly_period: zone_period).compute
+        results = CalculationOrchestrator.new(organization: dva, monthly_period: zone_period).compute
         a2_row = results.find { |r| r[:contact_point_id] == zcp_a2.id }
         a3_row = results.find { |r| r[:contact_point_id] == zcp_a3.id }
         a1_row = results.find { |r| r[:contact_point_id] == zcp_a1.id }

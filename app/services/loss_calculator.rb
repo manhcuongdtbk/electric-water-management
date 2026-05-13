@@ -2,7 +2,7 @@
 
 # Zone-wide electricity loss (tổn hao) calculator.
 #
-# Extracts the Loss phase from CalculationEngine into a standalone service. A
+# Extracts the Loss phase from CalculationOrchestrator into a standalone service. A
 # zone is the unit of loss computation — supply (MainMeter readings) minus
 # no_loss consumption minus loss-pool consumption (B) gives total_zone_loss
 # (C). Per-CP loss numerators and per-pump-station loss share are derived

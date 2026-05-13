@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # F11 — Bảng tổng hợp theo tháng (bảng 24 cột)
-# Hiển thị kết quả tính toán từ CalculationEngine cho một đơn vị và một kỳ tháng.
+# Hiển thị kết quả tính toán từ CalculationOrchestrator cho một đơn vị và một kỳ tháng.
 # Nếu chưa có dữ liệu → tự động chạy engine. Nút "Tính lại" cho admin.
 class MonthlySummariesController < ApplicationController
   before_action :set_period
@@ -35,7 +35,7 @@ class MonthlySummariesController < ApplicationController
     end
 
     begin
-      CalculationEngine.new(organization: @target_org, monthly_period: @period).call
+      CalculationOrchestrator.new(organization: @target_org, monthly_period: @period).call
     rescue => e
       return redirect_to monthly_summary_path(period_id: @period.id, org_id: effective_org_id),
                          alert: t("flash.monthly_summary.recalculate_failed", error: e.message)
@@ -78,7 +78,7 @@ class MonthlySummariesController < ApplicationController
 
     if @calculations.empty?
       begin
-        CalculationEngine.new(organization: @target_org, monthly_period: @period).call
+        CalculationOrchestrator.new(organization: @target_org, monthly_period: @period).call
         @calculations = fetch_calculations
       rescue => e
         @calculation_error = e.message
