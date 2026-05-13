@@ -72,7 +72,7 @@ RSpec.describe SummaryCalculator do
     }
   end
 
-  let(:contact_points) { [cp_a, cp_b] }
+  let(:contact_points) { [ cp_a, cp_b ] }
 
   subject(:summary) do
     described_class.new(
@@ -157,7 +157,7 @@ RSpec.describe SummaryCalculator do
         monthly_period: period,
         loss_results:   loss_results,
         pump_results:   pump_results
-      ).compute([orphan_cp])
+      ).compute([ orphan_cp ])
       expect(result.first[:loss_deduction_kw]).to eq(bd("0"))
     end
 
@@ -235,7 +235,7 @@ RSpec.describe SummaryCalculator do
         monthly_period: period,
         loss_results:   loss_results,
         pump_results:   pump_results
-      ).compute([orphan_cp])
+      ).compute([ orphan_cp ])
       expect(result.first[:water_pump_actual_kw]).to eq(bd("0"))
     end
 
@@ -277,7 +277,7 @@ RSpec.describe SummaryCalculator do
         monthly_period: period,
         loss_results:   loss_results,
         pump_results:   pump_results
-      ).compute([lonely_cp])
+      ).compute([ lonely_cp ])
       row = result.first
       (1..7).each { |i| expect(row[:"rank#{i}_kw"]).to eq(bd("0")) }
       expect(row[:total_personnel]).to eq(0)
@@ -295,7 +295,7 @@ RSpec.describe SummaryCalculator do
         monthly_period: period,
         loss_results:   loss_results,
         pump_results:   pump_results
-      ).compute([bare_cp])
+      ).compute([ bare_cp ])
       expect(result.first[:meter_usage_kw]).to eq(bd("0"))
     end
 
