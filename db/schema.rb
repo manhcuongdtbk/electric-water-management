@@ -10,9 +10,28 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_12_224138) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_13_023947) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "contact_point_group_memberships", force: :cascade do |t|
+    t.bigint "contact_point_group_id", null: false
+    t.bigint "contact_point_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["contact_point_group_id", "contact_point_id"], name: "idx_cpg_memberships_on_group_and_cp", unique: true
+    t.index ["contact_point_group_id"], name: "idx_on_contact_point_group_id_1c884f5aab"
+    t.index ["contact_point_id"], name: "index_contact_point_group_memberships_on_contact_point_id"
+  end
+
+  create_table "contact_point_groups", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.bigint "organization_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["organization_id", "name"], name: "index_contact_point_groups_on_organization_id_and_name", unique: true
+    t.index ["organization_id"], name: "index_contact_point_groups_on_organization_id"
+  end
 
   create_table "contact_point_other_deductions", force: :cascade do |t|
     t.bigint "contact_point_id", null: false
@@ -280,6 +299,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_12_224138) do
     t.index ["name"], name: "index_zones_on_name", unique: true
   end
 
+  add_foreign_key "contact_point_group_memberships", "contact_point_groups"
+  add_foreign_key "contact_point_group_memberships", "contact_points"
+  add_foreign_key "contact_point_groups", "organizations"
   add_foreign_key "contact_point_other_deductions", "contact_points"
   add_foreign_key "contact_point_other_deductions", "monthly_periods"
   add_foreign_key "contact_points", "organizations"

@@ -1,0 +1,69 @@
+<% content_for :title, t("contact_point_groups.index.title") %>
+
+<div class="flex items-center justify-between mb-4">
+  <h1 class="text-xl font-semibold text-gray-900"><%= t("contact_point_groups.index.title") %></h1>
+  <% if can? :create, ContactPointGroup %>
+    <%= link_to t("contact_point_groups.index.new_button"), new_contact_point_group_path,
+          class: "inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors" %>
+  <% end %>
+</div>
+
+<% if current_user.admin_level1? && @all_orgs.present? %>
+  <div class="mb-4">
+    <%= form_with url: contact_point_groups_path, method: :get, data: { turbo: false } do |f| %>
+      <div class="flex items-center gap-2">
+        <%= f.select :org_id,
+              options_from_collection_for_select(@all_orgs, :id, :name, @target_org&.id),
+              { include_blank: false },
+              class: "rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500",
+              onchange: "this.form.submit()" %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+  <table class="min-w-full divide-y divide-gray-200 text-sm">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-4 py-3 text-left font-medium text-gray-600 w-10"><%= t("contact_point_groups.index.columns.stt") %></th>
+        <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("contact_point_groups.index.columns.name") %></th>
+        <th class="px-4 py-3 text-right font-medium text-gray-600 w-32"><%= t("contact_point_groups.index.columns.members_count") %></th>
+        <th class="px-4 py-3 text-right font-medium text-gray-600 w-32"><%= t("contact_point_groups.index.columns.total_personnel") %></th>
+        <th class="px-4 py-3 text-left font-medium text-gray-600 w-32"><%= t("contact_point_groups.index.columns.actions") %></th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      <% if @contact_point_groups.any? %>
+        <% @contact_point_groups.each_with_index do |cpg, idx| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-3 text-gray-500"><%= idx + 1 %></td>
+            <td class="px-4 py-3 font-medium text-gray-900"><%= cpg.name %></td>
+            <td class="px-4 py-3 text-right text-gray-700"><%= cpg.contact_points.size %></td>
+            <td class="px-4 py-3 text-right text-gray-700"><%= number_with_delimiter(cpg.total_personnel) %></td>
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-2">
+                <% if can? :update, cpg %>
+                  <%= link_to t("contact_point_groups.actions.edit"), edit_contact_point_group_path(cpg),
+                        class: "text-blue-600 hover:underline text-xs" %>
+                <% end %>
+                <% if can? :destroy, cpg %>
+                  <%= button_to t("contact_point_groups.actions.delete"), contact_point_group_path(cpg),
+                        method: :delete,
+                        data: { turbo_confirm: t("contact_point_groups.actions.delete_confirm") },
+                        class: "text-red-600 hover:underline text-xs bg-transparent border-0 cursor-pointer p-0" %>
+                <% end %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      <% else %>
+        <tr>
+          <td colspan="5" class="px-4 py-6 text-center text-gray-500 italic">
+            <%= t("contact_point_groups.index.empty") %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

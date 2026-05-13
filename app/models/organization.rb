@@ -14,6 +14,7 @@ class Organization < ApplicationRecord
   has_many :pump_station_assignments, as: :assignable, dependent: :destroy
   has_many :owned_work_groups, class_name: "WorkGroup",
            foreign_key: :owner_organization_id, dependent: :restrict_with_error
+  has_many :contact_point_groups, dependent: :restrict_with_error
 
   # Enums
   enum :level, { division: 1, unit: 2 }, validate: true

@@ -49,6 +49,12 @@ vi:
       pump_station_assignment:
         one: "phân bổ trạm bơm"
         other: "phân bổ trạm bơm"
+      contact_point_group:
+        one: "nhóm đầu mối"
+        other: "nhóm đầu mối"
+      contact_point_group_membership:
+        one: "thành viên nhóm"
+        other: "thành viên nhóm"
       work_group:
         one: "nhóm công tác"
         other: "nhóm công tác"
@@ -89,6 +95,10 @@ vi:
             assignable:
               must_be_unit_level: "phải là đơn vị cấp 2"
               must_be_in_unit_org: "đầu mối phải thuộc đơn vị cấp 2"
+        contact_point_group_membership:
+          attributes:
+            contact_point:
+              must_belong_to_same_organization: "phải thuộc cùng đơn vị với nhóm"
     attributes:
       user:
         full_name: "Họ tên"
@@ -129,6 +139,12 @@ vi:
         assignable_type: "Loại nhóm đối tượng"
         assignable_id: "Nhóm đối tượng"
         fixed_pump_percentage: "Tỷ lệ cố định (%)"
+      contact_point_group:
+        name: "Tên nhóm"
+        organization: "Đơn vị"
+        organization_id: "Đơn vị"
+      contact_point_group_membership:
+        contact_point: "Đầu mối"
       work_group:
         name: "Tên nhóm công tác"
         personnel_count: "Quân số"
@@ -342,6 +358,11 @@ vi:
       updated: "Cập nhật phân bổ trạm bơm thành công. Hãy tính lại các kỳ bị ảnh hưởng."
       destroyed: "Đã bỏ gán nhóm đối tượng khỏi trạm bơm. Hãy tính lại các kỳ bị ảnh hưởng."
       destroy_failed: "Không thể bỏ gán nhóm đối tượng khỏi trạm bơm."
+    contact_point_groups:
+      created: "Tạo nhóm đầu mối thành công."
+      updated: "Cập nhật nhóm đầu mối thành công."
+      destroyed: "Xoá nhóm đầu mối thành công."
+      destroy_failed: "Không thể xoá nhóm đầu mối."
     work_groups:
       created: "Tạo nhóm công tác thành công."
       updated: "Cập nhật nhóm công tác thành công."
@@ -667,6 +688,7 @@ vi:
   nav:
     dashboard: "Trang chủ"
     contact_points: "Đầu mối"
+    contact_point_groups: "Nhóm đầu mối"
     unit_config: "Cấu hình"
     electricity_supply: "Nhập số điện lực"
     meter_readings: "Chỉ số công tơ"
@@ -929,6 +951,29 @@ vi:
       edit: "Sửa"
       delete: "Bỏ gán"
       delete_confirm: "Bạn có chắc muốn bỏ gán nhóm đối tượng này khỏi trạm bơm?"
+
+  contact_point_groups:
+    index:
+      title: "Nhóm đầu mối"
+      new_button: "Thêm nhóm"
+      empty: "Chưa có nhóm đầu mối nào."
+      columns:
+        stt: "STT"
+        name: "Tên nhóm"
+        members_count: "Số thành viên"
+        total_personnel: "Tổng quân số"
+        actions: "Thao tác"
+    form:
+      name: "Tên nhóm"
+      members: "Đầu mối thành viên"
+      members_hint: "Chỉ đầu mối sinh hoạt trong đơn vị. Đầu mối công cộng không tham gia nhóm."
+      submit_create: "Thêm nhóm"
+      submit_update: "Lưu thay đổi"
+      cancel: "Hủy"
+    actions:
+      edit: "Sửa"
+      delete: "Xoá"
+      delete_confirm: "Bạn có chắc muốn xoá nhóm đầu mối này?"
 
   work_groups:
     index:

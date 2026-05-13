@@ -28,6 +28,7 @@ Rails.application.routes.draw do
   resource :pump_station_readings, only: [ :show, :update ]
 
   resources :work_groups, except: [ :show ]
+  resources :contact_point_groups, except: [ :show ]
 
   resources :contact_points do
     resource :personnel, only: [ :show, :update ], controller: :personnel do
