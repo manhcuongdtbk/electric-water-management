@@ -151,128 +151,16 @@ class CalculationEngine
     @zone_org_ids ||= zone ? zone.organizations.pluck(:id) : [ organization.id ]
   end
 
-  # Pump meters serving the zone — resolved via PumpStationAssignment so that
-  # pump stations administered at division-level still get picked up. A pump
-  # is "in the zone" when at least one assignment points to:
-  #   - an Organization in the zone, OR
-  #   - a ContactPoint whose Organization is in the zone.
-  # WorkGroup assignments do NOT pull a pump into a zone (a WG sits outside
-  # the org tree — in practice it always co-exists with at least one Org/CP
-  # assignment on the same pump).
-  def zone_pump_meter_ids
-    @zone_pump_meter_ids ||= begin
-      org_ps = PumpStationAssignment
-                 .where(assignable_type: "Organization", assignable_id: zone_org_ids)
-                 .pluck(:pump_station_id)
-      cp_ps = PumpStationAssignment
-                .where(assignable_type: "ContactPoint")
-                .joins("INNER JOIN contact_points " \
-                       "ON contact_points.id = pump_station_assignments.assignable_id")
-                .where(contact_points: { organization_id: zone_org_ids })
-                .pluck(:pump_station_id)
-      ps_ids = (org_ps + cp_ps).uniq
-      if ps_ids.empty?
-        []
-      else
-        Meter.where(pump_station_id: ps_ids,
-                    meter_type: Meter.meter_types[:pump_station]).pluck(:id)
-      end
-    end
+  # --- Loss phase (zone-wide tổn hao) — delegated to LossCalculator -------
+  # Loss values (C, B, per-CP numerators, supply) live in LossCalculator.
+  # Engine memoizes the instance + the call() hash so per-CP / per-pump
+  # access stays cheap inside compute().
+  def loss_calculator
+    @loss_calculator ||= LossCalculator.new(zone: zone, monthly_period: monthly_period)
   end
 
-  # Loss pool B = CP meters in zone (normal + public_meter, no_loss = false)
-  # ∪ pump meters serving zone. No-loss meters are subtracted from supply
-  # directly and never enter B. After PR#91 no_loss is a boolean on `normal`
-  # meters, so the `Meter.with_loss` scope is required to exclude them.
-  def loss_pool_meter_ids
-    @loss_pool_meter_ids ||= begin
-      cp_ids = Meter
-        .where(organization_id: zone_org_ids,
-               meter_type: [ Meter.meter_types[:normal], Meter.meter_types[:public_meter] ])
-        .merge(Meter.with_loss)
-        .pluck(:id)
-      (cp_ids + zone_pump_meter_ids).uniq
-    end
-  end
-
-  # --- Loss-pool consumption (per CP) — DB-side group + sum ----------------
-  # Used as the numerator for loss allocation. Pump meters have contact_point_id = nil
-  # so they're naturally excluded from this per-CP group; their share lives in
-  # `pump_loss_share` and inflates pump pool instead.
-  def loss_pool_consumption_by_cp
-    @loss_pool_consumption_by_cp ||= MeterReading
-                                     .for_period(monthly_period.id)
-                                     .joins(:meter)
-                                     .where(meter_id: loss_pool_meter_ids)
-                                     .group("meters.contact_point_id")
-                                     .sum(:consumption)
-                                     .transform_values { |v| to_bd(v) }
-                                     .except(nil) # pump meters land in nil bucket
-  end
-
-  def loss_pool_consumption_for(cp_id)
-    loss_pool_consumption_by_cp[cp_id] || ZERO
-  end
-
-  # B (zone-wide loss-pool denominator). Includes pump meter consumption.
-  def loss_pool_consumption_in_zone
-    @loss_pool_consumption_in_zone ||= to_bd(
-      MeterReading.for_period(monthly_period.id)
-                  .where(meter_id: loss_pool_meter_ids)
-                  .sum(:consumption)
-    )
-  end
-
-  # Σ(no_loss) readings — meters at the substation that don't go through
-  # internal lines, so their kW must be removed from supply BEFORE computing
-  # internal-line loss (they don't contribute to the loss pool).
-  def no_loss_consumption_in_zone
-    @no_loss_consumption_in_zone ||= to_bd(
-      MeterReading
-        .for_period(monthly_period.id)
-        .joins(:meter)
-        .where(meters: { organization_id: zone_org_ids })
-        .merge(Meter.no_loss)
-        .sum(:consumption)
-    )
-  end
-
-  # Supply = Σ supply across every MainMeter in the zone. Returns nil when the
-  # zone has no MainMeterReading at all (→ loss = 0). Sums multi-meter zones so
-  # the engine matches PumpAllocationCalculator and is ready for the future
-  # case of a zone with >1 main meter.
-  def zone_supply_kw
-    return @zone_supply_kw if defined?(@zone_supply_kw)
-    @zone_supply_kw =
-      if zone.nil?
-        nil
-      else
-        readings = zone.main_meters.filter_map { |mm| mm.supply_kw_for(monthly_period) }
-        readings.empty? ? nil : readings.sum { |kw| to_bd(kw) }
-      end
-  end
-
-  def total_zone_loss
-    return @total_zone_loss if defined?(@total_zone_loss)
-
-    supply = zone_supply_kw
-    @total_zone_loss =
-      if supply.blank?
-        ZERO
-      else
-        diff = to_bd(supply) - no_loss_consumption_in_zone - loss_pool_consumption_in_zone
-        diff.negative? ? ZERO : diff
-      end
-  end
-
-  # Tổn hao của pump_station = total_zone_loss × (kW pump ÷ B).
-  # Pump pool phân bổ = consumption + pump_loss_share.
-  def pump_loss_share(pump_station)
-    return ZERO unless total_zone_loss.positive? && loss_pool_consumption_in_zone.positive?
-    ps_consumption = pump_station_consumption(pump_station)
-    return ZERO unless ps_consumption.positive?
-
-    total_zone_loss * ps_consumption / loss_pool_consumption_in_zone
+  def loss_results
+    @loss_results ||= loss_calculator.call
   end
 
   # --- Water pump actual (per CP) ------------------------------------------
@@ -316,7 +204,7 @@ class CalculationEngine
     pump_stations.each do |ps|
       # Pump pool absorbs the pump's share of zone loss so the inflated pool
       # is what gets distributed by personnel ratio.
-      consumption = pump_station_consumption(ps) + pump_loss_share(ps)
+      consumption = pump_station_consumption(ps) + loss_calculator.pump_loss_share(ps)
       next unless consumption.positive?
 
       assignments = pump_station_assignments_for(ps)
@@ -530,10 +418,12 @@ class CalculationEngine
     # Tổn hao phân bổ theo tỷ lệ kW công tơ của đầu mối / B (zone-wide
     # loss-pool denominator gồm normal + public_meter + pump). CP không có
     # công tơ → loss = 0. Pump nhận tổn hao qua pump_loss_share, không qua đây.
-    cp_loss_pool = loss_pool_consumption_for(cp.id)
+    cp_loss_pool = loss_results[:loss_pool_consumption_by_cp][cp.id] || ZERO
+    b = loss_results[:loss_pool_consumption_in_zone]
+    c = loss_results[:total_zone_loss]
     loss =
-      if loss_pool_consumption_in_zone.positive? && total_zone_loss.positive?
-        total_zone_loss * cp_loss_pool / loss_pool_consumption_in_zone
+      if b.positive? && c.positive?
+        c * cp_loss_pool / b
       else
         ZERO
       end
