@@ -1,10 +1,12 @@
 class PumpStationsController < ApplicationController
   before_action :authorize_pump_stations
   before_action :set_pump_station, only: [ :edit, :update, :destroy ]
+  before_action :load_available_zones, only: [ :new, :create, :edit, :update ]
 
   def index
     @pump_stations = PumpStation
-                       .includes(:organization, :meters,
+                       .accessible_by(current_ability)
+                       .includes(:zone, :meters,
                                  pump_station_assignments: :assignable)
                        .ordered
   end
@@ -15,6 +17,8 @@ class PumpStationsController < ApplicationController
 
   def create
     @pump_station = PumpStation.new(pump_station_params)
+    # Satisfy the still-NOT-NULL `organization_id` column. Dropped together with
+    # this assignment in the DropLegacyColumns migration in this same PR.
     @pump_station.organization = division
     @pump_station.first_meter_name          = first_meter_name_param
     @pump_station.first_meter_serial_number = first_meter_serial_param
@@ -69,7 +73,18 @@ class PumpStationsController < ApplicationController
   end
 
   def pump_station_params
-    params.require(:pump_station).permit(:name)
+    params.require(:pump_station).permit(:name, :zone_id)
+  end
+
+  # Zone scope shown in the create/edit form. admin_level1 sees every zone;
+  # an admin_unit zone-manager only sees the zones they manage (matching the
+  # ability rule `can :manage, PumpStation, zone_id: managed_zone_ids`).
+  def load_available_zones
+    @available_zones = if current_user.admin_level1?
+      Zone.ordered
+    else
+      Zone.where(manager_organization_id: current_user.organization_id).ordered
+    end
   end
 
   def first_meter_name_param

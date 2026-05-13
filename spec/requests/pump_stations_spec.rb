@@ -55,10 +55,12 @@ RSpec.describe "PumpStations", type: :request do
   end
 
   describe "POST /pump_stations" do
+    let!(:zone) { create(:zone, name: "Khu vực bơm A") }
     let(:valid_params) do
       {
         pump_station: {
           name: "Trạm bơm A",
+          zone_id: zone.id,
           first_meter_name: "CT01 đầu vào",
           first_meter_serial_number: "SN-A001"
         }
@@ -79,7 +81,7 @@ RSpec.describe "PumpStations", type: :request do
 
         ps = PumpStation.last
         expect(ps.name).to eq("Trạm bơm A")
-        expect(ps.organization).to eq(division)
+        expect(ps.zone).to eq(zone)
         expect(ps.meters.count).to eq(1)
         meter = ps.meters.first
         expect(meter.name).to eq("CT01 đầu vào")
@@ -129,7 +131,7 @@ RSpec.describe "PumpStations", type: :request do
   end
 
   describe "GET /pump_stations/:id/edit" do
-    let!(:pump_station) { create(:pump_station, organization: division) }
+    let!(:pump_station) { create(:pump_station) }
 
     context "as admin_level1" do
       before { sign_in admin1 }
@@ -151,7 +153,7 @@ RSpec.describe "PumpStations", type: :request do
   end
 
   describe "PATCH /pump_stations/:id" do
-    let!(:pump_station) { create(:pump_station, organization: division, name: "Original") }
+    let!(:pump_station) { create(:pump_station, name: "Original") }
     let(:params) { { pump_station: { name: "Renamed" } } }
 
     context "as admin_level1" do
@@ -182,7 +184,7 @@ RSpec.describe "PumpStations", type: :request do
   end
 
   describe "DELETE /pump_stations/:id" do
-    let!(:pump_station) { create(:pump_station, organization: division) }
+    let!(:pump_station) { create(:pump_station) }
     let!(:meter) do
       create(:meter, :pump_station,
              pump_station: pump_station,

@@ -7,7 +7,7 @@ RSpec.describe "PumpStationMeters", type: :request do
   let(:admin1)     { create(:user, :admin_level1, organization: division) }
   let(:admin_unit) { create(:user, :admin_unit,   organization: org) }
 
-  let!(:pump_station) { create(:pump_station, organization: division) }
+  let!(:pump_station) { create(:pump_station) }
   let!(:initial_meter) do
     create(:meter, :pump_station, pump_station: pump_station, organization: division)
   end

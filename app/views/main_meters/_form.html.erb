@@ -39,15 +39,15 @@
           <% selected_ids = main_meter.organizations.pluck(:id) %>
           <% @available_organizations.each do |org| %>
             <% checked = selected_ids.include?(org.id) %>
-            <% other = org.main_meter_id.present? && org.main_meter_id != main_meter.id %>
+            <% other = org.zone_id.present? && org.zone_id != main_meter.zone_id %>
             <label class="flex items-start gap-2 py-1 text-sm <%= 'text-gray-500' if other %>">
               <%= check_box_tag "main_meter[organization_ids][]", org.id, checked,
                     id: "main_meter_organization_ids_#{org.id}",
                     class: "mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" %>
               <span class="flex flex-col">
                 <span class="font-medium"><%= org.name %></span>
-                <% if other && org.main_meter %>
-                  <span class="text-xs text-amber-600"><%= t("main_meters.form.org_in_other", main_meter: org.main_meter.name) %></span>
+                <% if other && org.zone %>
+                  <span class="text-xs text-amber-600"><%= t("main_meters.form.org_in_other", zone: org.zone.name) %></span>
                 <% end %>
               </span>
             </label>

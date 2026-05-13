@@ -44,7 +44,7 @@ class ElectricitySuppliesController < ApplicationController
         @all_main_meters.first
       end
     else
-      @target_main_meter = current_user.organization&.main_meter
+      @target_main_meter = current_user.organization&.zone&.main_meters&.ordered&.first
     end
   end
 

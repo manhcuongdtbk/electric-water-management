@@ -21,7 +21,7 @@
       <div class="px-4 py-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
         <div>
           <h2 class="text-base font-medium text-gray-800"><%= ps.name %></h2>
-          <p class="text-xs text-gray-500 mt-0.5"><%= ps.organization.name %></p>
+          <p class="text-xs text-gray-500 mt-0.5"><%= ps.zone.name %></p>
         </div>
         <div class="flex items-center gap-2">
           <%= link_to t("pump_stations.actions.edit"), edit_pump_station_path(ps),

@@ -10,10 +10,12 @@ RSpec.describe "Pump stations management", type: :system do
 
     it "tạo trạm bơm mới + công tơ đầu tiên trong cùng một bước" do
       scenario
+      zone = create(:zone, name: "Khu vực bơm A")
       visit pump_stations_path
       click_on I18n.t("pump_stations.index.new_button")
 
       fill_in I18n.t("pump_stations.form.name"), with: "Trạm bơm A"
+      select zone.name, from: I18n.t("pump_stations.form.zone")
       fill_in I18n.t("pump_stations.form.first_meter_name"), with: "CT01 đầu vào"
       fill_in I18n.t("pump_stations.form.first_meter_serial_number"), with: "SN-A001"
       click_on I18n.t("pump_stations.form.submit_create")
@@ -24,13 +26,14 @@ RSpec.describe "Pump stations management", type: :system do
       expect(page).to have_content("CT01 đầu vào")
 
       ps = PumpStation.find_by!(name: "Trạm bơm A")
-      expect(ps.organization).to eq(scenario.division)
+      expect(ps.zone).to eq(zone)
       expect(ps.meters.count).to eq(1)
       expect(ps.meters.first.meter_type).to eq("pump_station")
+      expect(ps.meters.first.organization).to eq(scenario.division)
     end
 
     it "thêm + xoá công tơ; chặn xoá công tơ cuối cùng" do
-      ps = create(:pump_station, organization: scenario.division, name: "Trạm B")
+      ps = create(:pump_station, name: "Trạm B")
       create(:meter, :pump_station,
              pump_station: ps, organization: scenario.division, name: "CT gốc")
 
@@ -61,7 +64,7 @@ RSpec.describe "Pump stations management", type: :system do
     end
 
     it "gán + bỏ gán đơn vị cho trạm bơm" do
-      ps = create(:pump_station, organization: scenario.division, name: "Trạm C")
+      ps = create(:pump_station, name: "Trạm C")
       create(:meter, :pump_station,
              pump_station: ps, organization: scenario.division)
 
@@ -89,7 +92,7 @@ RSpec.describe "Pump stations management", type: :system do
     end
 
     it "nhập chỉ số công tơ trạm bơm cho kỳ và lưu thành công" do
-      ps = create(:pump_station, organization: scenario.division, name: "Trạm D")
+      ps = create(:pump_station, name: "Trạm D")
       meter = create(:meter, :pump_station,
                      pump_station: ps,
                      organization: scenario.division,
@@ -108,7 +111,7 @@ RSpec.describe "Pump stations management", type: :system do
     end
 
     it "không xoá được trạm bơm có dữ liệu chỉ số (bảo toàn lịch sử)" do
-      ps = create(:pump_station, organization: scenario.division, name: "Trạm E")
+      ps = create(:pump_station, name: "Trạm E")
       meter = create(:meter, :pump_station,
                      pump_station: ps, organization: scenario.division)
       create(:meter_reading,

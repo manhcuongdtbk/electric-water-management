@@ -9,7 +9,7 @@ RSpec.describe "PumpStationAssignments", type: :request do
   let(:commander)     { create(:user, :commander,    organization: org) }
   let(:tech_user)     { create(:user, :tech,         organization: division) }
 
-  let!(:pump_station) { create(:pump_station, organization: division) }
+  let!(:pump_station) { create(:pump_station) }
   let!(:assignment)   { create(:pump_station_assignment, pump_station: pump_station, organization: org) }
 
   describe "GET /pump_stations" do

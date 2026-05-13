@@ -6,7 +6,7 @@ RSpec.describe "F05 — Electricity supply", type: :system do
   let(:scenario) { setup_basic_scenario }
   let(:main_meter) { create(:main_meter, name: "Khu vực A") }
 
-  before { scenario.unit.update!(main_meter: main_meter) }
+  before { scenario.unit.update!(zone: main_meter.zone) }
 
   describe "admin_level1" do
     before { login_as scenario.admin_level1, scope: :user }
@@ -45,7 +45,7 @@ RSpec.describe "F05 — Electricity supply", type: :system do
     end
 
     it "shows no-main-meter notice when their org is not assigned a zone" do
-      scenario.unit.update!(main_meter: nil)
+      scenario.unit.update!(zone: nil)
       visit electricity_supply_path
       expect(page).to have_content(I18n.t("electricity_supplies.no_main_meter"))
     end

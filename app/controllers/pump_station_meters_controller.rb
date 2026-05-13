@@ -11,7 +11,7 @@ class PumpStationMetersController < ApplicationController
     @meter = @pump_station.meters.new(meter_params)
     @meter.meter_type   = :pump_station
     @meter.contact_point = nil
-    @meter.organization = @pump_station.organization
+    @meter.organization = division
 
     if @meter.save
       redirect_to pump_stations_path, notice: t("flash.pump_station_meters.created")
@@ -63,5 +63,9 @@ class PumpStationMetersController < ApplicationController
 
   def meter_params
     params.require(:meter).permit(:name, :serial_number, :notes, :position)
+  end
+
+  def division
+    @division ||= Organization.divisions.first
   end
 end

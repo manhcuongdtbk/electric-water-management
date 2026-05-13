@@ -72,22 +72,23 @@ class MainMetersController < ApplicationController
     Array(params.dig(:main_meter, :organization_ids)).reject(&:blank?).map(&:to_i)
   end
 
-  # Re-assign the units linked to this main meter: any unit previously linked
-  # but not in the new selection is detached (main_meter_id => nil), and any
-  # newly selected unit is attached. Stealing a unit from another main meter
-  # is allowed (the previous link is overwritten) — admin_level1 is trusted
-  # to manage zone membership.
+  # Re-assign the units linked to this main meter via its zone: any unit
+  # previously in the zone but not in the new selection is detached
+  # (zone_id => nil), and any newly selected unit is attached. Stealing a
+  # unit from another zone is allowed — admin_level1 is trusted to manage
+  # zone membership.
   #
   # Uses `update!` per record (not `update_all`) so paper_trail logs the FK
   # change on each Organization — F19 audit log must see who moved which unit
   # into which zone. paper_trail no-ops when the value is unchanged, so calling
   # update! on an already-linked org is safe and produces no spurious version.
   def assign_organizations(main_meter, requested_ids)
-    Organization.where(main_meter_id: main_meter.id).where.not(id: requested_ids).each do |org|
-      org.update!(main_meter_id: nil)
+    zone_id = main_meter.zone_id
+    Organization.where(zone_id: zone_id).where.not(id: requested_ids).each do |org|
+      org.update!(zone_id: nil)
     end
     Organization.units.where(id: requested_ids).each do |org|
-      org.update!(main_meter_id: main_meter.id)
+      org.update!(zone_id: zone_id)
     end
   end
 end

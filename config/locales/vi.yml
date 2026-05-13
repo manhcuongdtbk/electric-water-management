@@ -881,6 +881,9 @@ vi:
       title: "Sửa trạm bơm"
     form:
       name: "Tên trạm bơm"
+      zone: "Khu vực"
+      zone_prompt: "— Chọn khu vực —"
+      no_zones_available: "Chưa có khu vực nào. Hãy tạo khu vực trước."
       first_meter_name: "Tên công tơ"
       first_meter_serial_number: "Số hiệu (tùy chọn)"
       submit_create: "Tạo trạm bơm"
@@ -1138,7 +1141,7 @@ vi:
       notes: "Ghi chú"
       organizations: "Đơn vị cấp 2 dùng chung đồng hồ tổng này"
       organizations_hint: "Tích chọn các đơn vị thuộc khu vực. Một đơn vị chỉ thuộc tối đa một khu vực — chọn ở đây sẽ chuyển đơn vị khỏi khu vực cũ."
-      org_in_other: "Đang thuộc khu vực: %{main_meter}"
+      org_in_other: "Đang thuộc khu vực: %{zone}"
       no_organizations_available: "Chưa có đơn vị cấp 2 nào. Hãy tạo đơn vị trước."
       submit_create: "Thêm khu vực"
       submit_update: "Lưu thay đổi"

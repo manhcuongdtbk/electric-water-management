@@ -24,6 +24,19 @@
             required: true %>
     </div>
 
+    <div>
+      <%= f.label :zone_id, t("pump_stations.form.zone"),
+            class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <% if @available_zones.any? %>
+        <%= f.collection_select :zone_id, @available_zones, :id, :name,
+              { prompt: t("pump_stations.form.zone_prompt") },
+              { class: "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500",
+                required: true } %>
+      <% else %>
+        <p class="text-sm text-gray-500 italic"><%= t("pump_stations.form.no_zones_available") %></p>
+      <% end %>
+    </div>
+
     <% if pump_station.new_record? %>
       <h2 class="text-sm font-semibold text-gray-700 border-b border-gray-200 pb-2 pt-2">
         <%= t("pump_stations.new.first_meter_section") %>

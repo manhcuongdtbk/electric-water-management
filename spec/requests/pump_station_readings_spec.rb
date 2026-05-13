@@ -8,7 +8,7 @@ RSpec.describe "PumpStationReadings", type: :request do
   let(:admin_unit) { create(:user, :admin_unit,   organization: org) }
   let(:commander)  { create(:user, :commander,    organization: org) }
 
-  let!(:pump_station) { create(:pump_station, organization: division) }
+  let!(:pump_station) { create(:pump_station) }
   let!(:meter) do
     create(:meter, :pump_station, pump_station: pump_station, organization: division)
   end
