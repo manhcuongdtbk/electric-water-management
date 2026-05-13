@@ -78,7 +78,11 @@ class PumpStationAssignmentsController < ApplicationController
                         .where(organizations: { level: Organization.levels[:unit] })
                         .order("organizations.position, contact_points.position, contact_points.name")
                         .where.not(id: taken_ids_by_type["ContactPoint"] || []),
-      work_groups: WorkGroup.ordered.where.not(id: taken_ids_by_type["WorkGroup"] || [])
+      work_groups: WorkGroup.ordered.where.not(id: taken_ids_by_type["WorkGroup"] || []),
+      contact_point_groups: ContactPointGroup
+        .where(organization_id: @pump_station.zone.organizations.pluck(:id))
+        .ordered
+        .where.not(id: taken_ids_by_type["ContactPointGroup"] || [])
     }
   end
 end

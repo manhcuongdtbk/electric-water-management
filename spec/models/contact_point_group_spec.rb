@@ -54,10 +54,8 @@ RSpec.describe ContactPointGroup, type: :model do
   describe "#destroy" do
     it "is blocked when pump_station_assignments exist" do
       group = create(:contact_point_group)
-      # ContactPointGroup will be added to ALLOWED_ASSIGNABLE_TYPES in next PR;
-      # bypass model validation here to test the restrict_with_error dependency.
       ps = create(:pump_station)
-      PumpStationAssignment.new(pump_station: ps, assignable: group).save(validate: false)
+      create(:pump_station_assignment, :for_contact_point_group, pump_station: ps, assignable: group)
 
       expect { group.destroy }.not_to change(ContactPointGroup, :count)
       expect(group.errors[:base]).to be_present
