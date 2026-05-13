@@ -243,13 +243,16 @@ class CalculationEngine
   end
 
   # Headcount of a "nhóm đối tượng" — used both for the variable-pool
-  # denominator and (for Organization) to split share down to CPs.
+  # denominator and (for Organization / ContactPointGroup) to split share
+  # down to CPs.
   def headcount_for(target)
     case target
     when Organization
       organization_personnel_total(target.id)
     when ContactPoint
       contact_point_personnel_total(target.id)
+    when ContactPointGroup
+      contact_point_group_personnel_total(target.id)
     when WorkGroup
       target.personnel_count.to_i
     else
@@ -260,7 +263,9 @@ class CalculationEngine
   # Route share to allocations. Engine is per-Organization → only writes
   # rows for CPs belonging to the current organization. WorkGroup shares
   # are computed by the loop above (to keep the denominator correct) but
-  # not persisted here.
+  # not persisted here. A ContactPointGroup belongs to one org (validation):
+  # if it's not this engine's org, skip; otherwise split across member CPs
+  # by personnel ratio.
   def apply_assignable_share(allocations, pump_station, target, share)
     return unless share.positive?
 
@@ -273,6 +278,10 @@ class CalculationEngine
       return unless contact_point_ids.include?(target.id)
 
       allocations[target.id] += share
+    when ContactPointGroup
+      return unless target.organization_id == organization.id
+
+      distribute_within_contact_point_group(allocations, pump_station, target, share)
     when WorkGroup
       # F10 visibility handled by PumpAllocationCalculator.
     end
@@ -296,6 +305,16 @@ class CalculationEngine
     end
   end
 
+  def contact_point_group_personnel_total(group_id)
+    @contact_point_group_personnel_cache ||= {}
+    @contact_point_group_personnel_cache[group_id] ||= Personnel
+      .for_period(monthly_period.id)
+      .joins(contact_point: :contact_point_group_memberships)
+      .where(contact_point_group_memberships: { contact_point_group_id: group_id })
+      .sum("rank1_count + rank2_count + rank3_count + rank4_count + " \
+           "rank5_count + rank6_count + rank7_count").to_i
+  end
+
   # Distribute one org's slice (kW) across the org's CPs by personnel ratio.
   # Slice is lost when the org has 0 personnel (consistent with current
   # behaviour: CPs with personnel = 0 are skipped).
@@ -315,20 +334,58 @@ class CalculationEngine
     end
   end
 
+  # Distribute one group's slice (kW) across the group's member CPs by
+  # personnel ratio. ContactPointGroup membership is validated to be
+  # same-org so all members live in this engine's organization. Member CPs
+  # with 0 personnel are skipped; slice is lost when the whole group has 0
+  # personnel (mirrors `distribute_within_org`).
+  def distribute_within_contact_point_group(allocations, ps, group, group_share_kw)
+    return unless group_share_kw.positive?
+
+    member_cp_ids = group.contact_points.pluck(:id) & contact_point_ids
+    return if member_cp_ids.empty?
+
+    cp_personnel = personnel_by_cp_for_group(ps, group.id)
+    group_total  = member_cp_ids.sum { |cp_id| cp_personnel[cp_id].to_i }
+    return unless group_total.positive?
+
+    group_total_bd = to_bd(group_total)
+    member_cp_ids.each do |cp_id|
+      people = cp_personnel[cp_id].to_i
+      next if people.zero?
+
+      allocations[cp_id] += group_share_kw * to_bd(people) / group_total_bd
+    end
+  end
+
   # Pump stations serving the current engine's organization. A pump serves
   # the org when there is an assignment to either:
-  #   - the Organization itself, or
-  #   - any ContactPoint belonging to the Organization.
+  #   - the Organization itself,
+  #   - any ContactPoint belonging to the Organization, or
+  #   - a ContactPointGroup with at least one member CP in the Organization
+  #     (membership validated same-org, so in practice this means the group
+  #     itself belongs to the Organization).
   # WorkGroup assignments alone do NOT pull a pump into the engine's view
   # (no CP to attach to).
   def pump_stations_serving_unit
     @pump_stations_serving_unit ||= begin
       cp_ids = contact_point_ids
-      ps_ids = PumpStationAssignment.where(
+      org_cp_ps = PumpStationAssignment.where(
         "(assignable_type = 'Organization' AND assignable_id = :org_id) OR " \
         "(assignable_type = 'ContactPoint' AND assignable_id IN (:cp_ids))",
         org_id: organization.id, cp_ids: cp_ids.presence || [ 0 ]
-      ).pluck(:pump_station_id).uniq
+      ).pluck(:pump_station_id)
+
+      cpg_ps = PumpStationAssignment
+        .where(assignable_type: "ContactPointGroup")
+        .joins("INNER JOIN contact_point_group_memberships " \
+               "ON contact_point_group_memberships.contact_point_group_id = pump_station_assignments.assignable_id")
+        .joins("INNER JOIN contact_points " \
+               "ON contact_points.id = contact_point_group_memberships.contact_point_id")
+        .where(contact_points: { organization_id: organization.id })
+        .pluck(:pump_station_id)
+
+      ps_ids = (org_cp_ps + cpg_ps).uniq
 
       if ps_ids.empty?
         []
@@ -365,6 +422,18 @@ class CalculationEngine
       Personnel.for_period(monthly_period.id)
                .joins(:contact_point)
                .where(contact_points: { organization_id: org_id })
+               .each_with_object({}) { |p, h| h[p.contact_point_id] = p.total_count }
+  end
+
+  # {cp_id => total_count} for member CPs of one ContactPointGroup in this
+  # period. Member CPs without a Personnel row don't appear in the hash;
+  # callers treat absence as 0.
+  def personnel_by_cp_for_group(pump_station, group_id)
+    @personnel_by_cp_for_group ||= {}
+    @personnel_by_cp_for_group[[ pump_station.id, group_id ]] ||=
+      Personnel.for_period(monthly_period.id)
+               .joins(contact_point: :contact_point_group_memberships)
+               .where(contact_point_group_memberships: { contact_point_group_id: group_id })
                .each_with_object({}) { |p, h| h[p.contact_point_id] = p.total_count }
   end
 

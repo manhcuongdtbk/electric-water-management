@@ -329,6 +329,66 @@ RSpec.describe LossCalculator do
     end
   end
 
+  # ============================================================ Scenario D
+  # Pump station assigned ONLY to a ContactPointGroup (no Organization /
+  # ContactPoint assignment). Verifies that the loss-pool zone resolution
+  # follows the group → member CP → organization route so the pump meter
+  # still participates in B and pump_loss_share.
+  describe "Scenario D — ContactPointGroup-only pump assignment pulls pump into zone" do
+    let(:division)    { create(:organization, :division) }
+    let(:main_meter)  { create(:main_meter, name: "Zone D") }
+    let(:zone)        { main_meter.zone }
+    let(:organization) { create(:organization, level: :unit, parent: division, main_meter: main_meter, zone: zone) }
+    let(:period)      { create(:monthly_period, year: 2026, month: 5, unit_price: bd("2336.4")) }
+
+    let!(:supply_reading) do
+      create(:main_meter_reading,
+             main_meter: main_meter, monthly_period: period,
+             electricity_supply_kw: bd("1000"))
+    end
+
+    let!(:cp1) { create(:contact_point, organization: organization, name: "CP1") }
+    let!(:cp2) { create(:contact_point, organization: organization, name: "CP2") }
+
+    let!(:meter_cp1) { create(:meter, :normal, organization: organization, contact_point: cp1, name: "M-CP1") }
+    let!(:reading_cp1) do
+      create(:meter_reading, meter: meter_cp1, monthly_period: period,
+             reading_start: 0, reading_end: 200, consumption: 200)
+    end
+
+    let!(:pump_station) { create(:pump_station, organization: division, name: "TB-D") }
+    let!(:pump_meter) do
+      create(:meter, :pump_station, organization: division, contact_point: nil,
+             pump_station: pump_station, name: "M-Pump-D")
+    end
+    let!(:pump_reading) do
+      create(:meter_reading, meter: pump_meter, monthly_period: period,
+             reading_start: 0, reading_end: 600, consumption: 600)
+    end
+
+    # Pump is ONLY tied to the zone via a ContactPointGroup assignment.
+    let!(:group) { create(:contact_point_group, organization: organization, name: "Nhom CP1-CP2") }
+    let!(:mem_cp1) { create(:contact_point_group_membership, contact_point_group: group, contact_point: cp1) }
+    let!(:mem_cp2) { create(:contact_point_group_membership, contact_point_group: group, contact_point: cp2) }
+    let!(:assignment) do
+      create(:pump_station_assignment, pump_station: pump_station, assignable: group)
+    end
+
+    let(:calc) { described_class.new(zone: zone, monthly_period: period) }
+
+    it "loss pool B includes the pump meter (200 normal + 600 pump = 800)" do
+      expect(calc.call[:loss_pool_consumption_in_zone]).to eq(bd("800"))
+    end
+
+    it "total_zone_loss C = 1000 − 0 − 800 = 200" do
+      expect(calc.call[:total_zone_loss]).to eq(bd("200"))
+    end
+
+    it "pump_loss_share = C × pump consumption / B = 200 × 600 / 800" do
+      expect(calc.pump_loss_share(pump_station)).to eq(bd("200") * bd("600") / bd("800"))
+    end
+  end
+
   # ============================================================ Memoization
   describe "memoization" do
     let(:division)     { create(:organization, :division) }

@@ -108,8 +108,9 @@ class PumpAllocationCalculator
 
   def seed_org_ids(assignment)
     case assignment.assignable
-    when Organization then [ assignment.assignable.id ]
-    when ContactPoint then [ assignment.assignable.organization_id ]
+    when Organization      then [ assignment.assignable.id ]
+    when ContactPoint      then [ assignment.assignable.organization_id ]
+    when ContactPointGroup then assignment.assignable.contact_points.pluck(:organization_id).uniq
     else []
     end
   end
@@ -234,6 +235,12 @@ class PumpAllocationCalculator
     when ContactPoint
       record = Personnel.for_period(monthly_period.id).for_contact_point(target.id).first
       record ? record.total_count : 0
+    when ContactPointGroup
+      Personnel.for_period(monthly_period.id)
+               .joins(contact_point: :contact_point_group_memberships)
+               .where(contact_point_group_memberships: { contact_point_group_id: target.id })
+               .sum("rank1_count + rank2_count + rank3_count + rank4_count + " \
+                    "rank5_count + rank6_count + rank7_count").to_i
     when WorkGroup
       target.personnel_count.to_i
     else

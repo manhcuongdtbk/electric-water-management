@@ -61,9 +61,13 @@ class LossCalculator
 
   # Pump meters serving the zone — via PumpStationAssignment so that pump
   # stations administered at division-level still get picked up. A pump is
-  # "in the zone" when at least one assignment points to an Organization in
-  # the zone, or a ContactPoint whose Organization is in the zone. WorkGroup
-  # / ContactPointGroup assignments do NOT pull a pump into a zone.
+  # "in the zone" when at least one assignment points to:
+  #   - an Organization in the zone,
+  #   - a ContactPoint whose Organization is in the zone, or
+  #   - a ContactPointGroup with a member ContactPoint whose Organization is
+  #     in the zone.
+  # WorkGroup assignments do NOT pull a pump into a zone (no CP / org to
+  # anchor against).
   def zone_pump_meter_ids
     @zone_pump_meter_ids ||= compute_zone_pump_meter_ids
   end
@@ -80,7 +84,15 @@ class LossCalculator
                      "ON contact_points.id = pump_station_assignments.assignable_id")
               .where(contact_points: { organization_id: zone_org_ids })
               .pluck(:pump_station_id)
-    ps_ids = (org_ps + cp_ps).uniq
+    cpg_ps = PumpStationAssignment
+               .where(assignable_type: "ContactPointGroup")
+               .joins("INNER JOIN contact_point_group_memberships " \
+                      "ON contact_point_group_memberships.contact_point_group_id = pump_station_assignments.assignable_id")
+               .joins("INNER JOIN contact_points " \
+                      "ON contact_points.id = contact_point_group_memberships.contact_point_id")
+               .where(contact_points: { organization_id: zone_org_ids })
+               .pluck(:pump_station_id)
+    ps_ids = (org_ps + cp_ps + cpg_ps).uniq
     return [] if ps_ids.empty?
 
     Meter.where(pump_station_id: ps_ids,
