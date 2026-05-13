@@ -44,13 +44,13 @@
             <td class="px-4 py-3">
               <div class="flex items-center gap-2">
                 <% if can? :update, cpg %>
-                  <%= link_to t("work_groups.actions.edit"), edit_contact_point_group_path(cpg),
+                  <%= link_to t("contact_point_groups.actions.edit"), edit_contact_point_group_path(cpg),
                         class: "text-blue-600 hover:underline text-xs" %>
                 <% end %>
                 <% if can? :destroy, cpg %>
-                  <%= button_to t("work_groups.actions.delete"), contact_point_group_path(cpg),
+                  <%= button_to t("contact_point_groups.actions.delete"), contact_point_group_path(cpg),
                         method: :delete,
-                        data: { turbo_confirm: t("work_groups.actions.delete_confirm") },
+                        data: { turbo_confirm: t("contact_point_groups.actions.delete_confirm") },
                         class: "text-red-600 hover:underline text-xs bg-transparent border-0 cursor-pointer p-0" %>
                 <% end %>
               </div>

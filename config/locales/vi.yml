@@ -969,6 +969,11 @@ vi:
       members_hint: "Chỉ đầu mối sinh hoạt trong đơn vị. Đầu mối công cộng không tham gia nhóm."
       submit_create: "Thêm nhóm"
       submit_update: "Lưu thay đổi"
+      cancel: "Hủy"
+    actions:
+      edit: "Sửa"
+      delete: "Xoá"
+      delete_confirm: "Bạn có chắc muốn xoá nhóm đầu mối này?"
 
   work_groups:
     index:
