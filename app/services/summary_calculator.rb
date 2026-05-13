@@ -22,6 +22,10 @@
 #
 # Row Hash chứa cả `contact_point:` (CP object) — orchestrator strip trước khi
 # persist. Mọi phép tính dùng BigDecimal, KHÔNG làm tròn trung gian.
+#
+# Instance là one-shot: caches build trên CP list lần đầu gọi `compute`.
+# KHÔNG gọi `compute` 2 lần với CP list khác nhau trên cùng instance —
+# `contact_point_ids`-based caches sẽ stale. Tạo instance mới nếu cần.
 class SummaryCalculator
   ZERO = BigDecimal("0")
   WATER_PUMP_RATE = Personnel::WATER_PUMP_RATE
