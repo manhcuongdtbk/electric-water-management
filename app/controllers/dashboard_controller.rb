@@ -233,7 +233,7 @@ class DashboardController < ApplicationController
       calcs = fetch_calculations_for_period(period.id).to_a
       result[period.month] = calcs if calcs.any?
     end
-    result
+    result.sort_by { |month, _| month }.to_h
   end
 
   def quarter_months(quarter)
