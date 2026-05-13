@@ -1,61 +1,106 @@
 # frozen_string_literal: true
 
-# Standalone, org-agnostic view of pump allocation. Where CalculationEngine
-# resolves pump kW per-CP for the engine's organization (and so persists
-# only those CP rows), PumpAllocationCalculator answers the broader
-# question "for THIS pump station in THIS period, how is its kW pool split
-# across every assignee (Organization, ContactPoint, WorkGroup)?".
+# Zone-wide pump allocation calculator (F08 + F10).
 #
-# It mirrors the engine's 30/70 logic but never narrows by `organization`,
-# so WorkGroup shares (which never reach MonthlyCalculation) and shares
-# belonging to other units can be reported alongside the engine's own
-# results. This is what F10 báo cáo phân bổ bơm needs.
+# Resolves how each pump station's inflated pool — consumption plus the
+# station's share of zone loss — is split across its assignments
+# (Organization, ContactPoint, ContactPointGroup, WorkGroup), and then
+# drilled down to contact points for billing.
+#
+# 30/70 model (M6). An assignment may carry a `fixed_pump_percentage`, in
+# which case it takes that slice of the pool off the top regardless of
+# personnel. Remaining assignments (NULL percentage) share the rest by
+# personnel ratio. fixed_pump_percentage = 0 → that assignment gets 0 and
+# does NOT participate in the variable pool. sum_fixed_percentage > 100 is
+# clamped to 100 → variable assignments collapse to 0.
+#
+# Within an Organization or ContactPointGroup share, kW is split across
+# member contact points by personnel ratio. A ContactPoint share lands
+# on that single CP. A WorkGroup share counts toward the variable
+# denominator but yields no CP allocation — it only appears in
+# `allocations_by_assignment` (the F10 breakdown).
+#
+# Zone-wide: every pump station in the zone is processed, and every
+# member CP receives its drill-down share regardless of which
+# organization owns it. CalculationEngine reads `pump_actual_for(cp_id)`
+# for only the CPs it cares about.
+#
+# Interface:
+#
+#   pac = PumpAllocationCalculator.new(
+#     zone: zone, monthly_period: period,
+#     loss_calculator: optional_shared_instance
+#   )
+#   pac.call # =>
+#   {
+#     allocations_by_cp:         { cp_id => BigDecimal },
+#     allocations_by_assignment: [
+#       { assignable_type:, assignable_id:, name:, personnel:,
+#         fixed_pump_percentage:, kw: }, ...
+#     ],
+#     total_pool_kw: BigDecimal
+#   }
+#
+# Instance is one-shot — caches are built on first access. Pass in a
+# shared LossCalculator so its memoized loss math is reused across
+# calculators.
 class PumpAllocationCalculator
   ZERO = BigDecimal("0")
-  BD_100 = BigDecimal("100")
 
-  attr_reader :pump_station, :monthly_period
+  attr_reader :zone, :monthly_period
 
-  def initialize(pump_station:, monthly_period:)
-    @pump_station = pump_station
+  def initialize(zone:, monthly_period:, loss_calculator: nil)
+    @zone = zone
     @monthly_period = monthly_period
+    @loss_calculator = loss_calculator
   end
 
-  # Returns:
-  # {
-  #   consumption_kw:  BigDecimal, # meters' raw kWh
-  #   loss_share_kw:   BigDecimal, # pump's share of zone loss
-  #   total_pool_kw:   BigDecimal, # consumption + loss_share
-  #   allocations: [
-  #     { assignable_type:, assignable_id:, name:, personnel:,
-  #       fixed_pump_percentage:, kw: }, ...
-  #   ]
-  # }
   def call
-    consumption = pump_station_consumption
-    loss_share  = pump_loss_share(consumption)
-    pool        = consumption + loss_share
-    rows        = allocate(pool)
+    return empty_result if zone.nil?
+
+    allocations_by_cp = Hash.new(ZERO)
+    allocations_by_assignment = []
+    total_pool_kw = ZERO
+
+    pump_stations.each do |ps|
+      pool = pump_station_consumption(ps) + loss_calculator.pump_loss_share(ps)
+      next unless pool.positive?
+
+      total_pool_kw += pool
+
+      assignments = pump_station_assignments_for(ps)
+      next if assignments.empty?
+
+      allocate_station(allocations_by_cp, allocations_by_assignment, pool, assignments)
+    end
 
     {
-      consumption_kw: consumption,
-      loss_share_kw:  loss_share,
-      total_pool_kw:  pool,
-      allocations:    rows
+      allocations_by_cp:         allocations_by_cp,
+      allocations_by_assignment: allocations_by_assignment,
+      total_pool_kw:             total_pool_kw
     }
   end
 
   private
 
-  def assignments
-    @assignments ||= PumpStationAssignment
-                       .for_pump_station(pump_station.id)
-                       .includes(:assignable)
-                       .to_a
+  def empty_result
+    { allocations_by_cp: {}, allocations_by_assignment: [], total_pool_kw: ZERO }
   end
 
-  def pump_station_consumption
-    meter_ids = pump_station.meters.pluck(:id)
+  def loss_calculator
+    @loss_calculator ||= LossCalculator.new(zone: zone, monthly_period: monthly_period)
+  end
+
+  # ============================================================ pump stations
+
+  def pump_stations
+    @pump_stations ||= PumpStation.where(zone: zone)
+                                  .includes(:meters)
+                                  .select { |ps| ps.meters.any? }
+  end
+
+  def pump_station_consumption(pump_station)
+    meter_ids = pump_station.meters.map(&:id)
     return ZERO if meter_ids.empty?
 
     to_bd(
@@ -64,188 +109,182 @@ class PumpAllocationCalculator
     )
   end
 
-  # Zone resolved through any Organization served by this pump. If none
-  # exists (pump only has WG/CP assignments without an Org), loss_share = 0.
-  def pump_loss_share(ps_consumption)
-    return ZERO unless ps_consumption.positive?
-
-    zone = zone_org_ids
-    return ZERO if zone.empty?
-
-    supply = zone_supply_kw(zone)
-    return ZERO if supply.blank?
-
-    no_loss = no_loss_consumption_in_zone(zone)
-    loss_pool_b = loss_pool_consumption_in_zone(zone)
-
-    return ZERO unless loss_pool_b.positive?
-
-    total_zone_loss = to_bd(supply) - no_loss - loss_pool_b
-    return ZERO if total_zone_loss <= ZERO
-
-    total_zone_loss * ps_consumption / loss_pool_b
+  def pump_station_assignments_for(pump_station)
+    @pump_station_assignments_cache ||= {}
+    @pump_station_assignments_cache[pump_station.id] ||=
+      PumpStationAssignment.for_pump_station(pump_station.id)
+                           .includes(:assignable)
+                           .to_a
   end
 
-  # Zone = unit-level Organization served by this pump (directly or via a
-  # ContactPoint), expanded to all orgs sharing the same Zone.
-  def zone_org_ids
-    return @zone_org_ids if defined?(@zone_org_ids)
+  # ============================================================ allocation
 
-    org_ids = assignments.flat_map { |a| seed_org_ids(a) }.uniq
-    @zone_org_ids =
-      if org_ids.empty?
-        []
-      else
-        zone_ids = Organization.where(id: org_ids).where.not(zone_id: nil)
-                               .pluck(:zone_id).uniq
-        if zone_ids.empty?
-          org_ids
-        else
-          Organization.where(zone_id: zone_ids).pluck(:id)
-        end
-      end
-  end
-
-  def seed_org_ids(assignment)
-    case assignment.assignable
-    when Organization      then [ assignment.assignable.id ]
-    when ContactPoint      then [ assignment.assignable.organization_id ]
-    when ContactPointGroup then assignment.assignable.contact_points.pluck(:organization_id).uniq
-    else []
-    end
-  end
-
-  # Supply for the zone = Σ supply across every distinct MainMeter present
-  # in the zone. Pumps assigned across two zones therefore see the combined
-  # supply, matching what `loss_pool_consumption_in_zone` sums over the same
-  # zone. Returns nil only if no MainMeterReading exists for any meter.
-  def zone_supply_kw(zone_org_ids)
-    zone_ids = Organization.where(id: zone_org_ids).where.not(zone_id: nil)
-                           .distinct.pluck(:zone_id)
-    return nil if zone_ids.empty?
-
-    readings = MainMeter.where(zone_id: zone_ids).filter_map do |mm|
-      mm.supply_kw_for(monthly_period)
-    end
-    return nil if readings.empty?
-
-    readings.sum { |kw| to_bd(kw) }
-  end
-
-  def no_loss_consumption_in_zone(zone)
-    to_bd(
-      MeterReading.for_period(monthly_period.id)
-                  .joins(:meter)
-                  .where(meters: { organization_id: zone })
-                  .merge(Meter.no_loss)
-                  .sum(:consumption)
-    )
-  end
-
-  def loss_pool_consumption_in_zone(zone)
-    cp_meter_ids = Meter
-      .where(organization_id: zone,
-             meter_type: [ Meter.meter_types[:normal], Meter.meter_types[:public_meter] ])
-      .merge(Meter.with_loss)
-      .pluck(:id)
-
-    zone_pump_ids = pump_meter_ids_in_zone(zone)
-    meter_ids = (cp_meter_ids + zone_pump_ids).uniq
-    return ZERO if meter_ids.empty?
-
-    to_bd(
-      MeterReading.where(meter_id: meter_ids,
-                         monthly_period_id: monthly_period.id).sum(:consumption)
-    )
-  end
-
-  def pump_meter_ids_in_zone(zone)
-    org_ps = PumpStationAssignment
-               .where(assignable_type: "Organization", assignable_id: zone)
-               .pluck(:pump_station_id)
-    cp_ps = PumpStationAssignment
-              .where(assignable_type: "ContactPoint")
-              .joins("INNER JOIN contact_points " \
-                     "ON contact_points.id = pump_station_assignments.assignable_id")
-              .where(contact_points: { organization_id: zone })
-              .pluck(:pump_station_id)
-    ps_ids = (org_ps + cp_ps).uniq
-    return [] if ps_ids.empty?
-
-    Meter.where(pump_station_id: ps_ids,
-                meter_type: Meter.meter_types[:pump_station]).pluck(:id)
-  end
-
-  def allocate(pool)
-    rows = []
-    return rows unless pool.positive?
-    return rows if assignments.empty?
-
+  def allocate_station(allocations_by_cp, allocations_by_assignment, pool, assignments)
     fixed, variable = assignments.partition(&:fixed?)
+
     sum_fixed_pct = fixed.sum { |a| to_bd(a.fixed_pump_percentage) }
-    sum_fixed_pct = BD_100 if sum_fixed_pct > BD_100
+    sum_fixed_pct = bd_100 if sum_fixed_pct > bd_100
 
     fixed.each do |asg|
-      share = pool * to_bd(asg.fixed_pump_percentage) / BD_100
-      rows << build_row(asg, share)
+      share = pool * to_bd(asg.fixed_pump_percentage) / bd_100
+      apply_share(allocations_by_cp, allocations_by_assignment, asg, share)
     end
 
-    variable_pct = BD_100 - sum_fixed_pct
+    variable_pct = bd_100 - sum_fixed_pct
     if variable_pct.positive?
-      head_by_asg = variable.to_h { |a| [ a, headcount(a.assignable) ] }
-      total = head_by_asg.values.sum
+      variable_pool_kw = pool * variable_pct / bd_100
+      head_by_asg = variable.to_h { |a| [ a, headcount_for(a.assignable) ] }
+      variable_total = head_by_asg.values.sum
 
       variable.each do |asg|
         head = head_by_asg[asg]
         share =
-          if total.positive? && head.positive?
-            (pool * variable_pct / BD_100) * to_bd(head) / to_bd(total)
+          if variable_total.positive? && head.positive?
+            variable_pool_kw * to_bd(head) / to_bd(variable_total)
           else
             ZERO
           end
-        rows << build_row(asg, share)
+        apply_share(allocations_by_cp, allocations_by_assignment, asg, share)
       end
     else
-      variable.each { |asg| rows << build_row(asg, ZERO) }
+      variable.each do |asg|
+        apply_share(allocations_by_cp, allocations_by_assignment, asg, ZERO)
+      end
     end
-
-    rows
   end
 
-  def build_row(assignment, share)
+  def apply_share(allocations_by_cp, allocations_by_assignment, assignment, share)
+    target = assignment.assignable
+
+    case target
+    when Organization
+      distribute_within_org(allocations_by_cp, target.id, share)
+    when ContactPoint
+      allocations_by_cp[target.id] += share if share.positive?
+    when ContactPointGroup
+      distribute_within_contact_point_group(allocations_by_cp, target, share)
+    when WorkGroup
+      # No CP routing — WorkGroup only surfaces in allocations_by_assignment.
+    end
+
+    allocations_by_assignment << build_assignment_row(assignment, share)
+  end
+
+  def build_assignment_row(assignment, share)
     target = assignment.assignable
     {
-      assignable_type:        assignment.assignable_type,
-      assignable_id:          assignment.assignable_id,
-      name:                   target.respond_to?(:name) ? target.name : nil,
-      personnel:              headcount(target),
-      fixed_pump_percentage:  assignment.fixed_pump_percentage,
-      kw:                     share
+      assignable_type:       assignment.assignable_type,
+      assignable_id:         assignment.assignable_id,
+      name:                  target.respond_to?(:name) ? target.name : nil,
+      personnel:             headcount_for(target),
+      fixed_pump_percentage: assignment.fixed_pump_percentage,
+      kw:                    share
     }
   end
 
-  def headcount(target)
+  # ============================================================ drill-down
+
+  def distribute_within_org(allocations_by_cp, org_id, org_share_kw)
+    return unless org_share_kw.positive?
+
+    cp_personnel = personnel_by_cp_for_org(org_id)
+    org_total = cp_personnel.values.sum(0)
+    return unless org_total.positive?
+
+    org_total_bd = to_bd(org_total)
+    cp_personnel.each do |cp_id, people|
+      next if people.zero?
+
+      allocations_by_cp[cp_id] += org_share_kw * to_bd(people) / org_total_bd
+    end
+  end
+
+  def distribute_within_contact_point_group(allocations_by_cp, group, group_share_kw)
+    return unless group_share_kw.positive?
+
+    member_cp_ids = group.contact_points.pluck(:id)
+    return if member_cp_ids.empty?
+
+    cp_personnel = personnel_by_cp_for_group(group.id)
+    group_total = member_cp_ids.sum { |cp_id| cp_personnel[cp_id].to_i }
+    return unless group_total.positive?
+
+    group_total_bd = to_bd(group_total)
+    member_cp_ids.each do |cp_id|
+      people = cp_personnel[cp_id].to_i
+      next if people.zero?
+
+      allocations_by_cp[cp_id] += group_share_kw * to_bd(people) / group_total_bd
+    end
+  end
+
+  # ============================================================ headcount
+
+  def headcount_for(target)
     case target
     when Organization
-      Personnel.for_period(monthly_period.id)
-               .joins(:contact_point)
-               .where(contact_points: { organization_id: target.id })
-               .sum("rank1_count + rank2_count + rank3_count + rank4_count + " \
-                    "rank5_count + rank6_count + rank7_count").to_i
+      organization_personnel_total(target.id)
     when ContactPoint
-      record = Personnel.for_period(monthly_period.id).for_contact_point(target.id).first
-      record ? record.total_count : 0
+      contact_point_personnel_total(target.id)
     when ContactPointGroup
-      Personnel.for_period(monthly_period.id)
-               .joins(contact_point: :contact_point_group_memberships)
-               .where(contact_point_group_memberships: { contact_point_group_id: target.id })
-               .sum("rank1_count + rank2_count + rank3_count + rank4_count + " \
-                    "rank5_count + rank6_count + rank7_count").to_i
+      contact_point_group_personnel_total(target.id)
     when WorkGroup
       target.personnel_count.to_i
     else
       0
     end
+  end
+
+  def organization_personnel_total(org_id)
+    @organization_personnel_cache ||= {}
+    @organization_personnel_cache[org_id] ||= Personnel
+      .for_period(monthly_period.id)
+      .joins(:contact_point)
+      .where(contact_points: { organization_id: org_id })
+      .sum("rank1_count + rank2_count + rank3_count + rank4_count + " \
+           "rank5_count + rank6_count + rank7_count").to_i
+  end
+
+  def contact_point_personnel_total(cp_id)
+    @contact_point_personnel_cache ||= {}
+    @contact_point_personnel_cache[cp_id] ||= begin
+      record = Personnel.for_period(monthly_period.id).for_contact_point(cp_id).first
+      record ? record.total_count : 0
+    end
+  end
+
+  def contact_point_group_personnel_total(group_id)
+    @contact_point_group_personnel_cache ||= {}
+    @contact_point_group_personnel_cache[group_id] ||= Personnel
+      .for_period(monthly_period.id)
+      .joins(contact_point: :contact_point_group_memberships)
+      .where(contact_point_group_memberships: { contact_point_group_id: group_id })
+      .sum("rank1_count + rank2_count + rank3_count + rank4_count + " \
+           "rank5_count + rank6_count + rank7_count").to_i
+  end
+
+  def personnel_by_cp_for_org(org_id)
+    @personnel_by_cp_for_org_cache ||= {}
+    @personnel_by_cp_for_org_cache[org_id] ||=
+      Personnel.for_period(monthly_period.id)
+               .joins(:contact_point)
+               .where(contact_points: { organization_id: org_id })
+               .each_with_object({}) { |p, h| h[p.contact_point_id] = p.total_count }
+  end
+
+  def personnel_by_cp_for_group(group_id)
+    @personnel_by_cp_for_group_cache ||= {}
+    @personnel_by_cp_for_group_cache[group_id] ||=
+      Personnel.for_period(monthly_period.id)
+               .joins(contact_point: :contact_point_group_memberships)
+               .where(contact_point_group_memberships: { contact_point_group_id: group_id })
+               .each_with_object({}) { |p, h| h[p.contact_point_id] = p.total_count }
+  end
+
+  # ============================================================ misc
+
+  def bd_100
+    @bd_100 ||= BigDecimal("100")
   end
 
   def to_bd(value)
