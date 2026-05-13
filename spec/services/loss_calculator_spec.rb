@@ -1,10 +1,10 @@
 require "rails_helper"
 
 # Direct unit specs for LossCalculator — the Loss phase extracted from
-# CalculationEngine. Numeric anchors are deliberately shared with
-# calculation_engine_spec.rb (Scenario A) and calculation_engine_zone_loss_spec.rb
-# (Scenario B) so bit-for-bit equivalence with the pre-extraction engine can be
-# spotted at a glance.
+# CalculationOrchestrator. Numeric anchors are deliberately shared with
+# calculation_orchestrator_spec.rb (Scenario A) and
+# calculation_orchestrator_zone_loss_spec.rb (Scenario B) so bit-for-bit
+# equivalence with the pre-extraction engine can be spotted at a glance.
 #
 # Engine integration is still covered by the existing 49 numeric assertions
 # in those two specs; this file covers LossCalculator's own contract:

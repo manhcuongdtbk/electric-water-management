@@ -22,7 +22,7 @@
 #
 # Zone-wide: every pump station in the zone is processed, and every
 # member CP receives its drill-down share regardless of which
-# organization owns it. CalculationEngine reads `pump_actual_for(cp_id)`
+# organization owns it. SummaryCalculator reads `allocations_by_cp[cp_id]`
 # for only the CPs it cares about.
 #
 # Interface:

@@ -350,7 +350,7 @@ RSpec.describe "MonthlySummary", type: :request do
     context "as admin_unit" do
       it "triggers recalculation and redirects with notice" do
         sign_in admin_unit_a
-        allow_any_instance_of(CalculationEngine).to receive(:call).and_return([])
+        allow_any_instance_of(CalculationOrchestrator).to receive(:call).and_return([])
         post recalculate_monthly_summary_path, params: { period_id: period.id }
         expect(response).to redirect_to(monthly_summary_path(period_id: period.id, org_id: nil))
         expect(flash[:notice]).to eq(I18n.t("flash.monthly_summary.recalculated"))
@@ -358,7 +358,7 @@ RSpec.describe "MonthlySummary", type: :request do
 
       it "redirects with alert on engine error" do
         sign_in admin_unit_a
-        allow_any_instance_of(CalculationEngine).to receive(:call).and_raise(StandardError, "test error")
+        allow_any_instance_of(CalculationOrchestrator).to receive(:call).and_raise(StandardError, "test error")
         post recalculate_monthly_summary_path, params: { period_id: period.id }
         expect(response).to redirect_to(monthly_summary_path(period_id: period.id, org_id: nil))
         expect(flash[:alert]).to include("test error")
@@ -377,7 +377,7 @@ RSpec.describe "MonthlySummary", type: :request do
     context "as admin_level1" do
       it "can recalculate for any org via org_id" do
         sign_in admin1
-        allow_any_instance_of(CalculationEngine).to receive(:call).and_return([])
+        allow_any_instance_of(CalculationOrchestrator).to receive(:call).and_return([])
         post recalculate_monthly_summary_path, params: { period_id: period.id, org_id: org_a.id }
         expect(response).to redirect_to(monthly_summary_path(period_id: period.id, org_id: org_a.id.to_s))
         expect(flash[:notice]).to eq(I18n.t("flash.monthly_summary.recalculated"))
