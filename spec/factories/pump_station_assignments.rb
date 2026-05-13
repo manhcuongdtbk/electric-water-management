@@ -25,5 +25,9 @@ FactoryBot.define do
     trait :for_work_group do
       assignable { association(:work_group) }
     end
+
+    trait :for_contact_point_group do
+      assignable { association(:contact_point_group) }
+    end
   end
 end

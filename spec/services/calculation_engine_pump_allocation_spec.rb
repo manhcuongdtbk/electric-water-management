@@ -262,8 +262,10 @@ RSpec.describe "Pump allocation across 3 nhóm đối tượng (integration)" do
 
     it "sum_fixed > 100 → variable allocations get 0 (clamping affects only variable_pct)" do
       asg_a1.update!(fixed_pump_percentage: 80)
-      create(:pump_station_assignment, pump_station: pump_station,
-             assignable: a2, fixed_pump_percentage: 50)
+      # Bypass zone-limit validation to test engine clamping behaviour when
+      # total fixed_pct intentionally exceeds 100%.
+      build(:pump_station_assignment, pump_station: pump_station,
+            assignable: a2, fixed_pump_percentage: 50).save!(validate: false)
 
       result = PumpAllocationCalculator
                  .new(pump_station: pump_station, monthly_period: period).call

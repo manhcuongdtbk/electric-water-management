@@ -729,8 +729,10 @@ RSpec.describe CalculationEngine do
                fixed_pump_percentage: bd("60"))
       end
       let!(:other_assignment) do
-        create(:pump_station_assignment, pump_station: pump_station, organization: other_a,
-               fixed_pump_percentage: bd("60"))
+        # Bypass zone-limit validation to test engine clamping behaviour when
+        # total fixed_pct intentionally exceeds 100%.
+        build(:pump_station_assignment, pump_station: pump_station, organization: other_a,
+              fixed_pump_percentage: bd("60")).tap { |a| a.save!(validate: false) }
       end
 
       it "clamps fixed total to 100 → variable orgs receive 0" do

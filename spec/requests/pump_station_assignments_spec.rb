@@ -200,6 +200,19 @@ RSpec.describe "PumpStationAssignments", type: :request do
         expect(PumpStationAssignment.last.assignable).to eq(wg)
       end
 
+      it "creates a ContactPointGroup assignment (nhóm đầu mối)" do
+        cpg = create(:contact_point_group, organization: org)
+        params = create_params.deep_merge(pump_station_assignment: {
+                                            assignable_type: "ContactPointGroup",
+                                            assignable_id: cpg.id,
+                                            fixed_pump_percentage: ""
+                                          })
+        expect {
+          post pump_station_assignments_path(pump_station), params: params
+        }.to change(PumpStationAssignment, :count).by(1)
+        expect(PumpStationAssignment.last.assignable).to eq(cpg)
+      end
+
       it "creates with nil percentage (variable)" do
         other_unit
         params = create_params.deep_merge(pump_station_assignment: { fixed_pump_percentage: "" })
