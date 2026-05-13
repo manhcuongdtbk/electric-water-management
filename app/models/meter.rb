@@ -28,8 +28,9 @@ class Meter < ApplicationRecord
   scope :ordered, -> { order(:position, :name) }
   scope :by_organization, ->(org_id) { where(organization_id: org_id) }
   scope :by_type, ->(type) { where(meter_type: type) }
-  # Shared by CalculationEngine + PumpAllocationCalculator. Inline `where(no_loss: ...)`
-  # in either engine drifts the two apart; route through these scopes instead.
+  # Used by LossCalculator to build the loss-pool (B) and the no_loss
+  # subtraction from supply. Inline `where(no_loss: ...)` in callers drifts
+  # the semantics apart; route through these scopes instead.
   scope :no_loss,   -> { where(no_loss: true) }
   scope :with_loss, -> { where(no_loss: false) }
 

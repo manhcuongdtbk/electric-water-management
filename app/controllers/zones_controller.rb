@@ -55,7 +55,7 @@ class ZonesController < ApplicationController
   end
 
   def unit_options
-    Organization.units.ordered.map { |o| [o.name, o.id] }
+    Organization.units.ordered.map { |o| [ o.name, o.id ] }
   end
   helper_method :unit_options
 end

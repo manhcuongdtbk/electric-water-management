@@ -542,8 +542,8 @@ RSpec.describe CalculationEngine do
     # pump pool equals raw consumption (matches the 30/70 examples in the docs).
     before { main_meter_reading.destroy! }
 
-    let(:hq_unit)   { create(:organization, level: :unit, parent: division, name: "Chi huy F + nha khach") }
-    let(:other_a)   { create(:organization, level: :unit, parent: division, name: "Other A") }
+    let(:hq_unit)   { create(:organization, level: :unit, parent: division, name: "Chi huy F + nha khach", zone: main_meter.zone) }
+    let(:other_a)   { create(:organization, level: :unit, parent: division, name: "Other A", zone: main_meter.zone) }
 
     let!(:cp_hq)    { create(:contact_point, organization: hq_unit, name: "CP HQ") }
     let!(:p_hq) do
@@ -608,11 +608,11 @@ RSpec.describe CalculationEngine do
     context "1 fixed (30%) + 5 variable orgs sharing 70%, total personnel 557" do
       let(:total) { bd("6152") }
 
-      let(:org_co_quan)     { create(:organization, level: :unit, parent: division, name: "Co quan SDB") }
-      let(:org_td18)        { create(:organization, level: :unit, parent: division, name: "Tieu doan 18 (real)") }
-      let(:org_dd2023)      { create(:organization, level: :unit, parent: division, name: "Dai doi 20-23") }
-      let(:org_che_bien)    { create(:organization, level: :unit, parent: division, name: "Tram che bien") }
-      let(:org_tho_xay)     { create(:organization, level: :unit, parent: division, name: "Tho xay") }
+      let(:org_co_quan)     { create(:organization, level: :unit, parent: division, name: "Co quan SDB", zone: main_meter.zone) }
+      let(:org_td18)        { create(:organization, level: :unit, parent: division, name: "Tieu doan 18 (real)", zone: main_meter.zone) }
+      let(:org_dd2023)      { create(:organization, level: :unit, parent: division, name: "Dai doi 20-23", zone: main_meter.zone) }
+      let(:org_che_bien)    { create(:organization, level: :unit, parent: division, name: "Tram che bien", zone: main_meter.zone) }
+      let(:org_tho_xay)     { create(:organization, level: :unit, parent: division, name: "Tho xay", zone: main_meter.zone) }
 
       # CPs với personnel y như Excel: 251, 149, 109, 18, 30 (tổng 557)
       let!(:cp_co_quan) do
@@ -877,6 +877,250 @@ RSpec.describe CalculationEngine do
       truong = described_class.new(organization: organization, monthly_period: period).compute
                               .find { |r| r[:contact_point_id] == cp_truong.id }
       expect(truong[:unit_public_deduction_kw]).to eq(total_standard_truong * bd("0.07"))
+    end
+  end
+
+  # Verifies that CalculationEngine wires per-CP pump kW correctly when the
+  # pump phase is delegated to PumpAllocationCalculator. Each scenario sets
+  # up two zone-mates (DVA + DVB) sharing one pump station, with one
+  # ContactPoint fixed slot, two Organization variable slots, and a
+  # WorkGroup variable slot (which counts toward the denominator but never
+  # surfaces in MonthlyCalculation rows).
+  #
+  # Numbers (BigDecimal, no rounding):
+  #   supply = 2000, no_loss = 100, B = 1680 → total_zone_loss = 220
+  #   pump_loss_share(TB1) = 220 × 500 / 1680
+  #   pump_pool            = 500 + pump_loss_share
+  #
+  #   A1 fixed 30%        = pool × 0.30
+  #   Variable pool 70%   = pool × 0.70
+  #     headcount DVA 6 + DVB 5 + WG 2 = 13
+  describe "pump allocation wiring (through PumpAllocationCalculator)" do
+    let(:zone_division) { create(:organization, :division) }
+    let(:zone_mm)       { create(:main_meter, name: "Khu vuc A") }
+    let(:dva)           { create(:organization, level: :unit, parent: zone_division, name: "DVA", zone: zone_mm.zone) }
+    let(:dvb)           { create(:organization, level: :unit, parent: zone_division, name: "DVB", zone: zone_mm.zone) }
+    let(:zone_period)   { create(:monthly_period, year: 2026, month: 4, unit_price: bd("2336.4")) }
+
+    # rank_quotas 1..4 already declared at the top of this spec file; pump
+    # allocation tests only check water_pump_actual_kw + total_usage_kw,
+    # which don't depend on rank quotas.
+    let!(:zone_supply_reading) do
+      create(:main_meter_reading,
+             main_meter: zone_mm, monthly_period: zone_period,
+             electricity_supply_kw: bd("2000"))
+    end
+    let!(:zone_division_cfg) do
+      create(:unit_config,
+             organization: zone_division, monthly_period: zone_period,
+             savings_rate: bd("0.05"), division_public_rate: bd("0.10"),
+             unit_public_rate: nil)
+    end
+
+    let!(:zcp_a1) { create(:contact_point, organization: dva, name: "A1 Ban Chi huy", position: 1) }
+    let!(:zcp_a2) { create(:contact_point, organization: dva, name: "A2 To xe",      position: 2) }
+    let!(:zcp_a3) { create(:contact_point, organization: dva, name: "A3 Kho",        position: 3) }
+    let!(:zcp_a4) { create(:contact_point, organization: dva, name: "A4 Den duong",  group_name: "public", position: 4) }
+    let!(:zcp_b1) { create(:contact_point, organization: dvb, name: "B1 Dai doi 1",  position: 1) }
+
+    let!(:zp_a1) do
+      create(:personnel, contact_point: zcp_a1, monthly_period: zone_period,
+             rank1_count: 1, rank2_count: 1, rank3_count: 0, rank4_count: 0,
+             rank5_count: 0, rank6_count: 0, rank7_count: 0)
+    end
+    let!(:zp_a2) do
+      create(:personnel, contact_point: zcp_a2, monthly_period: zone_period,
+             rank1_count: 0, rank2_count: 0, rank3_count: 0, rank4_count: 0,
+             rank5_count: 0, rank6_count: 0, rank7_count: 3)
+    end
+    let!(:zp_a3) do
+      create(:personnel, contact_point: zcp_a3, monthly_period: zone_period,
+             rank1_count: 0, rank2_count: 0, rank3_count: 0, rank4_count: 1,
+             rank5_count: 0, rank6_count: 0, rank7_count: 0)
+    end
+    let!(:zp_b1) do
+      create(:personnel, contact_point: zcp_b1, monthly_period: zone_period,
+             rank1_count: 0, rank2_count: 0, rank3_count: 0, rank4_count: 0,
+             rank5_count: 0, rank6_count: 0, rank7_count: 5)
+    end
+
+    let!(:zm_a1) do
+      m = create(:meter, :normal, organization: dva, contact_point: zcp_a1, name: "A1-CT1")
+      create(:meter_reading, meter: m, monthly_period: zone_period, reading_start: 0, reading_end: 800, consumption: 800)
+      m
+    end
+    let!(:zm_a2_1) do
+      m = create(:meter, :normal, organization: dva, contact_point: zcp_a2, name: "A2-CT1")
+      create(:meter_reading, meter: m, monthly_period: zone_period, reading_start: 0, reading_end: 50, consumption: 50)
+      m
+    end
+    let!(:zm_a2_2) do
+      m = create(:meter, :normal, organization: dva, contact_point: zcp_a2, name: "A2-CT2")
+      create(:meter_reading, meter: m, monthly_period: zone_period, reading_start: 0, reading_end: 30, consumption: 30)
+      m
+    end
+    let!(:zm_a3) do
+      m = create(:meter, :no_loss, organization: dva, contact_point: zcp_a3, name: "A3-CT1 no_loss")
+      create(:meter_reading, meter: m, monthly_period: zone_period, reading_start: 0, reading_end: 100, consumption: 100)
+      m
+    end
+    let!(:zm_a4) do
+      m = create(:meter, :public_meter, organization: dva, contact_point: zcp_a4, name: "A4-CT1 public")
+      create(:meter_reading, meter: m, monthly_period: zone_period, reading_start: 0, reading_end: 200, consumption: 200)
+      m
+    end
+    let!(:zm_b1) do
+      m = create(:meter, :normal, organization: dvb, contact_point: zcp_b1, name: "B1-CT1")
+      create(:meter_reading, meter: m, monthly_period: zone_period, reading_start: 0, reading_end: 100, consumption: 100)
+      m
+    end
+
+    let!(:zone_pump_station) { create(:pump_station, zone: zone_mm.zone, name: "TB1") }
+    let!(:zm_pump) do
+      m = create(:meter, :pump_station, organization: zone_division, contact_point: nil,
+                 pump_station: zone_pump_station, name: "TB1-CT1")
+      create(:meter_reading, meter: m, monthly_period: zone_period, reading_start: 0, reading_end: 500, consumption: 500)
+      m
+    end
+
+    let!(:zone_work_group) do
+      create(:work_group, owner_organization: dva, name: "Tho xay",
+             personnel_count: 2, position: 0)
+    end
+
+    let!(:zasg_a1)  { create(:pump_station_assignment, pump_station: zone_pump_station, assignable: zcp_a1, fixed_pump_percentage: 30) }
+    let!(:zasg_dva) { create(:pump_station_assignment, pump_station: zone_pump_station, assignable: dva) }
+    let!(:zasg_dvb) { create(:pump_station_assignment, pump_station: zone_pump_station, assignable: dvb) }
+    let!(:zasg_wg)  { create(:pump_station_assignment, pump_station: zone_pump_station, assignable: zone_work_group) }
+
+    let(:zone_tolerance) { bd("0.01") }
+    let(:engine_dva)     { CalculationEngine.new(organization: dva, monthly_period: zone_period) }
+    let(:engine_dvb)     { CalculationEngine.new(organization: dvb, monthly_period: zone_period) }
+
+    let(:zone_pump_pool)    { bd("500") + (bd("220") * bd("500") / bd("1680")) }
+    let(:zone_variable_pool) { zone_pump_pool * bd("0.70") }
+
+    context "mixed CP fixed + Org variable + WorkGroup variable" do
+      let(:results_dva) { engine_dva.compute }
+      let(:results_dvb) { engine_dvb.compute }
+
+      it "credits A1 with BOTH its CP-level 30% slot AND its slice of DVA's variable share" do
+        a1_row = results_dva.find { |r| r[:contact_point_id] == zcp_a1.id }
+        cp_fixed_share     = zone_pump_pool * bd("0.30")
+        dva_variable_share = zone_variable_pool * bd("6") / bd("13")
+        a1_from_dva        = dva_variable_share * bd("2") / bd("6")
+
+        expect(a1_row[:water_pump_actual_kw]).to be_within(zone_tolerance)
+          .of(cp_fixed_share + a1_from_dva)
+        expect(a1_row[:water_pump_actual_kw]).to be_within(zone_tolerance).of(bd("230.540"))
+      end
+
+      it "splits DVA's variable share across A2/A3/A4 by personnel" do
+        a2_row = results_dva.find { |r| r[:contact_point_id] == zcp_a2.id }
+        a3_row = results_dva.find { |r| r[:contact_point_id] == zcp_a3.id }
+        a4_row = results_dva.find { |r| r[:contact_point_id] == zcp_a4.id }
+
+        dva_share = zone_variable_pool * bd("6") / bd("13")
+
+        expect(a2_row[:water_pump_actual_kw]).to be_within(zone_tolerance).of(dva_share * bd("3") / bd("6"))
+        expect(a3_row[:water_pump_actual_kw]).to be_within(zone_tolerance).of(dva_share * bd("1") / bd("6"))
+        expect(a4_row[:water_pump_actual_kw]).to eq(bd("0"))
+      end
+
+      it "gives DVB its full 5/13 variable share (single CP B1)" do
+        b1_row = results_dvb.find { |r| r[:contact_point_id] == zcp_b1.id }
+        expect(b1_row[:water_pump_actual_kw])
+          .to be_within(zone_tolerance).of(zone_variable_pool * bd("5") / bd("13"))
+      end
+
+      it "sets A1 total_usage = meter + pump" do
+        a1_row = results_dva.find { |r| r[:contact_point_id] == zcp_a1.id }
+        expect(a1_row[:total_usage_kw]).to be_within(zone_tolerance).of(bd("1030.540"))
+      end
+
+      it "does not surface WorkGroup share through MonthlyCalculation rows" do
+        all_rows = engine_dva.compute + engine_dvb.compute
+        cp_sum   = all_rows.sum { |r| r[:water_pump_actual_kw] }
+        wg_share = zone_variable_pool * bd("2") / bd("13")
+        expect(cp_sum).to be_within(bd("0.05")).of(zone_pump_pool - wg_share)
+      end
+    end
+
+    # CPG1 = {A2, A3} gets a 20% fixed slot on TB1's pump pool. That share
+    # is split across the group's member CPs by personnel ratio (A2:3, A3:1).
+    # CPG stacking: A2/A3 still receive their slice of DVA's variable share.
+    context "with ContactPointGroup assignment" do
+      let!(:cpg1)        { create(:contact_point_group, organization: dva, name: "Nhóm A2-A3") }
+      let!(:cpg1_mem_a2) { create(:contact_point_group_membership, contact_point_group: cpg1, contact_point: zcp_a2) }
+      let!(:cpg1_mem_a3) { create(:contact_point_group_membership, contact_point_group: cpg1, contact_point: zcp_a3) }
+      let!(:zasg_cpg1) do
+        create(:pump_station_assignment, pump_station: zone_pump_station,
+               assignable: cpg1, fixed_pump_percentage: 20)
+      end
+
+      # sum_fixed_pct = 30 (A1) + 20 (CPG1) = 50 → variable_pct = 50
+      let(:variable_pool_50) { zone_pump_pool * bd("0.50") }
+      let(:cpg1_share)       { zone_pump_pool * bd("0.20") }
+
+      it "phân bổ CPG1 fixed share xuống A2/A3 theo personnel (3:1)" do
+        results = engine_dva.compute
+        a2_row = results.find { |r| r[:contact_point_id] == zcp_a2.id }
+        a3_row = results.find { |r| r[:contact_point_id] == zcp_a3.id }
+
+        dva_var     = variable_pool_50 * bd("6") / bd("13")
+        a2_expected = (cpg1_share * bd("3") / bd("4")) + (dva_var * bd("3") / bd("6"))
+        a3_expected = (cpg1_share * bd("1") / bd("4")) + (dva_var * bd("1") / bd("6"))
+
+        expect(a2_row[:water_pump_actual_kw]).to be_within(zone_tolerance).of(a2_expected)
+        expect(a3_row[:water_pump_actual_kw]).to be_within(zone_tolerance).of(a3_expected)
+      end
+
+      it "không cộng CPG1 share vào A1 (A1 không là member)" do
+        results = engine_dva.compute
+        a1_row = results.find { |r| r[:contact_point_id] == zcp_a1.id }
+
+        cp_fixed_share = zone_pump_pool * bd("0.30")
+        dva_var        = variable_pool_50 * bd("6") / bd("13")
+        a1_from_dva    = dva_var * bd("2") / bd("6")
+
+        expect(a1_row[:water_pump_actual_kw]).to be_within(zone_tolerance).of(cp_fixed_share + a1_from_dva)
+      end
+
+      it "pump chỉ có ContactPointGroup assignment vẫn được engine tìm thấy" do
+        # Xoá hết assignment khác — pump TB1 chỉ còn CPG1 (fixed 20%). Không
+        # còn variable target → variable pool dissipates. CPG1 nhận 20% pool,
+        # chia xuống A2 (3/4) và A3 (1/4).
+        [ zasg_a1, zasg_dva, zasg_dvb, zasg_wg ].each(&:destroy)
+
+        results = CalculationEngine.new(organization: dva, monthly_period: zone_period).compute
+        a2_row = results.find { |r| r[:contact_point_id] == zcp_a2.id }
+        a3_row = results.find { |r| r[:contact_point_id] == zcp_a3.id }
+        a1_row = results.find { |r| r[:contact_point_id] == zcp_a1.id }
+
+        expect(a2_row[:water_pump_actual_kw]).to be_within(zone_tolerance).of(cpg1_share * bd("3") / bd("4"))
+        expect(a3_row[:water_pump_actual_kw]).to be_within(zone_tolerance).of(cpg1_share * bd("1") / bd("4"))
+        expect(a1_row[:water_pump_actual_kw]).to eq(bd("0"))
+      end
+
+      it "CPG thuộc org khác không bleed vào CP của engine hiện tại" do
+        # Group thuộc DVB nhưng được assign vào TB1 → PAC zone-wide vẫn phân
+        # bổ share, nhưng share đó chỉ rơi vào B1 (member của cpg_dvb), không
+        # vào A2/A3 của DVA. Engine DVA không thấy share này.
+        cpg_dvb = create(:contact_point_group, organization: dvb, name: "Nhóm DVB")
+        create(:contact_point_group_membership, contact_point_group: cpg_dvb, contact_point: zcp_b1)
+        create(:pump_station_assignment, pump_station: zone_pump_station,
+               assignable: cpg_dvb, fixed_pump_percentage: 10)
+
+        results = engine_dva.compute
+        a2_row = results.find { |r| r[:contact_point_id] == zcp_a2.id }
+
+        # Variable_pct = 100 - 30 - 20 - 10 = 40. DVA variable share = 40% × 6/13.
+        variable_pool_40 = zone_pump_pool * bd("0.40")
+        dva_var          = variable_pool_40 * bd("6") / bd("13")
+        a2_expected      = (cpg1_share * bd("3") / bd("4")) + (dva_var * bd("3") / bd("6"))
+
+        expect(a2_row[:water_pump_actual_kw]).to be_within(zone_tolerance).of(a2_expected)
+      end
     end
   end
 end

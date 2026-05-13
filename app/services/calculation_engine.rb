@@ -9,21 +9,14 @@
 #   * Tiêu chuẩn bơm nước = 9.45 kW/người/tháng (Personnel::WATER_PUMP_RATE).
 #   * "Số phải trừ" gồm: Tiết kiệm, Tổn hao, Công cộng Sư đoàn, Công cộng đơn vị, Khác.
 #     Tổn hao TRỪ khỏi tiêu chuẩn, KHÔNG cộng vào sử dụng.
-#   * Tổn hao tính trên TOÀN KHU VỰC dùng chung đồng hồ tổng (MainMeter zone):
-#       A = MainMeterReading.electricity_supply_kw − Σ công tơ no_loss trong zone
-#       B = Σ công tơ có tổn hao (normal + public_meter, no_loss = false) trong zone
-#           + Σ công tơ pump phục vụ zone
-#       Tổn hao zone = A − B
-#       Phân bổ công tơ X: tổn hao × (kW công tơ X ÷ B)
-#     Pump tham gia loss pool (nằm trong B); tổn hao pump cộng vào pump pool phân bổ:
-#       pump pool = pump consumption + pump_loss_share
-#     Khi org chưa được gán MainMeter (zone = [organization.id]), supply không xác định
-#     → tổn hao = 0.
-#   * Bơm nước thực tế: mỗi trạm bơm phục vụ đơn vị (qua pump_station_assignments)
-#     phân bổ pump pool cho từng đầu mối theo tỷ lệ
-#     quân số đầu mối / tổng quân số trên TẤT CẢ các đơn vị mà trạm bơm phục vụ.
-#     Mô hình 30/70 (M6): assignment có thể có fixed_pump_percentage (fixed slot trên
-#     pump pool), còn lại chia theo personnel.
+#   * Tổn hao + bơm nước được tính TOÀN KHU VỰC bởi các service tách rời:
+#       - LossCalculator (zone:, monthly_period:) — tổn hao zone, per-CP + per-pump.
+#       - PumpAllocationCalculator (zone:, monthly_period:, loss_calculator:) —
+#         phân bổ pump pool (consumption + pump_loss_share) theo mô hình 30/70
+#         (M6) cho mọi assignment trong zone, drill xuống tới CP.
+#     Khi org chưa được gán Zone, zone = nil → cả hai service short-circuit về 0.
+#   * Engine orchestration: tổng hợp standard + deductions + usage + billing
+#     per CP, đọc per-CP loss/pump từ 2 service trên qua memoized accessors.
 #   * Mọi phép tính dùng BigDecimal. KHÔNG làm tròn ở bước trung gian.
 #
 # Interface:
@@ -142,13 +135,10 @@ class CalculationEngine
 
   # --- Zone resolution -----------------------------------------------------
   # Org belongs to a Zone (multiple orgs can share a zone). If the org has no
-  # zone (e.g. seed/spec data), fall back to a single-org "zone" of itself.
+  # zone (e.g. seed/spec data), zone is nil and downstream calculators short-
+  # circuit to zero.
   def zone
     @zone ||= organization.zone
-  end
-
-  def zone_org_ids
-    @zone_org_ids ||= zone ? zone.organizations.pluck(:id) : [ organization.id ]
   end
 
   # --- Loss phase (zone-wide tổn hao) — delegated to LossCalculator -------
@@ -163,282 +153,29 @@ class CalculationEngine
     @loss_results ||= loss_calculator.call
   end
 
-  # --- Water pump actual (per CP) ------------------------------------------
-  # 30/70 model (M6). Each pump station has assignments to "nhóm đối tượng"
-  # — Organization (đơn vị cấp 2), ContactPoint (đầu mối đặc biệt), or
-  # WorkGroup (nhóm công tác). An assignment may carry a
-  # `fixed_pump_percentage` (e.g. 30) meaning that target takes that slice
-  # off the top, regardless of personnel. Targets with NULL percentage share
-  # the remaining pool by personnel ratio across all variable targets on
-  # that pump.
-  #
-  # Within an Organization-level share (fixed or variable), the kW is split
-  # across the org's contact points by personnel ratio. A ContactPoint share
-  # lands on that single CP. A WorkGroup share is computed (so its personnel
-  # counts toward the variable denominator) but NOT persisted here — WG
-  # totals are reported via PumpAllocationCalculator (F10).
-  #
-  # NOTE: An assignable that overlaps the engine's own CPs receives share
-  # from both routes. Example: a CP fixed 30% is ALSO counted inside its
-  # parent Org's variable pool — CP personnel remain part of the Org
-  # headcount, and the resulting share lands on the same CP. This stacking
-  # is by design — admin chooses the assignments; the engine doesn't
-  # de-duplicate.
-  #
-  # Backward compat: when every assignment is NULL, sum_fixed_pct = 0 →
-  # variable_pct = 100 → behaves identically to the previous 100%-by-personnel
-  # logic.
+  # --- Pump phase (zone-wide bơm nước) — delegated to PumpAllocationCalculator
+  # PAC processes every pump station in the zone, partitions each pool by
+  # the 30/70 model (fixed slots first, remaining split by personnel), and
+  # drills Organization / ContactPointGroup shares down to CPs. Engine
+  # only reads per-CP kW for the CPs it persists.
+  def pump_calculator
+    @pump_calculator ||= PumpAllocationCalculator.new(
+      zone:            zone,
+      monthly_period:  monthly_period,
+      loss_calculator: loss_calculator
+    )
+  end
+
+  def pump_results
+    @pump_results ||= pump_calculator.call
+  end
+
   def pump_allocations_by_cp
-    @pump_allocations_by_cp ||= compute_pump_allocations
+    pump_results[:allocations_by_cp]
   end
 
   def pump_actual_for(cp_id)
     pump_allocations_by_cp[cp_id] || ZERO
-  end
-
-  def compute_pump_allocations
-    allocations = Hash.new(ZERO)
-    pump_stations = pump_stations_serving_unit
-    return allocations if pump_stations.empty?
-
-    pump_stations.each do |ps|
-      # Pump pool absorbs the pump's share of zone loss so the inflated pool
-      # is what gets distributed by personnel ratio.
-      consumption = pump_station_consumption(ps) + loss_calculator.pump_loss_share(ps)
-      next unless consumption.positive?
-
-      assignments = pump_station_assignments_for(ps)
-      next if assignments.empty?
-
-      fixed_assignments, variable_assignments = assignments.partition(&:fixed?)
-
-      sum_fixed_pct = fixed_assignments.sum { |a| to_bd(a.fixed_pump_percentage) }
-      sum_fixed_pct = bd_100 if sum_fixed_pct > bd_100
-
-      fixed_assignments.each do |asg|
-        share = consumption * to_bd(asg.fixed_pump_percentage) / bd_100
-        apply_assignable_share(allocations, ps, asg.assignable, share)
-      end
-
-      variable_pct = bd_100 - sum_fixed_pct
-      next unless variable_pct.positive?
-
-      variable_pool_kw = consumption * variable_pct / bd_100
-      head_by_asg     = variable_assignments.to_h { |a| [ a, headcount_for(a.assignable) ] }
-      variable_total  = head_by_asg.values.sum
-      next unless variable_total.positive?
-
-      variable_total_bd = to_bd(variable_total)
-
-      variable_assignments.each do |asg|
-        head = head_by_asg[asg]
-        next if head.zero?
-
-        share = variable_pool_kw * to_bd(head) / variable_total_bd
-        apply_assignable_share(allocations, ps, asg.assignable, share)
-      end
-    end
-
-    allocations
-  end
-
-  # Headcount of a "nhóm đối tượng" — used both for the variable-pool
-  # denominator and (for Organization / ContactPointGroup) to split share
-  # down to CPs.
-  def headcount_for(target)
-    case target
-    when Organization
-      organization_personnel_total(target.id)
-    when ContactPoint
-      contact_point_personnel_total(target.id)
-    when ContactPointGroup
-      contact_point_group_personnel_total(target.id)
-    when WorkGroup
-      target.personnel_count.to_i
-    else
-      0
-    end
-  end
-
-  # Route share to allocations. Engine is per-Organization → only writes
-  # rows for CPs belonging to the current organization. WorkGroup shares
-  # are computed by the loop above (to keep the denominator correct) but
-  # not persisted here. A ContactPointGroup belongs to one org (validation):
-  # if it's not this engine's org, skip; otherwise split across member CPs
-  # by personnel ratio.
-  def apply_assignable_share(allocations, pump_station, target, share)
-    return unless share.positive?
-
-    case target
-    when Organization
-      return unless target.id == organization.id
-
-      distribute_within_org(allocations, pump_station, target.id, share)
-    when ContactPoint
-      return unless contact_point_ids.include?(target.id)
-
-      allocations[target.id] += share
-    when ContactPointGroup
-      return unless target.organization_id == organization.id
-
-      distribute_within_contact_point_group(allocations, pump_station, target, share)
-    when WorkGroup
-      # F10 visibility handled by PumpAllocationCalculator.
-    end
-  end
-
-  def organization_personnel_total(org_id)
-    @organization_personnel_cache ||= {}
-    @organization_personnel_cache[org_id] ||= Personnel
-      .for_period(monthly_period.id)
-      .joins(:contact_point)
-      .where(contact_points: { organization_id: org_id })
-      .sum("rank1_count + rank2_count + rank3_count + rank4_count + " \
-           "rank5_count + rank6_count + rank7_count").to_i
-  end
-
-  def contact_point_personnel_total(cp_id)
-    @contact_point_personnel_cache ||= {}
-    @contact_point_personnel_cache[cp_id] ||= begin
-      record = Personnel.for_period(monthly_period.id).for_contact_point(cp_id).first
-      record ? record.total_count : 0
-    end
-  end
-
-  def contact_point_group_personnel_total(group_id)
-    @contact_point_group_personnel_cache ||= {}
-    @contact_point_group_personnel_cache[group_id] ||= Personnel
-      .for_period(monthly_period.id)
-      .joins(contact_point: :contact_point_group_memberships)
-      .where(contact_point_group_memberships: { contact_point_group_id: group_id })
-      .sum("rank1_count + rank2_count + rank3_count + rank4_count + " \
-           "rank5_count + rank6_count + rank7_count").to_i
-  end
-
-  # Distribute one org's slice (kW) across the org's CPs by personnel ratio.
-  # Slice is lost when the org has 0 personnel (consistent with current
-  # behaviour: CPs with personnel = 0 are skipped).
-  def distribute_within_org(allocations, ps, org_id, org_share_kw)
-    return unless org_share_kw.positive?
-
-    cp_personnel = personnel_by_cp_for_org(ps, org_id)
-    org_total    = cp_personnel.values.sum(0)
-    return unless org_total.positive?
-
-    org_total_bd = to_bd(org_total)
-    cp_personnel.each do |cp_id, people|
-      next if people.zero?
-      next unless contact_point_ids.include?(cp_id)
-
-      allocations[cp_id] += org_share_kw * to_bd(people) / org_total_bd
-    end
-  end
-
-  # Distribute one group's slice (kW) across the group's member CPs by
-  # personnel ratio. ContactPointGroup membership is validated to be
-  # same-org so all members live in this engine's organization. Member CPs
-  # with 0 personnel are skipped; slice is lost when the whole group has 0
-  # personnel (mirrors `distribute_within_org`).
-  def distribute_within_contact_point_group(allocations, ps, group, group_share_kw)
-    return unless group_share_kw.positive?
-
-    member_cp_ids = group.contact_points.pluck(:id) & contact_point_ids
-    return if member_cp_ids.empty?
-
-    cp_personnel = personnel_by_cp_for_group(ps, group.id)
-    group_total  = member_cp_ids.sum { |cp_id| cp_personnel[cp_id].to_i }
-    return unless group_total.positive?
-
-    group_total_bd = to_bd(group_total)
-    member_cp_ids.each do |cp_id|
-      people = cp_personnel[cp_id].to_i
-      next if people.zero?
-
-      allocations[cp_id] += group_share_kw * to_bd(people) / group_total_bd
-    end
-  end
-
-  # Pump stations serving the current engine's organization. A pump serves
-  # the org when there is an assignment to either:
-  #   - the Organization itself,
-  #   - any ContactPoint belonging to the Organization, or
-  #   - a ContactPointGroup with at least one member CP in the Organization
-  #     (membership validated same-org, so in practice this means the group
-  #     itself belongs to the Organization).
-  # WorkGroup assignments alone do NOT pull a pump into the engine's view
-  # (no CP to attach to).
-  def pump_stations_serving_unit
-    @pump_stations_serving_unit ||= begin
-      cp_ids = contact_point_ids
-      org_cp_ps = PumpStationAssignment.where(
-        "(assignable_type = 'Organization' AND assignable_id = :org_id) OR " \
-        "(assignable_type = 'ContactPoint' AND assignable_id IN (:cp_ids))",
-        org_id: organization.id, cp_ids: cp_ids.presence || [ 0 ]
-      ).pluck(:pump_station_id)
-
-      cpg_ps = PumpStationAssignment
-        .where(assignable_type: "ContactPointGroup")
-        .joins("INNER JOIN contact_point_group_memberships " \
-               "ON contact_point_group_memberships.contact_point_group_id = pump_station_assignments.assignable_id")
-        .joins("INNER JOIN contact_points " \
-               "ON contact_points.id = contact_point_group_memberships.contact_point_id")
-        .where(contact_points: { organization_id: organization.id })
-        .pluck(:pump_station_id)
-
-      ps_ids = (org_cp_ps + cpg_ps).uniq
-
-      if ps_ids.empty?
-        []
-      else
-        # Eager-load :meters so pump_station_consumption can read meter_ids
-        # off the preloaded collection without firing a query per station.
-        PumpStation.where(id: ps_ids).includes(:meters).select { |ps| ps.meters.any? }
-      end
-    end
-  end
-
-  def pump_station_consumption(pump_station)
-    # Use .meters.map(&:id) (not .meter_ids) so we read straight from the
-    # collection preloaded by `pump_stations_serving_unit` — no extra query.
-    meter_ids = pump_station.meters.map(&:id)
-    return ZERO if meter_ids.empty?
-
-    to_bd(
-      MeterReading.where(meter_id: meter_ids,
-                         monthly_period_id: monthly_period.id).sum(:consumption)
-    )
-  end
-
-  def pump_station_assignments_for(pump_station)
-    @pump_station_assignments_for ||= {}
-    @pump_station_assignments_for[pump_station.id] ||=
-      PumpStationAssignment.for_pump_station(pump_station.id).to_a
-  end
-
-  # {cp_id => total_count} for CPs of one specific org in this period.
-  def personnel_by_cp_for_org(pump_station, org_id)
-    @personnel_by_cp_for_org ||= {}
-    @personnel_by_cp_for_org[[ pump_station.id, org_id ]] ||=
-      Personnel.for_period(monthly_period.id)
-               .joins(:contact_point)
-               .where(contact_points: { organization_id: org_id })
-               .each_with_object({}) { |p, h| h[p.contact_point_id] = p.total_count }
-  end
-
-  # {cp_id => total_count} for member CPs of one ContactPointGroup in this
-  # period. Member CPs without a Personnel row don't appear in the hash;
-  # callers treat absence as 0.
-  def personnel_by_cp_for_group(pump_station, group_id)
-    @personnel_by_cp_for_group ||= {}
-    @personnel_by_cp_for_group[[ pump_station.id, group_id ]] ||=
-      Personnel.for_period(monthly_period.id)
-               .joins(contact_point: :contact_point_group_memberships)
-               .where(contact_point_group_memberships: { contact_point_group_id: group_id })
-               .each_with_object({}) { |p, h| h[p.contact_point_id] = p.total_count }
-  end
-
-  def bd_100
-    @bd_100 ||= BigDecimal("100")
   end
 
   # --- Misc -----------------------------------------------------------------
