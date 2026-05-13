@@ -240,4 +240,27 @@ RSpec.describe "PumpStations", type: :request do
       end
     end
   end
+
+  describe "zone-manager cross-zone access denial" do
+    let(:zone_manager_org) { create(:organization, level: :unit, parent: division) }
+    let(:zone_manager)     { create(:user, :admin_unit, organization: zone_manager_org) }
+    let(:managed_zone)     { create(:zone, manager_organization_id: zone_manager_org.id) }
+    let(:foreign_zone)     { create(:zone) }
+    let!(:foreign_ps)      { create(:pump_station, zone: foreign_zone) }
+
+    before do
+      managed_zone
+      sign_in zone_manager
+    end
+
+    it "denies PATCH on foreign-zone pump station → 404" do
+      patch pump_station_path(foreign_ps), params: { pump_station: { name: "X" } }
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "denies DELETE on foreign-zone pump station → 404" do
+      delete pump_station_path(foreign_ps)
+      expect(response).to have_http_status(:not_found)
+    end
+  end
 end

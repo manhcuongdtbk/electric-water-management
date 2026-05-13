@@ -64,7 +64,7 @@ RSpec.describe "Pump stations management", type: :system do
     end
 
     it "gán + bỏ gán đơn vị cho trạm bơm" do
-      ps = create(:pump_station, name: "Trạm C")
+      ps = create(:pump_station, name: "Trạm C", zone: scenario.unit.zone)
       create(:meter, :pump_station,
              pump_station: ps, organization: scenario.division)
 

@@ -142,4 +142,38 @@ RSpec.describe "PumpStationReadings", type: :request do
       end
     end
   end
+
+  describe "zone-manager only sees own zone's pump station meters" do
+    let(:zone_manager_org) { create(:organization, level: :unit, parent: division) }
+    let(:zone_manager)     { create(:user, :admin_unit, organization: zone_manager_org) }
+    let(:managed_zone)     { create(:zone, manager_organization_id: zone_manager_org.id) }
+    let(:foreign_zone)     { create(:zone) }
+    let!(:own_ps)          { create(:pump_station, zone: managed_zone) }
+    let!(:own_meter)       { create(:meter, :pump_station, pump_station: own_ps, organization: division) }
+    let!(:foreign_ps)      { create(:pump_station, zone: foreign_zone) }
+    let!(:foreign_meter)   { create(:meter, :pump_station, pump_station: foreign_ps, organization: division) }
+
+    before do
+      managed_zone
+      sign_in zone_manager
+    end
+
+    it "GET shows own zone pump station meters and not foreign zone meters" do
+      get pump_station_readings_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(own_ps.name)
+      expect(response.body).not_to include(foreign_ps.name)
+    end
+
+    it "PATCH ignores readings submitted for foreign-zone meters" do
+      expect {
+        patch pump_station_readings_path, params: {
+          period_id: period.id,
+          readings: {
+            foreign_meter.id.to_s => { reading_start: "100", reading_end: "200" }
+          }
+        }
+      }.not_to change(MeterReading, :count)
+    end
+  end
 end

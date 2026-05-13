@@ -46,7 +46,7 @@ class PumpStationAssignmentsController < ApplicationController
   end
 
   def set_pump_station
-    @pump_station = PumpStation.find(params[:pump_station_id])
+    @pump_station = PumpStation.accessible_by(current_ability).find(params[:pump_station_id])
   end
 
   def set_assignment
@@ -63,24 +63,27 @@ class PumpStationAssignmentsController < ApplicationController
   end
 
   # Build available pickers for each assignable type, excluding records
-  # already assigned to this pump station.
+  # already assigned to this pump station. All collections are scoped to the
+  # pump station's zone so zone-managers cannot see records from other zones.
   def available_assignables
+    zone_org_ids = @pump_station.zone.organization_ids
     taken_ids_by_type = @pump_station.pump_station_assignments
       .pluck(:assignable_type, :assignable_id)
       .group_by(&:first)
       .transform_values { |arr| arr.map(&:last) }
 
     {
-      organizations: Organization.units.ordered
+      organizations: Organization.units.where(id: zone_org_ids).ordered
                                  .where.not(id: taken_ids_by_type["Organization"] || []),
       contact_points: ContactPoint
                         .joins(:organization)
-                        .where(organizations: { level: Organization.levels[:unit] })
+                        .where(organizations: { id: zone_org_ids, level: Organization.levels[:unit] })
                         .order("organizations.position, contact_points.position, contact_points.name")
                         .where.not(id: taken_ids_by_type["ContactPoint"] || []),
-      work_groups: WorkGroup.ordered.where.not(id: taken_ids_by_type["WorkGroup"] || []),
+      work_groups: WorkGroup.where(owner_organization_id: zone_org_ids).ordered
+                            .where.not(id: taken_ids_by_type["WorkGroup"] || []),
       contact_point_groups: ContactPointGroup
-        .where(organization_id: @pump_station.zone.organizations.pluck(:id))
+        .where(organization_id: zone_org_ids)
         .includes(:organization)
         .ordered
         .where.not(id: taken_ids_by_type["ContactPointGroup"] || [])

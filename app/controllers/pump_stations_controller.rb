@@ -66,7 +66,7 @@ class PumpStationsController < ApplicationController
   end
 
   def set_pump_station
-    @pump_station = PumpStation.find(params[:id])
+    @pump_station = PumpStation.accessible_by(current_ability).find(params[:id])
   end
 
   def pump_station_params

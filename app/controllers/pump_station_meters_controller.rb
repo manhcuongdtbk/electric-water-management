@@ -54,7 +54,7 @@ class PumpStationMetersController < ApplicationController
   end
 
   def set_pump_station
-    @pump_station = PumpStation.find(params[:pump_station_id])
+    @pump_station = PumpStation.accessible_by(current_ability).find(params[:pump_station_id])
   end
 
   def set_meter
