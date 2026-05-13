@@ -254,6 +254,42 @@ RSpec.describe Ability do
     end
   end
 
+  describe "WorkGroup abilities" do
+    let(:wg_a) { create(:work_group, owner_organization: unit_a) }
+    let(:wg_b) { create(:work_group, owner_organization: unit_b) }
+
+    context "when user is admin_level1" do
+      let(:user) { create(:user, :admin_level1, organization: division) }
+
+      it { is_expected.to be_able_to(:manage, wg_a) }
+      it { is_expected.to be_able_to(:manage, wg_b) }
+    end
+
+    context "when user is admin_unit of unit_a" do
+      let(:user) { create(:user, :admin_unit, organization: unit_a) }
+
+      it { is_expected.to be_able_to(:manage, wg_a) }
+      it { is_expected.not_to be_able_to(:read, wg_b) }
+      it { is_expected.not_to be_able_to(:manage, wg_b) }
+    end
+
+    context "when user is commander of unit_a" do
+      let(:user) { create(:user, :commander, organization: unit_a) }
+
+      it { is_expected.to be_able_to(:read, wg_a) }
+      it { is_expected.not_to be_able_to(:update, wg_a) }
+      it { is_expected.not_to be_able_to(:destroy, wg_a) }
+      it { is_expected.not_to be_able_to(:read, wg_b) }
+    end
+
+    context "when user is tech" do
+      let(:user) { create(:user, :tech, organization: division) }
+
+      it { is_expected.not_to be_able_to(:read, wg_a) }
+      it { is_expected.not_to be_able_to(:manage, wg_a) }
+    end
+  end
+
   describe ".accessible_by" do
     let!(:cp_a_record) { cp_a }
     let!(:cp_b_record) { cp_b }

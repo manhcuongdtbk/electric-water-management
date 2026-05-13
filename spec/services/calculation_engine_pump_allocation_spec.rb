@@ -126,7 +126,7 @@ RSpec.describe "Pump allocation across 3 nhóm đối tượng (integration)" do
   end
 
   let!(:work_group_tho_xay) do
-    create(:work_group, owner_organization: division, name: "Tho xay",
+    create(:work_group, owner_organization: dva, name: "Tho xay",
            personnel_count: 2, position: 0)
   end
 

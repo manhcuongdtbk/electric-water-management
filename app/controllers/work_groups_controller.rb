@@ -1,18 +1,21 @@
 class WorkGroupsController < ApplicationController
-  before_action :authorize_work_groups
   before_action :set_work_group, only: [ :edit, :update, :destroy ]
 
   def index
-    @work_groups = WorkGroup.ordered
+    authorize! :read, WorkGroup
+    @work_groups = WorkGroup.accessible_by(current_ability).ordered
   end
 
   def new
-    @work_group = WorkGroup.new(position: next_position)
+    owner = current_user.admin_level1? ? nil : current_user.organization
+    @work_group = WorkGroup.new(position: next_position, owner_organization: owner)
+    authorize! :create, @work_group
   end
 
   def create
     @work_group = WorkGroup.new(work_group_params)
-    @work_group.owner_organization = division
+    @work_group.owner_organization = current_user.organization unless current_user.admin_level1?
+    authorize! :create, @work_group
 
     if @work_group.save
       redirect_to work_groups_path, notice: t("flash.work_groups.created")
@@ -22,9 +25,12 @@ class WorkGroupsController < ApplicationController
   end
 
   def edit
+    authorize! :update, @work_group
   end
 
   def update
+    authorize! :update, @work_group
+
     if @work_group.update(work_group_params)
       redirect_to work_groups_path, notice: t("flash.work_groups.updated")
     else
@@ -33,6 +39,8 @@ class WorkGroupsController < ApplicationController
   end
 
   def destroy
+    authorize! :destroy, @work_group
+
     if @work_group.destroy
       redirect_to work_groups_path, notice: t("flash.work_groups.destroyed")
     else
@@ -44,23 +52,19 @@ class WorkGroupsController < ApplicationController
 
   private
 
-  def authorize_work_groups
-    authorize! :manage, WorkGroup
-  end
-
   def set_work_group
-    @work_group = WorkGroup.find(params[:id])
+    @work_group = WorkGroup.accessible_by(current_ability).find(params[:id])
   end
 
   def work_group_params
-    params.require(:work_group).permit(:name, :personnel_count, :notes, :position)
+    permitted = params.require(:work_group).permit(:name, :personnel_count, :notes, :position)
+    if current_user.admin_level1? && params[:work_group][:owner_organization_id].present?
+      permitted[:owner_organization_id] = params[:work_group][:owner_organization_id]
+    end
+    permitted
   end
 
   def next_position
-    (WorkGroup.maximum(:position) || -1) + 1
-  end
-
-  def division
-    @division ||= Organization.divisions.first
+    (WorkGroup.where(owner_organization_id: current_user.organization_id).maximum(:position) || -1) + 1
   end
 end
