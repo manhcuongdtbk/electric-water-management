@@ -285,4 +285,110 @@ RSpec.describe "Pump allocation across 3 nhóm đối tượng (integration)" do
       expect(a2_row[:kw]).to be_within(tolerance).of(pump_pool * bd("0.50"))
     end
   end
+
+  # ContactPointGroup (CPG1 = {A2, A3}) gets a 20% fixed slot on TB1's pump
+  # pool. That share is split across the group's member CPs by personnel
+  # ratio (a2 has 3 personnel, a3 has 1 → 3:1). A2/A3 still receive their
+  # slice of DVA's variable share too — stacking is intentional, mirroring
+  # the existing CP/Org overlap behaviour.
+  #
+  # Numerics (sum_fixed_pct = asg_a1 30 + asg_cpg1 20 = 50; variable_pct = 50):
+  #   pool         = 500 + 220 × 500 / 1680  ≈ 565.476
+  #   CPG1 fixed   = pool × 0.20             ≈ 113.095
+  #     → a2 gets CPG1 × 3/4 ≈ 84.821
+  #     → a3 gets CPG1 × 1/4 ≈ 28.274
+  #   Variable pool 50%: headcount DVA 6 + DVB 5 + WG 2 = 13
+  #     DVA share        = pool × 0.50 × 6/13
+  #     → a2 from DVA    = DVA × 3/6
+  #     → a3 from DVA    = DVA × 1/6
+  describe "ContactPointGroup nhận pump allocation" do
+    let!(:cpg1)        { create(:contact_point_group, organization: dva, name: "Nhóm A2-A3") }
+    let!(:cpg1_mem_a2) { create(:contact_point_group_membership, contact_point_group: cpg1, contact_point: a2) }
+    let!(:cpg1_mem_a3) { create(:contact_point_group_membership, contact_point_group: cpg1, contact_point: a3) }
+    let!(:asg_cpg1) do
+      create(:pump_station_assignment, pump_station: pump_station,
+             assignable: cpg1, fixed_pump_percentage: 20)
+    end
+
+    let(:variable_pool_50) { pump_pool * bd("0.50") }
+    let(:cpg1_share)       { pump_pool * bd("0.20") }
+
+    it "phân bổ CPG1 fixed share xuống a2/a3 theo personnel (3:1)" do
+      results = engine_dva.compute
+      a2_row = results.find { |r| r[:contact_point_id] == a2.id }
+      a3_row = results.find { |r| r[:contact_point_id] == a3.id }
+
+      dva_var       = variable_pool_50 * bd("6") / bd("13")
+      a2_expected   = (cpg1_share * bd("3") / bd("4")) + (dva_var * bd("3") / bd("6"))
+      a3_expected   = (cpg1_share * bd("1") / bd("4")) + (dva_var * bd("1") / bd("6"))
+
+      expect(a2_row[:water_pump_actual_kw]).to be_within(tolerance).of(a2_expected)
+      expect(a3_row[:water_pump_actual_kw]).to be_within(tolerance).of(a3_expected)
+    end
+
+    it "không cộng CPG1 share vào A1 (a1 không là member)" do
+      results = engine_dva.compute
+      a1_row = results.find { |r| r[:contact_point_id] == a1.id }
+
+      cp_fixed_share = pump_pool * bd("0.30")                 # asg_a1
+      dva_var        = variable_pool_50 * bd("6") / bd("13")
+      a1_from_dva    = dva_var * bd("2") / bd("6")
+
+      expect(a1_row[:water_pump_actual_kw]).to be_within(tolerance).of(cp_fixed_share + a1_from_dva)
+    end
+
+    it "PumpAllocationCalculator báo cáo row cho ContactPointGroup với personnel = sum member CPs" do
+      result = PumpAllocationCalculator.new(pump_station: pump_station, monthly_period: period).call
+      cpg_row = result[:allocations].find { |r| r[:assignable_type] == "ContactPointGroup" }
+
+      expect(cpg_row).not_to be_nil
+      expect(cpg_row[:assignable_id]).to eq(cpg1.id)
+      expect(cpg_row[:personnel]).to eq(4) # a2: 3 (rank7) + a3: 1 (rank4)
+      expect(cpg_row[:fixed_pump_percentage]).to eq(BigDecimal("20"))
+      expect(cpg_row[:kw]).to be_within(tolerance).of(cpg1_share)
+    end
+
+    it "labels include ContactPointGroup in F10 report" do
+      result = PumpAllocationCalculator.new(pump_station: pump_station, monthly_period: period).call
+      types = result[:allocations].map { |r| r[:assignable_type] }.tally
+      expect(types).to eq("ContactPoint" => 1, "Organization" => 2,
+                          "WorkGroup" => 1, "ContactPointGroup" => 1)
+    end
+
+    it "pump chỉ có ContactPointGroup assignment vẫn được engine tìm thấy" do
+      # Xoá hết assignment khác — pump TB1 chỉ còn CPG1 (fixed 20%). Không
+      # còn variable target → variable pool dissipates. CPG1 nhận 20% pool,
+      # chia xuống a2 (3/4) và a3 (1/4).
+      [ asg_a1, asg_dva, asg_dvb, asg_tho_xay ].each(&:destroy)
+
+      results = CalculationEngine.new(organization: dva, monthly_period: period).compute
+      a2_row = results.find { |r| r[:contact_point_id] == a2.id }
+      a3_row = results.find { |r| r[:contact_point_id] == a3.id }
+      a1_row = results.find { |r| r[:contact_point_id] == a1.id }
+
+      expect(a2_row[:water_pump_actual_kw]).to be_within(tolerance).of(cpg1_share * bd("3") / bd("4"))
+      expect(a3_row[:water_pump_actual_kw]).to be_within(tolerance).of(cpg1_share * bd("1") / bd("4"))
+      expect(a1_row[:water_pump_actual_kw]).to eq(bd("0"))
+    end
+
+    it "engine bỏ qua ContactPointGroup thuộc org khác (defensive)" do
+      # Group thuộc DVB nhưng được assign vào TB1 → DVA engine không credit
+      # share này cho bất kỳ CP DVA nào.
+      cpg_dvb = create(:contact_point_group, organization: dvb, name: "Nhóm DVB")
+      create(:contact_point_group_membership, contact_point_group: cpg_dvb, contact_point: b1)
+      create(:pump_station_assignment, pump_station: pump_station,
+             assignable: cpg_dvb, fixed_pump_percentage: 10)
+
+      results = engine_dva.compute
+      a2_row = results.find { |r| r[:contact_point_id] == a2.id }
+
+      # a2 vẫn chỉ nhận share từ CPG1 + DVA variable, không có gì từ cpg_dvb.
+      # Variable_pct = 100 - 30 - 20 - 10 = 40. DVA variable share = 40% × 6/13.
+      variable_pool_40 = pump_pool * bd("0.40")
+      dva_var          = variable_pool_40 * bd("6") / bd("13")
+      a2_expected      = (cpg1_share * bd("3") / bd("4")) + (dva_var * bd("3") / bd("6"))
+
+      expect(a2_row[:water_pump_actual_kw]).to be_within(tolerance).of(a2_expected)
+    end
+  end
 end
