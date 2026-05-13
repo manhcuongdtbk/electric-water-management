@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_13_023947) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_13_100252) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -162,7 +162,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_13_023947) do
   create_table "organizations", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "level", default: 2, null: false
-    t.bigint "main_meter_id"
     t.string "name", null: false
     t.bigint "parent_id"
     t.integer "position", default: 0
@@ -170,7 +169,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_13_023947) do
     t.bigint "zone_id"
     t.index ["level", "name"], name: "index_organizations_on_level_and_name", unique: true
     t.index ["level"], name: "index_organizations_on_level"
-    t.index ["main_meter_id"], name: "index_organizations_on_main_meter_id"
     t.index ["parent_id"], name: "index_organizations_on_parent_id"
     t.index ["zone_id"], name: "index_organizations_on_zone_id"
   end
@@ -207,10 +205,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_13_023947) do
   create_table "pump_stations", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
-    t.bigint "organization_id", null: false
     t.datetime "updated_at", null: false
     t.bigint "zone_id", null: false
-    t.index ["organization_id"], name: "index_pump_stations_on_organization_id"
     t.index ["zone_id"], name: "index_pump_stations_on_zone_id"
   end
 
@@ -316,13 +312,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_13_023947) do
   add_foreign_key "monthly_calculations", "contact_points"
   add_foreign_key "monthly_calculations", "monthly_periods"
   add_foreign_key "monthly_periods", "users", column: "locked_by_id"
-  add_foreign_key "organizations", "main_meters"
   add_foreign_key "organizations", "organizations", column: "parent_id"
   add_foreign_key "organizations", "zones"
   add_foreign_key "personnel", "contact_points"
   add_foreign_key "personnel", "monthly_periods"
   add_foreign_key "pump_station_assignments", "pump_stations"
-  add_foreign_key "pump_stations", "organizations"
   add_foreign_key "pump_stations", "zones"
   add_foreign_key "unit_configs", "monthly_periods"
   add_foreign_key "unit_configs", "organizations"

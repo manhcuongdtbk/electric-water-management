@@ -17,9 +17,6 @@ class PumpStationsController < ApplicationController
 
   def create
     @pump_station = PumpStation.new(pump_station_params)
-    # Satisfy the still-NOT-NULL `organization_id` column. Dropped together with
-    # this assignment in the DropLegacyColumns migration in this same PR.
-    @pump_station.organization = division
     @pump_station.first_meter_name          = first_meter_name_param
     @pump_station.first_meter_serial_number = first_meter_serial_param
 

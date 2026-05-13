@@ -14,6 +14,10 @@ class MainMetersController < ApplicationController
   def create
     @main_meter = MainMeter.new(main_meter_params)
     Organization.transaction do
+      # The MainMeter form does not yet expose a zone picker (Zone CRUD is a
+      # follow-up). For the current 1:1 main_meter-to-zone reality, derive the
+      # zone from the meter's name.
+      assign_default_zone(@main_meter)
       if @main_meter.save
         assign_organizations(@main_meter, organization_ids_param)
         redirect_to main_meters_path, notice: t("flash.main_meters.created")
@@ -70,6 +74,13 @@ class MainMetersController < ApplicationController
 
   def organization_ids_param
     Array(params.dig(:main_meter, :organization_ids)).reject(&:blank?).map(&:to_i)
+  end
+
+  def assign_default_zone(main_meter)
+    return if main_meter.zone.present?
+    return if main_meter.name.blank?
+
+    main_meter.zone = Zone.find_or_create_by!(name: main_meter.name)
   end
 
   # Re-assign the units linked to this main meter via its zone: any unit
