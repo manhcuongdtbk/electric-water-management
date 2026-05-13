@@ -1,0 +1,14 @@
+<% content_for :title, t("contact_point_groups.index.title") %>
+
+<div class="mb-6 flex items-center gap-2 text-sm text-gray-500">
+  <%= link_to t("contact_point_groups.index.title"), contact_point_groups_path, class: "hover:underline" %>
+  <span>/</span>
+  <span class="text-gray-900"><%= t("contact_point_groups.form.submit_update") %></span>
+</div>
+
+<div class="bg-white rounded-lg border border-gray-200 p-6">
+  <h1 class="text-xl font-semibold text-gray-900 mb-1"><%= t("contact_point_groups.form.submit_update") %></h1>
+  <p class="text-sm text-gray-500 mb-6"><%= @contact_point_group.name %></p>
+
+  <%= render "form", contact_point_group: @contact_point_group %>
+</div>

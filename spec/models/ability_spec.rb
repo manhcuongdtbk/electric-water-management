@@ -157,6 +157,35 @@ RSpec.describe Ability do
     it { is_expected.not_to be_able_to(:manage, RankQuota.new) }
   end
 
+  describe "ContactPointGroup abilities" do
+    let(:cpg_a) { create(:contact_point_group, organization: unit_a) }
+    let(:cpg_b) { create(:contact_point_group, organization: unit_b) }
+
+    context "when user is admin_level1" do
+      let(:user) { create(:user, :admin_level1, organization: division) }
+
+      it { is_expected.to be_able_to(:manage, cpg_a) }
+      it { is_expected.to be_able_to(:manage, cpg_b) }
+    end
+
+    context "when user is admin_unit of unit_a" do
+      let(:user) { create(:user, :admin_unit, organization: unit_a) }
+
+      it { is_expected.to be_able_to(:manage, cpg_a) }
+      it { is_expected.not_to be_able_to(:read, cpg_b) }
+      it { is_expected.not_to be_able_to(:manage, cpg_b) }
+    end
+
+    context "when user is commander of unit_a" do
+      let(:user) { create(:user, :commander, organization: unit_a) }
+
+      it { is_expected.to be_able_to(:read, cpg_a) }
+      it { is_expected.not_to be_able_to(:update, cpg_a) }
+      it { is_expected.not_to be_able_to(:destroy, cpg_a) }
+      it { is_expected.not_to be_able_to(:read, cpg_b) }
+    end
+  end
+
   describe ".accessible_by" do
     let!(:cp_a_record) { cp_a }
     let!(:cp_b_record) { cp_b }

@@ -39,6 +39,9 @@ class Ability
     can :read, MainMeter,        organizations: { id: org_id }
     can :read, MainMeterReading, main_meter: { organizations: { id: org_id } }
 
+    can :manage, ContactPointGroup,       organization_id: org_id
+    can :manage, ContactPointGroupMembership, contact_point_group: { organization_id: org_id }
+
     can :read, MonthlyPeriod
     can :read, RankQuota
   end
@@ -55,6 +58,9 @@ class Ability
 
     can :read, MainMeter,        organizations: { id: org_id }
     can :read, MainMeterReading, main_meter: { organizations: { id: org_id } }
+
+    can :read, ContactPointGroup,       organization_id: org_id
+    can :read, ContactPointGroupMembership, contact_point_group: { organization_id: org_id }
 
     can :read, MonthlyPeriod
     can :read, RankQuota

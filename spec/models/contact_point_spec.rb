@@ -10,6 +10,8 @@ RSpec.describe ContactPoint, type: :model do
       expect(assoc.foreign_key.to_sym).to eq(:contact_point_id)
     end
     it { is_expected.to have_many(:monthly_calculations) }
+    it { is_expected.to have_many(:contact_point_group_memberships).dependent(:destroy) }
+    it { is_expected.to have_many(:contact_point_groups).through(:contact_point_group_memberships) }
   end
 
   describe "validations" do

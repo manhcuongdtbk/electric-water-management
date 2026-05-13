@@ -8,6 +8,8 @@ class ContactPoint < ApplicationRecord
   has_many :monthly_calculations, dependent: :destroy
   has_many :other_deductions, class_name: "ContactPointOtherDeduction", dependent: :destroy
   has_many :pump_station_assignments, as: :assignable, dependent: :destroy
+  has_many :contact_point_group_memberships, dependent: :destroy
+  has_many :contact_point_groups, through: :contact_point_group_memberships
 
   # Enums
   enum :contact_point_type, { residential: 0, communal: 1 }, validate: true
