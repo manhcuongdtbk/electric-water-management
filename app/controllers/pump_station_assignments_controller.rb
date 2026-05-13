@@ -81,6 +81,7 @@ class PumpStationAssignmentsController < ApplicationController
       work_groups: WorkGroup.ordered.where.not(id: taken_ids_by_type["WorkGroup"] || []),
       contact_point_groups: ContactPointGroup
         .where(organization_id: @pump_station.zone.organizations.pluck(:id))
+        .includes(:organization)
         .ordered
         .where.not(id: taken_ids_by_type["ContactPointGroup"] || [])
     }
