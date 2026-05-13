@@ -2,8 +2,10 @@
 
 <div class="flex items-center justify-between mb-4">
   <h1 class="text-xl font-semibold text-gray-900"><%= t("work_groups.index.title") %></h1>
-  <%= link_to t("work_groups.index.new_button"), new_work_group_path,
-        class: "inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors" %>
+  <% if can?(:create, WorkGroup) %>
+    <%= link_to t("work_groups.index.new_button"), new_work_group_path,
+          class: "inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors" %>
+  <% end %>
 </div>
 
 <p class="mb-4 text-sm text-gray-600"><%= t("work_groups.index.subtitle") %></p>
@@ -36,14 +38,16 @@
             <td class="px-4 py-3 text-gray-500 text-xs"><%= wg.notes.presence || "—" %></td>
             <td class="px-4 py-3 text-right text-gray-700"><%= wg.position %></td>
             <td class="px-4 py-3">
-              <div class="flex items-center gap-2">
-                <%= link_to t("work_groups.actions.edit"), edit_work_group_path(wg),
-                      class: "text-blue-600 hover:underline text-xs" %>
-                <%= button_to t("work_groups.actions.delete"), work_group_path(wg),
-                      method: :delete,
-                      data: { turbo_confirm: t("work_groups.actions.delete_confirm") },
-                      class: "text-red-600 hover:underline text-xs bg-transparent border-0 cursor-pointer p-0" %>
-              </div>
+              <% if can?(:manage, wg) %>
+                <div class="flex items-center gap-2">
+                  <%= link_to t("work_groups.actions.edit"), edit_work_group_path(wg),
+                        class: "text-blue-600 hover:underline text-xs" %>
+                  <%= button_to t("work_groups.actions.delete"), work_group_path(wg),
+                        method: :delete,
+                        data: { turbo_confirm: t("work_groups.actions.delete_confirm") },
+                        class: "text-red-600 hover:underline text-xs bg-transparent border-0 cursor-pointer p-0" %>
+                </div>
+              <% end %>
             </td>
           </tr>
         <% end %>
