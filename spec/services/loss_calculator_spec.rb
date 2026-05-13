@@ -77,9 +77,9 @@ RSpec.describe LossCalculator do
     end
 
     it "returns BigDecimal for all numeric fields" do
-      expect(results[:zone_supply_kw]).to               be_a(BigDecimal)
+      expect(results[:zone_supply_kw]).to be_a(BigDecimal)
       expect(results[:loss_pool_consumption_in_zone]).to be_a(BigDecimal)
-      expect(results[:total_zone_loss]).to              be_a(BigDecimal)
+      expect(results[:total_zone_loss]).to be_a(BigDecimal)
       results[:loss_pool_consumption_by_cp].each_value { |v| expect(v).to be_a(BigDecimal) }
     end
   end
