@@ -184,4 +184,27 @@ RSpec.describe "PumpStationMeters", type: :request do
       end
     end
   end
+
+  describe "zone-manager cross-zone access denial" do
+    let(:zone_manager_org) { create(:organization, level: :unit, parent: division) }
+    let(:zone_manager)     { create(:user, :admin_unit, organization: zone_manager_org) }
+    let(:managed_zone)     { create(:zone, manager_organization_id: zone_manager_org.id) }
+    let(:foreign_zone)     { create(:zone) }
+    let!(:foreign_ps)      { create(:pump_station, zone: foreign_zone) }
+
+    before do
+      managed_zone
+      sign_in zone_manager
+    end
+
+    it "denies new meter form on foreign-zone pump station → 404" do
+      get new_pump_station_meter_path(foreign_ps)
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "denies POST meter on foreign-zone pump station → 404" do
+      post pump_station_meters_path(foreign_ps), params: { meter: { name: "CT01" } }
+      expect(response).to have_http_status(:not_found)
+    end
+  end
 end

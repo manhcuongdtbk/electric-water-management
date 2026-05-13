@@ -123,7 +123,7 @@ RSpec.describe "PumpStationAssignments", type: :request do
   end
 
   describe "GET /pump_stations/:pump_station_id/assignments/new" do
-    let(:other_unit) { create(:organization, level: :unit, parent: division) }
+    let(:other_unit) { create(:organization, level: :unit, parent: division, zone: pump_station.zone) }
 
     context "as admin_level1" do
       before { sign_in admin1 }
@@ -269,6 +269,37 @@ RSpec.describe "PumpStationAssignments", type: :request do
         expect(response).to redirect_to(root_path)
         expect(PumpStationAssignment.exists?(assignment.id)).to be true
       end
+    end
+  end
+
+  describe "zone-manager cross-zone access denial" do
+    let(:zone_manager_org) { create(:organization, level: :unit, parent: division) }
+    let(:zone_manager)     { create(:user, :admin_unit, organization: zone_manager_org) }
+    let(:managed_zone)     { create(:zone, manager_organization_id: zone_manager_org.id) }
+    let(:foreign_zone)     { create(:zone) }
+    let!(:foreign_ps)      { create(:pump_station, zone: foreign_zone) }
+    let(:foreign_org)      { create(:organization, level: :unit, parent: division, zone: foreign_zone) }
+
+    before do
+      managed_zone
+      sign_in zone_manager
+    end
+
+    it "denies POST assignment on foreign-zone pump station → 404" do
+      post pump_station_assignments_path(foreign_ps),
+           params: { pump_station_assignment: {
+             assignable_type: "Organization", assignable_id: foreign_org.id
+           } }
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "available_assignables only shows zone-scoped orgs for own pump station" do
+      foreign_org
+      own_ps = create(:pump_station, zone: managed_zone)
+      get new_pump_station_assignment_path(own_ps)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(zone_manager_org.name)
+      expect(response.body).not_to include(foreign_org.name)
     end
   end
 end

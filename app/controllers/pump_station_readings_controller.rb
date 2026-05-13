@@ -52,8 +52,9 @@ class PumpStationReadingsController < ApplicationController
 
   def pump_station_meters
     @pump_station_meters ||= Meter
-                               .where(meter_type: Meter.meter_types[:pump_station])
                                .joins(:pump_station)
+                               .merge(PumpStation.accessible_by(current_ability))
+                               .where(meter_type: Meter.meter_types[:pump_station])
                                .includes(:pump_station)
                                .order("pump_stations.name", :position, :name)
   end

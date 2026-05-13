@@ -61,7 +61,7 @@ class MainMetersController < ApplicationController
   end
 
   def set_main_meter
-    @main_meter = MainMeter.find(params[:id])
+    @main_meter = MainMeter.accessible_by(current_ability).find(params[:id])
   end
 
   def next_position
