@@ -44,6 +44,18 @@ class Ability
 
     can :read, MonthlyPeriod
     can :read, RankQuota
+
+    # Zone-manager: admin_unit at zone.manager_organization manages shared zone
+    # infra (công tơ tổng, trạm bơm, phân bổ bơm). The `if any?` guard keeps the
+    # rule literally absent for non-zone-managers so class-level checks the
+    # sidebar uses (e.g. `can? :manage, PumpStation`) return false for them.
+    managed_zone_ids = Zone.where(manager_organization_id: org_id).pluck(:id)
+    if managed_zone_ids.any?
+      can :manage, MainMeter,             zone_id: managed_zone_ids
+      can :manage, MainMeterReading,      main_meter: { zone_id: managed_zone_ids }
+      can :manage, PumpStation,           zone_id: managed_zone_ids
+      can :manage, PumpStationAssignment, pump_station: { zone_id: managed_zone_ids }
+    end
   end
 
   def commander_abilities(user)

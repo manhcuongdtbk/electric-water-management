@@ -70,7 +70,7 @@
                 <%= t("nav.unit_config") %>
               <% end %>
             <% end %>
-            <% if current_user.admin_level1? %>
+            <% if can? :manage, MainMeterReading %>
               <%= link_to electricity_supply_path,
                     class: "flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-colors #{controller_name == 'electricity_supplies' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}" do %>
                 <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

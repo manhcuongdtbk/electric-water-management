@@ -63,6 +63,8 @@ RSpec.describe Ability do
     it { is_expected.to be_able_to(:manage, RankQuota.new) }
     it { is_expected.to be_able_to(:manage, main_meter) }
     it { is_expected.to be_able_to(:manage, main_meter_reading) }
+    it { is_expected.to be_able_to(:manage, create(:pump_station, zone: main_meter.zone)) }
+    it { is_expected.to be_able_to(:manage, create(:pump_station_assignment, pump_station: create(:pump_station, zone: main_meter.zone), assignable: unit_a)) }
     it { is_expected.not_to be_able_to(:manage, :backup) }
   end
 
@@ -138,6 +140,72 @@ RSpec.describe Ability do
 
     it { is_expected.not_to be_able_to(:manage, User.new) }
     it { is_expected.not_to be_able_to(:manage, MonthlyPeriod.new) }
+  end
+
+  # Zone-manager: when an admin_unit's organization is the manager_organization
+  # of a Zone, they get :manage on the shared zone infra (MainMeter,
+  # MainMeterReading, PumpStation, PumpStationAssignment) for that zone only.
+  # commander never inherits this elevation.
+  context "when user is admin_unit of unit_a AND unit_a is zone-manager" do
+    let(:user) { create(:user, :admin_unit, organization: unit_a) }
+    let(:pump_station_in_zone)    { create(:pump_station, zone: main_meter.zone) }
+    let(:pump_station_other_zone) { create(:pump_station, zone: other_main_meter.zone) }
+    let(:assignment_in_zone) do
+      create(:pump_station_assignment, pump_station: pump_station_in_zone, assignable: unit_a)
+    end
+    let(:assignment_other_zone) do
+      create(:pump_station_assignment, pump_station: pump_station_other_zone, assignable: unit_b)
+    end
+
+    before { main_meter.zone.update!(manager_organization: unit_a) }
+
+    # Managed zone: full manage
+    it { is_expected.to be_able_to(:manage, main_meter) }
+    it { is_expected.to be_able_to(:update, main_meter_reading) }
+    it { is_expected.to be_able_to(:manage, main_meter_reading) }
+    it { is_expected.to be_able_to(:manage, pump_station_in_zone) }
+    it { is_expected.to be_able_to(:manage, assignment_in_zone) }
+
+    # Other zone: blocked
+    it { is_expected.not_to be_able_to(:manage, other_main_meter) }
+    it { is_expected.not_to be_able_to(:manage, other_main_meter_reading) }
+    it { is_expected.not_to be_able_to(:manage, pump_station_other_zone) }
+    it { is_expected.not_to be_able_to(:manage, assignment_other_zone) }
+
+    # Existing :read rule still applies (regression guard for additive merge).
+    it { is_expected.to be_able_to(:read, main_meter) }
+  end
+
+  context "when user is admin_unit of unit_a AND unit_a is NOT zone-manager" do
+    let(:user) { create(:user, :admin_unit, organization: unit_a) }
+    let(:pump_station_in_zone) { create(:pump_station, zone: main_meter.zone) }
+
+    # Intentionally no `manager_organization` setup — the additive zone-manager
+    # rule must stay completely absent so sidebar class-level checks are false.
+
+    it { is_expected.not_to be_able_to(:manage, main_meter) }
+    it { is_expected.not_to be_able_to(:manage, main_meter_reading) }
+    it { is_expected.not_to be_able_to(:manage, pump_station_in_zone) }
+    it { is_expected.not_to be_able_to(:read,   pump_station_in_zone) }
+
+    # Class-level checks (sidebar): no rule must exist at all.
+    it { is_expected.not_to be_able_to(:manage, PumpStation) }
+    it { is_expected.not_to be_able_to(:manage, PumpStationAssignment) }
+    it { is_expected.not_to be_able_to(:manage, MainMeterReading) }
+    it { is_expected.not_to be_able_to(:manage, MainMeter) }
+  end
+
+  context "when user is commander of unit_a AND unit_a is zone-manager" do
+    let(:user) { create(:user, :commander, organization: unit_a) }
+    let(:pump_station_in_zone) { create(:pump_station, zone: main_meter.zone) }
+
+    before { main_meter.zone.update!(manager_organization: unit_a) }
+
+    it { is_expected.not_to be_able_to(:manage, main_meter) }
+    it { is_expected.to     be_able_to(:read,   main_meter) }
+    it { is_expected.not_to be_able_to(:update, main_meter_reading) }
+    it { is_expected.not_to be_able_to(:manage, pump_station_in_zone) }
+    it { is_expected.not_to be_able_to(:read,   pump_station_in_zone) }
   end
 
   context "when user is tech" do
@@ -219,6 +287,20 @@ RSpec.describe Ability do
 
       it "returns no contact_points" do
         expect(ContactPoint.accessible_by(ability)).to be_empty
+      end
+    end
+
+    context "for admin_unit who is zone-manager" do
+      let(:user) { create(:user, :admin_unit, organization: unit_a) }
+
+      before { main_meter.zone.update!(manager_organization: unit_a) }
+
+      it "scopes MainMeter manage to the managed zone only" do
+        # Ensure both meters exist as records so the scope has something to filter.
+        main_meter
+        other_main_meter
+
+        expect(MainMeter.accessible_by(ability, :manage)).to eq([ main_meter ])
       end
     end
   end
