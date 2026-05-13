@@ -7,7 +7,7 @@ class CreateContactPointGroupMemberships < ActiveRecord::Migration[8.1]
     end
 
     add_index :contact_point_group_memberships,
-              [:contact_point_group_id, :contact_point_id],
+              [ :contact_point_group_id, :contact_point_id ],
               unique: true,
               name: "idx_cpg_memberships_on_group_and_cp"
   end
