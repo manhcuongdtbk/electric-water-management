@@ -1,0 +1,14 @@
+<% content_for :title, t("zones.index.title") %>
+
+<div class="mb-6 flex items-center gap-2 text-sm text-gray-500">
+  <%= link_to t("zones.index.title"), zones_path, class: "hover:underline" %>
+  <span>/</span>
+  <span class="text-gray-900"><%= t("zones.edit.title") %></span>
+</div>
+
+<div class="bg-white rounded-lg border border-gray-200 p-6">
+  <h1 class="text-xl font-semibold text-gray-900 mb-1"><%= t("zones.edit.title") %></h1>
+  <p class="text-sm text-gray-500 mb-6"><%= @zone.name %></p>
+
+  <%= render "form", zone: @zone %>
+</div>

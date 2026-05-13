@@ -27,6 +27,7 @@ Rails.application.routes.draw do
   end
   resource :pump_station_readings, only: [ :show, :update ]
 
+  resources :zones, except: [ :show ]
   resources :work_groups, except: [ :show ]
   resources :contact_point_groups, except: [ :show ]
 

@@ -53,6 +53,7 @@ class Ability
     # sidebar uses (e.g. `can? :manage, PumpStation`) return false for them.
     managed_zone_ids = Zone.where(manager_organization_id: org_id).pluck(:id)
     if managed_zone_ids.any?
+      can :read,   Zone,                  id: managed_zone_ids
       can :manage, MainMeter,             zone_id: managed_zone_ids
       can :manage, MainMeterReading,      main_meter: { zone_id: managed_zone_ids }
       can :manage, PumpStation,           zone_id: managed_zone_ids
@@ -80,6 +81,8 @@ class Ability
 
     can :read, MonthlyPeriod
     can :read, RankQuota
+
+    can :read, Zone, id: user.organization&.zone_id
   end
 
   def tech_abilities

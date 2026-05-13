@@ -363,6 +363,11 @@ vi:
       updated: "Cập nhật nhóm đầu mối thành công."
       destroyed: "Xoá nhóm đầu mối thành công."
       destroy_failed: "Không thể xoá nhóm đầu mối."
+    zones:
+      created: "Đã thêm khu vực."
+      updated: "Đã cập nhật khu vực."
+      destroyed: "Đã xóa khu vực."
+      destroy_failed: "Không thể xóa khu vực."
     work_groups:
       created: "Tạo nhóm công tác thành công."
       updated: "Cập nhật nhóm công tác thành công."
@@ -700,6 +705,7 @@ vi:
     config_section: "Cấu hình hệ thống"
     monthly_periods: "Đơn giá điện"
     rank_quotas: "Định mức cấp bậc"
+    zones: "Khu vực"
     pump_stations: "Trạm bơm"
     pump_station_readings: "Chỉ số trạm bơm"
     work_groups: "Nhóm công tác"
@@ -1012,6 +1018,35 @@ vi:
       edit: "Sửa"
       delete: "Xoá"
       delete_confirm: "Bạn có chắc muốn xoá nhóm công tác này?"
+
+  zones:
+    index:
+      title: "Khu vực"
+      subtitle: "Quản lý khu vực điện"
+      empty: "Chưa có khu vực nào"
+      new: "Thêm khu vực"
+      columns:
+        stt: "STT"
+        name: "Tên khu vực"
+        manager_organization: "Đơn vị quản lý"
+        main_meters_count: "Công tơ tổng"
+        organizations_count: "Đơn vị"
+        actions: "Thao tác"
+    new:
+      title: "Thêm khu vực"
+    edit:
+      title: "Sửa khu vực"
+    form:
+      name: "Tên khu vực"
+      manager_organization: "Đơn vị quản lý"
+      manager_prompt: "— Chọn đơn vị quản lý —"
+      submit_create: "Tạo khu vực"
+      submit_update: "Lưu thay đổi"
+      cancel: "Hủy"
+    actions:
+      edit: "Sửa"
+      delete: "Xóa"
+      delete_confirm: "Bạn có chắc muốn xóa khu vực này?"
 
   pump_station_readings:
     show:

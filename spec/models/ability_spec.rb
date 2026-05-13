@@ -290,6 +290,48 @@ RSpec.describe Ability do
     end
   end
 
+  describe "Zone abilities" do
+    context "when user is admin_level1" do
+      let(:user) { create(:user, :admin_level1, organization: division) }
+
+      it { is_expected.to be_able_to(:manage, main_meter.zone) }
+      it { is_expected.to be_able_to(:manage, other_main_meter.zone) }
+    end
+
+    context "when user is admin_unit and unit is zone-manager" do
+      let(:user) { create(:user, :admin_unit, organization: unit_a) }
+
+      before { main_meter.zone.update!(manager_organization: unit_a) }
+
+      it { is_expected.to be_able_to(:read, main_meter.zone) }
+      it { is_expected.not_to be_able_to(:manage, main_meter.zone) }
+      it { is_expected.not_to be_able_to(:read, other_main_meter.zone) }
+    end
+
+    context "when user is admin_unit and unit is not zone-manager" do
+      let(:user) { create(:user, :admin_unit, organization: unit_a) }
+
+      it { is_expected.not_to be_able_to(:read, main_meter.zone) }
+      it { is_expected.not_to be_able_to(:read, other_main_meter.zone) }
+    end
+
+    context "when user is commander" do
+      let(:user) { create(:user, :commander, organization: unit_a) }
+
+      # unit_a.zone = main_meter.zone (set in the top-level before block)
+      it { is_expected.to be_able_to(:read, main_meter.zone) }
+      it { is_expected.not_to be_able_to(:update, main_meter.zone) }
+      it { is_expected.not_to be_able_to(:read, other_main_meter.zone) }
+    end
+
+    context "when user is tech" do
+      let(:user) { create(:user, :tech, organization: division) }
+
+      it { is_expected.not_to be_able_to(:read, main_meter.zone) }
+      it { is_expected.not_to be_able_to(:manage, main_meter.zone) }
+    end
+  end
+
   describe ".accessible_by" do
     let!(:cp_a_record) { cp_a }
     let!(:cp_b_record) { cp_b }

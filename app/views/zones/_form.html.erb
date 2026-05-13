@@ -1,0 +1,37 @@
+<%= form_with model: zone do |f| %>
+  <% if zone.errors.any? %>
+    <div class="mb-4 rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">
+      <ul class="list-disc pl-4 space-y-0.5">
+        <% zone.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="space-y-4 max-w-2xl">
+    <div>
+      <%= f.label :name, t("zones.form.name"),
+            class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.text_field :name,
+            class: "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500",
+            required: true %>
+    </div>
+
+    <div>
+      <%= f.label :manager_organization_id, t("zones.form.manager_organization"),
+            class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.select :manager_organization_id,
+            unit_options,
+            { include_blank: t("zones.form.manager_prompt") },
+            class: "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+    </div>
+
+    <div class="flex items-center gap-3 pt-2">
+      <%= f.submit zone.new_record? ? t("zones.form.submit_create") : t("zones.form.submit_update"),
+            class: "inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors cursor-pointer" %>
+      <%= link_to t("zones.form.cancel"), zones_path,
+            class: "text-sm text-gray-600 hover:underline" %>
+    </div>
+  </div>
+<% end %>
