@@ -42,6 +42,8 @@ class Ability
     can :manage, ContactPointGroup,       organization_id: org_id
     can :manage, ContactPointGroupMembership, contact_point_group: { organization_id: org_id }
 
+    can :manage, WorkGroup, owner_organization_id: org_id
+
     can :read, MonthlyPeriod
     can :read, RankQuota
 
@@ -73,6 +75,8 @@ class Ability
 
     can :read, ContactPointGroup,       organization_id: org_id
     can :read, ContactPointGroupMembership, contact_point_group: { organization_id: org_id }
+
+    can :read, WorkGroup, owner_organization_id: org_id
 
     can :read, MonthlyPeriod
     can :read, RankQuota

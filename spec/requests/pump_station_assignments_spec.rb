@@ -188,7 +188,7 @@ RSpec.describe "PumpStationAssignments", type: :request do
       end
 
       it "creates a WorkGroup assignment (nhóm công tác)" do
-        wg = create(:work_group, owner_organization: division)
+        wg = create(:work_group, owner_organization: org)
         params = create_params.deep_merge(pump_station_assignment: {
                                             assignable_type: "WorkGroup",
                                             assignable_id: wg.id,

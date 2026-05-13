@@ -13,6 +13,9 @@
     <thead class="bg-gray-50">
       <tr>
         <th class="px-4 py-3 text-left font-medium text-gray-600 w-10"><%= t("work_groups.index.columns.stt") %></th>
+        <% if can? :manage, :all %>
+          <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("activerecord.attributes.work_group.owner_organization") %></th>
+        <% end %>
         <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("work_groups.index.columns.name") %></th>
         <th class="px-4 py-3 text-right font-medium text-gray-600 w-32"><%= t("work_groups.index.columns.personnel_count") %></th>
         <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("work_groups.index.columns.notes") %></th>
@@ -25,6 +28,9 @@
         <% @work_groups.each_with_index do |wg, idx| %>
           <tr class="hover:bg-gray-50">
             <td class="px-4 py-3 text-gray-500"><%= idx + 1 %></td>
+            <% if can? :manage, :all %>
+              <td class="px-4 py-3 text-gray-700"><%= wg.owner_organization.name %></td>
+            <% end %>
             <td class="px-4 py-3 font-medium text-gray-900"><%= wg.name %></td>
             <td class="px-4 py-3 text-right text-gray-700"><%= number_with_delimiter(wg.personnel_count) %></td>
             <td class="px-4 py-3 text-gray-500 text-xs"><%= wg.notes.presence || "—" %></td>
@@ -43,7 +49,7 @@
         <% end %>
       <% else %>
         <tr>
-          <td colspan="6" class="px-4 py-6 text-center text-gray-500 italic">
+          <td colspan="<%= can?(:manage, :all) ? 7 : 6 %>" class="px-4 py-6 text-center text-gray-500 italic">
             <%= t("work_groups.index.empty") %>
           </td>
         </tr>

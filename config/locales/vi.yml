@@ -89,7 +89,7 @@ vi:
         work_group:
           attributes:
             owner_organization:
-              must_be_division: "phải là Sư đoàn"
+              must_be_unit: "phải là đơn vị trực thuộc"
         pump_station_assignment:
           attributes:
             assignable:
@@ -150,7 +150,7 @@ vi:
         personnel_count: "Quân số"
         position: "Thứ tự hiển thị"
         notes: "Ghi chú"
-        owner_organization: "Sư đoàn quản lý"
+        owner_organization: "Đơn vị quản lý"
       contact_point_other_deduction:
         other_type: "Kiểu nhập"
         other_value: "Giá trị"

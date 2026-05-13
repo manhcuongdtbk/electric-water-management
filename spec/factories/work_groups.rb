@@ -3,6 +3,6 @@ FactoryBot.define do
     sequence(:name) { |n| "Nhom cong tac #{n}" }
     personnel_count { 10 }
     position { 0 }
-    association :owner_organization, factory: %i[organization division]
+    association :owner_organization, factory: %i[organization unit]
   end
 end

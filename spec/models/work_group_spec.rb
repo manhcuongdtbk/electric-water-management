@@ -21,26 +21,26 @@ RSpec.describe WorkGroup, type: :model do
     it { is_expected.to validate_numericality_of(:position)
                           .only_integer.is_greater_than_or_equal_to(0) }
 
-    it "rejects unit-level Organization as owner" do
-      unit = create(:organization, :unit)
-      wg = build(:work_group, owner_organization: unit)
+    it "rejects division-level Organization as owner" do
+      div = create(:organization, :division)
+      wg = build(:work_group, owner_organization: div)
       expect(wg).not_to be_valid
       expect(wg.errors[:owner_organization]).to be_present
     end
 
-    it "accepts division-level Organization as owner" do
-      div = create(:organization, :division)
-      wg = build(:work_group, owner_organization: div)
+    it "accepts unit-level Organization as owner" do
+      unit = create(:organization, :unit)
+      wg = build(:work_group, owner_organization: unit)
       expect(wg).to be_valid
     end
   end
 
   describe "scopes" do
     it ".ordered sorts by position then name" do
-      div = create(:organization, :division)
-      b = create(:work_group, owner_organization: div, name: "Beta", position: 1)
-      a = create(:work_group, owner_organization: div, name: "Alpha", position: 2)
-      c = create(:work_group, owner_organization: div, name: "Gamma", position: 0)
+      unit = create(:organization, :unit)
+      b = create(:work_group, owner_organization: unit, name: "Beta", position: 1)
+      a = create(:work_group, owner_organization: unit, name: "Alpha", position: 2)
+      c = create(:work_group, owner_organization: unit, name: "Gamma", position: 0)
 
       expect(WorkGroup.ordered.to_a).to eq([ c, b, a ])
     end

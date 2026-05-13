@@ -154,7 +154,7 @@
                     <%= t("nav.pump_station_readings") %>
                   <% end %>
                 <% end %>
-                <% if can? :manage, WorkGroup %>
+                <% if can? :read, WorkGroup %>
                   <%= link_to work_groups_path,
                         class: "flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-colors #{controller_name == 'work_groups' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}" do %>
                     <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

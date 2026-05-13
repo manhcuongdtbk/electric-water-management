@@ -12,16 +12,16 @@ class WorkGroup < ApplicationRecord
             numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :position,
             numericality: { only_integer: true, greater_than_or_equal_to: 0 }
-  validate :owner_must_be_division
+  validate :owner_must_be_unit
 
   # Scopes
   scope :ordered, -> { order(:position, :name) }
 
   private
 
-  def owner_must_be_division
-    return if owner_organization&.division?
+  def owner_must_be_unit
+    return if owner_organization&.unit?
 
-    errors.add(:owner_organization, :must_be_division)
+    errors.add(:owner_organization, :must_be_unit)
   end
 end
