@@ -8,14 +8,12 @@ RSpec.describe Organization, type: :model do
     subject { build(:organization, :division) }
 
     it { is_expected.to belong_to(:parent).class_name("Organization").optional }
-    it { is_expected.to belong_to(:main_meter).optional }
     it { is_expected.to belong_to(:zone).optional }
     it { is_expected.to have_many(:children).class_name("Organization").with_foreign_key(:parent_id) }
     it { is_expected.to have_many(:users) }
     it { is_expected.to have_many(:contact_points) }
     it { is_expected.to have_many(:meters) }
     it { is_expected.to have_many(:unit_configs) }
-    it { is_expected.to have_many(:pump_stations) }
     it { is_expected.to have_many(:pump_station_assignments) }
   end
 

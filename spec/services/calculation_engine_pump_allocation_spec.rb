@@ -37,8 +37,8 @@ RSpec.describe "Pump allocation across 3 nhóm đối tượng (integration)" do
 
   let(:division)    { create(:organization, :division) }
   let(:main_meter)  { create(:main_meter, name: "Khu vuc A") }
-  let(:dva)         { create(:organization, level: :unit, parent: division, name: "DVA", main_meter: main_meter, zone: main_meter.zone) }
-  let(:dvb)         { create(:organization, level: :unit, parent: division, name: "DVB", main_meter: main_meter, zone: main_meter.zone) }
+  let(:dva)         { create(:organization, level: :unit, parent: division, name: "DVA", zone: main_meter.zone) }
+  let(:dvb)         { create(:organization, level: :unit, parent: division, name: "DVB", zone: main_meter.zone) }
   let(:period)      { create(:monthly_period, year: 2026, month: 4, unit_price: bd("2336.4")) }
 
   let!(:rank_quotas) { (1..7).map { |g| create(:rank_quota, :"rank#{g}") } }
@@ -117,7 +117,7 @@ RSpec.describe "Pump allocation across 3 nhóm đối tượng (integration)" do
     m
   end
 
-  let!(:pump_station) { create(:pump_station, organization: division, name: "TB1") }
+  let!(:pump_station) { create(:pump_station, zone: main_meter.zone, name: "TB1") }
   let!(:m_pump) do
     m = create(:meter, :pump_station, organization: division, contact_point: nil,
                pump_station: pump_station, name: "TB1-CT1")

@@ -28,7 +28,7 @@ RSpec.describe Meter, type: :model do
 
   describe "pump_station consistency validation" do
     let(:org) { create(:organization) }
-    let(:pump_station) { create(:pump_station, organization: org) }
+    let(:pump_station) { create(:pump_station) }
     let(:contact_point) { create(:contact_point, organization: org) }
 
     context "for a pump_station meter" do

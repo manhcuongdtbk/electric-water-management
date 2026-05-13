@@ -64,7 +64,6 @@ class OrganizationsController < ApplicationController
     @organization.users.exists? ||
       @organization.contact_points.exists? ||
       @organization.meters.exists? ||
-      @organization.pump_stations.exists? ||
       @organization.unit_configs.exists? ||
       @organization.pump_station_assignments.exists?
   end

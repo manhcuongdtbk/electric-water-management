@@ -37,8 +37,8 @@ RSpec.describe "CalculationEngine zone-loss + pump pool (integration)" do
 
   let(:division)    { create(:organization, :division) }
   let(:main_meter)  { create(:main_meter, name: "Khu vuc A") }
-  let(:dva)         { create(:organization, level: :unit, parent: division, name: "DVA", main_meter: main_meter, zone: main_meter.zone) }
-  let(:dvb)         { create(:organization, level: :unit, parent: division, name: "DVB", main_meter: main_meter, zone: main_meter.zone) }
+  let(:dva)         { create(:organization, level: :unit, parent: division, name: "DVA", zone: main_meter.zone) }
+  let(:dvb)         { create(:organization, level: :unit, parent: division, name: "DVB", zone: main_meter.zone) }
   let(:period)      { create(:monthly_period, year: 2026, month: 4, unit_price: bd("2336.4")) }
 
   let!(:rank_quotas) { (1..7).map { |g| create(:rank_quota, :"rank#{g}") } }
@@ -123,7 +123,7 @@ RSpec.describe "CalculationEngine zone-loss + pump pool (integration)" do
   end
 
   # Pump at division-level, assigned to DVA only.
-  let!(:pump_station) { create(:pump_station, organization: division, name: "TB1") }
+  let!(:pump_station) { create(:pump_station, zone: main_meter.zone, name: "TB1") }
   let!(:m_pump) do
     m = create(:meter, :pump_station, organization: division, contact_point: nil, pump_station: pump_station, name: "TB1-CT1")
     create(:meter_reading, meter: m, monthly_period: period, reading_start: 0, reading_end: 500, consumption: 500)
@@ -200,7 +200,7 @@ RSpec.describe "CalculationEngine zone-loss + pump pool (integration)" do
   end
 
   describe "org with no MainMeter (no supply available)" do
-    let(:solo_org) { create(:organization, level: :unit, parent: division, main_meter: nil) }
+    let(:solo_org) { create(:organization, level: :unit, parent: division, zone: nil) }
     # solo_org reuses cfg_division (same parent). No unit-level config needed —
     # unit_public_rate defaults to ZERO when missing.
     let!(:cp_solo) { create(:contact_point, organization: solo_org, name: "Solo CP") }

@@ -46,7 +46,7 @@ RSpec.describe "MainMeters management", type: :system do
 
     it "sửa khu vực + thay đổi đơn vị thành công" do
       mm = create(:main_meter, name: "Khu vực A")
-      scenario.unit.update!(main_meter: mm)
+      scenario.unit.update!(zone: mm.zone)
       other_unit = create(:organization, :unit, parent: scenario.division, name: "Đơn vị B")
 
       visit edit_main_meter_path(mm)
@@ -56,22 +56,23 @@ RSpec.describe "MainMeters management", type: :system do
 
       expect(page).to have_current_path(main_meters_path)
       expect(page).to have_content(I18n.t("flash.main_meters.updated"))
-      expect(scenario.unit.reload.main_meter_id).to be_nil
-      expect(other_unit.reload.main_meter_id).to eq(mm.id)
+      expect(scenario.unit.reload.zone_id).to be_nil
+      expect(other_unit.reload.zone_id).to eq(mm.zone_id)
     end
 
     it "gán đơn vị đang thuộc khu vực khác → chuyển sang khu vực mới (cảnh báo hiển thị)" do
-      old_mm = create(:main_meter, name: "Khu vực cũ")
-      scenario.unit.update!(main_meter: old_mm)
-      new_mm = create(:main_meter, name: "Khu vực mới")
+      old_zone = create(:zone, name: "Khu vực cũ")
+      old_mm = create(:main_meter, name: "Đồng hồ tổng cũ", zone: old_zone)
+      scenario.unit.update!(zone: old_zone)
+      new_mm = create(:main_meter, name: "Đồng hồ tổng mới")
 
       visit edit_main_meter_path(new_mm)
-      expect(page).to have_content(I18n.t("main_meters.form.org_in_other", main_meter: old_mm.name))
+      expect(page).to have_content(I18n.t("main_meters.form.org_in_other", zone: old_zone.name))
       check scenario.unit.name
       click_on I18n.t("main_meters.form.submit_update")
 
       expect(page).to have_content(I18n.t("flash.main_meters.updated"))
-      expect(scenario.unit.reload.main_meter_id).to eq(new_mm.id)
+      expect(scenario.unit.reload.zone_id).to eq(new_mm.zone_id)
       expect(old_mm.reload.organizations).to be_empty
     end
 
@@ -85,9 +86,10 @@ RSpec.describe "MainMeters management", type: :system do
       }.to change { PaperTrail::Version.where(item_type: "Organization", item_id: scenario.unit.id).count }.by(1)
     end
 
-    it "xoá khu vực không có reading → các đơn vị bị tách khỏi khu vực" do
+    it "xoá đồng hồ tổng không có reading → đơn vị vẫn thuộc khu vực, zone không bị xoá" do
       mm = create(:main_meter)
-      scenario.unit.update!(main_meter: mm)
+      zone = mm.zone
+      scenario.unit.update!(zone: zone)
 
       visit main_meters_path
       within("tr", text: mm.name) do
@@ -96,7 +98,9 @@ RSpec.describe "MainMeters management", type: :system do
 
       expect(page).to have_content(I18n.t("flash.main_meters.destroyed"))
       expect(MainMeter.exists?(mm.id)).to be false
-      expect(scenario.unit.reload.main_meter_id).to be_nil
+      # Zone outlives the main_meter — orgs keep their zone membership.
+      expect(scenario.unit.reload.zone_id).to eq(zone.id)
+      expect(Zone.exists?(zone.id)).to be true
     end
 
     it "không xoá được khu vực có chỉ số đồng hồ tổng" do

@@ -39,7 +39,7 @@ RSpec.describe CalculationEngine do
   # -----------------------------------------------------------------------
   let(:division)    { create(:organization, :division) }
   let(:main_meter)  { create(:main_meter, name: "Zone fixture") }
-  let(:organization) { create(:organization, level: :unit, parent: division, main_meter: main_meter, zone: main_meter.zone) }
+  let(:organization) { create(:organization, level: :unit, parent: division, zone: main_meter.zone) }
   let(:period)      { create(:monthly_period, year: 2026, month: 2, unit_price: unit_price) }
   let!(:main_meter_reading) do
     create(:main_meter_reading,
@@ -71,7 +71,7 @@ RSpec.describe CalculationEngine do
   let!(:reading_tac_huan) { create(:meter_reading, meter: meter_tac_huan, monthly_period: period, reading_start: 0, reading_end: 500, consumption: 500) }
 
   # Pump station — 1 trạm bơm phục vụ organization, tổng điện 1000 kW.
-  let!(:pump_station) { create(:pump_station, organization: division, name: "TB 1") }
+  let!(:pump_station) { create(:pump_station, zone: main_meter.zone, name: "TB 1") }
   let!(:pump_meter)  { create(:meter, :pump_station, organization: division, contact_point: nil, pump_station: pump_station, name: "M-Pump") }
   let!(:pump_reading) { create(:meter_reading, meter: pump_meter, monthly_period: period, reading_start: 0, reading_end: 1000, consumption: 1000) }
   let!(:pump_assignment) { create(:pump_station_assignment, pump_station: pump_station, organization: organization) }
@@ -495,7 +495,7 @@ RSpec.describe CalculationEngine do
   # a single pump station serves several units. Each served CP's share is
   # pump_pool × cp_people / (Σ people across ALL served orgs).
   describe "multi-unit pump allocation (real Excel 'Bảng II' case)" do
-    let(:other_unit) { create(:organization, level: :unit, parent: division, main_meter: main_meter, zone: main_meter.zone) }
+    let(:other_unit) { create(:organization, level: :unit, parent: division, zone: main_meter.zone) }
 
     let!(:cp_other) { create(:contact_point, organization: other_unit, name: "CP Other") }
     let!(:p_other) do

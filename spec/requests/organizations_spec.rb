@@ -207,14 +207,6 @@ RSpec.describe "Organizations", type: :request do
         expect(flash[:alert]).to eq(I18n.t("flash.organizations.cannot_destroy_with_data"))
       end
 
-      it "blocks destroying a unit with pump_stations" do
-        create(:pump_station, organization: unit_org)
-        expect {
-          delete organization_path(unit_org)
-        }.not_to change(Organization, :count)
-        expect(flash[:alert]).to eq(I18n.t("flash.organizations.cannot_destroy_with_data"))
-      end
-
       it "blocks destroying a unit with unit_configs" do
         period = create(:monthly_period)
         create(:unit_config, organization: unit_org, monthly_period: period)
@@ -225,7 +217,7 @@ RSpec.describe "Organizations", type: :request do
       end
 
       it "blocks destroying a unit with pump_station_assignments" do
-        pump = create(:pump_station, organization: division)
+        pump = create(:pump_station)
         create(:pump_station_assignment, pump_station: pump, organization: unit_org)
         expect {
           delete organization_path(unit_org)

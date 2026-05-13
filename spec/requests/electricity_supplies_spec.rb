@@ -4,9 +4,9 @@ RSpec.describe "ElectricitySupplies", type: :request do
   let(:division)   { create(:organization, :division) }
   let(:main_meter_a) { create(:main_meter, name: "Zone A") }
   let(:main_meter_b) { create(:main_meter, name: "Zone B") }
-  let(:org_a)      { create(:organization, :unit, parent: division, main_meter: main_meter_a) }
-  let(:org_b)      { create(:organization, :unit, parent: division, main_meter: main_meter_b) }
-  let(:orphan_org) { create(:organization, :unit, parent: division, main_meter: nil) }
+  let(:org_a)      { create(:organization, :unit, parent: division, zone: main_meter_a.zone) }
+  let(:org_b)      { create(:organization, :unit, parent: division, zone: main_meter_b.zone) }
+  let(:orphan_org) { create(:organization, :unit, parent: division, zone: nil) }
 
   let(:admin1)       { create(:user, :admin_level1, organization: division) }
   let(:admin_unit_a) { create(:user, :admin_unit,   organization: org_a) }
