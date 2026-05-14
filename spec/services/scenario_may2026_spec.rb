@@ -8,7 +8,7 @@ require "rails_helper"
 #
 # Expected values được tính độc lập bằng Python BigDecimal. So sánh dùng
 # tolerance bd("0.01") vì engine giữ full-precision (không làm tròn).
-RSpec.describe "Kịch bản tháng 5/2026", type: :service do
+RSpec.describe "Kịch bản tháng 5/2026" do
   def bd(value) = BigDecimal(value.to_s)
 
   let(:tolerance) { bd("0.01") }

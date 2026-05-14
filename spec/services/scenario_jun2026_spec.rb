@@ -13,7 +13,7 @@ require "rails_helper"
 #   * công tơ bơm tiêu thụ 400 (T5 là 500)
 #
 # Expected values tính độc lập bằng Python BigDecimal, tolerance bd("0.01").
-RSpec.describe "Kịch bản tháng 6/2026", type: :service do
+RSpec.describe "Kịch bản tháng 6/2026" do
   def bd(value) = BigDecimal(value.to_s)
 
   let(:tolerance) { bd("0.01") }
