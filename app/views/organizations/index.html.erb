@@ -6,42 +6,106 @@
         class: "inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors" %>
 </div>
 
+<%# Search form %>
+<%= search_form_for @q, url: organizations_path, html: { class: "mb-4 flex flex-wrap gap-2" } do |f| %>
+  <%= f.text_field :name_cont,
+        placeholder: t("organizations.index.search_placeholder"),
+        class: "border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-56" %>
+  <%= f.select :zone_id_eq,
+        options_from_collection_for_select(@zones, :id, :name, params.dig(:q, :zone_id_eq)),
+        { include_blank: t("organizations.index.all_zones") },
+        class: "border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+  <%= f.submit t("common.search.submit"),
+        class: "px-4 py-1.5 bg-gray-600 text-white text-sm rounded-md hover:bg-gray-700 cursor-pointer transition-colors" %>
+  <%= link_to t("common.search.clear"), organizations_path(sort: params[:sort].presence, direction: params[:direction].presence),
+        class: "px-4 py-1.5 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50 transition-colors" %>
+<% end %>
+
+<% current_sort = params[:sort].presence || "zone"
+   current_dir  = params[:direction].presence || "asc"
+   q_params     = params[:q]&.to_unsafe_h.presence
+
+   sort_link = ->(col, label) do
+     next_dir = (current_sort == col && current_dir == "asc") ? "desc" : "asc"
+     icon = current_sort == col ? (current_dir == "asc" ? " ↑" : " ↓") : nil
+     link_to organizations_path(q: q_params, sort: col, direction: next_dir),
+             class: "inline-flex items-center gap-0.5 hover:text-blue-600 transition-colors" do
+       safe_join([ label, icon ? content_tag(:span, icon, class: "text-gray-500 text-xs") : nil ].compact)
+     end
+   end %>
+
+<%# Table %>
 <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
   <table class="min-w-full divide-y divide-gray-200 text-sm">
     <thead class="bg-gray-50">
       <tr>
-        <th class="px-4 py-3 text-left font-medium text-gray-600 w-10"><%= t("organizations.index.columns.stt") %></th>
-        <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("organizations.index.columns.name") %></th>
-        <th class="px-4 py-3 text-right font-medium text-gray-600"><%= t("organizations.index.columns.contact_points_count") %></th>
-        <th class="px-4 py-3 text-right font-medium text-gray-600"><%= t("organizations.index.columns.users_count") %></th>
-        <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("organizations.index.columns.actions") %></th>
+        <th class="px-4 py-3 text-left text-gray-600 w-40">
+          <%= sort_link.call("zone", t("organizations.index.columns.zone")) %>
+        </th>
+        <th class="px-4 py-3 text-left text-gray-600">
+          <%= sort_link.call("name", t("organizations.index.columns.name")) %>
+        </th>
+        <th class="px-4 py-3 text-left text-gray-600">
+          <%= sort_link.call("contact_points", t("organizations.index.columns.contact_points_count")) %>
+        </th>
+        <th class="px-4 py-3 text-left text-gray-600">
+          <%= sort_link.call("users", t("organizations.index.columns.users_count")) %>
+        </th>
+        <th class="px-4 py-3 text-left text-gray-600"><%= t("organizations.index.columns.actions") %></th>
       </tr>
     </thead>
-    <tbody class="divide-y divide-gray-100">
-      <% if @organizations.any? %>
-        <% @organizations.each_with_index do |organization, idx| %>
-          <tr class="hover:bg-gray-50">
-            <td class="px-4 py-3 text-gray-500"><%= idx + 1 %></td>
-            <td class="px-4 py-3 font-medium text-gray-900"><%= organization.name %></td>
-            <td class="px-4 py-3 text-right text-gray-700"><%= organization.contact_points.size %></td>
-            <td class="px-4 py-3 text-right text-gray-700"><%= organization.users.size %></td>
-            <td class="px-4 py-3">
-              <div class="flex items-center gap-2">
-                <%= link_to t("organizations.actions.edit"), edit_organization_path(organization),
-                      class: "text-blue-600 hover:underline text-xs" %>
+    <tbody class="divide-y divide-gray-100" data-controller="zone-hover">
+      <% if @organizations_by_zone.empty? %>
+        <tr>
+          <td colspan="5" class="px-4 py-8 text-center text-gray-400">
+            <%= q_params.present? ? t("organizations.index.empty_filtered") : t("organizations.index.empty") %>
+          </td>
+        </tr>
+      <% else %>
+        <% @organizations_by_zone.each do |zone, orgs| %>
+          <% orgs.each_with_index do |organization, i| %>
+            <tr class="hover:bg-gray-50"
+                data-zone-id="<%= zone.id %>"
+                data-action="mouseenter->zone-hover#enter mouseleave->zone-hover#leave">
+              <% if i == 0 %>
+                <td class="px-4 py-3 text-gray-700 align-middle border-r border-gray-200"
+                    rowspan="<%= orgs.size %>"
+                    data-zone-cell="<%= zone.id %>">
+                  <% if can?(:read, zone) %>
+                    <%= link_to zone.name, zone_path(zone), class: "hover:text-blue-600 transition-colors" %>
+                  <% else %>
+                    <%= zone.name %>
+                  <% end %>
+                </td>
+              <% end %>
+              <td class="px-4 py-3 text-gray-700 align-middle">
+                <%= link_to organization.name, edit_organization_path(organization),
+                      class: "hover:text-blue-600 transition-colors" %>
+              </td>
+              <td class="px-4 py-3 text-gray-700 align-middle">
+                <% cp_count = organization.contact_points.size %>
+                <% if cp_count > 0 %>
+                  <%= link_to cp_count,
+                        contact_points_path(q: { organization_id_eq: organization.id }),
+                        class: "text-blue-600 hover:text-blue-800" %>
+                <% else %>
+                  0
+                <% end %>
+              </td>
+              <td class="px-4 py-3 text-gray-700 align-middle"><%= organization.users.size %></td>
+              <td class="px-4 py-3 align-middle">
                 <%= button_to t("organizations.actions.delete"), organization_path(organization),
                       method: :delete,
                       data: { turbo_confirm: t("organizations.actions.delete_confirm") },
-                      class: "text-red-600 hover:underline text-xs bg-transparent border-0 cursor-pointer p-0" %>
-              </div>
-            </td>
-          </tr>
+                      class: "text-red-600 hover:underline bg-transparent border-0 cursor-pointer p-0" %>
+              </td>
+            </tr>
+          <% end %>
         <% end %>
-      <% else %>
-        <tr>
-          <td colspan="5" class="px-4 py-8 text-center text-gray-400"><%= t("organizations.index.empty") %></td>
-        </tr>
       <% end %>
     </tbody>
   </table>
 </div>
+
+<%# Pagination %>
+<%= render "shared/pagination", pagy: @pagy %>

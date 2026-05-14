@@ -1,9 +1,21 @@
 class OrganizationsController < ApplicationController
+  include Pagy::Method
+
   before_action :authorize_organization_management
   before_action :set_organization, only: [ :edit, :update, :destroy ]
 
   def index
-    @organizations = Organization.units.ordered.includes(:users, :contact_points)
+    @q = Organization.units.accessible_by(current_ability)
+                     .includes(:zone, :users, :contact_points)
+                     .ransack(params[:q])
+
+    all_orgs = @q.result.to_a
+    all_orgs = apply_sort(all_orgs, params[:sort], params[:direction])
+
+    @pagy, paged_orgs = pagy(all_orgs, limit: 25)
+    @organizations_by_zone = paged_orgs.group_by(&:zone)
+                                       .sort_by { |z, _| z&.name.to_s }
+    @zones = Zone.order(:name)
   end
 
   def new
@@ -62,6 +74,33 @@ class OrganizationsController < ApplicationController
       @organization.meters.exists? ||
       @organization.unit_configs.exists? ||
       @organization.pump_station_assignments.exists?
+  end
+
+  def apply_sort(orgs, sort_col, direction)
+    orgs.sort do |a, b|
+      zone_a = a.zone&.name.to_s
+      zone_b = b.zone&.name.to_s
+
+      if sort_col == "zone"
+        zone_cmp = zone_a <=> zone_b
+        primary  = direction == "desc" ? -zone_cmp : zone_cmp
+        next primary unless primary.zero?
+        next a.name <=> b.name
+      end
+
+      zone_cmp = zone_a <=> zone_b
+      next zone_cmp unless zone_cmp.zero?
+
+      col_cmp = case sort_col
+      when "contact_points" then a.contact_points.size <=> b.contact_points.size
+      when "users"          then a.users.size <=> b.users.size
+      else                       a.name <=> b.name
+      end
+      primary = direction == "desc" ? -col_cmp : col_cmp
+      next primary unless primary.zero?
+
+      a.name <=> b.name
+    end
   end
 
   def organization_params
