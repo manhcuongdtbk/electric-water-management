@@ -567,7 +567,7 @@ vi:
 
   meter_readings:
     show:
-      title: "Chỉ số công tơ"
+      title: "Chỉ số đầu mối"
     period_select: "Kỳ tính toán"
     org_select: "Đơn vị"
     no_period: "Chưa có kỳ nào. Vui lòng tạo kỳ tính toán trước."
@@ -698,28 +698,31 @@ vi:
       submit: "Đổi mật khẩu"
 
   nav:
-    dashboard: "Trang chủ"
+    dashboard: "Tổng quan"
     contact_points: "Đầu mối"
     contact_point_groups: "Nhóm đầu mối"
     unit_config: "Cấu hình"
     electricity_supply: "Nhập số điện lực"
-    meter_readings: "Chỉ số công tơ"
+    meter_readings: "Chỉ số đầu mối"
     personnel_review: "Soát lại quân số"
     monthly_summary: "Bảng tổng hợp"
     history: "Tra cứu lịch sử"
     users: "Tài khoản"
     sign_out: "Đăng xuất"
-    config_section: "Cấu hình hệ thống"
     monthly_periods: "Đơn giá điện"
     rank_quotas: "Định mức cấp bậc"
     zones: "Khu vực"
-    pump_stations: "Trạm bơm"
-    pump_station_readings: "Chỉ số trạm bơm"
-    work_groups: "Nhóm công tác"
+    pump_stations: "Trạm bơm nước"
+    pump_station_readings: "Chỉ số bơm nước"
+    work_groups: "Đầu mối ngoài biên chế"
     organizations: "Đơn vị"
-    main_meters: "Khu vực đồng hồ tổng"
     audit_logs: "Nhật ký hoạt động"
     backups: "Sao lưu dữ liệu"
+    section_results: "XEM KẾT QUẢ"
+    section_monthly_input: "NHẬP LIỆU HÀNG THÁNG"
+    section_declaration: "KHAI BÁO"
+    section_setup: "THIẾT LẬP"
+    section_system: "HỆ THỐNG"
 
   users:
     index:
@@ -769,7 +772,7 @@ vi:
 
   dashboard:
     show:
-      title: "Trang chủ"
+      title: "Tổng quan"
       period_select: "Chọn kỳ"
       org_select: "Chọn đơn vị"
       all_orgs: "Tất cả đơn vị"
@@ -876,7 +879,7 @@ vi:
 
   pump_stations:
     index:
-      title: "Trạm bơm"
+      title: "Trạm bơm nước"
       note: "Đặt phần trăm cố định (ví dụ 30%) cho đầu mối hưởng riêng. Phần còn lại sẽ chia cho các đơn vị khác theo quân số. Tổng các tỷ lệ cố định trên cùng một trạm bơm không được vượt quá 100%."
       empty: "Chưa có trạm bơm nào. Bấm \"Thêm trạm bơm\" để bắt đầu."
       new_button: "Thêm trạm bơm"
@@ -887,12 +890,12 @@ vi:
       add_assignment: "Thêm phân bổ"
       no_meters: "Trạm bơm này chưa có công tơ nào."
     new:
-      title: "Thêm trạm bơm mới"
+      title: "Thêm trạm bơm nước"
       pump_station_section: "Thông tin trạm bơm"
       first_meter_section: "Công tơ đầu tiên"
       first_meter_hint: "Trạm bơm phải có ít nhất 1 công tơ. Nhập thông tin công tơ đầu tiên — có thể thêm/sửa/xoá thêm các công tơ khác sau."
     edit:
-      title: "Sửa trạm bơm"
+      title: "Sửa trạm bơm nước"
     form:
       name: "Tên trạm bơm"
       zone: "Khu vực"
@@ -998,9 +1001,9 @@ vi:
 
   work_groups:
     index:
-      title: "Nhóm công tác"
-      subtitle: "Nhóm công tác là tập hợp người lao động (VD: Thợ xây, Trạm chế biến) không thuộc đơn vị hay đầu mối nào, nhưng được phân bổ điện bơm theo quân số."
-      new_button: "Thêm nhóm công tác"
+      title: "Đầu mối ngoài biên chế"
+      subtitle: "Đầu mối ngoài biên chế là tập hợp người lao động (VD: Thợ xây, Trạm chế biến) không thuộc đơn vị hay đầu mối nào, nhưng được phân bổ điện bơm theo quân số."
+      new_button: "Thêm đầu mối ngoài biên chế"
       empty: "Chưa có nhóm công tác nào."
       columns:
         stt: "STT"
@@ -1010,9 +1013,9 @@ vi:
         position: "Thứ tự"
         actions: "Thao tác"
     new:
-      title: "Thêm nhóm công tác"
+      title: "Thêm đầu mối ngoài biên chế"
     edit:
-      title: "Sửa nhóm công tác"
+      title: "Sửa đầu mối ngoài biên chế"
     form:
       name: "Tên nhóm công tác"
       personnel_count: "Quân số (người)"
@@ -1058,7 +1061,7 @@ vi:
 
   pump_station_readings:
     show:
-      title: "Nhập chỉ số công tơ trạm bơm"
+      title: "Chỉ số bơm nước"
     period_select: "Kỳ tính toán"
     no_period: "Chưa có kỳ nào. Vui lòng tạo kỳ tính toán trước."
     no_meters: "Chưa có trạm bơm nào hoặc trạm bơm chưa có công tơ."
@@ -1117,7 +1120,7 @@ vi:
 
   backups:
     index:
-      title: "Sao lưu & Phục hồi dữ liệu"
+      title: "Sao lưu dữ liệu"
       backup_button: "Sao lưu ngay"
       restore_confirm: "Bạn chắc chắn muốn phục hồi từ file này? Toàn bộ dữ liệu hiện tại sẽ bị ghi đè và bạn cần đăng nhập lại."
       delete_confirm: "Bạn chắc chắn muốn xóa file sao lưu này?"
