@@ -92,10 +92,10 @@ class OrganizationsController < ApplicationController
       next zone_cmp unless zone_cmp.zero?
 
       col_cmp = case sort_col
-                when "contact_points" then a.contact_points.size <=> b.contact_points.size
-                when "users"          then a.users.size <=> b.users.size
-                else                       a.name <=> b.name
-                end
+      when "contact_points" then a.contact_points.size <=> b.contact_points.size
+      when "users"          then a.users.size <=> b.users.size
+      else                       a.name <=> b.name
+      end
       primary = direction == "desc" ? -col_cmp : col_cmp
       next primary unless primary.zero?
 
