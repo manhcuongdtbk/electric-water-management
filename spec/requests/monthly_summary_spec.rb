@@ -403,6 +403,17 @@ RSpec.describe "MonthlySummary", type: :request do
         expect(response).to redirect_to(monthly_summary_path(period_id: period.id, org_id: nil))
         expect(flash[:alert]).to include("test error")
       end
+
+      # Recalculate is idempotent computation over existing data, not data entry,
+      # so the period lock intentionally does not block it.
+      it "still recalculates when the period is locked" do
+        sign_in admin_unit_a
+        period.update!(locked: true, locked_at: Time.current, locked_by: admin1)
+        allow_any_instance_of(CalculationOrchestrator).to receive(:call).and_return([])
+        post recalculate_monthly_summary_path, params: { period_id: period.id }
+        expect(response).to redirect_to(monthly_summary_path(period_id: period.id, org_id: nil))
+        expect(flash[:notice]).to eq(I18n.t("flash.monthly_summary.recalculated"))
+      end
     end
 
     context "as commander" do
