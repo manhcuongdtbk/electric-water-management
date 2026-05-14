@@ -10,16 +10,56 @@
     <h1 class="text-xl font-semibold text-gray-900"><%= @zone.name %></h1>
   </div>
 
-  <div class="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100 mb-6">
-    <div class="flex px-5 py-3 text-sm">
-      <span class="w-40 text-gray-500 flex-shrink-0"><%= t("zones.form.name") %></span>
-      <span class="text-gray-900 font-medium"><%= @zone.name %></span>
+  <% if can? :update, @zone %>
+    <div class="bg-white rounded-lg border border-gray-200 p-5 mb-6">
+      <%= form_with model: @zone do |f| %>
+        <% if @zone.errors.any? %>
+          <div class="mb-4 rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">
+            <ul class="list-disc pl-4 space-y-0.5">
+              <% @zone.errors.full_messages.each do |msg| %>
+                <li><%= msg %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <div class="space-y-4">
+          <div>
+            <%= f.label :name, t("zones.form.name"),
+                  class: "block text-sm font-medium text-gray-700 mb-1" %>
+            <%= f.text_field :name,
+                  class: "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500",
+                  required: true %>
+          </div>
+
+          <div>
+            <%= f.label :manager_organization_id, t("zones.form.manager_organization"),
+                  class: "block text-sm font-medium text-gray-700 mb-1" %>
+            <%= f.select :manager_organization_id,
+                  unit_options,
+                  { include_blank: t("zones.form.manager_prompt") },
+                  class: "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+          </div>
+
+          <div class="pt-1">
+            <%= f.submit t("zones.form.submit_update"),
+                  class: "inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors cursor-pointer" %>
+          </div>
+        </div>
+      <% end %>
     </div>
-    <div class="flex px-5 py-3 text-sm">
-      <span class="w-40 text-gray-500 flex-shrink-0"><%= t("zones.form.manager_organization") %></span>
-      <span class="text-gray-900"><%= @zone.manager_organization&.name || t("zones.show.no_manager") %></span>
+  <% else %>
+    <div class="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100 mb-6">
+      <div class="flex px-5 py-3 text-sm">
+        <span class="w-40 text-gray-500 flex-shrink-0"><%= t("zones.form.name") %></span>
+        <span class="text-gray-900 font-medium"><%= @zone.name %></span>
+      </div>
+      <div class="flex px-5 py-3 text-sm">
+        <span class="w-40 text-gray-500 flex-shrink-0"><%= t("zones.form.manager_organization") %></span>
+        <span class="text-gray-900"><%= @zone.manager_organization&.name || t("zones.show.no_manager") %></span>
+      </div>
     </div>
-  </div>
+  <% end %>
 
   <%# Công tơ tổng %>
   <div class="mb-6">
@@ -38,16 +78,14 @@
       <table class="min-w-full divide-y divide-gray-200 text-sm">
         <thead class="bg-gray-50">
           <tr>
-            <th class="px-4 py-3 text-left font-medium text-gray-600 w-12"><%= t("main_meters.columns.stt") %></th>
             <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("main_meters.columns.name") %></th>
             <th class="px-4 py-3 text-left font-medium text-gray-600 w-32"><%= t("main_meters.columns.actions") %></th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
           <% if @main_meters.any? %>
-            <% @main_meters.each_with_index do |main_meter, idx| %>
+            <% @main_meters.each do |main_meter| %>
               <tr class="hover:bg-gray-50">
-                <td class="px-4 py-3 text-gray-500"><%= idx + 1 %></td>
                 <td class="px-4 py-3 font-medium text-gray-900"><%= main_meter.name %></td>
                 <td class="px-4 py-3">
                   <div class="flex items-center gap-2">
@@ -67,7 +105,7 @@
             <% end %>
           <% else %>
             <tr>
-              <td colspan="3" class="px-4 py-6 text-center text-gray-500 italic">
+              <td colspan="2" class="px-4 py-6 text-center text-gray-500 italic">
                 <%= t("zones.show.main_meters_empty") %>
               </td>
             </tr>
@@ -93,18 +131,10 @@
     </div>
   </div>
 
-  <div class="flex gap-3">
-    <% if can? :update, @zone %>
-      <%= link_to t("zones.actions.edit"), edit_zone_path(@zone),
-            class: "px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-md hover:bg-amber-600 transition-colors" %>
-    <% end %>
-    <% if can? :destroy, @zone %>
-      <%= button_to t("zones.actions.delete"), zone_path(@zone),
-            method: :delete,
-            data: { turbo_confirm: t("zones.actions.delete_confirm") },
-            class: "px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 transition-colors cursor-pointer border-0" %>
-    <% end %>
-    <%= link_to t("zones.show.back"), zones_path,
-          class: "px-4 py-2 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50 transition-colors" %>
-  </div>
+  <% if can? :destroy, @zone %>
+    <%= button_to t("zones.actions.delete"), zone_path(@zone),
+          method: :delete,
+          data: { turbo_confirm: t("zones.actions.delete_confirm") },
+          class: "px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 transition-colors cursor-pointer border-0" %>
+  <% end %>
 </div>

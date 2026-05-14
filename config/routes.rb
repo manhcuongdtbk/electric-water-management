@@ -27,7 +27,7 @@ Rails.application.routes.draw do
   end
   resource :pump_station_readings, only: [ :show, :update ]
 
-  resources :zones do
+  resources :zones, except: [ :edit ] do
     resources :main_meters, only: [ :new, :create, :edit, :update, :destroy ]
   end
   resources :work_groups, except: [ :show ]

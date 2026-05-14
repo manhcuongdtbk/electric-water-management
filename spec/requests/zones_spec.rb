@@ -205,38 +205,6 @@ RSpec.describe "Zones", type: :request do
     end
   end
 
-  describe "GET /zones/:id/edit" do
-    context "as admin_level1" do
-      before { sign_in admin1 }
-
-      it "renders the edit form" do
-        get edit_zone_path(zone_a)
-        expect(response).to have_http_status(:ok)
-      end
-    end
-
-    context "as zone-manager admin_unit (no :update ability)" do
-      before do
-        zone_a.update!(manager_organization: org_a)
-        sign_in admin_unit_a
-      end
-
-      it "is forbidden even for the managed zone" do
-        get edit_zone_path(zone_a)
-        expect(response).to redirect_to(root_path)
-      end
-    end
-
-    context "when zone does not exist" do
-      before { sign_in admin1 }
-
-      it "returns 404" do
-        get edit_zone_path(id: 999_999)
-        expect(response).to have_http_status(:not_found)
-      end
-    end
-  end
-
   describe "PATCH /zones/:id" do
     context "as admin_level1" do
       before { sign_in admin1 }
