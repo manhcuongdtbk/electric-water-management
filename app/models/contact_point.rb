@@ -18,15 +18,14 @@ class ContactPoint < ApplicationRecord
   validates :name, presence: true, length: { maximum: 100 },
             uniqueness: { scope: :organization_id }
   validates :group_name, length: { maximum: 100 }, allow_blank: true
-  validates :position, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 
   # Scopes
-  scope :ordered, -> { order(:position, :name) }
+  scope :ordered, -> { order(:name) }
   scope :by_organization, ->(org_id) { where(organization_id: org_id) }
   scope :by_group, ->(group) { where(group_name: group) }
 
   def self.ransackable_attributes(_auth_object = nil)
-    %w[name group_name organization_id position contact_point_type created_at updated_at]
+    %w[name group_name organization_id contact_point_type created_at updated_at]
   end
 
   def self.ransackable_associations(_auth_object = nil)

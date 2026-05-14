@@ -28,9 +28,9 @@ RSpec.describe LossCalculator do
              electricity_supply_kw: bd("1800"))
     end
 
-    let_it_be(:cp_truong)   { create(:contact_point, organization: organization, name: "TMP Truong",   position: 1) }
-    let_it_be(:cp_qluc)     { create(:contact_point, organization: organization, name: "TB Q.Luc",     position: 2) }
-    let_it_be(:cp_tac_huan) { create(:contact_point, organization: organization, name: "Ban Tac Huan", position: 3) }
+    let_it_be(:cp_truong)   { create(:contact_point, organization: organization, name: "TMP Truong") }
+    let_it_be(:cp_qluc)     { create(:contact_point, organization: organization, name: "TB Q.Luc") }
+    let_it_be(:cp_tac_huan) { create(:contact_point, organization: organization, name: "Ban Tac Huan") }
 
     let_it_be(:meter_truong)   { create(:meter, :normal, organization: organization, contact_point: cp_truong,   name: "M-Truong") }
     let_it_be(:meter_qluc)     { create(:meter, :normal, organization: organization, contact_point: cp_qluc,     name: "M-QLuc") }
@@ -101,11 +101,11 @@ RSpec.describe LossCalculator do
              electricity_supply_kw: bd("2000"))
     end
 
-    let_it_be(:a1) { create(:contact_point, organization: dva, name: "A1", position: 1) }
-    let_it_be(:a2) { create(:contact_point, organization: dva, name: "A2", position: 2) }
-    let_it_be(:a3) { create(:contact_point, organization: dva, name: "A3", position: 3) }
-    let_it_be(:a4) { create(:contact_point, organization: dva, name: "A4 public", group_name: "public", position: 4) }
-    let_it_be(:b1) { create(:contact_point, organization: dvb, name: "B1", position: 1) }
+    let_it_be(:a1) { create(:contact_point, organization: dva, name: "A1") }
+    let_it_be(:a2) { create(:contact_point, organization: dva, name: "A2") }
+    let_it_be(:a3) { create(:contact_point, organization: dva, name: "A3") }
+    let_it_be(:a4) { create(:contact_point, organization: dva, name: "A4 public", group_name: "public") }
+    let_it_be(:b1) { create(:contact_point, organization: dvb, name: "B1") }
 
     let_it_be(:m_a1) do
       m = create(:meter, :normal, organization: dva, contact_point: a1, name: "A1-CT1")
@@ -238,7 +238,7 @@ RSpec.describe LossCalculator do
         create(:main_meter_reading, main_meter: main_meter, monthly_period: period,
                electricity_supply_kw: bd("500"))
       end
-      let_it_be(:cp) { create(:contact_point, organization: organization, name: "CP no-loss only", position: 1) }
+      let_it_be(:cp) { create(:contact_point, organization: organization, name: "CP no-loss only") }
       let_it_be(:m_no_loss) do
         m = create(:meter, :no_loss, organization: organization, contact_point: cp, name: "no_loss meter")
         create(:meter_reading, meter: m, monthly_period: period, reading_start: 0, reading_end: 50, consumption: 50)
@@ -268,7 +268,7 @@ RSpec.describe LossCalculator do
         create(:main_meter_reading, main_meter: main_meter, monthly_period: period,
                electricity_supply_kw: bd("100"))
       end
-      let_it_be(:cp) { create(:contact_point, organization: organization, name: "Big consumer", position: 1) }
+      let_it_be(:cp) { create(:contact_point, organization: organization, name: "Big consumer") }
       let_it_be(:m) do
         meter = create(:meter, :normal, organization: organization, contact_point: cp, name: "M big")
         create(:meter_reading, meter: meter, monthly_period: period, reading_start: 0, reading_end: 999, consumption: 999)
@@ -304,7 +304,7 @@ RSpec.describe LossCalculator do
         create(:main_meter_reading, main_meter: main_meter, monthly_period: period,
                electricity_supply_kw: bd("2000"))
       end
-      let_it_be(:cp) { create(:contact_point, organization: organization, name: "CP", position: 1) }
+      let_it_be(:cp) { create(:contact_point, organization: organization, name: "CP") }
       let_it_be(:m) do
         meter = create(:meter, :normal, organization: organization, contact_point: cp, name: "M")
         create(:meter_reading, meter: meter, monthly_period: period, reading_start: 0, reading_end: 1500, consumption: 1500)
@@ -336,7 +336,7 @@ RSpec.describe LossCalculator do
         create(:main_meter_reading, main_meter: main_meter, monthly_period: period,
                electricity_supply_kw: bd("1000"))
       end
-      let_it_be(:cp) { create(:contact_point, organization: organization, name: "CP", position: 1) }
+      let_it_be(:cp) { create(:contact_point, organization: organization, name: "CP") }
       let_it_be(:m) do
         meter = create(:meter, :normal, organization: organization, contact_point: cp, name: "M")
         create(:meter_reading, meter: meter, monthly_period: period, reading_start: 0, reading_end: 100, consumption: 100)

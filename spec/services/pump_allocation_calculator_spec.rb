@@ -63,11 +63,11 @@ RSpec.describe PumpAllocationCalculator do
       let_it_be(:dva)      { create(:organization, level: :unit, parent: division, name: "DVA", zone: zone) }
       let_it_be(:dvb)      { create(:organization, level: :unit, parent: division, name: "DVB", zone: zone) }
 
-      let_it_be(:a1) { create(:contact_point, organization: dva, name: "A1", position: 1) }
-      let_it_be(:a2) { create(:contact_point, organization: dva, name: "A2", position: 2) }
-      let_it_be(:a3) { create(:contact_point, organization: dva, name: "A3", position: 3) }
-      let_it_be(:a4) { create(:contact_point, organization: dva, name: "A4", position: 4) }
-      let_it_be(:b1) { create(:contact_point, organization: dvb, name: "B1", position: 1) }
+      let_it_be(:a1) { create(:contact_point, organization: dva, name: "A1") }
+      let_it_be(:a2) { create(:contact_point, organization: dva, name: "A2") }
+      let_it_be(:a3) { create(:contact_point, organization: dva, name: "A3") }
+      let_it_be(:a4) { create(:contact_point, organization: dva, name: "A4") }
+      let_it_be(:b1) { create(:contact_point, organization: dvb, name: "B1") }
 
       let_it_be(:p_a1) { make_personnel(contact_point: a1, rank1: 2) }
       let_it_be(:p_a2) { make_personnel(contact_point: a2, rank7: 3) }
@@ -78,7 +78,7 @@ RSpec.describe PumpAllocationCalculator do
       let_it_be(:pump_station) { create(:pump_station, zone: zone, name: "TB1") }
       let_it_be(:m_pump)       { make_pump_meter(pump_station: pump_station, org: division, consumption: bd("1000")) }
 
-      let_it_be(:work_group) { create(:work_group, owner_organization: dva, name: "Tho xay", personnel_count: 2, position: 0) }
+      let_it_be(:work_group) { create(:work_group, owner_organization: dva, name: "Tho xay", personnel_count: 2) }
 
       let_it_be(:asg_a1)  { create(:pump_station_assignment, pump_station: pump_station, assignable: a1, fixed_pump_percentage: 30) }
       let_it_be(:asg_dva) { create(:pump_station_assignment, pump_station: pump_station, assignable: dva) }

@@ -3,7 +3,7 @@ class PumpStation < ApplicationRecord
 
   # Virtual attrs used only by the create form to atomically build the
   # first meter alongside the pump station (invariant: ≥ 1 meter).
-  attr_accessor :first_meter_name, :first_meter_serial_number
+  attr_accessor :first_meter_name
 
   # Associations
   belongs_to :zone

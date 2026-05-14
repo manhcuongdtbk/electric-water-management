@@ -19,13 +19,10 @@ class Meter < ApplicationRecord
   # Validations
   validates :name, presence: true, length: { maximum: 100 }
   validates :meter_type, presence: true
-  validates :serial_number, uniqueness: true, allow_blank: true, length: { maximum: 50 }
-  validates :notes, length: { maximum: 1000 }, allow_blank: true
-  validates :position, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validate :pump_station_assignment_consistency
 
   # Scopes
-  scope :ordered, -> { order(:position, :name) }
+  scope :ordered, -> { order(:name) }
   scope :by_organization, ->(org_id) { where(organization_id: org_id) }
   scope :by_type, ->(type) { where(meter_type: type) }
   # Used by LossCalculator to build the loss-pool (B) and the no_loss

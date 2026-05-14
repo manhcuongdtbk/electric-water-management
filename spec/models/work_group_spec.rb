@@ -18,8 +18,6 @@ RSpec.describe WorkGroup, type: :model do
     it { is_expected.to validate_uniqueness_of(:name).scoped_to(:owner_organization_id) }
     it { is_expected.to validate_numericality_of(:personnel_count)
                           .only_integer.is_greater_than_or_equal_to(0) }
-    it { is_expected.to validate_numericality_of(:position)
-                          .only_integer.is_greater_than_or_equal_to(0) }
 
     it "rejects division-level Organization as owner" do
       div = create(:organization, :division)
@@ -36,13 +34,13 @@ RSpec.describe WorkGroup, type: :model do
   end
 
   describe "scopes" do
-    it ".ordered sorts by position then name" do
+    it ".ordered sorts by name" do
       unit = create(:organization, :unit)
-      b = create(:work_group, owner_organization: unit, name: "Beta", position: 1)
-      a = create(:work_group, owner_organization: unit, name: "Alpha", position: 2)
-      c = create(:work_group, owner_organization: unit, name: "Gamma", position: 0)
+      b = create(:work_group, owner_organization: unit, name: "Beta")
+      a = create(:work_group, owner_organization: unit, name: "Alpha")
+      c = create(:work_group, owner_organization: unit, name: "Gamma")
 
-      expect(WorkGroup.ordered.to_a).to eq([ c, b, a ])
+      expect(WorkGroup.ordered.to_a).to eq([ a, b, c ])
     end
   end
 

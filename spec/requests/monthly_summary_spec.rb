@@ -418,8 +418,8 @@ RSpec.describe "MonthlySummary", type: :request do
   # Sort by group_name — F11
   # ---------------------------------------------------------------------------
   describe "sort by group_name" do
-    let!(:cp_alpha) { create(:contact_point, organization: org_a, group_name: "Alpha", position: 99) }
-    let!(:cp_zeta)  { create(:contact_point, organization: org_a, group_name: "Zeta",  position: 1) }
+    let!(:cp_alpha) { create(:contact_point, organization: org_a, group_name: "Alpha", name: "CP Alpha") }
+    let!(:cp_zeta)  { create(:contact_point, organization: org_a, group_name: "Zeta",  name: "CP Zeta") }
     let!(:calc_alpha) do
       create(:monthly_calculation, contact_point: cp_alpha, monthly_period: period,
              total_personnel: 5, rank1_kw: 100, water_pump_standard_kw: 0,

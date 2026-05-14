@@ -62,17 +62,17 @@ RSpec.describe ContactPoint, type: :model do
 
   describe "scopes" do
     let!(:org) { create(:organization) }
-    let!(:cp1) { create(:contact_point, organization: org, group_name: "A", position: 2) }
-    let!(:cp2) { create(:contact_point, organization: org, group_name: "B", position: 1) }
+    let!(:cp1) { create(:contact_point, organization: org, group_name: "A", name: "Zulu") }
+    let!(:cp2) { create(:contact_point, organization: org, group_name: "B", name: "Alpha") }
     let!(:cp3) { create(:contact_point) }
-    let!(:cp_communal) { create(:contact_point, :communal, organization: org, position: 9) }
+    let!(:cp_communal) { create(:contact_point, :communal, organization: org, name: "Mike") }
 
     it ".by_organization filters correctly" do
       expect(ContactPoint.by_organization(org.id)).to include(cp1, cp2)
       expect(ContactPoint.by_organization(org.id)).not_to include(cp3)
     end
 
-    it ".ordered sorts by position" do
+    it ".ordered sorts by name" do
       expect(ContactPoint.by_organization(org.id).ordered.first).to eq(cp2)
     end
 

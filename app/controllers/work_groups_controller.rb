@@ -8,7 +8,7 @@ class WorkGroupsController < ApplicationController
 
   def new
     owner = current_user.admin_level1? ? nil : current_user.organization
-    @work_group = WorkGroup.new(position: next_position, owner_organization: owner)
+    @work_group = WorkGroup.new(owner_organization: owner)
     authorize! :create, @work_group
   end
 
@@ -57,14 +57,11 @@ class WorkGroupsController < ApplicationController
   end
 
   def work_group_params
-    permitted = params.require(:work_group).permit(:name, :personnel_count, :notes, :position)
+    permitted = params.require(:work_group).permit(:name, :personnel_count)
     if current_user.admin_level1? && params[:work_group][:owner_organization_id].present?
       permitted[:owner_organization_id] = params[:work_group][:owner_organization_id]
     end
     permitted
   end
 
-  def next_position
-    (WorkGroup.where(owner_organization_id: current_user.organization_id).maximum(:position) || -1) + 1
-  end
 end

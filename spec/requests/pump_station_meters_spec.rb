@@ -36,10 +36,7 @@ RSpec.describe "PumpStationMeters", type: :request do
     let(:valid_params) do
       {
         meter: {
-          name: "CT thứ hai",
-          serial_number: "SN-002",
-          notes: "Đầu ra",
-          position: "1"
+          name: "CT thứ hai"
         }
       }
     end
@@ -87,16 +84,15 @@ RSpec.describe "PumpStationMeters", type: :request do
   end
 
   describe "PATCH /pump_stations/:pump_station_id/meters/:id" do
-    let(:params) { { meter: { name: "Renamed", notes: "New notes" } } }
+    let(:params) { { meter: { name: "Renamed" } } }
 
     context "as admin_level1" do
       before { sign_in admin1 }
 
-      it "updates name and notes" do
+      it "updates name" do
         patch pump_station_meter_path(pump_station, initial_meter), params: params
         initial_meter.reload
         expect(initial_meter.name).to eq("Renamed")
-        expect(initial_meter.notes).to eq("New notes")
         expect(response).to redirect_to(pump_stations_path)
       end
     end

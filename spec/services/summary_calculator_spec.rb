@@ -21,8 +21,8 @@ RSpec.describe SummaryCalculator do
   let_it_be(:rank_quota1) { create(:rank_quota, rank_group: 1, rank_name: "3*/4*", quota_kw: bd("115")) }
   let_it_be(:rank_quota2) { create(:rank_quota, rank_group: 2, rank_name: "1*/2*", quota_kw: bd("38")) }
 
-  let_it_be(:cp_a) { create(:contact_point, organization: organization, name: "CP A", position: 1) }
-  let_it_be(:cp_b) { create(:contact_point, organization: organization, name: "CP B", position: 2) }
+  let_it_be(:cp_a) { create(:contact_point, organization: organization, name: "CP A") }
+  let_it_be(:cp_b) { create(:contact_point, organization: organization, name: "CP B") }
 
   let_it_be(:personnel_a) do
     create(:personnel, contact_point: cp_a, monthly_period: period,
@@ -151,7 +151,7 @@ RSpec.describe SummaryCalculator do
     end
 
     it "loss = 0 when CP has no entry in loss_pool_consumption_by_cp" do
-      orphan_cp = create(:contact_point, organization: organization, name: "Orphan", position: 3)
+      orphan_cp = create(:contact_point, organization: organization, name: "Orphan")
       result = described_class.new(
         organization:   organization,
         monthly_period: period,
@@ -244,7 +244,7 @@ RSpec.describe SummaryCalculator do
     end
 
     it "water_pump_actual_kw = 0 when CP has no entry in allocations_by_cp" do
-      orphan_cp = create(:contact_point, organization: organization, name: "Orphan", position: 3)
+      orphan_cp = create(:contact_point, organization: organization, name: "Orphan")
       result = described_class.new(
         organization:   organization,
         monthly_period: period,
@@ -286,7 +286,7 @@ RSpec.describe SummaryCalculator do
 
   describe "edge cases" do
     it "no personnel → all rank_kw = 0 and total_standard = 0" do
-      lonely_cp = create(:contact_point, organization: organization, name: "Lonely", position: 9)
+      lonely_cp = create(:contact_point, organization: organization, name: "Lonely")
       result = described_class.new(
         organization:   organization,
         monthly_period: period,
@@ -301,7 +301,7 @@ RSpec.describe SummaryCalculator do
     end
 
     it "no meter readings → meter_usage_kw = 0" do
-      bare_cp = create(:contact_point, organization: organization, name: "Bare", position: 10)
+      bare_cp = create(:contact_point, organization: organization, name: "Bare")
       create(:personnel, contact_point: bare_cp, monthly_period: period,
                          rank1_count: 1, rank2_count: 0, rank3_count: 0,
                          rank4_count: 0, rank5_count: 0, rank6_count: 0, rank7_count: 0)

@@ -10,12 +10,10 @@ class WorkGroup < ApplicationRecord
             uniqueness: { scope: :owner_organization_id }
   validates :personnel_count,
             numericality: { only_integer: true, greater_than_or_equal_to: 0 }
-  validates :position,
-            numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validate :owner_must_be_unit
 
   # Scopes
-  scope :ordered, -> { order(:position, :name) }
+  scope :ordered, -> { order(:name) }
 
   private
 

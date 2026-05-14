@@ -61,10 +61,10 @@ RSpec.describe "CalculationOrchestrator zone-loss + pump pool (integration)" do
   end
 
   # DVA contact points + personnel + meters
-  let!(:a1) { create(:contact_point, organization: dva, name: "A1 Ban Chi huy", position: 1) }
-  let!(:a2) { create(:contact_point, organization: dva, name: "A2 To xe",      position: 2) }
-  let!(:a3) { create(:contact_point, organization: dva, name: "A3 Kho",         position: 3) }
-  let!(:a4) { create(:contact_point, organization: dva, name: "A4 Den duong",   group_name: "public", position: 4) }
+  let!(:a1) { create(:contact_point, organization: dva, name: "A1 Ban Chi huy") }
+  let!(:a2) { create(:contact_point, organization: dva, name: "A2 To xe") }
+  let!(:a3) { create(:contact_point, organization: dva, name: "A3 Kho") }
+  let!(:a4) { create(:contact_point, organization: dva, name: "A4 Den duong", group_name: "public") }
 
   let!(:p_a1) do
     create(:personnel, contact_point: a1, monthly_period: period,
@@ -110,7 +110,7 @@ RSpec.describe "CalculationOrchestrator zone-loss + pump pool (integration)" do
   end
 
   # DVB contact points + personnel + meter
-  let!(:b1) { create(:contact_point, organization: dvb, name: "B1 Dai doi 1", position: 1) }
+  let!(:b1) { create(:contact_point, organization: dvb, name: "B1 Dai doi 1") }
   let!(:p_b1) do
     create(:personnel, contact_point: b1, monthly_period: period,
            rank1_count: 0, rank2_count: 0, rank3_count: 0, rank4_count: 0,

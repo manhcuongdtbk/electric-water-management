@@ -119,7 +119,7 @@ RSpec.describe "ContactPoints", type: :request do
   end
 
   describe "POST /contact_points" do
-    let(:valid_params) { { contact_point: { name: "Ban Tác huấn", position: 1 } } }
+    let(:valid_params) { { contact_point: { name: "Ban Tác huấn" } } }
 
     context "as admin_unit" do
       it "creates a contact point in own organization" do
@@ -144,7 +144,7 @@ RSpec.describe "ContactPoints", type: :request do
         sign_in admin1
         expect {
           post contact_points_path, params: {
-            contact_point: { name: "Ban Quân lực", position: 2, organization_id: org_b.id }
+            contact_point: { name: "Ban Quân lực", organization_id: org_b.id }
           }
         }.to change(ContactPoint, :count).by(1)
 

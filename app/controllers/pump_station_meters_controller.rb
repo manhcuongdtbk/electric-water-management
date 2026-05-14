@@ -62,7 +62,7 @@ class PumpStationMetersController < ApplicationController
   end
 
   def meter_params
-    params.require(:meter).permit(:name, :serial_number, :notes, :position)
+    params.require(:meter).permit(:name)
   end
 
   def division

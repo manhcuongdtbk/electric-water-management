@@ -17,12 +17,10 @@ class PumpStationsController < ApplicationController
 
   def create
     @pump_station = PumpStation.new(pump_station_params)
-    @pump_station.first_meter_name          = first_meter_name_param
-    @pump_station.first_meter_serial_number = first_meter_serial_param
+    @pump_station.first_meter_name = first_meter_name_param
 
     @first_meter = @pump_station.meters.build(
       name: first_meter_name_param,
-      serial_number: first_meter_serial_param,
       meter_type: :pump_station,
       organization: division
     )
@@ -88,19 +86,11 @@ class PumpStationsController < ApplicationController
     params.dig(:pump_station, :first_meter_name).to_s.strip
   end
 
-  def first_meter_serial_param
-    raw = params.dig(:pump_station, :first_meter_serial_number)
-    raw.present? ? raw.to_s.strip : nil
-  end
-
   def copy_first_meter_errors
     return unless @first_meter
 
     @first_meter.errors[:name].each do |msg|
       @pump_station.errors.add(:first_meter_name, msg)
-    end
-    @first_meter.errors[:serial_number].each do |msg|
-      @pump_station.errors.add(:first_meter_serial_number, msg)
     end
   end
 

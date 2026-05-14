@@ -7,7 +7,7 @@ class MainMetersController < ApplicationController
   end
 
   def new
-    @main_meter = MainMeter.new(position: next_position)
+    @main_meter = MainMeter.new
     @available_organizations = Organization.units.ordered
   end
 
@@ -64,12 +64,8 @@ class MainMetersController < ApplicationController
     @main_meter = MainMeter.accessible_by(current_ability).find(params[:id])
   end
 
-  def next_position
-    (MainMeter.maximum(:position) || 0) + 1
-  end
-
   def main_meter_params
-    params.require(:main_meter).permit(:name, :notes, :position)
+    params.require(:main_meter).permit(:name)
   end
 
   def organization_ids_param

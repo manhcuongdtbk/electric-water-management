@@ -113,7 +113,7 @@ RSpec.describe "Meters", type: :request do
   # CREATE
   # ---------------------------------------------------------------------------
   describe "POST /contact_points/:contact_point_id/meters" do
-    let(:valid_params) { { meter: { name: "Công tơ tầng 1", meter_type: "normal", position: 0 } } }
+    let(:valid_params) { { meter: { name: "Công tơ tầng 1", meter_type: "normal" } } }
 
     context "as admin_unit" do
       it "creates a meter for own contact_point" do
@@ -169,30 +169,6 @@ RSpec.describe "Meters", type: :request do
           post contact_point_meters_path(cp_a), params: valid_params
         }.not_to change(Meter, :count)
         expect(response).to redirect_to(root_path)
-      end
-    end
-
-    context "notes field" do
-      it "saves notes when provided" do
-        sign_in admin_unit_a
-        post contact_point_meters_path(cp_a),
-             params: { meter: { name: "CT ghi chú", meter_type: "normal", notes: "Gần cầu dao tổng" } }
-        expect(Meter.last.notes).to eq("Gần cầu dao tổng")
-      end
-
-      it "allows blank notes" do
-        sign_in admin_unit_a
-        post contact_point_meters_path(cp_a),
-             params: { meter: { name: "CT không ghi chú", meter_type: "normal", notes: "" } }
-        expect(response).to redirect_to(contact_point_meters_path(cp_a))
-        expect(Meter.last.notes).to be_blank
-      end
-
-      it "rejects notes over 1000 characters" do
-        sign_in admin_unit_a
-        post contact_point_meters_path(cp_a),
-             params: { meter: { name: "CT", meter_type: "normal", notes: "x" * 1001 } }
-        expect(response).to have_http_status(:unprocessable_entity)
       end
     end
 

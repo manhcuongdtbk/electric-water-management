@@ -54,7 +54,7 @@ class PumpStationReadingsController < ApplicationController
                                .merge(PumpStation.accessible_by(current_ability))
                                .where(meter_type: Meter.meter_types[:pump_station])
                                .includes(:pump_station)
-                               .order("pump_stations.name", :position, :name)
+                               .order("pump_stations.name", :name)
   end
 
   # Build @grouped_readings: { PumpStation => [[Meter, MeterReading], ...] }

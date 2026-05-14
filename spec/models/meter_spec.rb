@@ -14,12 +14,6 @@ RSpec.describe Meter, type: :model do
     it { is_expected.to validate_presence_of(:name) }
     it { is_expected.to validate_length_of(:name).is_at_most(100) }
     it { is_expected.to validate_presence_of(:meter_type) }
-    it { is_expected.to validate_uniqueness_of(:serial_number).allow_blank }
-    it { is_expected.to validate_length_of(:serial_number).is_at_most(50) }
-
-    it "is valid without a serial number" do
-      expect(build(:meter, serial_number: nil)).to be_valid
-    end
 
     it "is valid without a contact_point" do
       expect(build(:meter, contact_point: nil)).to be_valid

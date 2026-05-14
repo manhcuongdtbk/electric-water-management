@@ -101,9 +101,6 @@
                 <td class="px-4 py-3 text-gray-500"><%= idx + 1 %></td>
                 <td class="px-4 py-3 font-medium text-gray-900">
                   <%= meter.name %>
-                  <% if meter.serial_number.present? %>
-                    <span class="text-xs text-gray-400 ml-1">(<%= meter.serial_number %>)</span>
-                  <% end %>
                 </td>
                 <td class="px-4 py-3 text-gray-600">
                   <%= t("meters.meter_types.#{meter.meter_type}") %>

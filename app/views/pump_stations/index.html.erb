@@ -46,17 +46,13 @@
             <thead>
               <tr class="text-left text-xs text-gray-500">
                 <th class="py-1 pr-3 font-medium"><%= t("pump_station_meters.index.meter_name_col") %></th>
-                <th class="py-1 pr-3 font-medium"><%= t("pump_station_meters.index.serial_col") %></th>
-                <th class="py-1 pr-3 font-medium"><%= t("pump_station_meters.index.notes_col") %></th>
                 <th class="py-1 font-medium text-right w-32"><%= t("pump_station_meters.index.actions_col") %></th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-              <% ps.meters.sort_by { |m| [ m.position || 0, m.name.to_s ] }.each do |meter| %>
+              <% ps.meters.sort_by { |m| m.name.to_s }.each do |meter| %>
                 <tr>
                   <td class="py-1.5 pr-3 text-gray-900"><%= meter.name %></td>
-                  <td class="py-1.5 pr-3 text-gray-700"><%= meter.serial_number.presence || "—" %></td>
-                  <td class="py-1.5 pr-3 text-gray-500 text-xs"><%= meter.notes.presence || "—" %></td>
                   <td class="py-1.5 text-right">
                     <div class="flex items-center justify-end gap-2">
                       <%= link_to t("pump_station_meters.actions.edit"),

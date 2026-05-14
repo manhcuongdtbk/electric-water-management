@@ -2,7 +2,6 @@ FactoryBot.define do
   factory :organization do
     sequence(:name) { |n| "Organization #{n}" }
     level { :unit }
-    position { 0 }
     association :zone
 
     trait :division do
