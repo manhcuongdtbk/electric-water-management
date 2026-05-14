@@ -100,17 +100,28 @@ RSpec.describe "Dashboard", type: :request do
     end
 
     context "Khối column" do
-      it "shows Khối column header in month view" do
+      it "shows Khối column header in month view HTML" do
         sign_in admin_unit_a
         get dashboard_path(view_type: "month", period_id: period.id)
         expect(response.body).to include("Khối")
       end
 
       it "shows group_name value for contact points with a group" do
-        cp_normal.update!(group_name: "Ban Tham mưu")
         sign_in admin_unit_a
         get dashboard_path(view_type: "month", period_id: period.id)
-        expect(response.body).to include("Ban Tham mưu")
+        expect(response.body).to include(cp_normal.group_name)
+      end
+
+      it "has Khối at index 0 and Đầu mối at index 1 in month CSV" do
+        sign_in admin_unit_a
+        get dashboard_path(format: :csv, view_type: "month", period_id: period.id)
+        expect(response).to have_http_status(:ok)
+        body = response.body.force_encoding("UTF-8").sub(/\A\xEF\xBB\xBF/, "")
+        headers = CSV.parse_line(body.lines.first.chomp)
+        expect(headers[0]).to eq("Khối")
+        expect(headers[1]).to eq("Đầu mối")
+        data_row = CSV.parse_line(body.lines[1].chomp)
+        expect(data_row[0]).to eq(cp_normal.group_name.to_s)
       end
     end
 

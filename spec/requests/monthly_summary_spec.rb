@@ -400,17 +400,17 @@ RSpec.describe "MonthlySummary", type: :request do
       expect(response.body).to include(cp_a.group_name)
     end
 
-    it "includes Khối column before Tên đầu mối in CSV with correct group_name value" do
+    it "includes Khối at index 1 (after STT) and Tên đầu mối at index 2 in CSV" do
       sign_in admin_unit_a
       get monthly_summary_path(format: :csv, period_id: period.id)
       body = response.body.force_encoding("UTF-8").sub(/\A\xEF\xBB\xBF/, "")
       headers = CSV.parse_line(body.lines.first.chomp)
-      idx_khoi    = headers.index("Khối")
-      idx_contact = headers.index("Tên đầu mối")
-      expect(idx_khoi).not_to be_nil
-      expect(idx_khoi).to be < idx_contact
+      expect(headers[0]).to eq("STT")
+      expect(headers[1]).to eq("Khối")
+      expect(headers[2]).to eq("Tên đầu mối")
+      # data row: group_name value at correct position
       data_row = CSV.parse_line(body.lines[1].chomp)
-      expect(data_row[idx_khoi]).to eq(cp_a.group_name)
+      expect(data_row[1]).to eq(cp_a.group_name)
     end
   end
 
