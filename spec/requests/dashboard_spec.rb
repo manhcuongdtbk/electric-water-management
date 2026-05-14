@@ -3,6 +3,7 @@ require "rails_helper"
 RSpec.describe "Dashboard", type: :request do
   let(:division)     { create(:organization, :division) }
   let(:org_a)        { create(:organization, :unit, parent: division) }
+  let(:org_b)        { create(:organization, :unit, parent: division) }
   let(:admin1)       { create(:user, :admin_level1, organization: division) }
   let(:admin_unit_a) { create(:user, :admin_unit,   organization: org_a) }
   let(:tech_user)    { create(:user, :tech,         organization: org_a) }
@@ -142,6 +143,24 @@ RSpec.describe "Dashboard", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Khối")
         expect(response.body).to include(cp_normal.name)
+      end
+
+      it "does not merge two contact_points with the same name in aggregate view" do
+        cp_dup = create(:contact_point, organization: org_b, name: cp_normal.name, group_name: "Khối khác")
+        create(:monthly_calculation,
+               contact_point: cp_dup,
+               monthly_period: period_jan,
+               total_personnel: 5,
+               total_standard_kw: 200, total_usage_kw: 180,
+               over_under_kw: -20, total_amount: -40_000)
+
+        sign_in admin1
+        get dashboard_path(view_type: "quarter", year: 2026, quarter: 1)
+        expect(response).to have_http_status(:ok)
+
+        body = response.body
+        occurrences = body.scan(cp_normal.name).count
+        expect(occurrences).to be >= 2
       end
     end
   end
