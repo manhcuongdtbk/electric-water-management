@@ -35,10 +35,15 @@
           <div>
             <%= f.label :manager_organization_id, t("zones.form.manager_organization"),
                   class: "block text-sm font-medium text-gray-700 mb-1" %>
-            <%= f.select :manager_organization_id,
-                  unit_options,
-                  { include_blank: t("zones.form.manager_prompt") },
-                  class: "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+            <% manager_choices = manager_options(@zone) %>
+            <% if manager_choices.any? %>
+              <%= f.select :manager_organization_id,
+                    manager_choices,
+                    { include_blank: t("zones.form.manager_prompt") },
+                    class: "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+            <% else %>
+              <p class="text-sm text-gray-500"><%= t("zones.form.no_units_hint") %></p>
+            <% end %>
           </div>
 
           <div class="pt-1">

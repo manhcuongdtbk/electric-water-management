@@ -18,14 +18,21 @@
             required: true %>
     </div>
 
-    <div>
-      <%= f.label :manager_organization_id, t("zones.form.manager_organization"),
-            class: "block text-sm font-medium text-gray-700 mb-1" %>
-      <%= f.select :manager_organization_id,
-            unit_options,
-            { include_blank: t("zones.form.manager_prompt") },
-            class: "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
-    </div>
+    <% if f.object.persisted? %>
+      <div>
+        <%= f.label :manager_organization_id, t("zones.form.manager_organization"),
+              class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <% options = manager_options(f.object) %>
+        <% if options.any? %>
+          <%= f.select :manager_organization_id,
+                options,
+                { include_blank: t("zones.form.manager_prompt") },
+                class: "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+        <% else %>
+          <p class="text-sm text-gray-500"><%= t("zones.form.no_units_hint") %></p>
+        <% end %>
+      </div>
+    <% end %>
 
     <div class="flex items-center gap-3 pt-2">
       <%= f.submit zone.new_record? ? t("zones.form.submit_create") : t("zones.form.submit_update"),

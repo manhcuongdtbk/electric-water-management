@@ -9,6 +9,15 @@ class Zone < ApplicationRecord
   validates :name, presence: true,
                    uniqueness: { case_sensitive: true },
                    length: { maximum: 100 }
+  validate :manager_must_belong_to_zone
 
   scope :ordered, -> { order(:name) }
+
+  private
+
+  def manager_must_belong_to_zone
+    return if manager_organization.blank?
+
+    errors.add(:manager_organization, :not_in_zone) if manager_organization.zone_id != id
+  end
 end
