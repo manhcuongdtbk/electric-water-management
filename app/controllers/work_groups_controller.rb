@@ -63,5 +63,4 @@ class WorkGroupsController < ApplicationController
     end
     permitted
   end
-
 end
