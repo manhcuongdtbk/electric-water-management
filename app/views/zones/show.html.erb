@@ -135,7 +135,13 @@
       <% if @organizations.any? %>
         <ul class="divide-y divide-gray-100">
           <% @organizations.each do |organization| %>
-            <li class="px-5 py-3 text-sm text-gray-900"><%= organization.name %></li>
+            <li class="px-5 py-3 text-sm text-gray-900">
+              <% if can?(:update, organization) %>
+                <%= link_to organization.name, edit_organization_path(organization), class: "text-blue-600 hover:underline" %>
+              <% else %>
+                <%= organization.name %>
+              <% end %>
+            </li>
           <% end %>
         </ul>
       <% else %>

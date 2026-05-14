@@ -1152,7 +1152,7 @@ vi:
       zone: "Khu vực"
       zone_blank: "— Chọn khu vực —"
       submit_create: "Thêm đơn vị"
-      submit_update: "Lưu thay đổi"
+      submit_update: "Lưu"
       cancel: "Hủy"
     actions:
       edit: "Sửa"
