@@ -333,7 +333,6 @@ RSpec.describe CalculationOrchestrator do
         expect(row[:water_pump_actual_kw]).to eq(bd("0"))
       end
     end
-
   end
 
   # Matches the "Bảng II" scenario from docs/BANG_22_COT_ANALYSIS.md §3.2:
@@ -517,7 +516,6 @@ RSpec.describe CalculationOrchestrator do
         expect(sum).to be_within(bd("0.0001")).of(total)
       end
     end
-
   end
 
   # PumpStation→Meter is 1-many: a station may have several physical meters.
