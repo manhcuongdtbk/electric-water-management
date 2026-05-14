@@ -44,8 +44,9 @@ RSpec.describe "F05 — Electricity supply", type: :system do
       expect(page).to have_content("12.345,00")
     end
 
-    it "shows no-main-meter notice when their org is not assigned a zone" do
-      scenario.unit.update!(zone: nil)
+    it "shows no-main-meter notice when their zone has no MainMeter" do
+      empty_zone = create(:zone, name: "Khu vực rỗng")
+      scenario.unit.update!(zone: empty_zone)
       visit electricity_supply_path
       expect(page).to have_content(I18n.t("electricity_supplies.no_main_meter"))
     end

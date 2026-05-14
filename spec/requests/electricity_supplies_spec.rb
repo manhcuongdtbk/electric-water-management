@@ -6,7 +6,10 @@ RSpec.describe "ElectricitySupplies", type: :request do
   let(:main_meter_b) { create(:main_meter, name: "Zone B") }
   let(:org_a)      { create(:organization, :unit, parent: division, zone: main_meter_a.zone) }
   let(:org_b)      { create(:organization, :unit, parent: division, zone: main_meter_b.zone) }
-  let(:orphan_org) { create(:organization, :unit, parent: division, zone: nil) }
+  # orphan_org has a zone (now required by validation) but the zone has no
+  # MainMeter — exercises the "no main_meter" branch of the controller.
+  let(:orphan_zone) { create(:zone) }
+  let(:orphan_org)  { create(:organization, :unit, parent: division, zone: orphan_zone) }
 
   let(:admin1)       { create(:user, :admin_level1, organization: division) }
   let(:admin_unit_a) { create(:user, :admin_unit,   organization: org_a) }

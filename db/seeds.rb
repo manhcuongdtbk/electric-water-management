@@ -81,16 +81,21 @@ end
 # We materialise the units inside this block so dev / staging keep working.
 # Gate: Rails.env.development? OR ENV["SEED_TEST_ACCOUNTS"] == "true".
 if Rails.env.development? || ENV["SEED_TEST_ACCOUNTS"] == "true"
+  zone_sdb = Zone.find_or_create_by!(name: "Khu vực Sư đoàn bộ")
+  zone_tr101 = Zone.find_or_create_by!(name: "Khu vực Trung đoàn 101")
+
   sdb = Organization.find_or_create_by!(name: "Sư đoàn bộ") do |org|
     org.level    = :unit
     org.parent   = division
     org.position = 1
+    org.zone     = zone_sdb
   end
 
   tr101 = Organization.find_or_create_by!(name: "Trung đoàn 101") do |org|
     org.level    = :unit
     org.parent   = division
     org.position = 2
+    org.zone     = zone_tr101
   end
 
   dev_users = [

@@ -51,10 +51,19 @@ RSpec.describe Organization, type: :model do
       expect(org.errors[:parent_id]).to be_present
     end
 
-    it "allows zone to be blank for any level (form-flow does not yet enforce it)" do
+    it "is invalid for unit without a zone" do
       div = create(:organization, :division)
       unit = build(:organization, :unit, parent: div, zone: nil)
-      expect(unit).to be_valid
+      expect(unit).not_to be_valid
+      expect(unit.errors[:zone]).to be_present
+    end
+
+    it "is valid for unit with a zone" do
+      div = create(:organization, :division)
+      expect(build(:organization, :unit, parent: div)).to be_valid
+    end
+
+    it "allows zone to be blank for division" do
       expect(build(:organization, :division, zone: nil)).to be_valid
     end
   end

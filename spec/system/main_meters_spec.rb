@@ -44,19 +44,19 @@ RSpec.describe "MainMeters management", type: :system do
       expect(page).to have_content(I18n.t("main_meters.new.title"))
     end
 
-    it "sửa khu vực + thay đổi đơn vị thành công" do
+    it "sửa khu vực + thêm đơn vị thành công" do
       mm = create(:main_meter, name: "Khu vực A")
       scenario.unit.update!(zone: mm.zone)
       other_unit = create(:organization, :unit, parent: scenario.division, name: "Đơn vị B")
 
       visit edit_main_meter_path(mm)
-      uncheck scenario.unit.name
       check other_unit.name
       click_on I18n.t("main_meters.form.submit_update")
 
       expect(page).to have_current_path(main_meters_path)
       expect(page).to have_content(I18n.t("flash.main_meters.updated"))
-      expect(scenario.unit.reload.zone_id).to be_nil
+      # Both units now share the zone — units cannot be detached (must reassign).
+      expect(scenario.unit.reload.zone_id).to eq(mm.zone_id)
       expect(other_unit.reload.zone_id).to eq(mm.zone_id)
     end
 

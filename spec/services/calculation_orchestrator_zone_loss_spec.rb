@@ -200,7 +200,10 @@ RSpec.describe "CalculationOrchestrator zone-loss + pump pool (integration)" do
   end
 
   describe "org with no MainMeter (no supply available)" do
-    let(:solo_org) { create(:organization, level: :unit, parent: division, zone: nil) }
+    # solo_org has a zone (required for unit) but the zone has no MainMeter,
+    # which is what this scenario actually tests.
+    let(:solo_zone) { create(:zone) }
+    let(:solo_org)  { create(:organization, level: :unit, parent: division, zone: solo_zone) }
     # solo_org reuses cfg_division (same parent). No unit-level config needed —
     # unit_public_rate defaults to ZERO when missing.
     let!(:cp_solo) { create(:contact_point, organization: solo_org, name: "Solo CP") }

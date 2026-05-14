@@ -24,6 +24,14 @@
             min: 0 %>
     </div>
 
+    <div>
+      <%= f.label :zone_id, t("organizations.form.zone"), class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.collection_select :zone_id, Zone.order(:name), :id, :name,
+            { include_blank: t("organizations.form.zone_blank") },
+            class: "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500",
+            required: true %>
+    </div>
+
     <div class="flex items-center gap-3 pt-2">
       <%= f.submit organization.new_record? ? t("organizations.form.submit_create") : t("organizations.form.submit_update"),
             class: "inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors cursor-pointer" %>
