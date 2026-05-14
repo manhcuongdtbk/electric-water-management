@@ -28,7 +28,9 @@
         <% @zones.each_with_index do |zone, idx| %>
           <tr class="hover:bg-gray-50">
             <td class="px-4 py-3 text-gray-500"><%= idx + 1 %></td>
-            <td class="px-4 py-3 font-medium text-gray-900"><%= zone.name %></td>
+            <td class="px-4 py-3 font-medium">
+              <%= link_to zone.name, zone_path(zone), class: "text-blue-600 hover:underline" %>
+            </td>
             <td class="px-4 py-3 text-gray-700"><%= zone.manager_organization&.name || "—" %></td>
             <td class="px-4 py-3 text-right text-gray-700"><%= zone.main_meters.size %></td>
             <td class="px-4 py-3 text-right text-gray-700"><%= zone.organizations.size %></td>

@@ -27,7 +27,9 @@ Rails.application.routes.draw do
   end
   resource :pump_station_readings, only: [ :show, :update ]
 
-  resources :zones, except: [ :show ]
+  resources :zones do
+    resources :main_meters, only: [ :new, :create, :edit, :update, :destroy ]
+  end
   resources :work_groups, except: [ :show ]
   resources :contact_point_groups, except: [ :show ]
 
@@ -54,8 +56,6 @@ Rails.application.routes.draw do
   end
 
   resources :organizations, only: [ :index, :new, :create, :edit, :update, :destroy ]
-
-  resources :main_meters, except: [ :show ]
 
   resources :backups, only: [ :index, :create ] do
     collection do

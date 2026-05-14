@@ -1,9 +1,15 @@
 class ZonesController < ApplicationController
-  before_action :set_zone, only: [ :edit, :update, :destroy ]
+  before_action :set_zone, only: [ :show, :edit, :update, :destroy ]
 
   def index
     authorize! :read, Zone
     @zones = Zone.accessible_by(current_ability).ordered.includes(:manager_organization, :main_meters, :organizations)
+  end
+
+  def show
+    authorize! :read, @zone
+    @main_meters = @zone.main_meters.ordered
+    @organizations = @zone.organizations.ordered
   end
 
   def new

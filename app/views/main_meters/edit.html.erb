@@ -1,7 +1,16 @@
 <% content_for :title, t("main_meters.edit.title") %>
 
+<%# Breadcrumb %>
+<nav class="flex items-center gap-1.5 text-sm text-gray-500 mb-4">
+  <%= link_to t("zones.index.title"), zones_path, class: "hover:text-gray-700 transition-colors" %>
+  <span>/</span>
+  <%= link_to @zone.name, zone_path(@zone), class: "hover:text-gray-700 transition-colors" %>
+  <span>/</span>
+  <span class="text-gray-900 font-medium"><%= t("main_meters.edit.title") %></span>
+</nav>
+
 <div class="mb-6">
-  <h1 class="text-xl font-semibold text-gray-900"><%= t("main_meters.edit.title") %></h1>
+  <h1 class="text-xl font-semibold text-gray-900"><%= t("main_meters.edit.title") %>: <%= @main_meter.name %></h1>
 </div>
 
 <%= render "form", main_meter: @main_meter %>
