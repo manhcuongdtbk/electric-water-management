@@ -16,10 +16,10 @@ RSpec.describe SummaryCalculator do
 
   let_it_be(:division)     { create(:organization, :division) }
   let_it_be(:organization) { create(:organization, level: :unit, parent: division) }
-  let_it_be(:period)       { create(:monthly_period, year: 2026, month: 2, unit_price: BigDecimal("2336.4")) }
+  let_it_be(:period)       { create(:monthly_period, year: 2026, month: 2, unit_price: bd("2336.4")) }
 
-  let_it_be(:rank_quota1) { create(:rank_quota, rank_group: 1, rank_name: "3*/4*", quota_kw: BigDecimal("115")) }
-  let_it_be(:rank_quota2) { create(:rank_quota, rank_group: 2, rank_name: "1*/2*", quota_kw: BigDecimal("38")) }
+  let_it_be(:rank_quota1) { create(:rank_quota, rank_group: 1, rank_name: "3*/4*", quota_kw: bd("115")) }
+  let_it_be(:rank_quota2) { create(:rank_quota, rank_group: 2, rank_name: "1*/2*", quota_kw: bd("38")) }
 
   let_it_be(:cp_a) { create(:contact_point, organization: organization, name: "CP A", position: 1) }
   let_it_be(:cp_b) { create(:contact_point, organization: organization, name: "CP B", position: 2) }

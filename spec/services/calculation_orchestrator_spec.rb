@@ -40,7 +40,7 @@ RSpec.describe CalculationOrchestrator do
   let_it_be(:division)    { create(:organization, :division) }
   let_it_be(:main_meter)  { create(:main_meter, name: "Zone fixture") }
   let_it_be(:organization) { create(:organization, level: :unit, parent: division, zone: main_meter.zone) }
-  let_it_be(:period)      { create(:monthly_period, year: 2026, month: 2, unit_price: BigDecimal("2336.4")) }
+  let_it_be(:period)      { create(:monthly_period, year: 2026, month: 2, unit_price: bd("2336.4")) }
   # main_meter_reading stays let! — destroyed/updated by several contexts.
   let!(:main_meter_reading) do
     create(:main_meter_reading,
