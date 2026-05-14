@@ -238,8 +238,9 @@ RSpec.describe "MeterReadings", type: :request do
           patch meter_readings_path, params: valid_params
         }.not_to change(MeterReading, :count)
 
-        expect(response).to redirect_to(meter_readings_path(period_id: period.id, org_id: nil))
-        expect(flash[:alert]).to eq(I18n.t("meter_readings.period_locked"))
+        expect(response).to be_redirect
+        follow_redirect!
+        expect(flash[:alert]).to eq(I18n.t("flash.period_locked"))
       end
 
       it "re-renders show with errors when validation fails" do

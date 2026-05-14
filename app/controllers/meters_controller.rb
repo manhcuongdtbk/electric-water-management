@@ -1,6 +1,9 @@
 class MetersController < ApplicationController
+  include LockablePeriod
+
   before_action :load_and_authorize_contact_point
   before_action :set_meter, only: [ :edit, :update, :destroy ]
+  before_action :block_write_if_latest_period_locked, only: [ :create, :update, :destroy ]
 
   def index
     @meters = @contact_point.meters.ordered

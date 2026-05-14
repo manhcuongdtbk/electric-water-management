@@ -1,6 +1,9 @@
 class ElectricitySuppliesController < ApplicationController
+  include LockablePeriod
+
   before_action :set_period
   before_action :set_target_main_meter
+  before_action :block_write_if_period_locked, only: :update
 
   def show
     authorize! :read, MainMeter

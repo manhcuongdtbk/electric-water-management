@@ -112,7 +112,7 @@ RSpec.describe "F07 — Period inheritance + lock/unlock", type: :system do
       fill_in "personnel_rank1_count", with: 9
       click_on I18n.t("personnel.form.submit")
 
-      expect(page).to have_content(I18n.t("flash.personnel.period_locked"))
+      expect(page).to have_content(I18n.t("flash.period_locked"))
       # Value did not persist
       personnel = Personnel.find_by!(contact_point: cp, monthly_period: locked)
       expect(personnel.rank1_count).to eq(1)

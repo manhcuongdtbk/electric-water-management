@@ -1,7 +1,9 @@
 class ContactPointsController < ApplicationController
   include Pagy::Method
+  include LockablePeriod
 
   before_action :set_contact_point, only: [ :show, :edit, :update, :destroy ]
+  before_action :block_write_if_latest_period_locked, only: [ :create, :update, :destroy ]
 
   def index
     authorize! :read, ContactPoint

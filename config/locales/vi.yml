@@ -299,6 +299,7 @@ vi:
   flash:
     unauthorized: "Bạn không có quyền thực hiện thao tác này."
     access_denied: "Bạn không có quyền truy cập."
+    period_locked: "Kỳ này đã khóa, không thể thay đổi dữ liệu"
     password_changes:
       required: "Bạn phải đổi mật khẩu trước khi sử dụng hệ thống."
       success: "Đổi mật khẩu thành công. Chào mừng bạn!"
@@ -638,6 +639,11 @@ vi:
       cancel: "Hủy"
     actions:
       edit: "Sửa đơn giá"
+
+  calculation:
+    warnings:
+      heading: "Cảnh báo"
+      negative_loss: "Tổng sử dụng công tơ (%{consumption} kW) vượt số điện lực (%{supply} kW). Tổn hao được tính bằng 0. Vui lòng kiểm tra lại chỉ số."
 
   monthly_summary:
     show:
@@ -1144,6 +1150,8 @@ vi:
     form:
       name: "Tên đơn vị"
       position: "Thứ tự hiển thị"
+      zone: "Khu vực"
+      zone_blank: "— Chọn khu vực —"
       submit_create: "Thêm đơn vị"
       submit_update: "Lưu thay đổi"
       cancel: "Hủy"

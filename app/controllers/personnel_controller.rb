@@ -1,7 +1,10 @@
 class PersonnelController < ApplicationController
+  include LockablePeriod
+
   before_action :load_and_authorize_contact_point
   before_action :set_period
   before_action :set_personnel_and_quotas
+  before_action :block_write_if_period_locked, only: [ :update, :toggle_review ]
 
   def show
   end
@@ -12,12 +15,6 @@ class PersonnelController < ApplicationController
     if @period.nil?
       redirect_to contact_point_personnel_path(@contact_point),
                   alert: t("flash.personnel.no_period")
-      return
-    end
-
-    if @period.locked?
-      redirect_to contact_point_personnel_path(@contact_point, period_id: @period.id),
-                  alert: t("flash.personnel.period_locked")
       return
     end
 
@@ -34,12 +31,6 @@ class PersonnelController < ApplicationController
 
     if @period.nil?
       redirect_to personnel_review_path, alert: t("flash.personnel.no_period")
-      return
-    end
-
-    if @period.locked?
-      redirect_to personnel_review_path(period_id: @period.id),
-                  alert: t("flash.personnel.period_locked")
       return
     end
 
