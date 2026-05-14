@@ -83,10 +83,10 @@ class ContactPointsController < ApplicationController
   end
 
   def contact_point_params
-    params.require(:contact_point).permit(:name, :group_name, :position, :contact_point_type, :organization_id)
+    params.require(:contact_point).permit(:name, :group_name, :contact_point_type, :organization_id)
   end
 
   def contact_point_params_for_unit
-    params.require(:contact_point).permit(:name, :group_name, :position, :contact_point_type)
+    params.require(:contact_point).permit(:name, :group_name, :contact_point_type)
   end
 end

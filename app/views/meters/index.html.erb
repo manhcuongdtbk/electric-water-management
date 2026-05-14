@@ -27,14 +27,13 @@
         <th class="px-4 py-3 text-center font-medium text-gray-600 w-12"><%= t("meters.index.columns.stt") %></th>
         <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("meters.index.columns.name") %></th>
         <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("meters.index.columns.meter_type") %></th>
-        <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("meters.index.columns.serial_number") %></th>
         <th class="px-4 py-3 text-center font-medium text-gray-600"><%= t("meters.index.columns.actions") %></th>
       </tr>
     </thead>
     <tbody class="divide-y divide-gray-100">
       <% if @meters.empty? %>
         <tr>
-          <td colspan="5" class="px-4 py-8 text-center text-gray-400">
+          <td colspan="4" class="px-4 py-8 text-center text-gray-400">
             <%= t("meters.index.empty") %>
           </td>
         </tr>
@@ -49,7 +48,6 @@
               </span>
               <%= meter_no_loss_badge(meter) %>
             </td>
-            <td class="px-4 py-3 text-gray-600"><%= meter.serial_number.presence || "—" %></td>
             <td class="px-4 py-3 text-center">
               <div class="flex items-center justify-center gap-2">
                 <% if can? :update, meter %>

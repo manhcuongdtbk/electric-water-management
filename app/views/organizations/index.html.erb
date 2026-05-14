@@ -12,7 +12,6 @@
       <tr>
         <th class="px-4 py-3 text-left font-medium text-gray-600 w-10"><%= t("organizations.index.columns.stt") %></th>
         <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("organizations.index.columns.name") %></th>
-        <th class="px-4 py-3 text-right font-medium text-gray-600"><%= t("organizations.index.columns.position") %></th>
         <th class="px-4 py-3 text-right font-medium text-gray-600"><%= t("organizations.index.columns.contact_points_count") %></th>
         <th class="px-4 py-3 text-right font-medium text-gray-600"><%= t("organizations.index.columns.users_count") %></th>
         <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("organizations.index.columns.actions") %></th>
@@ -24,7 +23,6 @@
           <tr class="hover:bg-gray-50">
             <td class="px-4 py-3 text-gray-500"><%= idx + 1 %></td>
             <td class="px-4 py-3 font-medium text-gray-900"><%= organization.name %></td>
-            <td class="px-4 py-3 text-right text-gray-700"><%= organization.position %></td>
             <td class="px-4 py-3 text-right text-gray-700"><%= organization.contact_points.size %></td>
             <td class="px-4 py-3 text-right text-gray-700"><%= organization.users.size %></td>
             <td class="px-4 py-3">
@@ -41,7 +39,7 @@
         <% end %>
       <% else %>
         <tr>
-          <td colspan="6" class="px-4 py-8 text-center text-gray-400"><%= t("organizations.index.empty") %></td>
+          <td colspan="5" class="px-4 py-8 text-center text-gray-400"><%= t("organizations.index.empty") %></td>
         </tr>
       <% end %>
     </tbody>

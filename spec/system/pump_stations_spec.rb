@@ -17,7 +17,6 @@ RSpec.describe "Pump stations management", type: :system do
       fill_in I18n.t("pump_stations.form.name"), with: "Trạm bơm A"
       select zone.name, from: I18n.t("pump_stations.form.zone")
       fill_in I18n.t("pump_stations.form.first_meter_name"), with: "CT01 đầu vào"
-      fill_in I18n.t("pump_stations.form.first_meter_serial_number"), with: "SN-A001"
       click_on I18n.t("pump_stations.form.submit_create")
 
       expect(page).to have_current_path(pump_stations_path)

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_13_100252) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_14_114312) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -51,7 +51,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_13_100252) do
     t.string "group_name"
     t.string "name", null: false
     t.bigint "organization_id", null: false
-    t.integer "position", default: 0
     t.datetime "updated_at", null: false
     t.index ["contact_point_type"], name: "index_contact_points_on_contact_point_type"
     t.index ["organization_id", "name"], name: "index_contact_points_on_organization_id_and_name", unique: true
@@ -72,8 +71,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_13_100252) do
   create_table "main_meters", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
-    t.text "notes"
-    t.integer "position", default: 0
     t.datetime "updated_at", null: false
     t.bigint "zone_id", null: false
     t.index ["name"], name: "index_main_meters_on_name", unique: true
@@ -99,17 +96,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_13_100252) do
     t.integer "meter_type", default: 0, null: false
     t.string "name", null: false
     t.boolean "no_loss", default: false, null: false
-    t.text "notes"
     t.bigint "organization_id", null: false
-    t.integer "position", default: 0
     t.bigint "pump_station_id"
-    t.string "serial_number"
     t.datetime "updated_at", null: false
     t.index ["contact_point_id"], name: "index_meters_on_contact_point_id"
     t.index ["meter_type"], name: "index_meters_on_meter_type"
     t.index ["organization_id"], name: "index_meters_on_organization_id"
     t.index ["pump_station_id"], name: "index_meters_on_pump_station_id"
-    t.index ["serial_number"], name: "index_meters_on_serial_number"
   end
 
   create_table "monthly_calculations", force: :cascade do |t|
@@ -119,7 +112,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_13_100252) do
     t.decimal "loss_deduction_kw", precision: 12, scale: 2, default: "0.0"
     t.decimal "meter_usage_kw", precision: 12, scale: 2, default: "0.0"
     t.bigint "monthly_period_id", null: false
-    t.text "notes"
     t.decimal "other_deduction_kw", precision: 12, scale: 2, default: "0.0"
     t.decimal "over_under_kw", precision: 12, scale: 2, default: "0.0"
     t.decimal "rank1_kw", precision: 12, scale: 2, default: "0.0"
@@ -164,7 +156,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_13_100252) do
     t.integer "level", default: 2, null: false
     t.string "name", null: false
     t.bigint "parent_id"
-    t.integer "position", default: 0
     t.datetime "updated_at", null: false
     t.bigint "zone_id"
     t.index ["level", "name"], name: "index_organizations_on_level_and_name", unique: true
@@ -277,10 +268,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_13_100252) do
   create_table "work_groups", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
-    t.text "notes"
     t.bigint "owner_organization_id", null: false
     t.integer "personnel_count", default: 0, null: false
-    t.integer "position", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["owner_organization_id", "name"], name: "idx_work_groups_on_owner_and_name", unique: true
     t.index ["owner_organization_id"], name: "index_work_groups_on_owner_organization_id"

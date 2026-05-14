@@ -61,8 +61,7 @@ RSpec.describe "PumpStations", type: :request do
         pump_station: {
           name: "Trạm bơm A",
           zone_id: zone.id,
-          first_meter_name: "CT01 đầu vào",
-          first_meter_serial_number: "SN-A001"
+          first_meter_name: "CT01 đầu vào"
         }
       }
     end
@@ -85,19 +84,10 @@ RSpec.describe "PumpStations", type: :request do
         expect(ps.meters.count).to eq(1)
         meter = ps.meters.first
         expect(meter.name).to eq("CT01 đầu vào")
-        expect(meter.serial_number).to eq("SN-A001")
         expect(meter.meter_type).to eq("pump_station")
         expect(meter.contact_point_id).to be_nil
         expect(meter.organization).to eq(division)
         expect(response).to redirect_to(pump_stations_path)
-      end
-
-      it "accepts blank serial number" do
-        params = valid_params.deep_merge(pump_station: { first_meter_serial_number: "" })
-        expect {
-          post pump_stations_path, params: params
-        }.to change(PumpStation, :count).by(1)
-        expect(PumpStation.last.meters.first.serial_number).to be_nil
       end
 
       it "rejects when pump station name is blank" do

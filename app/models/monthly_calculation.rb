@@ -24,7 +24,7 @@ class MonthlyCalculation < ApplicationRecord
   scope :for_period, ->(period_id) { where(monthly_period_id: period_id) }
   scope :for_contact_point, ->(cp_id) { where(contact_point_id: cp_id) }
   scope :by_organization, ->(org_id) { joins(:contact_point).where(contact_points: { organization_id: org_id }) }
-  scope :ordered, -> { joins(:contact_point).order("contact_points.position", "contact_points.name") }
+  scope :ordered, -> { joins(:contact_point).order("contact_points.name") }
 
   # Exclude CPs flagged `communal` ("đầu mối công cộng") — they don't appear in
   # the billing table per CLAUDE.md. Engine still persists rows for them (so

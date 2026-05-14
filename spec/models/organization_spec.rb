@@ -74,8 +74,8 @@ RSpec.describe Organization, type: :model do
 
   describe "scopes" do
     let!(:division) { create(:organization, :division) }
-    let!(:unit1)    { create(:organization, :unit, parent: division, position: 2) }
-    let!(:unit2)    { create(:organization, :unit, parent: division, position: 1) }
+    let!(:unit1)    { create(:organization, :unit, parent: division, name: "Zulu") }
+    let!(:unit2)    { create(:organization, :unit, parent: division, name: "Alpha") }
 
     it ".divisions returns only divisions" do
       expect(Organization.divisions).to include(division)
@@ -87,7 +87,7 @@ RSpec.describe Organization, type: :model do
       expect(Organization.units).not_to include(division)
     end
 
-    it ".ordered sorts by position then name" do
+    it ".ordered sorts by name" do
       ordered = Organization.units.ordered.to_a
       expect(ordered.first).to eq(unit2)
     end

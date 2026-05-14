@@ -20,8 +20,6 @@
         <% end %>
         <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("work_groups.index.columns.name") %></th>
         <th class="px-4 py-3 text-right font-medium text-gray-600 w-32"><%= t("work_groups.index.columns.personnel_count") %></th>
-        <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("work_groups.index.columns.notes") %></th>
-        <th class="px-4 py-3 text-right font-medium text-gray-600 w-20"><%= t("work_groups.index.columns.position") %></th>
         <th class="px-4 py-3 text-left font-medium text-gray-600 w-32"><%= t("work_groups.index.columns.actions") %></th>
       </tr>
     </thead>
@@ -35,8 +33,6 @@
             <% end %>
             <td class="px-4 py-3 font-medium text-gray-900"><%= wg.name %></td>
             <td class="px-4 py-3 text-right text-gray-700"><%= number_with_delimiter(wg.personnel_count) %></td>
-            <td class="px-4 py-3 text-gray-500 text-xs"><%= wg.notes.presence || "—" %></td>
-            <td class="px-4 py-3 text-right text-gray-700"><%= wg.position %></td>
             <td class="px-4 py-3">
               <% if can?(:manage, wg) %>
                 <div class="flex items-center gap-2">
@@ -53,7 +49,7 @@
         <% end %>
       <% else %>
         <tr>
-          <td colspan="<%= can?(:manage, :all) ? 7 : 6 %>" class="px-4 py-6 text-center text-gray-500 italic">
+          <td colspan="<%= can?(:manage, :all) ? 5 : 4 %>" class="px-4 py-6 text-center text-gray-500 italic">
             <%= t("work_groups.index.empty") %>
           </td>
         </tr>

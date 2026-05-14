@@ -111,7 +111,6 @@ vi:
       contact_point:
         name: "Tên đầu mối"
         group_name: "Khối"
-        position: "Thứ tự hiển thị"
         organization: "Đơn vị"
         organization_id: "Đơn vị"
         contact_point_type: "Loại đầu mối"
@@ -122,9 +121,6 @@ vi:
         name: "Tên công tơ"
         meter_type: "Loại công tơ"
         no_loss: "Không tổn hao"
-        serial_number: "Số hiệu"
-        position: "Thứ tự hiển thị"
-        notes: "Ghi chú"
         contact_point: "Đầu mối"
         contact_point_id: "Đầu mối"
         organization: "Đơn vị"
@@ -133,7 +129,6 @@ vi:
       pump_station:
         name: "Tên trạm bơm"
         first_meter_name: "Tên công tơ đầu tiên"
-        first_meter_serial_number: "Số hiệu công tơ đầu tiên"
       pump_station_assignment:
         assignable: "Nhóm đối tượng"
         assignable_type: "Loại nhóm đối tượng"
@@ -148,8 +143,6 @@ vi:
       work_group:
         name: "Tên nhóm công tác"
         personnel_count: "Quân số"
-        position: "Thứ tự hiển thị"
-        notes: "Ghi chú"
         owner_organization: "Đơn vị quản lý"
       contact_point_other_deduction:
         other_type: "Kiểu nhập"
@@ -165,7 +158,6 @@ vi:
       organization:
         name: "Tên đơn vị"
         code: "Mã viết tắt"
-        position: "Thứ tự hiển thị"
         parent: "Đơn vị cha"
         level: "Cấp đơn vị"
         main_meter: "Khu vực đồng hồ tổng"
@@ -173,8 +165,6 @@ vi:
       main_meter:
         code: "Mã viết tắt"
         name: "Tên khu vực"
-        notes: "Ghi chú"
-        position: "Thứ tự hiển thị"
       main_meter_reading:
         electricity_supply_kw: "Số điện lực (kW)"
         main_meter: "Khu vực đồng hồ tổng"
@@ -231,7 +221,6 @@ vi:
         over_under_kw: "Thừa/Thiếu (kW)"
         unit_price: "Đơn giá (đ/kW)"
         total_amount: "Thành tiền (đ)"
-        notes: "Ghi chú"
         contact_point: "Đầu mối"
         contact_point_id: "Đầu mối"
         monthly_period: "Kỳ tính toán"
@@ -433,7 +422,6 @@ vi:
     form:
       name: "Tên đầu mối"
       group_name: "Khối"
-      position: "Thứ tự hiển thị"
       organization: "Đơn vị"
       organization_prompt: "— Chọn đơn vị —"
       contact_point_type_hint: "Sinh hoạt: hiển thị trong bảng thu tiền. Công cộng: chỉ tính khoản trừ, không thu tiền."
@@ -455,7 +443,6 @@ vi:
         stt: "STT"
         name: "Tên công tơ"
         meter_type: "Loại"
-        serial_number: "Số hiệu"
         actions: "Thao tác"
       empty: "Chưa có công tơ nào."
     new:
@@ -467,9 +454,6 @@ vi:
       meter_type: "Loại công tơ"
       meter_type_hint: "Thường: xuất hiện trong bản thu tiền. Công cộng: không xuất hiện."
       no_loss_hint: "Đánh dấu công tơ đặt tại trạm biến áp — kW được trừ khỏi nguồn cung cấp trước khi tính tổn hao toàn khu vực."
-      serial_number: "Số hiệu (tùy chọn)"
-      notes: "Ghi chú"
-      position: "Thứ tự hiển thị"
       submit_create: "Thêm công tơ"
       submit_update: "Lưu thay đổi"
     no_loss_badge: "Không tổn hao"
@@ -902,7 +886,6 @@ vi:
       zone_prompt: "— Chọn khu vực —"
       no_zones_available: "Chưa có khu vực nào. Hãy tạo khu vực trước."
       first_meter_name: "Tên công tơ"
-      first_meter_serial_number: "Số hiệu (tùy chọn)"
       submit_create: "Tạo trạm bơm"
       submit_update: "Lưu thay đổi"
       cancel: "Hủy"
@@ -914,8 +897,6 @@ vi:
   pump_station_meters:
     index:
       meter_name_col: "Tên công tơ"
-      serial_col: "Số hiệu"
-      notes_col: "Ghi chú"
       actions_col: "Thao tác"
     new:
       title: "Thêm công tơ vào %{pump_station}"
@@ -923,9 +904,6 @@ vi:
       title: "Sửa công tơ %{meter}"
     form:
       name: "Tên công tơ"
-      serial_number: "Số hiệu (tùy chọn)"
-      notes: "Ghi chú"
-      position: "Thứ tự hiển thị"
       submit_create: "Thêm công tơ"
       submit_update: "Lưu thay đổi"
       cancel: "Hủy"
@@ -1009,8 +987,6 @@ vi:
         stt: "STT"
         name: "Tên nhóm"
         personnel_count: "Quân số"
-        notes: "Ghi chú"
-        position: "Thứ tự"
         actions: "Thao tác"
     new:
       title: "Thêm đầu mối ngoài biên chế"
@@ -1020,8 +996,6 @@ vi:
       name: "Tên đầu mối ngoài biên chế"
       personnel_count: "Quân số (người)"
       personnel_count_hint: "Quân số nhập tay. Không thay đổi theo tháng — nếu cần điều chỉnh hãy cập nhật giá trị tại đây."
-      notes: "Ghi chú"
-      position: "Thứ tự hiển thị"
       submit_create: "Tạo đầu mối ngoài biên chế"
       submit_update: "Lưu thay đổi"
       cancel: "Hủy"
@@ -1070,7 +1044,6 @@ vi:
     save_all: "Lưu tất cả"
     table:
       meter_name: "Tên công tơ"
-      serial_number: "Số hiệu"
       reading_start: "Đầu kỳ"
       reading_end: "Cuối kỳ"
       consumption: "Sử dụng (kWh)"
@@ -1143,7 +1116,6 @@ vi:
       columns:
         stt: "STT"
         name: "Tên đơn vị"
-        position: "Thứ tự"
         contact_points_count: "Số đầu mối"
         users_count: "Số tài khoản"
         actions: "Thao tác"
@@ -1154,7 +1126,6 @@ vi:
       title: "Sửa đơn vị"
     form:
       name: "Tên đơn vị"
-      position: "Thứ tự hiển thị"
       zone: "Khu vực"
       zone_blank: "— Chọn khu vực —"
       submit_create: "Thêm đơn vị"
@@ -1174,7 +1145,6 @@ vi:
         stt: "STT"
         name: "Tên khu vực"
         organizations: "Đơn vị dùng chung"
-        position: "Thứ tự"
         actions: "Thao tác"
       empty: "Chưa có khu vực đồng hồ tổng nào. Bấm \"Thêm khu vực\" để tạo mới."
       no_organizations: "Chưa gán đơn vị"
@@ -1185,8 +1155,6 @@ vi:
     form:
       name: "Tên khu vực"
       name_hint: "Ví dụ: \"Khu vực Cơ quan SĐB\" (gồm Cơ quan SĐB + TĐ18 + ĐĐ20-23)"
-      position: "Thứ tự hiển thị"
-      notes: "Ghi chú"
       organizations: "Đơn vị cấp 2 dùng chung đồng hồ tổng này"
       organizations_hint: "Tích chọn các đơn vị thuộc khu vực. Một đơn vị chỉ thuộc tối đa một khu vực — chọn ở đây sẽ chuyển đơn vị khỏi khu vực cũ."
       org_in_other: "Đang thuộc khu vực: %{zone}"

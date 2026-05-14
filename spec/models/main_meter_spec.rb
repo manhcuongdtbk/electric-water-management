@@ -15,22 +15,14 @@ RSpec.describe MainMeter, type: :model do
     it { is_expected.to validate_uniqueness_of(:name) }
     it { is_expected.to validate_length_of(:name).is_at_most(100) }
 
-    it "allows blank notes" do
-      expect(build(:main_meter, notes: nil)).to be_valid
-      expect(build(:main_meter, notes: "")).to be_valid
-    end
-
-    it "rejects negative position" do
-      expect(build(:main_meter, position: -1)).not_to be_valid
-    end
   end
 
   describe "scopes" do
     describe ".ordered" do
-      it "orders by position then name" do
-        third  = create(:main_meter, name: "A", position: 3)
-        first  = create(:main_meter, name: "B", position: 1)
-        second = create(:main_meter, name: "C", position: 2)
+      it "orders by name" do
+        third  = create(:main_meter, name: "Z")
+        first  = create(:main_meter, name: "A")
+        second = create(:main_meter, name: "M")
         expect(described_class.ordered).to eq([ first, second, third ])
       end
     end

@@ -21,16 +21,13 @@ module PumpStationAssignmentsHelper
   end
 
   # Sort key — Organization, ContactPoint, WorkGroup, ContactPointGroup;
-  # within each group, by the target's `position` when available, else 0,
-  # then by name for stability.
+  # within each group, alphabetically by name.
   def pump_station_assignment_sort_key(assignment)
     type_order = { "Organization" => 0, "ContactPoint" => 1, "WorkGroup" => 2, "ContactPointGroup" => 3 }
                    .fetch(assignment.assignable_type, 99)
-    target   = assignment.assignable
-    position = target.respond_to?(:position) ? target.position.to_i : 0
-    name     = target.respond_to?(:name) ? target.name.to_s : ""
+    name = assignment.assignable.respond_to?(:name) ? assignment.assignable.name.to_s : ""
 
-    [ type_order, position, name ]
+    [ type_order, name ]
   end
 
   private

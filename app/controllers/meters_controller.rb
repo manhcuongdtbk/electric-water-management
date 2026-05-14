@@ -67,7 +67,7 @@ class MetersController < ApplicationController
   end
 
   def meter_params
-    attrs = params.require(:meter).permit(:name, :meter_type, :no_loss, :serial_number, :notes, :position)
+    attrs = params.require(:meter).permit(:name, :meter_type, :no_loss)
     # Pump-station meters belong to a PumpStation, not a contact point. Null out
     # any meter_type not on the contact-point form whitelist — covers the form's
     # "pump_station" string, the JSON API's integer 2, and any future enum

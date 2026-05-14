@@ -104,7 +104,7 @@ class MonthlySummariesController < ApplicationController
       .excluding_communal_cps
       .ordered
       .includes(:contact_point)
-      .reorder(Arel.sql("contact_points.group_name ASC NULLS LAST, contact_points.position, contact_points.name"))
+      .reorder(Arel.sql("contact_points.group_name ASC NULLS LAST, contact_points.name"))
   end
 
   def build_totals(calculations)

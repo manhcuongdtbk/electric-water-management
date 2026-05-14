@@ -22,7 +22,6 @@ class Organization < ApplicationRecord
                     uniqueness: { scope: :level, case_sensitive: true },
                     length: { maximum: 100 }
   validates :level, presence: true
-  validates :position, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validate :parent_must_be_division, if: -> { level == "unit" && parent_id.present? }
   validate :division_has_no_parent, if: -> { level == "division" }
   validate :unit_must_have_zone
@@ -31,7 +30,7 @@ class Organization < ApplicationRecord
   before_destroy :prevent_destroy_division
 
   # Scopes
-  scope :ordered, -> { order(:position, :name) }
+  scope :ordered, -> { order(:name) }
   scope :divisions, -> { where(level: :division) }
   scope :units, -> { where(level: :unit) }
   scope :by_parent, ->(parent_id) { where(parent_id: parent_id) }

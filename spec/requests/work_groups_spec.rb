@@ -66,7 +66,7 @@ RSpec.describe "WorkGroups", type: :request do
 
   describe "POST /work_groups" do
     let(:base_params) do
-      { work_group: { name: "Tram che bien", personnel_count: "18", position: "1", notes: "Note" } }
+      { work_group: { name: "Tram che bien", personnel_count: "18" } }
     end
 
     context "as admin_level1" do

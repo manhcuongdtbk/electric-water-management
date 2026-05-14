@@ -74,7 +74,7 @@ RSpec.describe "Organizations", type: :request do
   describe "POST /organizations" do
     let(:zone) { create(:zone) }
     let(:valid_params) do
-      { organization: { name: "Đại đội 30", position: 14, zone_id: zone.id } }
+      { organization: { name: "Đại đội 30", zone_id: zone.id } }
     end
 
     context "as admin_level1" do
@@ -118,7 +118,7 @@ RSpec.describe "Organizations", type: :request do
       it "re-renders form when zone is missing" do
         expect {
           post organizations_path,
-               params: { organization: { name: "Không zone", position: 5 } }
+               params: { organization: { name: "Không zone" } }
         }.not_to change(Organization, :count)
         expect(response).to have_http_status(:unprocessable_entity)
       end
@@ -153,12 +153,11 @@ RSpec.describe "Organizations", type: :request do
     context "as admin_level1" do
       before { sign_in admin1 }
 
-      it "updates name and position" do
+      it "updates name" do
         patch organization_path(unit_org),
-              params: { organization: { name: "Tên mới", position: 99 } }
+              params: { organization: { name: "Tên mới" } }
         expect(response).to redirect_to(organizations_path)
         expect(unit_org.reload.name).to eq("Tên mới")
-        expect(unit_org.reload.position).to eq(99)
       end
 
       it "re-renders on duplicate name" do

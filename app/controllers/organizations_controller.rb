@@ -7,7 +7,7 @@ class OrganizationsController < ApplicationController
   end
 
   def new
-    @organization = Organization.new(level: :unit, position: next_position)
+    @organization = Organization.new(level: :unit)
   end
 
   def create
@@ -56,10 +56,6 @@ class OrganizationsController < ApplicationController
     @organization = Organization.units.find(params[:id])
   end
 
-  def next_position
-    (Organization.units.maximum(:position) || 0) + 1
-  end
-
   def related_data_exists?
     @organization.users.exists? ||
       @organization.contact_points.exists? ||
@@ -69,6 +65,6 @@ class OrganizationsController < ApplicationController
   end
 
   def organization_params
-    params.require(:organization).permit(:name, :position, :zone_id)
+    params.require(:organization).permit(:name, :zone_id)
   end
 end

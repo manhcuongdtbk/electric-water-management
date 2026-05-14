@@ -53,9 +53,9 @@ RSpec.describe CalculationOrchestrator do
   let_it_be(:rank_quota3) { create(:rank_quota, rank_group: 3, rank_name: "Cap uy",  quota_kw: bd("28")) }
   let_it_be(:rank_quota4) { create(:rank_quota, rank_group: 4, rank_name: "HSQ-CS",  quota_kw: bd("11")) }
 
-  let_it_be(:cp_truong)    { create(:contact_point, organization: organization, name: "TMP Truong",   position: 1) }
-  let_it_be(:cp_qluc)      { create(:contact_point, organization: organization, name: "TB Q.Luc",     position: 2) }
-  let_it_be(:cp_tac_huan)  { create(:contact_point, organization: organization, name: "Ban Tac Huan", position: 3) }
+  let_it_be(:cp_truong)    { create(:contact_point, organization: organization, name: "TMP Truong") }
+  let_it_be(:cp_qluc)      { create(:contact_point, organization: organization, name: "TB Q.Luc") }
+  let_it_be(:cp_tac_huan)  { create(:contact_point, organization: organization, name: "Ban Tac Huan") }
 
   # Personnel — Excel columns E/F/G/H mapped to rank 1..4
   # p_truong stays let! — updated by the #call persistence example.
@@ -259,7 +259,7 @@ RSpec.describe CalculationOrchestrator do
 
   describe "edge cases" do
     context "contact point with no personnel record" do
-      let!(:cp_empty) { create(:contact_point, organization: organization, name: "Empty CP", position: 4) }
+      let!(:cp_empty) { create(:contact_point, organization: organization, name: "Empty CP") }
 
       it "treats all rank counts as zero and still computes" do
         results = engine.compute
@@ -273,7 +273,7 @@ RSpec.describe CalculationOrchestrator do
     end
 
     context "contact point with no meter readings" do
-      let!(:cp_no_meter) { create(:contact_point, organization: organization, name: "No Meter CP", position: 5) }
+      let!(:cp_no_meter) { create(:contact_point, organization: organization, name: "No Meter CP") }
       let!(:p_no_meter)  { create(:personnel, contact_point: cp_no_meter, monthly_period: period, rank1_count: 1, rank2_count: 0, rank3_count: 0, rank4_count: 0, rank5_count: 0, rank6_count: 0, rank7_count: 0) }
 
       it "uses 0 for meter_usage_kw and 0 loss (no meter → no loss allocation)" do
@@ -634,11 +634,11 @@ RSpec.describe CalculationOrchestrator do
              unit_public_rate: nil)
     end
 
-    let!(:zcp_a1) { create(:contact_point, organization: dva, name: "A1 Ban Chi huy", position: 1) }
-    let!(:zcp_a2) { create(:contact_point, organization: dva, name: "A2 To xe",      position: 2) }
-    let!(:zcp_a3) { create(:contact_point, organization: dva, name: "A3 Kho",        position: 3) }
-    let!(:zcp_a4) { create(:contact_point, organization: dva, name: "A4 Den duong",  group_name: "public", position: 4) }
-    let!(:zcp_b1) { create(:contact_point, organization: dvb, name: "B1 Dai doi 1",  position: 1) }
+    let!(:zcp_a1) { create(:contact_point, organization: dva, name: "A1 Ban Chi huy") }
+    let!(:zcp_a2) { create(:contact_point, organization: dva, name: "A2 To xe") }
+    let!(:zcp_a3) { create(:contact_point, organization: dva, name: "A3 Kho") }
+    let!(:zcp_a4) { create(:contact_point, organization: dva, name: "A4 Den duong",  group_name: "public") }
+    let!(:zcp_b1) { create(:contact_point, organization: dvb, name: "B1 Dai doi 1") }
 
     let!(:zp_a1) do
       create(:personnel, contact_point: zcp_a1, monthly_period: zone_period,
@@ -702,7 +702,7 @@ RSpec.describe CalculationOrchestrator do
 
     let!(:zone_work_group) do
       create(:work_group, owner_organization: dva, name: "Tho xay",
-             personnel_count: 2, position: 0)
+             personnel_count: 2)
     end
 
     let!(:zasg_a1)  { create(:pump_station_assignment, pump_station: zone_pump_station, assignable: zcp_a1, fixed_pump_percentage: 30) }
