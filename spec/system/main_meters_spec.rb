@@ -84,7 +84,8 @@ RSpec.describe "MainMeters management", type: :system do
 
   describe "admin_unit quản lý khu vực" do
     it "thêm công tơ tổng trên khu vực mình quản lý" do
-      zone = create(:zone, manager_organization: scenario.unit)
+      zone = scenario.unit.zone
+      zone.update!(manager_organization: scenario.unit)
       login_as scenario.admin_unit, scope: :user
 
       visit zone_path(zone)

@@ -16,6 +16,28 @@ RSpec.describe Zone, type: :model do
     it { is_expected.to validate_length_of(:name).is_at_most(100) }
   end
 
+  describe "#manager_must_belong_to_zone" do
+    it "is valid when manager_organization is nil" do
+      expect(build(:zone, manager_organization: nil)).to be_valid
+    end
+
+    it "is valid when manager_organization belongs to the zone" do
+      zone = create(:zone)
+      unit = create(:organization, :unit, zone: zone)
+      zone.manager_organization = unit
+      expect(zone).to be_valid
+    end
+
+    it "is invalid when manager_organization belongs to another zone" do
+      zone  = create(:zone)
+      other = create(:zone)
+      unit  = create(:organization, :unit, zone: other)
+      zone.manager_organization = unit
+      expect(zone).not_to be_valid
+      expect(zone.errors[:manager_organization]).to be_present
+    end
+  end
+
   describe "scopes" do
     it ".ordered sorts by name" do
       z2 = create(:zone, name: "B zone")

@@ -144,9 +144,9 @@ RSpec.describe "PumpStationReadings", type: :request do
   end
 
   describe "zone-manager only sees own zone's pump station meters" do
-    let(:zone_manager_org) { create(:organization, level: :unit, parent: division) }
+    let(:managed_zone)     { create(:zone) }
+    let(:zone_manager_org) { create(:organization, level: :unit, parent: division, zone: managed_zone) }
     let(:zone_manager)     { create(:user, :admin_unit, organization: zone_manager_org) }
-    let(:managed_zone)     { create(:zone, manager_organization_id: zone_manager_org.id) }
     let(:foreign_zone)     { create(:zone) }
     let!(:own_ps)          { create(:pump_station, zone: managed_zone) }
     let!(:own_meter)       { create(:meter, :pump_station, pump_station: own_ps, organization: division) }
@@ -154,7 +154,7 @@ RSpec.describe "PumpStationReadings", type: :request do
     let!(:foreign_meter)   { create(:meter, :pump_station, pump_station: foreign_ps, organization: division) }
 
     before do
-      managed_zone
+      managed_zone.update!(manager_organization: zone_manager_org)
       sign_in zone_manager
     end
 

@@ -79,6 +79,10 @@ vi:
           attributes:
             base:
               cannot_destroy_division: "Không thể xoá đơn vị cấp Sư đoàn."
+        zone:
+          attributes:
+            manager_organization:
+              not_in_zone: "phải là đơn vị thuộc khu vực này"
         meter:
           attributes:
             contact_point_id:
@@ -1024,6 +1028,7 @@ vi:
       name: "Tên khu vực"
       manager_organization: "Đơn vị quản lý"
       manager_prompt: "— Chọn đơn vị quản lý —"
+      no_units_hint: "Chưa có đơn vị nào thuộc khu vực này. Hãy gán đơn vị ở trang Đơn vị trước."
       submit_create: "Tạo khu vực"
       submit_update: "Lưu"
       cancel: "Hủy"

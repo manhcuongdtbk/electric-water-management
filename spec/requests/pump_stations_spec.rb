@@ -232,14 +232,14 @@ RSpec.describe "PumpStations", type: :request do
   end
 
   describe "zone-manager cross-zone access denial" do
-    let(:zone_manager_org) { create(:organization, level: :unit, parent: division) }
+    let(:managed_zone)     { create(:zone) }
+    let(:zone_manager_org) { create(:organization, level: :unit, parent: division, zone: managed_zone) }
     let(:zone_manager)     { create(:user, :admin_unit, organization: zone_manager_org) }
-    let(:managed_zone)     { create(:zone, manager_organization_id: zone_manager_org.id) }
     let(:foreign_zone)     { create(:zone) }
     let!(:foreign_ps)      { create(:pump_station, zone: foreign_zone) }
 
     before do
-      managed_zone
+      managed_zone.update!(manager_organization: zone_manager_org)
       sign_in zone_manager
     end
 

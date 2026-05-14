@@ -58,8 +58,8 @@ class ZonesController < ApplicationController
     params.require(:zone).permit(:name, :manager_organization_id)
   end
 
-  def unit_options
-    Organization.units.ordered.map { |o| [ o.name, o.id ] }
+  def manager_options(zone)
+    zone.organizations.units.ordered.map { |o| [ o.name, o.id ] }
   end
-  helper_method :unit_options
+  helper_method :manager_options
 end

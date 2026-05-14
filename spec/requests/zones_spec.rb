@@ -94,6 +94,13 @@ RSpec.describe "Zones", type: :request do
         expect(response.body).to include("Công tơ tổng Alpha")
         expect(response.body).to include(I18n.t("zones.show.add_main_meter"))
       end
+
+      it "shows the manager dropdown scoped to units in the zone" do
+        get zone_path(zone_a)
+        expect(response.body).to include("zone[manager_organization_id]")
+        expect(response.body).to include(org_a.name)
+        expect(response.body).not_to include(org_b.name)
+      end
     end
 
     context "as zone-manager admin_unit" do
@@ -135,9 +142,10 @@ RSpec.describe "Zones", type: :request do
     context "as admin_level1" do
       before { sign_in admin1 }
 
-      it "renders the form" do
+      it "renders the form without the manager organization field" do
         get new_zone_path
         expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("zone[manager_organization_id]")
       end
     end
 
@@ -176,10 +184,10 @@ RSpec.describe "Zones", type: :request do
         expect(response).to redirect_to(zones_path)
       end
 
-      it "creates a zone with a manager organization" do
+      it "rejects a manager organization on create (zone has no units yet)" do
         post zones_path, params: { zone: { name: "Zone Managed", manager_organization_id: org_a.id } }
-        expect(Zone.last.manager_organization).to eq(org_a)
-        expect(response).to redirect_to(zones_path)
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(Zone.where(name: "Zone Managed")).to be_empty
       end
 
       it "rejects blank name" do
@@ -215,9 +223,16 @@ RSpec.describe "Zones", type: :request do
         expect(zone_a.reload.name).to eq("Zone Updated")
       end
 
-      it "updates manager organization" do
+      it "updates manager organization to a unit in the zone" do
+        patch zone_path(zone_a), params: { zone: { manager_organization_id: org_a.id } }
+        expect(response).to redirect_to(zones_path)
+        expect(zone_a.reload.manager_organization).to eq(org_a)
+      end
+
+      it "rejects a manager organization from another zone" do
         patch zone_path(zone_a), params: { zone: { manager_organization_id: org_b.id } }
-        expect(zone_a.reload.manager_organization).to eq(org_b)
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(zone_a.reload.manager_organization).to be_nil
       end
     end
 
