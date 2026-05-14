@@ -82,6 +82,55 @@ RSpec.describe "Zones", type: :request do
     end
   end
 
+  describe "GET /zones/:id" do
+    let!(:main_meter) { create(:main_meter, name: "Công tơ tổng Alpha", zone: zone_a) }
+
+    context "as admin_level1" do
+      before { sign_in admin1 }
+
+      it "renders the zone with its main meters and the add button" do
+        get zone_path(zone_a)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Công tơ tổng Alpha")
+        expect(response.body).to include(I18n.t("zones.show.add_main_meter"))
+      end
+    end
+
+    context "as zone-manager admin_unit" do
+      before do
+        zone_a.update!(manager_organization: org_a)
+        sign_in admin_unit_a
+      end
+
+      it "renders the managed zone with the add button" do
+        get zone_path(zone_a)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include(I18n.t("zones.show.add_main_meter"))
+      end
+
+      it "returns 404 for a zone it does not manage" do
+        get zone_path(zone_b)
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+
+    context "as commander" do
+      before { sign_in commander_a }
+
+      it "renders own zone read-only without the add button" do
+        get zone_path(zone_a)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Công tơ tổng Alpha")
+        expect(response.body).not_to include(I18n.t("zones.show.add_main_meter"))
+      end
+
+      it "returns 404 for another unit's zone" do
+        get zone_path(zone_b)
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+  end
+
   describe "GET /zones/new" do
     context "as admin_level1" do
       before { sign_in admin1 }

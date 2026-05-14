@@ -163,8 +163,7 @@ vi:
         main_meter: "Công tơ tổng"
         main_meter_id: "Công tơ tổng"
       main_meter:
-        code: "Mã viết tắt"
-        name: "Tên khu vực"
+        name: "Tên công tơ tổng"
       main_meter_reading:
         electricity_supply_kw: "Số điện lực (kW)"
         main_meter: "Công tơ tổng"
@@ -392,10 +391,10 @@ vi:
       cannot_destroy_division: "Không thể xoá đơn vị cấp Sư đoàn."
       destroy_failed: "Không thể xoá đơn vị."
     main_meters:
-      created: "Tạo khu vực đồng hồ tổng thành công."
-      updated: "Cập nhật khu vực đồng hồ tổng thành công."
-      destroyed: "Xoá khu vực đồng hồ tổng thành công."
-      cannot_destroy_with_readings: "Không thể xoá khu vực đang có chỉ số đồng hồ tổng. Hãy xoá các chỉ số liên quan trước."
+      created: "Thêm công tơ tổng thành công."
+      updated: "Cập nhật công tơ tổng thành công."
+      destroyed: "Xoá công tơ tổng thành công."
+      cannot_destroy_with_readings: "Không thể xoá công tơ tổng đang có chỉ số. Hãy xoá các chỉ số liên quan trước."
 
   contact_points:
     index:
@@ -1032,6 +1031,16 @@ vi:
       edit: "Sửa"
       delete: "Xóa"
       delete_confirm: "Bạn có chắc muốn xóa khu vực này?"
+    show:
+      info_section: "Thông tin khu vực"
+      main_meters_section: "Công tơ tổng"
+      main_meters_hint: "Công tơ đo tổng điện lực cấp cho khu vực."
+      add_main_meter: "Thêm công tơ tổng"
+      main_meters_empty: "Chưa có công tơ tổng nào."
+      organizations_section: "Đơn vị thuộc khu vực"
+      organizations_empty: "Chưa có đơn vị nào thuộc khu vực này."
+      no_manager: "Chưa chỉ định"
+      back: "Quay lại danh sách khu vực"
 
   pump_station_readings:
     show:
@@ -1137,32 +1146,21 @@ vi:
       delete_confirm: "Bạn có chắc muốn xoá đơn vị này?"
 
   main_meters:
-    index:
-      title: "Công tơ tổng"
-      subtitle: "Mỗi khu vực là một đồng hồ tổng vật lý. Nhiều đơn vị cấp 2 có thể dùng chung một đồng hồ tổng."
-      new_button: "Thêm khu vực"
-      columns:
-        stt: "STT"
-        name: "Tên khu vực"
-        organizations: "Đơn vị dùng chung"
-        actions: "Thao tác"
-      empty: "Chưa có khu vực đồng hồ tổng nào. Bấm \"Thêm khu vực\" để tạo mới."
-      no_organizations: "Chưa gán đơn vị"
     new:
-      title: "Thêm khu vực đồng hồ tổng"
+      title: "Thêm công tơ tổng"
     edit:
-      title: "Sửa khu vực đồng hồ tổng"
+      title: "Sửa công tơ tổng"
+    columns:
+      stt: "STT"
+      name: "Tên công tơ tổng"
+      actions: "Thao tác"
     form:
-      name: "Tên khu vực"
-      name_hint: "Ví dụ: \"Khu vực Cơ quan SĐB\" (gồm Cơ quan SĐB + TĐ18 + ĐĐ20-23)"
-      organizations: "Đơn vị cấp 2 dùng chung đồng hồ tổng này"
-      organizations_hint: "Tích chọn các đơn vị thuộc khu vực. Một đơn vị chỉ thuộc tối đa một khu vực — chọn ở đây sẽ chuyển đơn vị khỏi khu vực cũ."
-      org_in_other: "Đang thuộc khu vực: %{zone}"
-      no_organizations_available: "Chưa có đơn vị cấp 2 nào. Hãy tạo đơn vị trước."
-      submit_create: "Thêm khu vực"
+      name: "Tên công tơ tổng"
+      name_hint: "Ví dụ: \"Công tơ tổng trạm biến áp\""
+      submit_create: "Thêm công tơ tổng"
       submit_update: "Lưu thay đổi"
       cancel: "Hủy"
     actions:
       edit: "Sửa"
       delete: "Xoá"
-      delete_confirm: "Bạn có chắc muốn xoá khu vực này? Các đơn vị thuộc khu vực sẽ được tách ra."
+      delete_confirm: "Bạn có chắc muốn xoá công tơ tổng này?"
