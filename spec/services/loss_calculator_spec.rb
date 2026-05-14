@@ -284,6 +284,48 @@ RSpec.describe LossCalculator do
         ps = create(:pump_station, zone: zone, name: "PS")
         expect(calc.pump_loss_share(ps)).to eq(bd("0"))
       end
+
+      it "returns a :negative_loss warning describing supply vs consumption" do
+        warning = calc.call[:warnings].first
+        expect(warning).to be_present
+        expect(warning[:type]).to eq(:negative_loss)
+        expect(warning[:supply_adjusted]).to eq(bd("100"))
+        expect(warning[:total_consumption]).to eq(bd("999"))
+        expect(warning[:difference]).to eq(bd("-899"))
+        expect(warning[:message]).to include("100", "999")
+      end
+    end
+
+    describe "supply >= consumption → no warnings" do
+      let(:main_meter)   { create(:main_meter, name: "Healthy supply") }
+      let(:zone)         { main_meter.zone }
+      let!(:organization) { create(:organization, level: :unit, parent: division, zone: zone) }
+      let!(:supply_reading) do
+        create(:main_meter_reading, main_meter: main_meter, monthly_period: period,
+               electricity_supply_kw: bd("2000"))
+      end
+      let!(:cp) { create(:contact_point, organization: organization, name: "CP", position: 1) }
+      let!(:m) do
+        meter = create(:meter, :normal, organization: organization, contact_point: cp, name: "M")
+        create(:meter_reading, meter: meter, monthly_period: period, reading_start: 0, reading_end: 1500, consumption: 1500)
+        meter
+      end
+      let(:calc) { described_class.new(zone: zone, monthly_period: period) }
+
+      it "returns an empty warnings array" do
+        expect(calc.call[:warnings]).to eq([])
+      end
+    end
+
+    describe "zone has no supply (no MainMeterReading) → no warnings" do
+      let(:zone)          { create(:zone, name: "No supply zone") }
+      let!(:_main_meter)  { create(:main_meter, zone: zone, name: "MM no reading") }
+      let!(:organization) { create(:organization, level: :unit, parent: division, zone: zone) }
+      let(:calc)          { described_class.new(zone: zone, monthly_period: period) }
+
+      it "returns an empty warnings array (cannot compute diff without supply)" do
+        expect(calc.call[:warnings]).to eq([])
+      end
     end
 
     describe "pump station with no consumption" do

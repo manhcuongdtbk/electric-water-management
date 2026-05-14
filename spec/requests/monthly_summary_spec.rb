@@ -308,6 +308,44 @@ RSpec.describe "MonthlySummary", type: :request do
   end
 
   # ---------------------------------------------------------------------------
+  # Warning banner — shown when LossCalculator clamps a negative loss to 0
+  # ---------------------------------------------------------------------------
+  describe "negative-loss warning banner" do
+    let(:zone)         { create(:zone, name: "Tiny zone") }
+    let(:main_meter)   { create(:main_meter, zone: zone, name: "Tiny supply") }
+    let(:org_tiny)     { create(:organization, :unit, parent: division, zone: zone) }
+    let(:user_tiny)    { create(:user, :admin_unit, organization: org_tiny) }
+    let!(:cp_tiny)     { create(:contact_point, organization: org_tiny, name: "CP tiny") }
+    let!(:meter_tiny) do
+      m = create(:meter, :normal, organization: org_tiny, contact_point: cp_tiny, name: "Big meter")
+      create(:meter_reading, meter: m, monthly_period: period,
+             reading_start: 0, reading_end: 999, consumption: 999)
+      m
+    end
+    let!(:supply_tiny) do
+      create(:main_meter_reading, main_meter: main_meter, monthly_period: period,
+             electricity_supply_kw: 100)
+    end
+
+    it "shows the yellow warning banner with consumption and supply numbers" do
+      sign_in user_tiny
+      get monthly_summary_path(period_id: period.id)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(I18n.t("calculation.warnings.heading"))
+      expect(response.body).to include("Tổng sử dụng công tơ")
+      expect(response.body).to match(/100/)
+      expect(response.body).to match(/999/)
+    end
+
+    it "does not show the banner when supply >= consumption" do
+      supply_tiny.update!(electricity_supply_kw: 5_000)
+      sign_in user_tiny
+      get monthly_summary_path(period_id: period.id)
+      expect(response.body).not_to include(I18n.t("calculation.warnings.heading"))
+    end
+  end
+
+  # ---------------------------------------------------------------------------
   # GET /monthly_summary.csv (Việc 4c: đồng bộ với UI)
   # ---------------------------------------------------------------------------
   describe "GET /monthly_summary.csv" do

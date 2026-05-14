@@ -85,6 +85,15 @@ class MonthlySummariesController < ApplicationController
       end
     end
 
+    # Warnings reflect current readings, not the snapshot at last persist.
+    # LossCalculator is cheap (sums + memoized) so we run it on every show.
+    zone = @target_org&.zone
+    @warnings = if zone
+      LossCalculator.new(zone: zone, monthly_period: @period).call[:warnings] || []
+    else
+      []
+    end
+
     @totals = build_totals(@calculations) if @calculations.any?
   end
 
