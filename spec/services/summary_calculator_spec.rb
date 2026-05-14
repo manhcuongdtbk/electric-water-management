@@ -201,6 +201,21 @@ RSpec.describe SummaryCalculator do
       it "= 0 when no record exists for the CP" do
         expect(row_for(cp_a)[:other_deduction_kw]).to eq(bd("0"))
       end
+
+      it "negative fixed_kw — passed through raw; subtracting it adds back to remaining" do
+        create(:contact_point_other_deduction,
+               contact_point: cp_a, monthly_period: period,
+               other_type: :fixed_kw, other_value: bd("-50"))
+        row = row_for(cp_a)
+        expect(row[:other_deduction_kw]).to eq(bd("-50"))
+        # other_deduction âm → total_deduction nhỏ hơn tổng 4 khoản còn lại
+        # → remaining_standard CAO HƠN so với khi không có khoản này.
+        other_four = row[:savings_deduction_kw] + row[:loss_deduction_kw] +
+                     row[:division_public_deduction_kw] + row[:unit_public_deduction_kw]
+        expect(row[:total_deduction_kw]).to eq(other_four - bd("50"))
+        expect(row[:remaining_standard_kw]).to eq(row[:total_standard_kw] - other_four + bd("50"))
+        expect(row[:remaining_standard_kw]).to be > row[:total_standard_kw] - other_four
+      end
     end
 
     it "total_deduction_kw = sum of all 5 deduction components" do
