@@ -98,5 +98,40 @@ RSpec.describe "Dashboard", type: :request do
         expect(response).to redirect_to(new_user_session_path)
       end
     end
+
+    context "Khối column" do
+      it "shows Khối column header in month view" do
+        sign_in admin_unit_a
+        get dashboard_path(view_type: "month", period_id: period.id)
+        expect(response.body).to include("Khối")
+      end
+
+      it "shows group_name value for contact points with a group" do
+        cp_normal.update!(group_name: "Ban Tham mưu")
+        sign_in admin_unit_a
+        get dashboard_path(view_type: "month", period_id: period.id)
+        expect(response.body).to include("Ban Tham mưu")
+      end
+    end
+
+    context "quarter aggregate view" do
+      let!(:period_jan) { create(:monthly_period, year: 2026, month: 1) }
+      let!(:calc_jan) do
+        create(:monthly_calculation,
+               contact_point: cp_normal,
+               monthly_period: period_jan,
+               total_personnel: 10,
+               total_standard_kw: 500, total_usage_kw: 450,
+               over_under_kw: -50, total_amount: -100_000)
+      end
+
+      it "renders quarter view with Khối column and contact point data" do
+        sign_in admin_unit_a
+        get dashboard_path(view_type: "quarter", year: 2026, quarter: 1)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Khối")
+        expect(response.body).to include(cp_normal.name)
+      end
+    end
   end
 end

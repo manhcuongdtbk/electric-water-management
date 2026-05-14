@@ -88,6 +88,9 @@
         <th class="px-2 py-2 text-center font-medium border border-slate-600 whitespace-nowrap w-8" rowspan="2">
           <%= t("monthly_summary.columns.stt") %>
         </th>
+        <th class="px-2 py-2 text-left font-medium border border-slate-600 whitespace-nowrap min-w-[80px]" rowspan="2">
+          <%= t("monthly_summary.columns.group_name") %>
+        </th>
         <th class="px-2 py-2 text-left font-medium border border-slate-600 min-w-[140px]" rowspan="2">
           <%= t("monthly_summary.columns.contact_point") %>
         </th>
@@ -176,6 +179,9 @@
       <% @calculations.each_with_index do |calc, idx| %>
         <tr class="hover:bg-gray-50">
           <td class="px-2 py-2 text-center text-gray-500 border-r border-gray-200"><%= idx + 1 %></td>
+          <td class="px-2 py-2 text-gray-600 border-r border-gray-200 whitespace-nowrap">
+            <%= calc.contact_point.group_name %>
+          </td>
           <td class="px-2 py-2 font-medium text-gray-900 border-r border-gray-200 whitespace-nowrap">
             <%= calc.contact_point.name %>
           </td>
@@ -253,7 +259,7 @@
     <% if @totals %>
       <tfoot>
         <tr class="bg-slate-100 font-bold border-t-2 border-slate-400">
-          <td class="px-2 py-2 text-center text-gray-700 border-r border-gray-300" colspan="2">
+          <td class="px-2 py-2 text-center text-gray-700 border-r border-gray-300" colspan="3">
             <%= t("monthly_summary.total_row") %>
           </td>
           <% (1..7).each do |i| %>

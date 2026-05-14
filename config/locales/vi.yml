@@ -110,7 +110,7 @@ vi:
         password_confirmation: "Xác nhận mật khẩu"
       contact_point:
         name: "Tên đầu mối"
-        group_name: "Nhóm"
+        group_name: "Khối"
         position: "Thứ tự hiển thị"
         organization: "Đơn vị"
         organization_id: "Đơn vị"
@@ -418,7 +418,7 @@ vi:
       columns:
         stt: "STT"
         name: "Tên đầu mối"
-        group_name: "Nhóm"
+        group_name: "Khối"
         organization: "Đơn vị"
         meters_count: "Số công tơ"
         personnel_total: "Tổng quân số"
@@ -432,7 +432,7 @@ vi:
       title: "Sửa đầu mối"
     form:
       name: "Tên đầu mối"
-      group_name: "Nhóm"
+      group_name: "Khối"
       position: "Thứ tự hiển thị"
       organization: "Đơn vị"
       organization_prompt: "— Chọn đơn vị —"
@@ -665,6 +665,7 @@ vi:
       result: "Còn được hưởng"
     columns:
       stt: "STT"
+      group_name: "Khối"
       contact_point: "Tên đầu mối"
       total_personnel: "Tổng quân số"
       living_standard_kw: "Sinh hoạt"
@@ -786,6 +787,7 @@ vi:
       usage: "Sử dụng"
     table:
       title: "Chi tiết đầu mối"
+      group_name: "Khối"
       name: "Đầu mối"
       standard: "Tiêu chuẩn (kW)"
       usage: "Sử dụng (kW)"
