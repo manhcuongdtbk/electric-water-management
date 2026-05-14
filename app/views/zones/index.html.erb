@@ -1,28 +1,65 @@
 <% content_for :title, t("zones.index.title") %>
 
-<div class="flex items-center justify-between mb-4">
-  <div>
-    <h1 class="text-xl font-semibold text-gray-900"><%= t("zones.index.title") %></h1>
-    <p class="text-sm text-gray-500 mt-0.5"><%= t("zones.index.subtitle") %></p>
-  </div>
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-xl font-semibold text-gray-900"><%= t("zones.index.title") %></h1>
   <% if can? :create, Zone %>
     <%= link_to t("zones.index.new"), new_zone_path,
           class: "inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors" %>
   <% end %>
 </div>
 
+<%# Search form %>
+<%= search_form_for @q, url: zones_path, html: { class: "mb-4 flex flex-wrap gap-2" } do |f| %>
+  <%= f.text_field :name_cont,
+        placeholder: t("zones.index.search_placeholder"),
+        class: "border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-56" %>
+  <%= f.submit t("common.search.submit"),
+        class: "px-4 py-1.5 bg-gray-600 text-white text-sm rounded-md hover:bg-gray-700 cursor-pointer transition-colors" %>
+  <%= link_to t("common.search.clear"), zones_path(sort: params[:sort].presence, direction: params[:direction].presence),
+        class: "px-4 py-1.5 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50 transition-colors" %>
+<% end %>
+
+<% current_sort = params[:sort].presence || "name"
+   current_dir  = params[:direction].presence || "asc"
+   q_params     = params[:q]&.to_unsafe_h.presence
+
+   sort_link = ->(col, label) do
+     next_dir = (current_sort == col && current_dir == "asc") ? "desc" : "asc"
+     icon = current_sort == col ? (current_dir == "asc" ? " ↑" : " ↓") : nil
+     link_to zones_path(q: q_params, sort: col, direction: next_dir),
+             class: "inline-flex items-center gap-0.5 hover:text-blue-600 transition-colors" do
+       safe_join([ label, icon ? content_tag(:span, icon, class: "text-gray-500 text-xs") : nil ].compact)
+     end
+   end %>
+
+<%# Table %>
 <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
   <table class="min-w-full divide-y divide-gray-200 text-sm">
     <thead class="bg-gray-50">
       <tr>
-        <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("zones.index.columns.name") %></th>
-        <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("zones.index.columns.manager_organization") %></th>
-        <th class="px-4 py-3 text-right font-medium text-gray-600 w-28 whitespace-nowrap"><%= t("zones.index.columns.main_meters_count") %></th>
-        <th class="px-4 py-3 text-right font-medium text-gray-600 w-24"><%= t("zones.index.columns.organizations_count") %></th>
+        <th class="px-4 py-3 text-left text-gray-600">
+          <%= sort_link.call("name", t("zones.index.columns.name")) %>
+        </th>
+        <th class="px-4 py-3 text-left text-gray-600">
+          <%= sort_link.call("manager_organization", t("zones.index.columns.manager_organization")) %>
+        </th>
+        <th class="px-4 py-3 text-left text-gray-600 w-28 whitespace-nowrap">
+          <%= sort_link.call("main_meters", t("zones.index.columns.main_meters_count")) %>
+        </th>
+        <th class="px-4 py-3 text-left text-gray-600 w-24">
+          <%= sort_link.call("organizations", t("zones.index.columns.organizations_count")) %>
+        </th>
+        <th class="px-4 py-3 text-left text-gray-600"><%= t("zones.index.columns.actions") %></th>
       </tr>
     </thead>
     <tbody class="divide-y divide-gray-100">
-      <% if @zones.any? %>
+      <% if @zones.empty? %>
+        <tr>
+          <td colspan="5" class="px-4 py-8 text-center text-gray-400">
+            <%= q_params.present? ? t("zones.index.empty_filtered") : t("zones.index.empty") %>
+          </td>
+        </tr>
+      <% else %>
         <% @zones.each do |zone| %>
           <tr class="hover:bg-gray-50">
             <td class="px-4 py-3 font-medium">
@@ -31,7 +68,7 @@
             <td class="px-4 py-3 text-gray-700">
               <% if zone.manager_organization %>
                 <% if can?(:update, zone.manager_organization) %>
-                  <%= link_to zone.manager_organization.name, edit_organization_path(zone.manager_organization), class: "text-blue-600 hover:underline" %>
+                  <%= link_to zone.manager_organization.name, edit_organization_path(zone.manager_organization), class: "hover:text-blue-600 transition-colors" %>
                 <% else %>
                   <%= zone.manager_organization.name %>
                 <% end %>
@@ -39,17 +76,31 @@
                 —
               <% end %>
             </td>
-            <td class="px-4 py-3 text-right text-gray-700"><%= zone.main_meters.size %></td>
-            <td class="px-4 py-3 text-right text-gray-700"><%= zone.organizations.size %></td>
+            <td class="px-4 py-3 text-gray-700"><%= zone.main_meters.size %></td>
+            <td class="px-4 py-3 text-gray-700">
+              <% org_count = zone.organizations.size %>
+              <% if org_count > 0 %>
+                <%= link_to org_count,
+                      organizations_path(q: { zone_id_eq: zone.id }),
+                      class: "text-blue-600 hover:text-blue-800" %>
+              <% else %>
+                0
+              <% end %>
+            </td>
+            <td class="px-4 py-3">
+              <% if can? :destroy, zone %>
+                <%= button_to t("zones.actions.delete"), zone_path(zone),
+                      method: :delete,
+                      data: { turbo_confirm: t("zones.actions.delete_confirm") },
+                      class: "text-red-600 hover:underline bg-transparent border-0 cursor-pointer p-0" %>
+              <% end %>
+            </td>
           </tr>
         <% end %>
-      <% else %>
-        <tr>
-          <td colspan="4" class="px-4 py-6 text-center text-gray-500 italic">
-            <%= t("zones.index.empty") %>
-          </td>
-        </tr>
       <% end %>
     </tbody>
   </table>
 </div>
+
+<%# Pagination %>
+<%= render "shared/pagination", pagy: @pagy %>

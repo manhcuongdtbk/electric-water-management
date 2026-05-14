@@ -13,6 +13,10 @@ class Zone < ApplicationRecord
 
   scope :ordered, -> { order(:name) }
 
+  def self.ransackable_attributes(_auth_object = nil)
+    %w[name]
+  end
+
   private
 
   def manager_must_belong_to_zone

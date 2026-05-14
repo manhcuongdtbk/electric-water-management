@@ -1021,7 +1021,9 @@ vi:
       title: "Khu vực"
       subtitle: "Quản lý khu vực điện"
       empty: "Chưa có khu vực nào"
+      empty_filtered: "Không tìm thấy khu vực nào phù hợp."
       new: "Thêm khu vực"
+      search_placeholder: "Tìm theo tên khu vực..."
       columns:
         stt: "STT"
         name: "Tên khu vực"
