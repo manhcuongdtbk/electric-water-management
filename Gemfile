@@ -55,6 +55,7 @@ group :development, :test do
   gem "shoulda-matchers"
   gem "capybara"
   gem "selenium-webdriver"
+  gem "test-prof", "~> 1.0"
 end
 
 group :development do

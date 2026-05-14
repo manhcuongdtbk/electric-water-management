@@ -16,34 +16,34 @@ RSpec.describe LossCalculator do
   # Base: 1 MainMeter zone, 3 normal CP meters (99 + 105 + 500 = 704),
   # 1 pump meter (1000). supply 1800 → B = 1704, C = 96.
   describe "Scenario A — base (supply 1800, no no_loss, 3 normal + 1 pump)" do
-    let(:division)    { create(:organization, :division) }
-    let(:main_meter)  { create(:main_meter, name: "Zone A") }
-    let(:zone)        { main_meter.zone }
-    let(:organization) { create(:organization, level: :unit, parent: division, zone: zone) }
-    let(:period)      { create(:monthly_period, year: 2026, month: 2, unit_price: bd("2336.4")) }
+    let_it_be(:division)    { create(:organization, :division) }
+    let_it_be(:main_meter)  { create(:main_meter, name: "Zone A") }
+    let_it_be(:zone)        { main_meter.zone }
+    let_it_be(:organization) { create(:organization, level: :unit, parent: division, zone: zone) }
+    let_it_be(:period)      { create(:monthly_period, year: 2026, month: 2, unit_price: bd("2336.4")) }
 
-    let!(:supply_reading) do
+    let_it_be(:supply_reading) do
       create(:main_meter_reading,
              main_meter: main_meter, monthly_period: period,
              electricity_supply_kw: bd("1800"))
     end
 
-    let!(:cp_truong)   { create(:contact_point, organization: organization, name: "TMP Truong",   position: 1) }
-    let!(:cp_qluc)     { create(:contact_point, organization: organization, name: "TB Q.Luc",     position: 2) }
-    let!(:cp_tac_huan) { create(:contact_point, organization: organization, name: "Ban Tac Huan", position: 3) }
+    let_it_be(:cp_truong)   { create(:contact_point, organization: organization, name: "TMP Truong",   position: 1) }
+    let_it_be(:cp_qluc)     { create(:contact_point, organization: organization, name: "TB Q.Luc",     position: 2) }
+    let_it_be(:cp_tac_huan) { create(:contact_point, organization: organization, name: "Ban Tac Huan", position: 3) }
 
-    let!(:meter_truong)   { create(:meter, :normal, organization: organization, contact_point: cp_truong,   name: "M-Truong") }
-    let!(:meter_qluc)     { create(:meter, :normal, organization: organization, contact_point: cp_qluc,     name: "M-QLuc") }
-    let!(:meter_tac_huan) { create(:meter, :normal, organization: organization, contact_point: cp_tac_huan, name: "M-TacHuan") }
+    let_it_be(:meter_truong)   { create(:meter, :normal, organization: organization, contact_point: cp_truong,   name: "M-Truong") }
+    let_it_be(:meter_qluc)     { create(:meter, :normal, organization: organization, contact_point: cp_qluc,     name: "M-QLuc") }
+    let_it_be(:meter_tac_huan) { create(:meter, :normal, organization: organization, contact_point: cp_tac_huan, name: "M-TacHuan") }
 
-    let!(:reading_truong)   { create(:meter_reading, meter: meter_truong,   monthly_period: period, reading_start: 0, reading_end: 99,  consumption: 99) }
-    let!(:reading_qluc)     { create(:meter_reading, meter: meter_qluc,     monthly_period: period, reading_start: 0, reading_end: 105, consumption: 105) }
-    let!(:reading_tac_huan) { create(:meter_reading, meter: meter_tac_huan, monthly_period: period, reading_start: 0, reading_end: 500, consumption: 500) }
+    let_it_be(:reading_truong)   { create(:meter_reading, meter: meter_truong,   monthly_period: period, reading_start: 0, reading_end: 99,  consumption: 99) }
+    let_it_be(:reading_qluc)     { create(:meter_reading, meter: meter_qluc,     monthly_period: period, reading_start: 0, reading_end: 105, consumption: 105) }
+    let_it_be(:reading_tac_huan) { create(:meter_reading, meter: meter_tac_huan, monthly_period: period, reading_start: 0, reading_end: 500, consumption: 500) }
 
-    let!(:pump_station) { create(:pump_station, zone: zone, name: "TB 1") }
-    let!(:pump_meter)   { create(:meter, :pump_station, organization: division, contact_point: nil, pump_station: pump_station, name: "M-Pump") }
-    let!(:pump_reading) { create(:meter_reading, meter: pump_meter, monthly_period: period, reading_start: 0, reading_end: 1000, consumption: 1000) }
-    let!(:pump_assignment) { create(:pump_station_assignment, pump_station: pump_station, organization: organization) }
+    let_it_be(:pump_station) { create(:pump_station, zone: zone, name: "TB 1") }
+    let_it_be(:pump_meter)   { create(:meter, :pump_station, organization: division, contact_point: nil, pump_station: pump_station, name: "M-Pump") }
+    let_it_be(:pump_reading) { create(:meter_reading, meter: pump_meter, monthly_period: period, reading_start: 0, reading_end: 1000, consumption: 1000) }
+    let_it_be(:pump_assignment) { create(:pump_station_assignment, pump_station: pump_station, organization: organization) }
 
     let(:calc)    { described_class.new(zone: zone, monthly_period: period) }
     let(:results) { calc.call }
@@ -88,63 +88,63 @@ RSpec.describe LossCalculator do
   # Zone shared by DVA + DVB. supply 2000, no_loss 100, normal+public+pump = 1680
   # → B = 1680, A = 1900, C = 220.
   describe "Scenario B — zone-wide with no_loss + public meters" do
-    let(:division)    { create(:organization, :division) }
-    let(:main_meter)  { create(:main_meter, name: "Zone B") }
-    let(:zone)        { main_meter.zone }
-    let(:dva)         { create(:organization, level: :unit, parent: division, name: "DVA", zone: zone) }
-    let(:dvb)         { create(:organization, level: :unit, parent: division, name: "DVB", zone: zone) }
-    let(:period)      { create(:monthly_period, year: 2026, month: 4, unit_price: bd("2336.4")) }
+    let_it_be(:division)    { create(:organization, :division) }
+    let_it_be(:main_meter)  { create(:main_meter, name: "Zone B") }
+    let_it_be(:zone)        { main_meter.zone }
+    let_it_be(:dva)         { create(:organization, level: :unit, parent: division, name: "DVA", zone: zone) }
+    let_it_be(:dvb)         { create(:organization, level: :unit, parent: division, name: "DVB", zone: zone) }
+    let_it_be(:period)      { create(:monthly_period, year: 2026, month: 4, unit_price: bd("2336.4")) }
 
-    let!(:supply_reading) do
+    let_it_be(:supply_reading) do
       create(:main_meter_reading,
              main_meter: main_meter, monthly_period: period,
              electricity_supply_kw: bd("2000"))
     end
 
-    let!(:a1) { create(:contact_point, organization: dva, name: "A1", position: 1) }
-    let!(:a2) { create(:contact_point, organization: dva, name: "A2", position: 2) }
-    let!(:a3) { create(:contact_point, organization: dva, name: "A3", position: 3) }
-    let!(:a4) { create(:contact_point, organization: dva, name: "A4 public", group_name: "public", position: 4) }
-    let!(:b1) { create(:contact_point, organization: dvb, name: "B1", position: 1) }
+    let_it_be(:a1) { create(:contact_point, organization: dva, name: "A1", position: 1) }
+    let_it_be(:a2) { create(:contact_point, organization: dva, name: "A2", position: 2) }
+    let_it_be(:a3) { create(:contact_point, organization: dva, name: "A3", position: 3) }
+    let_it_be(:a4) { create(:contact_point, organization: dva, name: "A4 public", group_name: "public", position: 4) }
+    let_it_be(:b1) { create(:contact_point, organization: dvb, name: "B1", position: 1) }
 
-    let!(:m_a1) do
+    let_it_be(:m_a1) do
       m = create(:meter, :normal, organization: dva, contact_point: a1, name: "A1-CT1")
       create(:meter_reading, meter: m, monthly_period: period, reading_start: 0, reading_end: 800, consumption: 800)
       m
     end
-    let!(:m_a2_1) do
+    let_it_be(:m_a2_1) do
       m = create(:meter, :normal, organization: dva, contact_point: a2, name: "A2-CT1")
       create(:meter_reading, meter: m, monthly_period: period, reading_start: 0, reading_end: 50, consumption: 50)
       m
     end
-    let!(:m_a2_2) do
+    let_it_be(:m_a2_2) do
       m = create(:meter, :normal, organization: dva, contact_point: a2, name: "A2-CT2")
       create(:meter_reading, meter: m, monthly_period: period, reading_start: 0, reading_end: 30, consumption: 30)
       m
     end
-    let!(:m_a3_no_loss) do
+    let_it_be(:m_a3_no_loss) do
       m = create(:meter, :no_loss, organization: dva, contact_point: a3, name: "A3-CT1 no_loss")
       create(:meter_reading, meter: m, monthly_period: period, reading_start: 0, reading_end: 100, consumption: 100)
       m
     end
-    let!(:m_a4_public) do
+    let_it_be(:m_a4_public) do
       m = create(:meter, :public_meter, organization: dva, contact_point: a4, name: "A4-CT1 public")
       create(:meter_reading, meter: m, monthly_period: period, reading_start: 0, reading_end: 200, consumption: 200)
       m
     end
-    let!(:m_b1) do
+    let_it_be(:m_b1) do
       m = create(:meter, :normal, organization: dvb, contact_point: b1, name: "B1-CT1")
       create(:meter_reading, meter: m, monthly_period: period, reading_start: 0, reading_end: 100, consumption: 100)
       m
     end
 
-    let!(:pump_station) { create(:pump_station, zone: zone, name: "TB1") }
-    let!(:m_pump) do
+    let_it_be(:pump_station) { create(:pump_station, zone: zone, name: "TB1") }
+    let_it_be(:m_pump) do
       m = create(:meter, :pump_station, organization: division, contact_point: nil, pump_station: pump_station, name: "TB1-CT1")
       create(:meter_reading, meter: m, monthly_period: period, reading_start: 0, reading_end: 500, consumption: 500)
       m
     end
-    let!(:pump_assignment) { create(:pump_station_assignment, pump_station: pump_station, organization: dva) }
+    let_it_be(:pump_assignment) { create(:pump_station_assignment, pump_station: pump_station, organization: dva) }
 
     let(:tolerance) { bd("0.001") }
     let(:calc)      { described_class.new(zone: zone, monthly_period: period) }
@@ -187,8 +187,8 @@ RSpec.describe LossCalculator do
   # ============================================================ Scenario C
   # Edge cases.
   describe "Scenario C — edge cases" do
-    let(:division)    { create(:organization, :division) }
-    let(:period)      { create(:monthly_period, year: 2026, month: 5, unit_price: bd("2336.4")) }
+    let_it_be(:division)    { create(:organization, :division) }
+    let_it_be(:period)      { create(:monthly_period, year: 2026, month: 5, unit_price: bd("2336.4")) }
 
     describe "zone is nil" do
       let(:calc) { described_class.new(zone: nil, monthly_period: period) }
@@ -216,10 +216,10 @@ RSpec.describe LossCalculator do
     end
 
     describe "zone present but no MainMeterReading" do
-      let(:main_meter)   { create(:main_meter, name: "Empty zone") }
-      let(:zone)         { main_meter.zone }
-      let!(:organization) { create(:organization, level: :unit, parent: division, zone: zone) }
-      let(:calc)         { described_class.new(zone: zone, monthly_period: period) }
+      let_it_be(:main_meter)   { create(:main_meter, name: "Empty zone") }
+      let_it_be(:zone)         { main_meter.zone }
+      let_it_be(:organization) { create(:organization, level: :unit, parent: division, zone: zone) }
+      let(:calc)               { described_class.new(zone: zone, monthly_period: period) }
 
       it "returns nil supply (no reading)" do
         expect(calc.call[:zone_supply_kw]).to be_nil
@@ -231,15 +231,15 @@ RSpec.describe LossCalculator do
     end
 
     describe "B = 0 (zone has supply + no_loss meters but no normal/public/pump)" do
-      let(:main_meter)   { create(:main_meter, name: "B0 zone") }
-      let(:zone)         { main_meter.zone }
-      let!(:organization) { create(:organization, level: :unit, parent: division, zone: zone) }
-      let!(:supply_reading) do
+      let_it_be(:main_meter)   { create(:main_meter, name: "B0 zone") }
+      let_it_be(:zone)         { main_meter.zone }
+      let_it_be(:organization) { create(:organization, level: :unit, parent: division, zone: zone) }
+      let_it_be(:supply_reading) do
         create(:main_meter_reading, main_meter: main_meter, monthly_period: period,
                electricity_supply_kw: bd("500"))
       end
-      let!(:cp) { create(:contact_point, organization: organization, name: "CP no-loss only", position: 1) }
-      let!(:m_no_loss) do
+      let_it_be(:cp) { create(:contact_point, organization: organization, name: "CP no-loss only", position: 1) }
+      let_it_be(:m_no_loss) do
         m = create(:meter, :no_loss, organization: organization, contact_point: cp, name: "no_loss meter")
         create(:meter_reading, meter: m, monthly_period: period, reading_start: 0, reading_end: 50, consumption: 50)
         m
@@ -261,15 +261,15 @@ RSpec.describe LossCalculator do
     end
 
     describe "A < B → total_zone_loss clamps to 0" do
-      let(:main_meter)   { create(:main_meter, name: "Tiny supply") }
-      let(:zone)         { main_meter.zone }
-      let!(:organization) { create(:organization, level: :unit, parent: division, zone: zone) }
-      let!(:supply_reading) do
+      let_it_be(:main_meter)   { create(:main_meter, name: "Tiny supply") }
+      let_it_be(:zone)         { main_meter.zone }
+      let_it_be(:organization) { create(:organization, level: :unit, parent: division, zone: zone) }
+      let_it_be(:supply_reading) do
         create(:main_meter_reading, main_meter: main_meter, monthly_period: period,
                electricity_supply_kw: bd("100"))
       end
-      let!(:cp) { create(:contact_point, organization: organization, name: "Big consumer", position: 1) }
-      let!(:m) do
+      let_it_be(:cp) { create(:contact_point, organization: organization, name: "Big consumer", position: 1) }
+      let_it_be(:m) do
         meter = create(:meter, :normal, organization: organization, contact_point: cp, name: "M big")
         create(:meter_reading, meter: meter, monthly_period: period, reading_start: 0, reading_end: 999, consumption: 999)
         meter
@@ -297,15 +297,15 @@ RSpec.describe LossCalculator do
     end
 
     describe "supply >= consumption → no warnings" do
-      let(:main_meter)   { create(:main_meter, name: "Healthy supply") }
-      let(:zone)         { main_meter.zone }
-      let!(:organization) { create(:organization, level: :unit, parent: division, zone: zone) }
-      let!(:supply_reading) do
+      let_it_be(:main_meter)   { create(:main_meter, name: "Healthy supply") }
+      let_it_be(:zone)         { main_meter.zone }
+      let_it_be(:organization) { create(:organization, level: :unit, parent: division, zone: zone) }
+      let_it_be(:supply_reading) do
         create(:main_meter_reading, main_meter: main_meter, monthly_period: period,
                electricity_supply_kw: bd("2000"))
       end
-      let!(:cp) { create(:contact_point, organization: organization, name: "CP", position: 1) }
-      let!(:m) do
+      let_it_be(:cp) { create(:contact_point, organization: organization, name: "CP", position: 1) }
+      let_it_be(:m) do
         meter = create(:meter, :normal, organization: organization, contact_point: cp, name: "M")
         create(:meter_reading, meter: meter, monthly_period: period, reading_start: 0, reading_end: 1500, consumption: 1500)
         meter
@@ -318,10 +318,10 @@ RSpec.describe LossCalculator do
     end
 
     describe "zone has no supply (no MainMeterReading) → no warnings" do
-      let(:zone)          { create(:zone, name: "No supply zone") }
-      let!(:_main_meter)  { create(:main_meter, zone: zone, name: "MM no reading") }
-      let!(:organization) { create(:organization, level: :unit, parent: division, zone: zone) }
-      let(:calc)          { described_class.new(zone: zone, monthly_period: period) }
+      let_it_be(:zone)          { create(:zone, name: "No supply zone") }
+      let_it_be(:_main_meter)   { create(:main_meter, zone: zone, name: "MM no reading") }
+      let_it_be(:organization)  { create(:organization, level: :unit, parent: division, zone: zone) }
+      let(:calc)                { described_class.new(zone: zone, monthly_period: period) }
 
       it "returns an empty warnings array (cannot compute diff without supply)" do
         expect(calc.call[:warnings]).to eq([])
@@ -329,20 +329,20 @@ RSpec.describe LossCalculator do
     end
 
     describe "pump station with no consumption" do
-      let(:main_meter)   { create(:main_meter, name: "Zone") }
-      let(:zone)         { main_meter.zone }
-      let!(:organization) { create(:organization, level: :unit, parent: division, zone: zone) }
-      let!(:supply_reading) do
+      let_it_be(:main_meter)   { create(:main_meter, name: "Zone") }
+      let_it_be(:zone)         { main_meter.zone }
+      let_it_be(:organization) { create(:organization, level: :unit, parent: division, zone: zone) }
+      let_it_be(:supply_reading) do
         create(:main_meter_reading, main_meter: main_meter, monthly_period: period,
                electricity_supply_kw: bd("1000"))
       end
-      let!(:cp) { create(:contact_point, organization: organization, name: "CP", position: 1) }
-      let!(:m) do
+      let_it_be(:cp) { create(:contact_point, organization: organization, name: "CP", position: 1) }
+      let_it_be(:m) do
         meter = create(:meter, :normal, organization: organization, contact_point: cp, name: "M")
         create(:meter_reading, meter: meter, monthly_period: period, reading_start: 0, reading_end: 100, consumption: 100)
         meter
       end
-      let!(:pump_station) { create(:pump_station, zone: zone, name: "PS-empty") }
+      let_it_be(:pump_station) { create(:pump_station, zone: zone, name: "PS-empty") }
       let(:calc) { described_class.new(zone: zone, monthly_period: period) }
 
       it "returns ZERO pump_loss_share (no meters / no readings on pump)" do
@@ -351,15 +351,15 @@ RSpec.describe LossCalculator do
     end
 
     describe "zone with multiple MainMeters" do
-      let(:zone)         { create(:zone, name: "Multi-MM zone") }
-      let!(:mm1)         { create(:main_meter, zone: zone, name: "MM1") }
-      let!(:mm2)         { create(:main_meter, zone: zone, name: "MM2") }
-      let!(:organization) { create(:organization, level: :unit, parent: division, zone: zone) }
-      let!(:r1) do
+      let_it_be(:zone)         { create(:zone, name: "Multi-MM zone") }
+      let_it_be(:mm1)          { create(:main_meter, zone: zone, name: "MM1") }
+      let_it_be(:mm2)          { create(:main_meter, zone: zone, name: "MM2") }
+      let_it_be(:organization) { create(:organization, level: :unit, parent: division, zone: zone) }
+      let_it_be(:r1) do
         create(:main_meter_reading, main_meter: mm1, monthly_period: period,
                electricity_supply_kw: bd("1200"))
       end
-      let!(:r2) do
+      let_it_be(:r2) do
         create(:main_meter_reading, main_meter: mm2, monthly_period: period,
                electricity_supply_kw: bd("800"))
       end
@@ -377,42 +377,42 @@ RSpec.describe LossCalculator do
   # follows the group → member CP → organization route so the pump meter
   # still participates in B and pump_loss_share.
   describe "Scenario D — ContactPointGroup-only pump assignment pulls pump into zone" do
-    let(:division)    { create(:organization, :division) }
-    let(:main_meter)  { create(:main_meter, name: "Zone D") }
-    let(:zone)        { main_meter.zone }
-    let(:organization) { create(:organization, level: :unit, parent: division, zone: zone) }
-    let(:period)      { create(:monthly_period, year: 2026, month: 5, unit_price: bd("2336.4")) }
+    let_it_be(:division)     { create(:organization, :division) }
+    let_it_be(:main_meter)   { create(:main_meter, name: "Zone D") }
+    let_it_be(:zone)         { main_meter.zone }
+    let_it_be(:organization) { create(:organization, level: :unit, parent: division, zone: zone) }
+    let_it_be(:period)       { create(:monthly_period, year: 2026, month: 5, unit_price: bd("2336.4")) }
 
-    let!(:supply_reading) do
+    let_it_be(:supply_reading) do
       create(:main_meter_reading,
              main_meter: main_meter, monthly_period: period,
              electricity_supply_kw: bd("1000"))
     end
 
-    let!(:cp1) { create(:contact_point, organization: organization, name: "CP1") }
-    let!(:cp2) { create(:contact_point, organization: organization, name: "CP2") }
+    let_it_be(:cp1) { create(:contact_point, organization: organization, name: "CP1") }
+    let_it_be(:cp2) { create(:contact_point, organization: organization, name: "CP2") }
 
-    let!(:meter_cp1) { create(:meter, :normal, organization: organization, contact_point: cp1, name: "M-CP1") }
-    let!(:reading_cp1) do
+    let_it_be(:meter_cp1) { create(:meter, :normal, organization: organization, contact_point: cp1, name: "M-CP1") }
+    let_it_be(:reading_cp1) do
       create(:meter_reading, meter: meter_cp1, monthly_period: period,
              reading_start: 0, reading_end: 200, consumption: 200)
     end
 
-    let!(:pump_station) { create(:pump_station, zone: zone, name: "TB-D") }
-    let!(:pump_meter) do
+    let_it_be(:pump_station) { create(:pump_station, zone: zone, name: "TB-D") }
+    let_it_be(:pump_meter) do
       create(:meter, :pump_station, organization: division, contact_point: nil,
              pump_station: pump_station, name: "M-Pump-D")
     end
-    let!(:pump_reading) do
+    let_it_be(:pump_reading) do
       create(:meter_reading, meter: pump_meter, monthly_period: period,
              reading_start: 0, reading_end: 600, consumption: 600)
     end
 
     # Pump is ONLY tied to the zone via a ContactPointGroup assignment.
-    let!(:group) { create(:contact_point_group, organization: organization, name: "Nhom CP1-CP2") }
-    let!(:mem_cp1) { create(:contact_point_group_membership, contact_point_group: group, contact_point: cp1) }
-    let!(:mem_cp2) { create(:contact_point_group_membership, contact_point_group: group, contact_point: cp2) }
-    let!(:assignment) do
+    let_it_be(:group) { create(:contact_point_group, organization: organization, name: "Nhom CP1-CP2") }
+    let_it_be(:mem_cp1) { create(:contact_point_group_membership, contact_point_group: group, contact_point: cp1) }
+    let_it_be(:mem_cp2) { create(:contact_point_group_membership, contact_point_group: group, contact_point: cp2) }
+    let_it_be(:assignment) do
       create(:pump_station_assignment, pump_station: pump_station, assignable: group)
     end
 
@@ -433,12 +433,12 @@ RSpec.describe LossCalculator do
 
   # ============================================================ Memoization
   describe "memoization" do
-    let(:division)     { create(:organization, :division) }
-    let(:main_meter)   { create(:main_meter, name: "Memo zone") }
-    let(:zone)         { main_meter.zone }
-    let!(:organization) { create(:organization, level: :unit, parent: division, zone: zone) }
-    let(:period)       { create(:monthly_period, year: 2026, month: 6, unit_price: bd("2336.4")) }
-    let!(:supply_reading) do
+    let_it_be(:division)     { create(:organization, :division) }
+    let_it_be(:main_meter)   { create(:main_meter, name: "Memo zone") }
+    let_it_be(:zone)         { main_meter.zone }
+    let_it_be(:organization) { create(:organization, level: :unit, parent: division, zone: zone) }
+    let_it_be(:period)       { create(:monthly_period, year: 2026, month: 6, unit_price: bd("2336.4")) }
+    let_it_be(:supply_reading) do
       create(:main_meter_reading, main_meter: main_meter, monthly_period: period,
              electricity_supply_kw: bd("1000"))
     end

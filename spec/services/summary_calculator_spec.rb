@@ -14,32 +14,32 @@ RSpec.describe SummaryCalculator do
   let(:unit_public_rate) { bd("0.02") }
   let(:unit_price)      { bd("2336.4") }
 
-  let(:division)     { create(:organization, :division) }
-  let(:organization) { create(:organization, level: :unit, parent: division) }
-  let(:period)       { create(:monthly_period, year: 2026, month: 2, unit_price: unit_price) }
+  let_it_be(:division)     { create(:organization, :division) }
+  let_it_be(:organization) { create(:organization, level: :unit, parent: division) }
+  let_it_be(:period)       { create(:monthly_period, year: 2026, month: 2, unit_price: bd("2336.4")) }
 
-  let!(:rank_quota1) { create(:rank_quota, rank_group: 1, rank_name: "3*/4*", quota_kw: bd("115")) }
-  let!(:rank_quota2) { create(:rank_quota, rank_group: 2, rank_name: "1*/2*", quota_kw: bd("38")) }
+  let_it_be(:rank_quota1) { create(:rank_quota, rank_group: 1, rank_name: "3*/4*", quota_kw: bd("115")) }
+  let_it_be(:rank_quota2) { create(:rank_quota, rank_group: 2, rank_name: "1*/2*", quota_kw: bd("38")) }
 
-  let!(:cp_a) { create(:contact_point, organization: organization, name: "CP A", position: 1) }
-  let!(:cp_b) { create(:contact_point, organization: organization, name: "CP B", position: 2) }
+  let_it_be(:cp_a) { create(:contact_point, organization: organization, name: "CP A", position: 1) }
+  let_it_be(:cp_b) { create(:contact_point, organization: organization, name: "CP B", position: 2) }
 
-  let!(:personnel_a) do
+  let_it_be(:personnel_a) do
     create(:personnel, contact_point: cp_a, monthly_period: period,
                        rank1_count: 1, rank2_count: 0, rank3_count: 0,
                        rank4_count: 0, rank5_count: 0, rank6_count: 0, rank7_count: 0)
   end
-  let!(:personnel_b) do
+  let_it_be(:personnel_b) do
     create(:personnel, contact_point: cp_b, monthly_period: period,
                        rank1_count: 0, rank2_count: 2, rank3_count: 0,
                        rank4_count: 0, rank5_count: 0, rank6_count: 0, rank7_count: 0)
   end
 
-  let!(:meter_a) { create(:meter, :normal, organization: organization, contact_point: cp_a, name: "M-A") }
-  let!(:meter_b) { create(:meter, :normal, organization: organization, contact_point: cp_b, name: "M-B") }
+  let_it_be(:meter_a) { create(:meter, :normal, organization: organization, contact_point: cp_a, name: "M-A") }
+  let_it_be(:meter_b) { create(:meter, :normal, organization: organization, contact_point: cp_b, name: "M-B") }
 
-  let!(:reading_a) { create(:meter_reading, meter: meter_a, monthly_period: period, reading_start: 0, reading_end: 100, consumption: 100) }
-  let!(:reading_b) { create(:meter_reading, meter: meter_b, monthly_period: period, reading_start: 0, reading_end: 200, consumption: 200) }
+  let_it_be(:reading_a) { create(:meter_reading, meter: meter_a, monthly_period: period, reading_start: 0, reading_end: 100, consumption: 100) }
+  let_it_be(:reading_b) { create(:meter_reading, meter: meter_b, monthly_period: period, reading_start: 0, reading_end: 200, consumption: 200) }
 
   let!(:division_config) do
     create(:unit_config, organization: division, monthly_period: period,
