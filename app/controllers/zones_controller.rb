@@ -1,5 +1,5 @@
 class ZonesController < ApplicationController
-  before_action :set_zone, only: [ :show, :edit, :update, :destroy ]
+  before_action :set_zone, only: [ :show, :update, :destroy ]
 
   def index
     authorize! :read, Zone
@@ -27,16 +27,14 @@ class ZonesController < ApplicationController
     end
   end
 
-  def edit
-    authorize! :update, @zone
-  end
-
   def update
     authorize! :update, @zone
     if @zone.update(zone_params)
       redirect_to zones_path, notice: t("flash.zones.updated")
     else
-      render :edit, status: :unprocessable_entity
+      @main_meters = @zone.main_meters.ordered
+      @organizations = @zone.organizations.ordered
+      render :show, status: :unprocessable_entity
     end
   end
 

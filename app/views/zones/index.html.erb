@@ -15,44 +15,27 @@
   <table class="min-w-full divide-y divide-gray-200 text-sm">
     <thead class="bg-gray-50">
       <tr>
-        <th class="px-4 py-3 text-left font-medium text-gray-600 w-10"><%= t("zones.index.columns.stt") %></th>
         <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("zones.index.columns.name") %></th>
         <th class="px-4 py-3 text-left font-medium text-gray-600"><%= t("zones.index.columns.manager_organization") %></th>
-        <th class="px-4 py-3 text-right font-medium text-gray-600 w-28"><%= t("zones.index.columns.main_meters_count") %></th>
+        <th class="px-4 py-3 text-right font-medium text-gray-600 w-28 whitespace-nowrap"><%= t("zones.index.columns.main_meters_count") %></th>
         <th class="px-4 py-3 text-right font-medium text-gray-600 w-24"><%= t("zones.index.columns.organizations_count") %></th>
-        <th class="px-4 py-3 text-left font-medium text-gray-600 w-32"><%= t("zones.index.columns.actions") %></th>
       </tr>
     </thead>
     <tbody class="divide-y divide-gray-100">
       <% if @zones.any? %>
-        <% @zones.each_with_index do |zone, idx| %>
+        <% @zones.each do |zone| %>
           <tr class="hover:bg-gray-50">
-            <td class="px-4 py-3 text-gray-500"><%= idx + 1 %></td>
             <td class="px-4 py-3 font-medium">
               <%= link_to zone.name, zone_path(zone), class: "text-blue-600 hover:underline" %>
             </td>
             <td class="px-4 py-3 text-gray-700"><%= zone.manager_organization&.name || "—" %></td>
             <td class="px-4 py-3 text-right text-gray-700"><%= zone.main_meters.size %></td>
             <td class="px-4 py-3 text-right text-gray-700"><%= zone.organizations.size %></td>
-            <td class="px-4 py-3">
-              <div class="flex items-center gap-2">
-                <% if can? :update, zone %>
-                  <%= link_to t("zones.actions.edit"), edit_zone_path(zone),
-                        class: "text-blue-600 hover:underline text-xs" %>
-                <% end %>
-                <% if can? :destroy, zone %>
-                  <%= button_to t("zones.actions.delete"), zone_path(zone),
-                        method: :delete,
-                        data: { turbo_confirm: t("zones.actions.delete_confirm") },
-                        class: "text-red-600 hover:underline text-xs bg-transparent border-0 cursor-pointer p-0" %>
-                <% end %>
-              </div>
-            </td>
           </tr>
         <% end %>
       <% else %>
         <tr>
-          <td colspan="6" class="px-4 py-6 text-center text-gray-500 italic">
+          <td colspan="4" class="px-4 py-6 text-center text-gray-500 italic">
             <%= t("zones.index.empty") %>
           </td>
         </tr>

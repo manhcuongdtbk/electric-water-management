@@ -1025,7 +1025,7 @@ vi:
       manager_organization: "Đơn vị quản lý"
       manager_prompt: "— Chọn đơn vị quản lý —"
       submit_create: "Tạo khu vực"
-      submit_update: "Lưu thay đổi"
+      submit_update: "Lưu"
       cancel: "Hủy"
     actions:
       edit: "Sửa"
