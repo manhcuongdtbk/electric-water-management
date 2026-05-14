@@ -67,7 +67,7 @@ class UsersController < ApplicationController
   end
 
   def set_user
-    @user = User.find(params[:id])
+    @user = User.accessible_by(current_ability).find(params[:id])
   end
 
   def unit_organizations

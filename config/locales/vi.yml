@@ -160,15 +160,15 @@ vi:
         code: "Mã viết tắt"
         parent: "Đơn vị cha"
         level: "Cấp đơn vị"
-        main_meter: "Khu vực đồng hồ tổng"
-        main_meter_id: "Khu vực đồng hồ tổng"
+        main_meter: "Công tơ tổng"
+        main_meter_id: "Công tơ tổng"
       main_meter:
         code: "Mã viết tắt"
         name: "Tên khu vực"
       main_meter_reading:
         electricity_supply_kw: "Số điện lực (kW)"
-        main_meter: "Khu vực đồng hồ tổng"
-        main_meter_id: "Khu vực đồng hồ tổng"
+        main_meter: "Công tơ tổng"
+        main_meter_id: "Công tơ tổng"
         monthly_period: "Kỳ tính toán"
         monthly_period_id: "Kỳ tính toán"
       personnel:
@@ -468,7 +468,7 @@ vi:
       delete_confirm: "Bạn có chắc muốn xóa công tơ này?"
       back: "Quay lại danh sách"
       cancel: "Hủy"
-      manage: "Quản lý công tơ"
+      manage: "Công tơ"
 
   personnel:
     show:
@@ -922,7 +922,7 @@ vi:
     type_badge:
       organization: "Đơn vị"
       contact_point: "Đầu mối"
-      work_group: "Nhóm công tác"
+      work_group: "Đầu mối ngoài biên chế"
       contact_point_group: "Nhóm đầu mối"
     new:
       title: "Gán nhóm đối tượng vào %{pump_station}"
@@ -933,14 +933,14 @@ vi:
       assignable_type: "Loại nhóm đối tượng"
       assignable_type_organization: "Đơn vị cấp 2"
       assignable_type_contact_point: "Đầu mối đặc biệt"
-      assignable_type_work_group: "Nhóm công tác"
+      assignable_type_work_group: "Đầu mối ngoài biên chế"
       assignable_type_contact_point_group: "Nhóm đầu mối"
       organization: "Đơn vị"
       organization_prompt: "— Chọn đơn vị —"
       contact_point: "Đầu mối"
       contact_point_prompt: "— Chọn đầu mối —"
-      work_group: "Nhóm công tác"
-      work_group_prompt: "— Chọn nhóm công tác —"
+      work_group: "Đầu mối ngoài biên chế"
+      work_group_prompt: "— Chọn đầu mối ngoài biên chế —"
       contact_point_group: "Nhóm đầu mối"
       contact_point_group_prompt: "— Chọn nhóm đầu mối —"
       fixed_pump_percentage: "Tỷ lệ cố định (%)"
@@ -1080,7 +1080,7 @@ vi:
       ContactPoint: "Đầu mối"
       Meter: "Công tơ"
       Personnel: "Quân số"
-      MeterReading: "Chỉ số công tơ"
+      MeterReading: "Chỉ số đầu mối"
       MonthlyCalculation: "Tính toán tháng"
       UnitConfig: "Cấu hình đơn vị"
       ContactPointOtherDeduction: "Khoản trừ khác"
@@ -1138,7 +1138,7 @@ vi:
 
   main_meters:
     index:
-      title: "Khu vực đồng hồ tổng"
+      title: "Công tơ tổng"
       subtitle: "Mỗi khu vực là một đồng hồ tổng vật lý. Nhiều đơn vị cấp 2 có thể dùng chung một đồng hồ tổng."
       new_button: "Thêm khu vực"
       columns:
