@@ -11,57 +11,65 @@
   </div>
 
   <% if can? :update, @zone %>
-    <div class="bg-white rounded-lg border border-gray-200 p-5 mb-6">
-      <%= form_with model: @zone do |f| %>
-        <% if @zone.errors.any? %>
-          <div class="mb-4 rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">
-            <ul class="list-disc pl-4 space-y-0.5">
-              <% @zone.errors.full_messages.each do |msg| %>
-                <li><%= msg %></li>
-              <% end %>
-            </ul>
-          </div>
-        <% end %>
-
-        <div class="space-y-4">
-          <div>
-            <%= f.label :name, t("zones.form.name"),
-                  class: "block text-sm font-medium text-gray-700 mb-1" %>
-            <%= f.text_field :name,
-                  class: "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500",
-                  required: true %>
-          </div>
-
-          <div>
-            <%= f.label :manager_organization_id, t("zones.form.manager_organization"),
-                  class: "block text-sm font-medium text-gray-700 mb-1" %>
-            <% manager_choices = manager_options(@zone) %>
-            <% if manager_choices.any? %>
-              <%= f.select :manager_organization_id,
-                    manager_choices,
-                    { include_blank: t("zones.form.manager_prompt") },
-                    class: "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
-            <% else %>
-              <p class="text-sm text-gray-500"><%= t("zones.form.no_units_hint") %></p>
+    <div class="mb-6">
+      <h2 class="text-base font-semibold text-gray-900 mb-2"><%= t("zones.show.info_section") %></h2>
+      <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div class="p-5">
+          <%= form_with model: @zone do |f| %>
+            <% if @zone.errors.any? %>
+              <div class="mb-4 rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">
+                <ul class="list-disc pl-4 space-y-0.5">
+                  <% @zone.errors.full_messages.each do |msg| %>
+                    <li><%= msg %></li>
+                  <% end %>
+                </ul>
+              </div>
             <% end %>
-          </div>
 
-          <div class="pt-1">
-            <%= f.submit t("zones.form.submit_update"),
-                  class: "inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors cursor-pointer" %>
-          </div>
+            <div class="space-y-4">
+              <div>
+                <%= f.label :name, t("zones.form.name"),
+                      class: "block text-sm font-medium text-gray-700 mb-1" %>
+                <%= f.text_field :name,
+                      class: "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500",
+                      required: true %>
+              </div>
+
+              <div>
+                <%= f.label :manager_organization_id, t("zones.form.manager_organization"),
+                      class: "block text-sm font-medium text-gray-700 mb-1" %>
+                <% manager_choices = manager_options(@zone) %>
+                <% if manager_choices.any? %>
+                  <%= f.select :manager_organization_id,
+                        manager_choices,
+                        { include_blank: t("zones.form.manager_prompt") },
+                        class: "block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500" %>
+                <% else %>
+                  <p class="text-sm text-gray-500"><%= t("zones.form.no_units_hint") %></p>
+                <% end %>
+              </div>
+
+              <div class="pt-1">
+                <%= f.submit t("zones.form.submit_update"),
+                      class: "inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors cursor-pointer" %>
+              </div>
+            </div>
+          <% end %>
         </div>
-      <% end %>
+      </div>
     </div>
   <% else %>
-    <div class="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100 mb-6">
-      <div class="flex px-5 py-3 text-sm">
-        <span class="w-40 text-gray-500 flex-shrink-0"><%= t("zones.form.name") %></span>
-        <span class="text-gray-900 font-medium"><%= @zone.name %></span>
-      </div>
-      <div class="flex px-5 py-3 text-sm">
-        <span class="w-40 text-gray-500 flex-shrink-0"><%= t("zones.form.manager_organization") %></span>
-        <span class="text-gray-900"><%= @zone.manager_organization&.name || t("zones.show.no_manager") %></span>
+    <div class="mb-6">
+      <h2 class="text-base font-semibold text-gray-900 mb-2"><%= t("zones.show.info_section") %></h2>
+      <div class="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100 overflow-hidden">
+        <div class="flex px-5 py-3 text-sm">
+          <span class="w-40 text-gray-500 flex-shrink-0"><%= t("zones.form.name") %></span>
+          <span class="text-gray-900 font-medium"><%= @zone.name %></span>
+        </div>
+        <div class="flex px-5 py-3 text-sm">
+          <span class="w-40 text-gray-500 flex-shrink-0"><%= t("zones.form.manager_organization") %></span>
+          <span class="text-gray-900"><%= @zone.manager_organization&.name || t("zones.show.no_manager") %></span>
+        </div>
       </div>
     </div>
   <% end %>
