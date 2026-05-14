@@ -222,6 +222,27 @@ RSpec.describe PumpAllocationCalculator do
       end
     end
 
+    context "single pump station with multiple meters" do
+      let_it_be(:org) { create(:organization, level: :unit, zone: zone) }
+      let_it_be(:cp)  { create(:contact_point, organization: org) }
+      let_it_be(:pp)  { make_personnel(contact_point: cp, rank1: 1) }
+      let_it_be(:ps)  { create(:pump_station, zone: zone, name: "TB1") }
+      # Two meters on the SAME pump station — pool must sum both.
+      let_it_be(:m1)  { make_pump_meter(pump_station: ps, org: org, consumption: bd("100")) }
+      let_it_be(:m2)  { make_pump_meter(pump_station: ps, org: org, consumption: bd("200")) }
+      let_it_be(:asg) { create(:pump_station_assignment, pump_station: ps, assignable: org) }
+
+      subject(:result) { described_class.new(zone: zone, monthly_period: period).call }
+
+      it "sums consumption across all meters of the station into total_pool_kw" do
+        expect(result[:total_pool_kw]).to be_within(tolerance).of(bd("300"))
+      end
+
+      it "drills the combined pool down to the CP" do
+        expect(result[:allocations_by_cp][cp.id]).to be_within(tolerance).of(bd("300"))
+      end
+    end
+
     context "sum_fixed_pct > 100 (clamped to variable_pct = 0)" do
       let_it_be(:org) { create(:organization, level: :unit, zone: zone) }
       let_it_be(:cp1) { create(:contact_point, organization: org) }
