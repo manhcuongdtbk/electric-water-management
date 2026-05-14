@@ -223,6 +223,17 @@ RSpec.describe Ability do
     it { is_expected.not_to be_able_to(:read, config_a) }
     it { is_expected.not_to be_able_to(:manage, MonthlyPeriod.new) }
     it { is_expected.not_to be_able_to(:manage, RankQuota.new) }
+
+    # Class-level denials — sidebar/nav checks use class-level ability, so the
+    # absence of any rule for these resources must hold at the class level too.
+    it { is_expected.not_to be_able_to(:read, ContactPoint) }
+    it { is_expected.not_to be_able_to(:read, Meter) }
+    it { is_expected.not_to be_able_to(:read, MeterReading) }
+    it { is_expected.not_to be_able_to(:read, Personnel) }
+    it { is_expected.not_to be_able_to(:read, MonthlyCalculation) }
+    it { is_expected.not_to be_able_to(:read, UnitConfig) }
+    it { is_expected.not_to be_able_to(:read, MonthlyPeriod) }
+    it { is_expected.not_to be_able_to(:read, Zone) }
   end
 
   describe "ContactPointGroup abilities" do
