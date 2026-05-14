@@ -1145,7 +1145,7 @@ vi:
         actions: "Thao tác"
       search_placeholder: "Tìm theo tên đơn vị..."
       all_zones: "Tất cả khu vực"
-      empty: "Chưa có đơn vị cấp 2 nào. Bấm \"Thêm đơn vị\" để tạo mới."
+      empty: "Chưa có đơn vị nào. Bấm \"Thêm đơn vị\" để tạo mới."
       empty_filtered: "Không tìm thấy đơn vị nào phù hợp."
     new:
       title: "Thêm đơn vị mới"
