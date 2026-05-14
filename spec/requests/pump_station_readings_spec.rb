@@ -126,9 +126,9 @@ RSpec.describe "PumpStationReadings", type: :request do
         expect {
           patch pump_station_readings_path, params: save_params
         }.not_to change(MeterReading, :count)
-        expect(response).to redirect_to(pump_station_readings_path(period_id: period.id))
+        expect(response).to be_redirect
         follow_redirect!
-        expect(response.body).to include(I18n.t("flash.pump_station_readings.period_locked"))
+        expect(flash[:alert]).to eq(I18n.t("flash.period_locked"))
       end
     end
 

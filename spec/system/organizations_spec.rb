@@ -15,10 +15,12 @@ RSpec.describe "Organizations management", type: :system do
     end
 
     it "tạo đơn vị mới thành công" do
+      zone = create(:zone, name: "Khu vực mới")
       visit organizations_path
       click_on I18n.t("organizations.index.new_button")
 
       fill_in I18n.t("organizations.form.name"), with: "Đại đội 30"
+      select zone.name, from: I18n.t("organizations.form.zone")
       click_on I18n.t("organizations.form.submit_create")
 
       expect(page).to have_current_path(organizations_path)
@@ -26,6 +28,7 @@ RSpec.describe "Organizations management", type: :system do
       created = Organization.find_by!(name: "Đại đội 30")
       expect(created.level).to eq("unit")
       expect(created.parent).to eq(scenario.division)
+      expect(created.zone).to eq(zone)
     end
 
     it "validation: tên đơn vị trùng → lỗi" do

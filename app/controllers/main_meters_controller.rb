@@ -83,11 +83,12 @@ class MainMetersController < ApplicationController
     main_meter.zone = Zone.find_or_create_by!(name: main_meter.name)
   end
 
-  # Re-assign the units linked to this main meter via its zone: any unit
-  # previously in the zone but not in the new selection is detached
-  # (zone_id => nil), and any newly selected unit is attached. Stealing a
-  # unit from another zone is allowed — admin_level1 is trusted to manage
-  # zone membership.
+  # Attach the requested units to this main meter's zone. Stealing a unit
+  # from another zone is allowed — admin_level1 is trusted to manage zone
+  # membership. Detaching (uncheck → zone_id = nil) is intentionally NOT
+  # supported: units must always have a zone (Organization model validation).
+  # To remove a unit from a zone, reassign it via another main meter or
+  # delete the unit through the Organizations admin.
   #
   # Uses `update!` per record (not `update_all`) so paper_trail logs the FK
   # change on each Organization — F19 audit log must see who moved which unit
@@ -95,9 +96,6 @@ class MainMetersController < ApplicationController
   # update! on an already-linked org is safe and produces no spurious version.
   def assign_organizations(main_meter, requested_ids)
     zone_id = main_meter.zone_id
-    Organization.where(zone_id: zone_id).where.not(id: requested_ids).each do |org|
-      org.update!(zone_id: nil)
-    end
     Organization.units.where(id: requested_ids).each do |org|
       org.update!(zone_id: zone_id)
     end

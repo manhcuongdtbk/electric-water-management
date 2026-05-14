@@ -1,6 +1,9 @@
 class PumpStationReadingsController < ApplicationController
+  include LockablePeriod
+
   before_action :authorize_pump_stations
   before_action :set_period
+  before_action :block_write_if_period_locked, only: :update
 
   def show
     set_grouped_readings
@@ -10,11 +13,6 @@ class PumpStationReadingsController < ApplicationController
     if @period.nil?
       return redirect_to pump_station_readings_path,
                          alert: t("pump_station_readings.no_period")
-    end
-
-    if @period.locked?
-      return redirect_to pump_station_readings_path(period_id: @period.id),
-                         alert: t("flash.pump_station_readings.period_locked")
     end
 
     if batch_save_readings

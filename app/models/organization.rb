@@ -25,6 +25,7 @@ class Organization < ApplicationRecord
   validates :position, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validate :parent_must_be_division, if: -> { level == "unit" && parent_id.present? }
   validate :division_has_no_parent, if: -> { level == "division" }
+  validate :unit_must_have_zone
 
   # Callbacks
   before_destroy :prevent_destroy_division
@@ -43,6 +44,10 @@ class Organization < ApplicationRecord
 
   def division_has_no_parent
     errors.add(:parent_id, :present) if parent_id.present?
+  end
+
+  def unit_must_have_zone
+    errors.add(:zone, :blank) if unit? && zone.blank?
   end
 
   def prevent_destroy_division

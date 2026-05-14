@@ -163,7 +163,9 @@ RSpec.describe "PersonnelReviews", type: :request do
       it "redirects with an alert" do
         patch toggle_review_contact_point_personnel_path(cp_a),
               params: { period_id: locked_period.id }
-        expect(response).to redirect_to(personnel_review_path(period_id: locked_period.id))
+        expect(response).to be_redirect
+        follow_redirect!
+        expect(flash[:alert]).to eq(I18n.t("flash.period_locked"))
       end
     end
   end

@@ -1,7 +1,10 @@
 class UnitConfigsController < ApplicationController
+  include LockablePeriod
+
   before_action :set_period
   before_action :set_division
   before_action :set_configs
+  before_action :block_write_if_period_locked, only: :update
 
   def show
     authorize! :read, UnitConfig

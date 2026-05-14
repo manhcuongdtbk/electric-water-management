@@ -52,6 +52,12 @@ class CalculationOrchestrator
     results
   end
 
+  # Engine-level warnings surfaced to the UI (e.g. clamped negative loss).
+  # Sourced from LossCalculator; empty array when nothing to flag.
+  def warnings
+    loss_results[:warnings] || []
+  end
+
   private
 
   def contact_points

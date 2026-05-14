@@ -1,6 +1,9 @@
 class MeterReadingsController < ApplicationController
+  include LockablePeriod
+
   before_action :set_period
   before_action :set_target_org
+  before_action :block_write_if_period_locked, only: :update
 
   def show
     authorize! :read, MeterReading
@@ -16,11 +19,6 @@ class MeterReadingsController < ApplicationController
 
     if @target_org.nil?
       return redirect_to meter_readings_path, alert: t("meter_readings.no_org")
-    end
-
-    if @period.locked?
-      return redirect_to meter_readings_path(period_id: @period.id, org_id: effective_org_id),
-                         alert: t("meter_readings.period_locked")
     end
 
     if batch_save_readings

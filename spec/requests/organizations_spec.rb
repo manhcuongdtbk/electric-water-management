@@ -72,8 +72,9 @@ RSpec.describe "Organizations", type: :request do
   end
 
   describe "POST /organizations" do
+    let(:zone) { create(:zone) }
     let(:valid_params) do
-      { organization: { name: "Đại đội 30", position: 14 } }
+      { organization: { name: "Đại đội 30", position: 14, zone_id: zone.id } }
     end
 
     context "as admin_level1" do
@@ -88,11 +89,13 @@ RSpec.describe "Organizations", type: :request do
         created = Organization.find_by!(name: "Đại đội 30")
         expect(created.level).to eq("unit")
         expect(created.parent).to eq(division)
+        expect(created.zone).to eq(zone)
       end
 
       it "ignores user-supplied level/parent params" do
         post organizations_path, params: {
-          organization: { name: "Hack division", level: "division", parent_id: nil }
+          organization: { name: "Hack division", level: "division",
+                          parent_id: nil, zone_id: zone.id }
         }
         created = Organization.find_by!(name: "Hack division")
         expect(created.level).to eq("unit")
@@ -108,7 +111,15 @@ RSpec.describe "Organizations", type: :request do
       end
 
       it "re-renders form when name is missing" do
-        post organizations_path, params: { organization: { name: "" } }
+        post organizations_path, params: { organization: { name: "", zone_id: zone.id } }
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+
+      it "re-renders form when zone is missing" do
+        expect {
+          post organizations_path,
+               params: { organization: { name: "Không zone", position: 5 } }
+        }.not_to change(Organization, :count)
         expect(response).to have_http_status(:unprocessable_entity)
       end
     end

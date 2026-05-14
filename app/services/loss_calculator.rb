@@ -38,8 +38,16 @@ class LossCalculator
       total_zone_loss:                total_zone_loss,
       loss_pool_consumption_in_zone:  loss_pool_consumption_in_zone,
       loss_pool_consumption_by_cp:    loss_pool_consumption_by_cp,
-      zone_supply_kw:                 zone_supply_kw
+      zone_supply_kw:                 zone_supply_kw,
+      warnings:                       warnings
     }
+  end
+
+  # When supply minus no_loss is less than the loss-pool consumption, the raw
+  # zone loss is negative — the engine clamps it to 0 to keep downstream math
+  # sane, but admins need to know the underlying readings are inconsistent.
+  def warnings
+    @warnings ||= compute_warnings
   end
 
   # Tổn hao của pump_station = total_zone_loss × (kW pump ÷ B).
@@ -206,5 +214,23 @@ class LossCalculator
     when nil then ZERO
     else BigDecimal(value.to_s)
     end
+  end
+
+  def compute_warnings
+    return [] if zone_supply_kw.blank?
+
+    diff = to_bd(zone_supply_kw) - no_loss_consumption_in_zone - loss_pool_consumption_in_zone
+    return [] unless diff.negative?
+
+    supply_after_no_loss = to_bd(zone_supply_kw) - no_loss_consumption_in_zone
+    [ {
+      type: :negative_loss,
+      message: I18n.t("calculation.warnings.negative_loss",
+                      supply: supply_after_no_loss.to_s("F"),
+                      consumption: loss_pool_consumption_in_zone.to_s("F")),
+      supply_adjusted: supply_after_no_loss,
+      total_consumption: loss_pool_consumption_in_zone,
+      difference: diff
+    } ]
   end
 end
