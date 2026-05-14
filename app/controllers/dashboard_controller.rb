@@ -114,11 +114,12 @@ class DashboardController < ApplicationController
   def build_month_table_data
     @table_rows = @calculations.map do |c|
       {
-        name:     c.contact_point.name,
-        standard: c.total_standard_kw,
-        usage:    c.total_usage_kw,
-        diff:     c.total_standard_kw - c.total_usage_kw,
-        over:     c.total_usage_kw > c.total_standard_kw
+        group_name: c.contact_point.group_name,
+        name:       c.contact_point.name,
+        standard:   c.total_standard_kw,
+        usage:      c.total_usage_kw,
+        diff:       c.total_standard_kw - c.total_usage_kw,
+        over:       c.total_usage_kw > c.total_standard_kw
       }
     end.sort_by { |r| r[:diff] }
   end
@@ -198,11 +199,13 @@ class DashboardController < ApplicationController
   # ---------------------------------------------------------------------------
 
   def build_table_data_aggregate
-    aggregated = Hash.new { |h, k| h[k] = { name: k, standard: BigDecimal("0"), usage: BigDecimal("0") } }
+    aggregated = Hash.new { |h, k| h[k] = { name: nil, group_name: nil, standard: BigDecimal("0"), usage: BigDecimal("0") } }
     @calculations.each do |c|
-      name = c.contact_point.name
-      aggregated[name][:standard] += c.total_standard_kw
-      aggregated[name][:usage]    += c.total_usage_kw
+      cp_id = c.contact_point.id
+      aggregated[cp_id][:name]       ||= c.contact_point.name
+      aggregated[cp_id][:group_name] ||= c.contact_point.group_name
+      aggregated[cp_id][:standard]   += c.total_standard_kw
+      aggregated[cp_id][:usage]      += c.total_usage_kw
     end
     @table_rows = aggregated.values
       .map { |r| r.merge(diff: r[:standard] - r[:usage], over: r[:usage] > r[:standard]) }
@@ -262,6 +265,7 @@ class DashboardController < ApplicationController
 
   def dashboard_csv
     headers = [
+      t("dashboard.table.group_name"),
       t("dashboard.table.name"),
       t("dashboard.table.standard"),
       t("dashboard.table.usage"),
@@ -272,10 +276,11 @@ class DashboardController < ApplicationController
     bom + CSV.generate(encoding: "UTF-8") do |csv|
       csv << headers
       @table_rows.each do |row|
-        csv << [ row[:name], row[:standard].to_f, row[:usage].to_f, row[:diff].to_f ]
+        csv << [ row[:group_name].to_s, row[:name], row[:standard].to_f, row[:usage].to_f, row[:diff].to_f ]
       end
       csv << [
         t("dashboard.table.total_row"),
+        "",
         @total_standard.to_f,
         @total_usage.to_f,
         @difference.to_f

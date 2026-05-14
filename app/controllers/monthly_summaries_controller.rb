@@ -104,6 +104,7 @@ class MonthlySummariesController < ApplicationController
       .excluding_communal_cps
       .ordered
       .includes(:contact_point)
+      .reorder(Arel.sql("contact_points.group_name ASC NULLS LAST, contact_points.position, contact_points.name"))
   end
 
   def build_totals(calculations)
@@ -139,6 +140,7 @@ class MonthlySummariesController < ApplicationController
                       .map { |k| t("monthly_summary.columns.#{k}") }
     headers = [
       t("monthly_summary.columns.stt"),
+      t("monthly_summary.columns.group_name"),
       t("monthly_summary.columns.contact_point"),
       *rank_headers,
       *non_rank_headers,
@@ -175,7 +177,7 @@ class MonthlySummariesController < ApplicationController
           amt < 0 ? amt.abs.to_f : "",
           amt > 0 ? amt.to_f     : ""
         ]
-        csv << [ idx + 1, calc.contact_point.name, *rank_values, *non_rank_values, *split_values ]
+        csv << [ idx + 1, calc.contact_point.group_name.to_s, calc.contact_point.name, *rank_values, *non_rank_values, *split_values ]
       end
 
       if @totals
@@ -202,7 +204,7 @@ class MonthlySummariesController < ApplicationController
           @totals[:surplus_amount] > 0 ? @totals[:surplus_amount].to_f : "",
           @totals[:deficit_amount] > 0 ? @totals[:deficit_amount].to_f : ""
         ]
-        csv << [ t("monthly_summary.total_row"), "", *totals_rank, *totals_non_rank, *totals_split ]
+        csv << [ t("monthly_summary.total_row"), "", "", *totals_rank, *totals_non_rank, *totals_split ]
       end
     end
   end

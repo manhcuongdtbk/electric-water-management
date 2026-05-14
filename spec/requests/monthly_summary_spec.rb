@@ -384,6 +384,79 @@ RSpec.describe "MonthlySummary", type: :request do
   end
 
   # ---------------------------------------------------------------------------
+  # Khối column — F11 HTML + CSV
+  # cp_a has group_name "Group A" from factory — no update needed.
+  # ---------------------------------------------------------------------------
+  describe "Khối column" do
+    it "shows Khối column header in HTML" do
+      sign_in admin_unit_a
+      get monthly_summary_path(period_id: period.id)
+      expect(response.body).to include("Khối")
+    end
+
+    it "shows group_name value in HTML table" do
+      sign_in admin_unit_a
+      get monthly_summary_path(period_id: period.id)
+      expect(response.body).to include(cp_a.group_name)
+    end
+
+    it "includes Khối at index 1 (after STT) and Tên đầu mối at index 2 in CSV" do
+      sign_in admin_unit_a
+      get monthly_summary_path(format: :csv, period_id: period.id)
+      body = response.body.force_encoding("UTF-8").sub(/\A\xEF\xBB\xBF/, "")
+      headers = CSV.parse_line(body.lines.first.chomp)
+      expect(headers[0]).to eq("STT")
+      expect(headers[1]).to eq("Khối")
+      expect(headers[2]).to eq("Tên đầu mối")
+      # data row: group_name value at correct position
+      data_row = CSV.parse_line(body.lines[1].chomp)
+      expect(data_row[1]).to eq(cp_a.group_name)
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # Sort by group_name — F11
+  # ---------------------------------------------------------------------------
+  describe "sort by group_name" do
+    let!(:cp_alpha) { create(:contact_point, organization: org_a, group_name: "Alpha", position: 99) }
+    let!(:cp_zeta)  { create(:contact_point, organization: org_a, group_name: "Zeta",  position: 1) }
+    let!(:calc_alpha) do
+      create(:monthly_calculation, contact_point: cp_alpha, monthly_period: period,
+             total_personnel: 5, rank1_kw: 100, water_pump_standard_kw: 0,
+             total_standard_kw: 100, total_deduction_kw: 0, remaining_standard_kw: 100,
+             meter_usage_kw: 90, water_pump_actual_kw: 0, total_usage_kw: 90,
+             over_under_kw: -10, unit_price: 2000, total_amount: -20_000)
+    end
+    let!(:calc_zeta) do
+      create(:monthly_calculation, contact_point: cp_zeta, monthly_period: period,
+             total_personnel: 5, rank1_kw: 100, water_pump_standard_kw: 0,
+             total_standard_kw: 100, total_deduction_kw: 0, remaining_standard_kw: 100,
+             meter_usage_kw: 90, water_pump_actual_kw: 0, total_usage_kw: 90,
+             over_under_kw: -10, unit_price: 2000, total_amount: -20_000)
+    end
+
+    it "sorts contact points by group_name ASC, putting Alpha before Zeta" do
+      sign_in admin_unit_a
+      get monthly_summary_path(period_id: period.id)
+      body = response.body
+      idx_alpha = body.index("Alpha")
+      idx_zeta  = body.index("Zeta")
+      expect(idx_alpha).to be < idx_zeta
+    end
+
+    it "puts contact points without group_name after those with group_name" do
+      cp_a.update!(group_name: nil)
+      cp_zeta.update!(group_name: "Zeta")
+      sign_in admin_unit_a
+      get monthly_summary_path(period_id: period.id)
+      body = response.body
+      idx_zeta = body.index("Zeta")
+      idx_cp_a = body.index(cp_a.name)
+      expect(idx_zeta).to be < idx_cp_a
+    end
+  end
+
+  # ---------------------------------------------------------------------------
   # POST /monthly_summary/recalculate
   # ---------------------------------------------------------------------------
   describe "POST /monthly_summary/recalculate" do
