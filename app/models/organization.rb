@@ -29,6 +29,11 @@ class Organization < ApplicationRecord
   # Callbacks
   before_destroy :prevent_destroy_division
 
+  # Ransack
+  def self.ransackable_attributes(_auth_object = nil)
+    %w[name zone_id]
+  end
+
   # Scopes
   scope :ordered, -> { order(:name) }
   scope :divisions, -> { where(level: :division) }
