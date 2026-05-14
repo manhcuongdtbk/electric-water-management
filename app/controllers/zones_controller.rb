@@ -1,9 +1,16 @@
 class ZonesController < ApplicationController
+  include Pagy::Method
+
   before_action :set_zone, only: [ :show, :update, :destroy ]
 
   def index
     authorize! :read, Zone
-    @zones = Zone.accessible_by(current_ability).ordered.includes(:manager_organization, :main_meters, :organizations)
+    @q = Zone.accessible_by(current_ability)
+              .includes(:manager_organization, :main_meters, :organizations)
+              .ransack(params[:q])
+    all_zones = @q.result.to_a
+    all_zones = apply_sort(all_zones, params[:sort], params[:direction])
+    @pagy, @zones = pagy(all_zones, limit: 25)
   end
 
   def show
@@ -52,6 +59,24 @@ class ZonesController < ApplicationController
 
   def set_zone
     @zone = Zone.accessible_by(current_ability).find(params[:id])
+  end
+
+  def apply_sort(zones, sort_col, direction)
+    zones.sort do |a, b|
+      col_cmp = case sort_col
+      when "manager_organization"
+        a.manager_organization&.name.to_s <=> b.manager_organization&.name.to_s
+      when "main_meters"
+        a.main_meters.size <=> b.main_meters.size
+      when "organizations"
+        a.organizations.size <=> b.organizations.size
+      else
+        a.name <=> b.name
+      end
+      primary = direction == "desc" ? -col_cmp : col_cmp
+      next primary unless primary.zero?
+      a.name <=> b.name
+    end
   end
 
   def zone_params
