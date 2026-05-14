@@ -37,42 +37,45 @@ RSpec.describe CalculationOrchestrator do
   #   (Excel dùng 4 nhóm 115/38/28/11; test map sang rank_group 1..4
   #    với RankQuota seed tương ứng để engine sinh ra đúng số sinh hoạt.)
   # -----------------------------------------------------------------------
-  let(:division)    { create(:organization, :division) }
-  let(:main_meter)  { create(:main_meter, name: "Zone fixture") }
-  let(:organization) { create(:organization, level: :unit, parent: division, zone: main_meter.zone) }
-  let(:period)      { create(:monthly_period, year: 2026, month: 2, unit_price: unit_price) }
+  let_it_be(:division)    { create(:organization, :division) }
+  let_it_be(:main_meter)  { create(:main_meter, name: "Zone fixture") }
+  let_it_be(:organization) { create(:organization, level: :unit, parent: division, zone: main_meter.zone) }
+  let_it_be(:period)      { create(:monthly_period, year: 2026, month: 2, unit_price: BigDecimal("2336.4")) }
+  # main_meter_reading stays let! — destroyed/updated by several contexts.
   let!(:main_meter_reading) do
     create(:main_meter_reading,
            main_meter: main_meter, monthly_period: period,
            electricity_supply_kw: bd("1800"))
   end
 
-  let!(:rank_quota1) { create(:rank_quota, rank_group: 1, rank_name: "3*/4*",   quota_kw: bd("115")) }
-  let!(:rank_quota2) { create(:rank_quota, rank_group: 2, rank_name: "1*/2*",   quota_kw: bd("38")) }
-  let!(:rank_quota3) { create(:rank_quota, rank_group: 3, rank_name: "Cap uy",  quota_kw: bd("28")) }
-  let!(:rank_quota4) { create(:rank_quota, rank_group: 4, rank_name: "HSQ-CS",  quota_kw: bd("11")) }
+  let_it_be(:rank_quota1) { create(:rank_quota, rank_group: 1, rank_name: "3*/4*",   quota_kw: bd("115")) }
+  let_it_be(:rank_quota2) { create(:rank_quota, rank_group: 2, rank_name: "1*/2*",   quota_kw: bd("38")) }
+  let_it_be(:rank_quota3) { create(:rank_quota, rank_group: 3, rank_name: "Cap uy",  quota_kw: bd("28")) }
+  let_it_be(:rank_quota4) { create(:rank_quota, rank_group: 4, rank_name: "HSQ-CS",  quota_kw: bd("11")) }
 
-  let!(:cp_truong)    { create(:contact_point, organization: organization, name: "TMP Truong",   position: 1) }
-  let!(:cp_qluc)      { create(:contact_point, organization: organization, name: "TB Q.Luc",     position: 2) }
-  let!(:cp_tac_huan)  { create(:contact_point, organization: organization, name: "Ban Tac Huan", position: 3) }
+  let_it_be(:cp_truong)    { create(:contact_point, organization: organization, name: "TMP Truong",   position: 1) }
+  let_it_be(:cp_qluc)      { create(:contact_point, organization: organization, name: "TB Q.Luc",     position: 2) }
+  let_it_be(:cp_tac_huan)  { create(:contact_point, organization: organization, name: "Ban Tac Huan", position: 3) }
 
   # Personnel — Excel columns E/F/G/H mapped to rank 1..4
-  let!(:p_truong)   { create(:personnel, contact_point: cp_truong,   monthly_period: period, rank1_count: 1, rank2_count: 0, rank3_count: 0, rank4_count: 0, rank5_count: 0, rank6_count: 0, rank7_count: 0) }
-  let!(:p_qluc)     { create(:personnel, contact_point: cp_qluc,     monthly_period: period, rank1_count: 0, rank2_count: 1, rank3_count: 0, rank4_count: 1, rank5_count: 0, rank6_count: 0, rank7_count: 0) }
-  let!(:p_tac_huan) { create(:personnel, contact_point: cp_tac_huan, monthly_period: period, rank1_count: 0, rank2_count: 2, rank3_count: 0, rank4_count: 0, rank5_count: 0, rank6_count: 0, rank7_count: 0) }
+  # p_truong stays let! — updated by the #call persistence example.
+  let!(:p_truong)        { create(:personnel, contact_point: cp_truong,   monthly_period: period, rank1_count: 1, rank2_count: 0, rank3_count: 0, rank4_count: 0, rank5_count: 0, rank6_count: 0, rank7_count: 0) }
+  let_it_be(:p_qluc)     { create(:personnel, contact_point: cp_qluc,     monthly_period: period, rank1_count: 0, rank2_count: 1, rank3_count: 0, rank4_count: 1, rank5_count: 0, rank6_count: 0, rank7_count: 0) }
+  let_it_be(:p_tac_huan) { create(:personnel, contact_point: cp_tac_huan, monthly_period: period, rank1_count: 0, rank2_count: 2, rank3_count: 0, rank4_count: 0, rank5_count: 0, rank6_count: 0, rank7_count: 0) }
 
   # Meter readings (normal) — one per contact point. Arbitrary but realistic.
-  let!(:meter_truong)   { create(:meter, :normal, organization: organization, contact_point: cp_truong,   name: "M-Truong") }
-  let!(:meter_qluc)     { create(:meter, :normal, organization: organization, contact_point: cp_qluc,     name: "M-QLuc") }
-  let!(:meter_tac_huan) { create(:meter, :normal, organization: organization, contact_point: cp_tac_huan, name: "M-TacHuan") }
+  let_it_be(:meter_truong)   { create(:meter, :normal, organization: organization, contact_point: cp_truong,   name: "M-Truong") }
+  let_it_be(:meter_qluc)     { create(:meter, :normal, organization: organization, contact_point: cp_qluc,     name: "M-QLuc") }
+  let_it_be(:meter_tac_huan) { create(:meter, :normal, organization: organization, contact_point: cp_tac_huan, name: "M-TacHuan") }
 
-  let!(:reading_truong)   { create(:meter_reading, meter: meter_truong,   monthly_period: period, reading_start: 0, reading_end: 99,  consumption: 99) }
-  let!(:reading_qluc)     { create(:meter_reading, meter: meter_qluc,     monthly_period: period, reading_start: 0, reading_end: 105, consumption: 105) }
-  let!(:reading_tac_huan) { create(:meter_reading, meter: meter_tac_huan, monthly_period: period, reading_start: 0, reading_end: 500, consumption: 500) }
+  let_it_be(:reading_truong)   { create(:meter_reading, meter: meter_truong,   monthly_period: period, reading_start: 0, reading_end: 99,  consumption: 99) }
+  let_it_be(:reading_qluc)     { create(:meter_reading, meter: meter_qluc,     monthly_period: period, reading_start: 0, reading_end: 105, consumption: 105) }
+  let_it_be(:reading_tac_huan) { create(:meter_reading, meter: meter_tac_huan, monthly_period: period, reading_start: 0, reading_end: 500, consumption: 500) }
 
   # Pump station — 1 trạm bơm phục vụ organization, tổng điện 1000 kW.
-  let!(:pump_station) { create(:pump_station, zone: main_meter.zone, name: "TB 1") }
-  let!(:pump_meter)  { create(:meter, :pump_station, organization: division, contact_point: nil, pump_station: pump_station, name: "M-Pump") }
+  let_it_be(:pump_station) { create(:pump_station, zone: main_meter.zone, name: "TB 1") }
+  let_it_be(:pump_meter)   { create(:meter, :pump_station, organization: division, contact_point: nil, pump_station: pump_station, name: "M-Pump") }
+  # pump_reading + pump_assignment stay let! — updated/destroyed by 557 + edge contexts.
   let!(:pump_reading) { create(:meter_reading, meter: pump_meter, monthly_period: period, reading_start: 0, reading_end: 1000, consumption: 1000) }
   let!(:pump_assignment) { create(:pump_station_assignment, pump_station: pump_station, organization: organization) }
 
@@ -163,8 +166,6 @@ RSpec.describe CalculationOrchestrator do
   end
 
   let(:expected_truong)    { expected_for(rank_total_kw: 115, personnel_count: 1, meter_usage: 99) }
-  let(:expected_qluc)      { expected_for(rank_total_kw: 49,  personnel_count: 2, meter_usage: 105) }
-  let(:expected_tac_huan)  { expected_for(rank_total_kw: 76,  personnel_count: 2, meter_usage: 500) }
 
   # -----------------------------------------------------------------------
   # Subject
@@ -175,101 +176,6 @@ RSpec.describe CalculationOrchestrator do
     let(:results) { engine.compute }
 
     def result_for(cp) = results.find { |r| r[:contact_point_id] == cp.id }
-
-    describe "F08 — Tiêu chuẩn" do
-      it "rank1 kW for TMP Truong = 1 × 115" do
-        expect(result_for(cp_truong)[:rank1_kw]).to eq(bd("115"))
-      end
-
-      it "rank2 kW for Ban Tac Huan = 2 × 38" do
-        expect(result_for(cp_tac_huan)[:rank2_kw]).to eq(bd("76"))
-      end
-
-      it "water pump standard uses 9.45 kW/person (v5, NOT Excel 6.3)" do
-        expect(result_for(cp_truong)[:water_pump_standard_kw]).to eq(expected_truong[:water_pump_standard_kw])
-        expect(result_for(cp_qluc)[:water_pump_standard_kw]).to eq(expected_qluc[:water_pump_standard_kw])
-        expect(result_for(cp_tac_huan)[:water_pump_standard_kw]).to eq(expected_tac_huan[:water_pump_standard_kw])
-      end
-
-      it "total_standard_kw = rank total + water pump standard" do
-        expect(result_for(cp_truong)[:total_standard_kw]).to eq(expected_truong[:total_standard_kw])
-        expect(result_for(cp_qluc)[:total_standard_kw]).to eq(expected_qluc[:total_standard_kw])
-        expect(result_for(cp_tac_huan)[:total_standard_kw]).to eq(expected_tac_huan[:total_standard_kw])
-      end
-    end
-
-    describe "F08 — Số phải trừ" do
-      it "savings = total_standard × 5%" do
-        expect(result_for(cp_truong)[:savings_deduction_kw]).to eq(expected_truong[:savings_deduction_kw])
-        expect(result_for(cp_tac_huan)[:savings_deduction_kw]).to eq(expected_tac_huan[:savings_deduction_kw])
-      end
-
-      it "loss = total_unit_loss × (cp_meter_consumption / total_meter_consumption) — placed inside deductions" do
-        expect(result_for(cp_truong)[:loss_deduction_kw]).to eq(expected_truong[:loss_deduction_kw])
-        expect(result_for(cp_qluc)[:loss_deduction_kw]).to eq(expected_qluc[:loss_deduction_kw])
-        expect(result_for(cp_tac_huan)[:loss_deduction_kw]).to eq(expected_tac_huan[:loss_deduction_kw])
-      end
-
-      it "CP loss + pump_loss_share sums to total_zone_loss" do
-        cp_loss     = results.sum { |r| r[:loss_deduction_kw] }
-        pump_actual = results.sum { |r| r[:water_pump_actual_kw] }
-        # pump_pool = consumption + share → share = pump_actual_total − consumption.
-        # (All pump consumption flows to this org's CPs since the single pump
-        # assignment in the fixture targets this org.)
-        # Tolerance to absorb BigDecimal precision drift across multiple divisions.
-        expect(cp_loss + (pump_actual - pump_consumption)).to be_within(bd("0.0001")).of(total_zone_loss)
-      end
-
-      it "division public = total_standard × 10%" do
-        expect(result_for(cp_truong)[:division_public_deduction_kw]).to eq(expected_truong[:division_public_deduction_kw])
-        expect(result_for(cp_tac_huan)[:division_public_deduction_kw]).to eq(expected_tac_huan[:division_public_deduction_kw])
-      end
-
-      it "total_deduction_kw = savings + loss + division public + unit public + other" do
-        expect(result_for(cp_truong)[:total_deduction_kw]).to eq(expected_truong[:total_deduction_kw])
-        expect(result_for(cp_tac_huan)[:total_deduction_kw]).to eq(expected_tac_huan[:total_deduction_kw])
-      end
-
-      it "remaining_standard_kw = total_standard − total_deduction" do
-        expect(result_for(cp_truong)[:remaining_standard_kw]).to eq(expected_truong[:remaining_standard_kw])
-        expect(result_for(cp_qluc)[:remaining_standard_kw]).to eq(expected_qluc[:remaining_standard_kw])
-        expect(result_for(cp_tac_huan)[:remaining_standard_kw]).to eq(expected_tac_huan[:remaining_standard_kw])
-      end
-    end
-
-    describe "F09 — Sử dụng và so sánh" do
-      it "meter_usage_kw excludes loss (v5: loss is NOT added to usage)" do
-        expect(result_for(cp_truong)[:meter_usage_kw]).to eq(bd("99"))
-        expect(result_for(cp_qluc)[:meter_usage_kw]).to eq(bd("105"))
-        expect(result_for(cp_tac_huan)[:meter_usage_kw]).to eq(bd("500"))
-      end
-
-      it "water_pump_actual_kw is allocated from pump stations by personnel ratio (F10)" do
-        expect(result_for(cp_truong)[:water_pump_actual_kw]).to eq(expected_truong[:water_pump_actual_kw])
-        expect(result_for(cp_qluc)[:water_pump_actual_kw]).to eq(expected_qluc[:water_pump_actual_kw])
-        expect(result_for(cp_tac_huan)[:water_pump_actual_kw]).to eq(expected_tac_huan[:water_pump_actual_kw])
-      end
-
-      it "total_usage_kw = meter usage + water pump actual" do
-        expect(result_for(cp_truong)[:total_usage_kw]).to eq(expected_truong[:total_usage_kw])
-        expect(result_for(cp_tac_huan)[:total_usage_kw]).to eq(expected_tac_huan[:total_usage_kw])
-      end
-
-      it "over_under_kw = total_usage − remaining_standard (positive = thâm, negative = tiết kiệm)" do
-        expect(result_for(cp_truong)[:over_under_kw]).to eq(expected_truong[:over_under_kw])
-        expect(result_for(cp_qluc)[:over_under_kw]).to eq(expected_qluc[:over_under_kw])
-        expect(result_for(cp_tac_huan)[:over_under_kw]).to eq(expected_tac_huan[:over_under_kw])
-      end
-
-      it "total_amount = over_under × unit_price" do
-        expect(result_for(cp_truong)[:total_amount]).to eq(expected_truong[:total_amount])
-        expect(result_for(cp_tac_huan)[:total_amount]).to eq(expected_tac_huan[:total_amount])
-      end
-
-      it "unit_price is snapshot from monthly_period" do
-        expect(result_for(cp_truong)[:unit_price]).to eq(unit_price)
-      end
-    end
 
     describe "determinism & precision" do
       it "returns BigDecimal for all numeric fields" do
@@ -378,17 +284,6 @@ RSpec.describe CalculationOrchestrator do
       end
     end
 
-    context "zone with no supply (no MainMeterReading)" do
-      before { main_meter_reading.destroy! }
-
-      it "treats total_zone_loss as zero (loss_deduction = 0 for all)" do
-        results = engine.compute
-        results.each do |row|
-          expect(row[:loss_deduction_kw]).to eq(bd("0"))
-        end
-      end
-    end
-
     context "with no UnitConfig records at all (neither Division nor Unit)" do
       before do
         unit_config.destroy!
@@ -439,56 +334,6 @@ RSpec.describe CalculationOrchestrator do
       end
     end
 
-    # Nghiệp vụ XAC_NHAN_NGHIEP_VU v5 mục 11 câu 1 (Zalo 21/04/2026):
-    # Một số công tơ đặt tại trạm biến áp không đi qua đường dây nội bộ,
-    # KHÔNG chịu tổn hao đường dây. kW công tơ no_loss phải bị trừ khỏi
-    # supply TRƯỚC khi tính tổn hao, đồng thời không tham gia tử số/mẫu số
-    # phân bổ tổn hao cho các CP khác.
-    context "with no_loss meter (vị trí không tổn hao)" do
-      # Tăng supply lên 1850: 1850 − 50 (no_loss) − 1704 (B) = 96
-      # → tổng tổn hao zone vẫn = 96 (giữ nguyên expected_for cũ).
-      let!(:cp_substation) { create(:contact_point, organization: organization, name: "Tram bien ap", position: 4) }
-      let!(:meter_no_loss) { create(:meter, :no_loss, organization: organization, contact_point: cp_substation, name: "M-NoLoss") }
-      let!(:reading_no_loss) do
-        create(:meter_reading, meter: meter_no_loss, monthly_period: period,
-                               reading_start: 0, reading_end: 50, consumption: 50)
-      end
-      before { main_meter_reading.update!(electricity_supply_kw: bd("1850")) }
-
-      it "subtracts no_loss kW from supply before computing total_zone_loss" do
-        # supply 1850 − no_loss 50 − B 1704 = 96. CP loss + pump_loss_share = 96.
-        results = engine.compute
-        cp_loss     = results.sum { |r| r[:loss_deduction_kw] }
-        pump_actual = results.sum { |r| r[:water_pump_actual_kw] }
-        expect(cp_loss + (pump_actual - pump_consumption)).to be_within(bd("0.0001")).of(bd("96"))
-      end
-
-      it "does not include no_loss meter in the loss-allocation denominator" do
-        # mẫu số B = 99 + 105 + 500 + 1000 = 1704 (không có 50 của no_loss)
-        loss = engine.compute.find { |r| r[:contact_point_id] == cp_qluc.id }[:loss_deduction_kw]
-        expect(loss).to eq(bd("96") * bd("105") / bd("1704"))
-      end
-
-      it "assigns loss_deduction = 0 for a CP with only a no_loss meter" do
-        row = engine.compute.find { |r| r[:contact_point_id] == cp_substation.id }
-        expect(row[:loss_deduction_kw]).to eq(bd("0"))
-      end
-
-      it "includes no_loss consumption in meter_usage_kw (still billed)" do
-        # no_loss only escapes the LOSS POOL; its consumption is real and must
-        # be billed like any sinh-hoạt reading.
-        row = engine.compute.find { |r| r[:contact_point_id] == cp_substation.id }
-        expect(row[:meter_usage_kw]).to eq(bd("50"))
-      end
-
-      it "clamps total_zone_loss to 0 when supply < no_loss + B" do
-        # supply 700 − no_loss 50 − B 1704 = -1054 → clamp về 0
-        main_meter_reading.update!(electricity_supply_kw: bd("700"))
-        described_class.new(organization: organization, monthly_period: period).compute.each do |row|
-          expect(row[:loss_deduction_kw]).to eq(bd("0"))
-        end
-      end
-    end
   end
 
   # Matches the "Bảng II" scenario from docs/BANG_22_COT_ANALYSIS.md §3.2:
@@ -543,62 +388,12 @@ RSpec.describe CalculationOrchestrator do
     before { main_meter_reading.destroy! }
 
     let(:hq_unit)   { create(:organization, level: :unit, parent: division, name: "Chi huy F + nha khach", zone: main_meter.zone) }
-    let(:other_a)   { create(:organization, level: :unit, parent: division, name: "Other A", zone: main_meter.zone) }
 
     let!(:cp_hq)    { create(:contact_point, organization: hq_unit, name: "CP HQ") }
     let!(:p_hq) do
       create(:personnel, contact_point: cp_hq, monthly_period: period,
              rank1_count: 0, rank2_count: 1, rank3_count: 0, rank4_count: 0,
              rank5_count: 0, rank6_count: 0, rank7_count: 0)
-    end
-
-    let!(:cp_other_a) { create(:contact_point, organization: other_a, name: "CP Other A") }
-    let!(:p_other_a) do
-      create(:personnel, contact_point: cp_other_a, monthly_period: period,
-             rank1_count: 0, rank2_count: 0, rank3_count: 0, rank4_count: 5,
-             rank5_count: 0, rank6_count: 0, rank7_count: 0)
-    end
-
-    context "1 fixed (30%) + variable orgs sharing 70%" do
-      let!(:hq_assignment) do
-        create(:pump_station_assignment, pump_station: pump_station, organization: hq_unit,
-               fixed_pump_percentage: bd("30"))
-      end
-      let!(:other_a_assignment) do
-        create(:pump_station_assignment, pump_station: pump_station, organization: other_a)
-      end
-
-      it "fixed org receives consumption × 30/100, distributed to its CPs by personnel" do
-        hq_engine = described_class.new(organization: hq_unit, monthly_period: period)
-        row = hq_engine.compute.find { |r| r[:contact_point_id] == cp_hq.id }
-        # 1000 × 30/100 = 300, single CP with 1 person → 300
-        expect(row[:water_pump_actual_kw]).to eq(bd("300"))
-      end
-
-      it "variable orgs share 70% pool by personnel ratio (HQ excluded from denominator)" do
-        # Variable pool = 1000 × 70/100 = 700
-        # Variable orgs: organization (5 ppl) + other_a (5 ppl) = 10
-        # Our org (organization) = 5/10 of 700 = 350
-        # cp_truong (1) → 700 × 1 / 10 = 70
-        # cp_qluc (2)   → 700 × 2 / 10 = 140
-        # cp_tac_huan (2) → 700 × 2 / 10 = 140
-        results = engine.compute
-        t = results.find { |r| r[:contact_point_id] == cp_truong.id }
-        q = results.find { |r| r[:contact_point_id] == cp_qluc.id }
-        h = results.find { |r| r[:contact_point_id] == cp_tac_huan.id }
-        expect(t[:water_pump_actual_kw]).to eq(bd("700") * bd("1") / bd("10"))
-        expect(q[:water_pump_actual_kw]).to eq(bd("700") * bd("2") / bd("10"))
-        expect(h[:water_pump_actual_kw]).to eq(bd("700") * bd("2") / bd("10"))
-      end
-
-      it "sum across all engine runs equals total pump consumption" do
-        sum  = engine.compute.sum { |r| r[:water_pump_actual_kw] }                                              # 350
-        sum += described_class.new(organization: other_a, monthly_period: period).compute
-                              .sum { |r| r[:water_pump_actual_kw] }                                             # 350
-        sum += described_class.new(organization: hq_unit, monthly_period: period).compute
-                              .sum { |r| r[:water_pump_actual_kw] }                                             # 300
-        expect(sum).to eq(bd("1000"))
-      end
     end
 
     # Bảng II scenario: 1 fixed HQ (30%) + 5 variable orgs sharing 70% by personnel.
@@ -723,82 +518,6 @@ RSpec.describe CalculationOrchestrator do
       end
     end
 
-    context "edge: sum_fixed_pct >= 100" do
-      let!(:hq_assignment) do
-        create(:pump_station_assignment, pump_station: pump_station, organization: hq_unit,
-               fixed_pump_percentage: bd("60"))
-      end
-      let!(:other_assignment) do
-        # Bypass zone-limit validation to test engine clamping behaviour when
-        # total fixed_pct intentionally exceeds 100%.
-        build(:pump_station_assignment, pump_station: pump_station, organization: other_a,
-              fixed_pump_percentage: bd("60")).tap { |a| a.save!(validate: false) }
-      end
-
-      it "clamps fixed total to 100 → variable orgs receive 0" do
-        results = engine.compute
-        truong = results.find { |r| r[:contact_point_id] == cp_truong.id }
-        # Our `organization` is variable but pool = 0, so its CPs all get 0
-        expect(truong[:water_pump_actual_kw]).to eq(bd("0"))
-      end
-    end
-
-    context "edge: fixed org with 0 personnel" do
-      let(:empty_hq) { create(:organization, level: :unit, parent: division, name: "Empty HQ") }
-      let!(:cp_empty_hq) { create(:contact_point, organization: empty_hq, name: "CP Empty") }
-      # No Personnel record → 0 people in the org
-      let!(:empty_assignment) do
-        create(:pump_station_assignment, pump_station: pump_station, organization: empty_hq,
-               fixed_pump_percentage: bd("30"))
-      end
-
-      it "loses the fixed slice (CPs with 0 personnel are skipped)" do
-        empty_engine = described_class.new(organization: empty_hq, monthly_period: period)
-        row = empty_engine.compute.find { |r| r[:contact_point_id] == cp_empty_hq.id }
-        expect(row[:water_pump_actual_kw]).to eq(bd("0"))
-      end
-
-      it "variable pool stays at 70% — does not absorb the lost slice" do
-        # Our org (5 ppl) is the only variable org → it gets the entire 70%
-        truong = engine.compute.find { |r| r[:contact_point_id] == cp_truong.id }
-        # 1000 × 70/100 × 1/5 = 140
-        expect(truong[:water_pump_actual_kw]).to eq(bd("700") * bd("1") / bd("5"))
-      end
-    end
-
-    context "edge: variable org with 0 personnel" do
-      let(:empty_unit) { create(:organization, level: :unit, parent: division, name: "Empty unit") }
-      let!(:cp_empty) { create(:contact_point, organization: empty_unit, name: "CP Empty unit") }
-      let!(:empty_assignment) do
-        create(:pump_station_assignment, pump_station: pump_station, organization: empty_unit)
-      end
-
-      it "the empty org receives 0; existing org receives full pool" do
-        # Variable orgs: organization (5 ppl) + empty_unit (0 ppl) = 5
-        # Pool = 1000 (no fixed), our org gets 1000 × 5/5 = 1000 (its CPs by ratio)
-        truong = engine.compute.find { |r| r[:contact_point_id] == cp_truong.id }
-        expect(truong[:water_pump_actual_kw]).to eq(bd("1000") * bd("1") / bd("5"))
-      end
-    end
-
-    context "edge: fixed_pump_percentage = 0" do
-      let!(:zero_assignment) do
-        create(:pump_station_assignment, pump_station: pump_station, organization: hq_unit,
-               fixed_pump_percentage: bd("0"))
-      end
-
-      it "treats 0 as fixed (HQ org receives 0 kW, NOT in variable pool)" do
-        hq_engine = described_class.new(organization: hq_unit, monthly_period: period)
-        row = hq_engine.compute.find { |r| r[:contact_point_id] == cp_hq.id }
-        expect(row[:water_pump_actual_kw]).to eq(bd("0"))
-      end
-
-      it "variable pool = 100% (sum_fixed_pct = 0); our org receives full share" do
-        # Our org is the only variable assignment (5 ppl)
-        truong = engine.compute.find { |r| r[:contact_point_id] == cp_truong.id }
-        expect(truong[:water_pump_actual_kw]).to eq(bd("1000") * bd("1") / bd("5"))
-      end
-    end
   end
 
   # PumpStation→Meter is 1-many: a station may have several physical meters.

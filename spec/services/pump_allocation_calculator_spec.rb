@@ -11,8 +11,8 @@ RSpec.describe PumpAllocationCalculator do
   def bd(value) = BigDecimal(value.to_s)
 
   let(:tolerance) { bd("0.01") }
-  let(:period)    { create(:monthly_period, year: 2026, month: 4) }
-  let(:zone)      { create(:zone, name: "Khu vực A") }
+  let_it_be(:period) { create(:monthly_period, year: 2026, month: 4) }
+  let_it_be(:zone)   { create(:zone, name: "Khu vực A") }
 
   def make_personnel(contact_point:, rank1: 0, rank2: 0, rank3: 0, rank4: 0,
                      rank5: 0, rank6: 0, rank7: 0)
@@ -59,31 +59,31 @@ RSpec.describe PumpAllocationCalculator do
     #
     #   A1 total = 300 + 107.692 ≈ 407.692
     context "one pump with mixed CP / Org / WorkGroup assignments" do
-      let(:division) { create(:organization, :division) }
-      let(:dva)      { create(:organization, level: :unit, parent: division, name: "DVA", zone: zone) }
-      let(:dvb)      { create(:organization, level: :unit, parent: division, name: "DVB", zone: zone) }
+      let_it_be(:division) { create(:organization, :division) }
+      let_it_be(:dva)      { create(:organization, level: :unit, parent: division, name: "DVA", zone: zone) }
+      let_it_be(:dvb)      { create(:organization, level: :unit, parent: division, name: "DVB", zone: zone) }
 
-      let!(:a1) { create(:contact_point, organization: dva, name: "A1", position: 1) }
-      let!(:a2) { create(:contact_point, organization: dva, name: "A2", position: 2) }
-      let!(:a3) { create(:contact_point, organization: dva, name: "A3", position: 3) }
-      let!(:a4) { create(:contact_point, organization: dva, name: "A4", position: 4) }
-      let!(:b1) { create(:contact_point, organization: dvb, name: "B1", position: 1) }
+      let_it_be(:a1) { create(:contact_point, organization: dva, name: "A1", position: 1) }
+      let_it_be(:a2) { create(:contact_point, organization: dva, name: "A2", position: 2) }
+      let_it_be(:a3) { create(:contact_point, organization: dva, name: "A3", position: 3) }
+      let_it_be(:a4) { create(:contact_point, organization: dva, name: "A4", position: 4) }
+      let_it_be(:b1) { create(:contact_point, organization: dvb, name: "B1", position: 1) }
 
-      let!(:p_a1) { make_personnel(contact_point: a1, rank1: 2) }
-      let!(:p_a2) { make_personnel(contact_point: a2, rank7: 3) }
-      let!(:p_a3) { make_personnel(contact_point: a3, rank4: 1) }
-      let!(:p_b1) { make_personnel(contact_point: b1, rank7: 5) }
+      let_it_be(:p_a1) { make_personnel(contact_point: a1, rank1: 2) }
+      let_it_be(:p_a2) { make_personnel(contact_point: a2, rank7: 3) }
+      let_it_be(:p_a3) { make_personnel(contact_point: a3, rank4: 1) }
+      let_it_be(:p_b1) { make_personnel(contact_point: b1, rank7: 5) }
       # A4: no personnel row
 
-      let!(:pump_station) { create(:pump_station, zone: zone, name: "TB1") }
-      let!(:m_pump)       { make_pump_meter(pump_station: pump_station, org: division, consumption: bd("1000")) }
+      let_it_be(:pump_station) { create(:pump_station, zone: zone, name: "TB1") }
+      let_it_be(:m_pump)       { make_pump_meter(pump_station: pump_station, org: division, consumption: bd("1000")) }
 
-      let!(:work_group) { create(:work_group, owner_organization: dva, name: "Tho xay", personnel_count: 2, position: 0) }
+      let_it_be(:work_group) { create(:work_group, owner_organization: dva, name: "Tho xay", personnel_count: 2, position: 0) }
 
-      let!(:asg_a1)  { create(:pump_station_assignment, pump_station: pump_station, assignable: a1, fixed_pump_percentage: 30) }
-      let!(:asg_dva) { create(:pump_station_assignment, pump_station: pump_station, assignable: dva) }
-      let!(:asg_dvb) { create(:pump_station_assignment, pump_station: pump_station, assignable: dvb) }
-      let!(:asg_wg)  { create(:pump_station_assignment, pump_station: pump_station, assignable: work_group) }
+      let_it_be(:asg_a1)  { create(:pump_station_assignment, pump_station: pump_station, assignable: a1, fixed_pump_percentage: 30) }
+      let_it_be(:asg_dva) { create(:pump_station_assignment, pump_station: pump_station, assignable: dva) }
+      let_it_be(:asg_dvb) { create(:pump_station_assignment, pump_station: pump_station, assignable: dvb) }
+      let_it_be(:asg_wg)  { create(:pump_station_assignment, pump_station: pump_station, assignable: work_group) }
 
       subject(:result) { described_class.new(zone: zone, monthly_period: period).call }
 
@@ -123,18 +123,18 @@ RSpec.describe PumpAllocationCalculator do
     end
 
     context "ContactPointGroup with 2 member CPs (3:1 personnel)" do
-      let(:org) { create(:organization, level: :unit, zone: zone) }
-      let!(:cp1) { create(:contact_point, organization: org, name: "CP1") }
-      let!(:cp2) { create(:contact_point, organization: org, name: "CP2") }
-      let!(:p1)  { make_personnel(contact_point: cp1, rank1: 3) }
-      let!(:p2)  { make_personnel(contact_point: cp2, rank1: 1) }
-      let!(:cpg) { create(:contact_point_group, organization: org, name: "Grp") }
-      let!(:m1)  { create(:contact_point_group_membership, contact_point_group: cpg, contact_point: cp1) }
-      let!(:m2)  { create(:contact_point_group_membership, contact_point_group: cpg, contact_point: cp2) }
+      let_it_be(:org) { create(:organization, level: :unit, zone: zone) }
+      let_it_be(:cp1) { create(:contact_point, organization: org, name: "CP1") }
+      let_it_be(:cp2) { create(:contact_point, organization: org, name: "CP2") }
+      let_it_be(:p1)  { make_personnel(contact_point: cp1, rank1: 3) }
+      let_it_be(:p2)  { make_personnel(contact_point: cp2, rank1: 1) }
+      let_it_be(:cpg) { create(:contact_point_group, organization: org, name: "Grp") }
+      let_it_be(:m1)  { create(:contact_point_group_membership, contact_point_group: cpg, contact_point: cp1) }
+      let_it_be(:m2)  { create(:contact_point_group_membership, contact_point_group: cpg, contact_point: cp2) }
 
-      let!(:ps)  { create(:pump_station, zone: zone, name: "TB") }
-      let!(:m_p) { make_pump_meter(pump_station: ps, org: org, consumption: bd("400")) }
-      let!(:asg) { create(:pump_station_assignment, pump_station: ps, assignable: cpg, fixed_pump_percentage: 100) }
+      let_it_be(:ps)  { create(:pump_station, zone: zone, name: "TB") }
+      let_it_be(:m_p) { make_pump_meter(pump_station: ps, org: org, consumption: bd("400")) }
+      let_it_be(:asg) { create(:pump_station_assignment, pump_station: ps, assignable: cpg, fixed_pump_percentage: 100) }
 
       subject(:result) { described_class.new(zone: zone, monthly_period: period).call }
 
@@ -152,12 +152,12 @@ RSpec.describe PumpAllocationCalculator do
     end
 
     context "ContactPoint direct assignment" do
-      let(:org)  { create(:organization, level: :unit, zone: zone) }
-      let!(:cp)  { create(:contact_point, organization: org) }
-      let!(:pp)  { make_personnel(contact_point: cp, rank1: 5) }
-      let!(:ps)  { create(:pump_station, zone: zone) }
-      let!(:m)   { make_pump_meter(pump_station: ps, org: org, consumption: bd("200")) }
-      let!(:asg) { create(:pump_station_assignment, pump_station: ps, assignable: cp, fixed_pump_percentage: 100) }
+      let_it_be(:org) { create(:organization, level: :unit, zone: zone) }
+      let_it_be(:cp)  { create(:contact_point, organization: org) }
+      let_it_be(:pp)  { make_personnel(contact_point: cp, rank1: 5) }
+      let_it_be(:ps)  { create(:pump_station, zone: zone) }
+      let_it_be(:m)   { make_pump_meter(pump_station: ps, org: org, consumption: bd("200")) }
+      let_it_be(:asg) { create(:pump_station_assignment, pump_station: ps, assignable: cp, fixed_pump_percentage: 100) }
 
       subject(:result) { described_class.new(zone: zone, monthly_period: period).call }
 
@@ -173,14 +173,14 @@ RSpec.describe PumpAllocationCalculator do
     end
 
     context "WorkGroup assignment alongside Organization" do
-      let(:org)   { create(:organization, level: :unit, zone: zone) }
-      let!(:cp)   { create(:contact_point, organization: org) }
-      let!(:pp)   { make_personnel(contact_point: cp, rank1: 3) }
-      let!(:wg)   { create(:work_group, owner_organization: org, personnel_count: 2) }
-      let!(:ps)   { create(:pump_station, zone: zone) }
-      let!(:m_ps) { make_pump_meter(pump_station: ps, org: org, consumption: bd("100")) }
-      let!(:asg_org) { create(:pump_station_assignment, pump_station: ps, assignable: org) }
-      let!(:asg_wg)  { create(:pump_station_assignment, pump_station: ps, assignable: wg) }
+      let_it_be(:org)   { create(:organization, level: :unit, zone: zone) }
+      let_it_be(:cp)    { create(:contact_point, organization: org) }
+      let_it_be(:pp)    { make_personnel(contact_point: cp, rank1: 3) }
+      let_it_be(:wg)    { create(:work_group, owner_organization: org, personnel_count: 2) }
+      let_it_be(:ps)    { create(:pump_station, zone: zone) }
+      let_it_be(:m_ps)  { make_pump_meter(pump_station: ps, org: org, consumption: bd("100")) }
+      let_it_be(:asg_org) { create(:pump_station_assignment, pump_station: ps, assignable: org) }
+      let_it_be(:asg_wg)  { create(:pump_station_assignment, pump_station: ps, assignable: wg) }
 
       subject(:result) { described_class.new(zone: zone, monthly_period: period).call }
 
@@ -196,16 +196,16 @@ RSpec.describe PumpAllocationCalculator do
     end
 
     context "multiple pump stations accumulate on the same CP" do
-      let(:org) { create(:organization, level: :unit, zone: zone) }
-      let!(:cp) { create(:contact_point, organization: org) }
-      let!(:pp) { make_personnel(contact_point: cp, rank1: 1) }
-      let!(:ps1) { create(:pump_station, zone: zone, name: "TB1") }
-      let!(:ps2) { create(:pump_station, zone: zone, name: "TB2") }
-      let!(:m1) { make_pump_meter(pump_station: ps1, org: org, consumption: bd("60")) }
-      let!(:m2) { make_pump_meter(pump_station: ps2, org: org, consumption: bd("40")) }
+      let_it_be(:org) { create(:organization, level: :unit, zone: zone) }
+      let_it_be(:cp)  { create(:contact_point, organization: org) }
+      let_it_be(:pp)  { make_personnel(contact_point: cp, rank1: 1) }
+      let_it_be(:ps1) { create(:pump_station, zone: zone, name: "TB1") }
+      let_it_be(:ps2) { create(:pump_station, zone: zone, name: "TB2") }
+      let_it_be(:m1)  { make_pump_meter(pump_station: ps1, org: org, consumption: bd("60")) }
+      let_it_be(:m2)  { make_pump_meter(pump_station: ps2, org: org, consumption: bd("40")) }
       # Variable Org assignment on each pump — full pool drills to the only CP.
-      let!(:asg1) { create(:pump_station_assignment, pump_station: ps1, assignable: org) }
-      let!(:asg2) { create(:pump_station_assignment, pump_station: ps2, assignable: org) }
+      let_it_be(:asg1) { create(:pump_station_assignment, pump_station: ps1, assignable: org) }
+      let_it_be(:asg2) { create(:pump_station_assignment, pump_station: ps2, assignable: org) }
 
       subject(:result) { described_class.new(zone: zone, monthly_period: period).call }
 
@@ -223,21 +223,21 @@ RSpec.describe PumpAllocationCalculator do
     end
 
     context "sum_fixed_pct > 100 (clamped to variable_pct = 0)" do
-      let(:org) { create(:organization, level: :unit, zone: zone) }
-      let!(:cp1) { create(:contact_point, organization: org) }
-      let!(:cp2) { create(:contact_point, organization: org) }
-      let!(:p1) { make_personnel(contact_point: cp1, rank1: 1) }
-      let!(:p2) { make_personnel(contact_point: cp2, rank1: 1) }
-      let!(:ps) { create(:pump_station, zone: zone) }
-      let!(:m)  { make_pump_meter(pump_station: ps, org: org, consumption: bd("100")) }
-      let!(:asg_f1) { create(:pump_station_assignment, pump_station: ps, assignable: cp1, fixed_pump_percentage: 80) }
-      let!(:asg_f2) do
+      let_it_be(:org) { create(:organization, level: :unit, zone: zone) }
+      let_it_be(:cp1) { create(:contact_point, organization: org) }
+      let_it_be(:cp2) { create(:contact_point, organization: org) }
+      let_it_be(:p1)  { make_personnel(contact_point: cp1, rank1: 1) }
+      let_it_be(:p2)  { make_personnel(contact_point: cp2, rank1: 1) }
+      let_it_be(:ps)  { create(:pump_station, zone: zone) }
+      let_it_be(:m)   { make_pump_meter(pump_station: ps, org: org, consumption: bd("100")) }
+      let_it_be(:asg_f1) { create(:pump_station_assignment, pump_station: ps, assignable: cp1, fixed_pump_percentage: 80) }
+      let_it_be(:asg_f2) do
         # Bypass zone-validation that caps sum_fixed at 100 — we're testing
         # the calculator's clamp behaviour under intentionally bad data.
         build(:pump_station_assignment, pump_station: ps, assignable: cp2, fixed_pump_percentage: 50)
           .save!(validate: false)
       end
-      let!(:asg_var) { create(:pump_station_assignment, pump_station: ps, assignable: org) }
+      let_it_be(:asg_var) { create(:pump_station_assignment, pump_station: ps, assignable: org) }
 
       subject(:result) { described_class.new(zone: zone, monthly_period: period).call }
 
@@ -255,15 +255,15 @@ RSpec.describe PumpAllocationCalculator do
     end
 
     context "fixed_pump_percentage = 0" do
-      let(:org) { create(:organization, level: :unit, zone: zone) }
-      let!(:cp1) { create(:contact_point, organization: org) }
-      let!(:cp2) { create(:contact_point, organization: org) }
-      let!(:p1) { make_personnel(contact_point: cp1, rank1: 2) }
-      let!(:p2) { make_personnel(contact_point: cp2, rank1: 3) }
-      let!(:ps) { create(:pump_station, zone: zone) }
-      let!(:m)  { make_pump_meter(pump_station: ps, org: org, consumption: bd("100")) }
-      let!(:asg_zero) { create(:pump_station_assignment, pump_station: ps, assignable: cp1, fixed_pump_percentage: 0) }
-      let!(:asg_var)  { create(:pump_station_assignment, pump_station: ps, assignable: cp2) }
+      let_it_be(:org) { create(:organization, level: :unit, zone: zone) }
+      let_it_be(:cp1) { create(:contact_point, organization: org) }
+      let_it_be(:cp2) { create(:contact_point, organization: org) }
+      let_it_be(:p1)  { make_personnel(contact_point: cp1, rank1: 2) }
+      let_it_be(:p2)  { make_personnel(contact_point: cp2, rank1: 3) }
+      let_it_be(:ps)  { create(:pump_station, zone: zone) }
+      let_it_be(:m)   { make_pump_meter(pump_station: ps, org: org, consumption: bd("100")) }
+      let_it_be(:asg_zero) { create(:pump_station_assignment, pump_station: ps, assignable: cp1, fixed_pump_percentage: 0) }
+      let_it_be(:asg_var)  { create(:pump_station_assignment, pump_station: ps, assignable: cp2) }
 
       subject(:result) { described_class.new(zone: zone, monthly_period: period).call }
 
@@ -281,12 +281,12 @@ RSpec.describe PumpAllocationCalculator do
     end
 
     context "variable pool with zero total headcount" do
-      let(:org)  { create(:organization, level: :unit, zone: zone) }
-      let!(:cp)  { create(:contact_point, organization: org) }
+      let_it_be(:org) { create(:organization, level: :unit, zone: zone) }
+      let_it_be(:cp)  { create(:contact_point, organization: org) }
       # No personnel record → headcount = 0
-      let!(:ps)  { create(:pump_station, zone: zone) }
-      let!(:m)   { make_pump_meter(pump_station: ps, org: org, consumption: bd("100")) }
-      let!(:asg) { create(:pump_station_assignment, pump_station: ps, assignable: org) }
+      let_it_be(:ps)  { create(:pump_station, zone: zone) }
+      let_it_be(:m)   { make_pump_meter(pump_station: ps, org: org, consumption: bd("100")) }
+      let_it_be(:asg) { create(:pump_station_assignment, pump_station: ps, assignable: org) }
 
       subject(:result) { described_class.new(zone: zone, monthly_period: period).call }
 
@@ -298,13 +298,13 @@ RSpec.describe PumpAllocationCalculator do
     end
 
     context "pump station with no meter readings" do
-      let(:org)  { create(:organization, level: :unit, zone: zone) }
-      let!(:cp)  { create(:contact_point, organization: org) }
-      let!(:pp)  { make_personnel(contact_point: cp, rank1: 1) }
-      let!(:ps)  { create(:pump_station, zone: zone) }
-      let!(:m)   { create(:meter, :pump_station, organization: org, contact_point: nil, pump_station: ps) }
+      let_it_be(:org) { create(:organization, level: :unit, zone: zone) }
+      let_it_be(:cp)  { create(:contact_point, organization: org) }
+      let_it_be(:pp)  { make_personnel(contact_point: cp, rank1: 1) }
+      let_it_be(:ps)  { create(:pump_station, zone: zone) }
+      let_it_be(:m)   { create(:meter, :pump_station, organization: org, contact_point: nil, pump_station: ps) }
       # No MeterReading → consumption = 0
-      let!(:asg) { create(:pump_station_assignment, pump_station: ps, assignable: org) }
+      let_it_be(:asg) { create(:pump_station_assignment, pump_station: ps, assignable: org) }
 
       subject(:result) { described_class.new(zone: zone, monthly_period: period).call }
 
@@ -316,12 +316,12 @@ RSpec.describe PumpAllocationCalculator do
     end
 
     context "injected LossCalculator inflates the pump pool" do
-      let(:org)  { create(:organization, level: :unit, zone: zone) }
-      let!(:cp)  { create(:contact_point, organization: org) }
-      let!(:pp)  { make_personnel(contact_point: cp, rank1: 1) }
-      let!(:ps)  { create(:pump_station, zone: zone) }
-      let!(:m)   { make_pump_meter(pump_station: ps, org: org, consumption: bd("100")) }
-      let!(:asg) { create(:pump_station_assignment, pump_station: ps, assignable: cp, fixed_pump_percentage: 100) }
+      let_it_be(:org) { create(:organization, level: :unit, zone: zone) }
+      let_it_be(:cp)  { create(:contact_point, organization: org) }
+      let_it_be(:pp)  { make_personnel(contact_point: cp, rank1: 1) }
+      let_it_be(:ps)  { create(:pump_station, zone: zone) }
+      let_it_be(:m)   { make_pump_meter(pump_station: ps, org: org, consumption: bd("100")) }
+      let_it_be(:asg) { create(:pump_station_assignment, pump_station: ps, assignable: cp, fixed_pump_percentage: 100) }
 
       it "uses the injected loss_calculator to compute pump_loss_share" do
         loss_calc = LossCalculator.new(zone: zone, monthly_period: period)

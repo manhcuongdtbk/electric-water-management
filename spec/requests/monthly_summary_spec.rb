@@ -1,21 +1,23 @@
 require "rails_helper"
 
 RSpec.describe "MonthlySummary", type: :request do
-  let(:division)  { create(:organization, :division) }
-  let(:org_a)     { create(:organization, :unit, parent: division) }
-  let(:org_b)     { create(:organization, :unit, parent: division) }
+  let_it_be(:division)  { create(:organization, :division) }
+  let_it_be(:org_a)     { create(:organization, :unit, parent: division) }
+  let_it_be(:org_b)     { create(:organization, :unit, parent: division) }
 
-  let(:admin1)       { create(:user, :admin_level1, organization: division) }
-  let(:admin_unit_a) { create(:user, :admin_unit,   organization: org_a) }
-  let(:admin_unit_b) { create(:user, :admin_unit,   organization: org_b) }
-  let(:commander)    { create(:user, :commander,    organization: org_a) }
-  let(:tech_user)    { create(:user, :tech,          organization: org_a) }
+  let_it_be(:admin1)       { create(:user, :admin_level1, organization: division) }
+  let_it_be(:admin_unit_a) { create(:user, :admin_unit,   organization: org_a) }
+  let_it_be(:admin_unit_b) { create(:user, :admin_unit,   organization: org_b) }
+  let_it_be(:commander)    { create(:user, :commander,    organization: org_a) }
+  let_it_be(:tech_user)    { create(:user, :tech,          organization: org_a) }
 
-  let!(:period)       { create(:monthly_period, year: 2026, month: 2) }
-  let!(:rank_quotas)  { (1..7).map { |g| create(:rank_quota, :"rank#{g}") } }
+  let_it_be(:rank_quotas)  { (1..7).map { |g| create(:rank_quota, :"rank#{g}") } }
 
-  let!(:cp_a) { create(:contact_point, organization: org_a) }
-  let!(:cp_b) { create(:contact_point, organization: org_b) }
+  let_it_be(:cp_a) { create(:contact_point, organization: org_a) }
+  let_it_be(:cp_b) { create(:contact_point, organization: org_b) }
+
+  # period + calc_a/calc_b stay let! — deleted/updated by several contexts.
+  let!(:period) { create(:monthly_period, year: 2026, month: 2) }
 
   let!(:calc_a) do
     create(:monthly_calculation,
