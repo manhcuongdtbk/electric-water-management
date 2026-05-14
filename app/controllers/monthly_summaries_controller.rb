@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# F11 — Bảng tổng hợp theo tháng (bảng 24 cột)
+# F11 — Bảng tổng hợp theo tháng (bảng 28 cột)
 # Hiển thị kết quả tính toán từ CalculationOrchestrator cho một đơn vị và một kỳ tháng.
 # Nếu chưa có dữ liệu → tự động chạy engine. Nút "Tính lại" cho admin.
 class MonthlySummariesController < ApplicationController

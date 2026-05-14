@@ -53,7 +53,7 @@ class OrganizationsController < ApplicationController
     # Controller scope is intentionally limited to level-2 units. The division
     # is managed by seeds and is not editable / destroyable here, even by
     # admin_level1.
-    @organization = Organization.units.find(params[:id])
+    @organization = Organization.units.accessible_by(current_ability).find(params[:id])
   end
 
   def related_data_exists?
