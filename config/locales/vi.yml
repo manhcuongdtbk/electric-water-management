@@ -56,8 +56,8 @@ vi:
         one: "thành viên nhóm"
         other: "thành viên nhóm"
       work_group:
-        one: "nhóm công tác"
-        other: "nhóm công tác"
+        one: "đầu mối ngoài biên chế"
+        other: "đầu mối ngoài biên chế"
       pump_station:
         one: "trạm bơm"
         other: "trạm bơm"
@@ -370,11 +370,11 @@ vi:
       destroyed: "Đã xóa khu vực."
       destroy_failed: "Không thể xóa khu vực."
     work_groups:
-      created: "Tạo nhóm công tác thành công."
-      updated: "Cập nhật nhóm công tác thành công."
-      destroyed: "Xoá nhóm công tác thành công."
-      destroy_failed: "Không thể xoá nhóm công tác."
-      cannot_destroy_with_assignments: "Không thể xoá nhóm công tác đang được phân bổ trạm bơm. Hãy bỏ gán trước."
+      created: "Tạo đầu mối ngoài biên chế thành công."
+      updated: "Cập nhật đầu mối ngoài biên chế thành công."
+      destroyed: "Xoá đầu mối ngoài biên chế thành công."
+      destroy_failed: "Không thể xoá đầu mối ngoài biên chế."
+      cannot_destroy_with_assignments: "Không thể xoá đầu mối ngoài biên chế đang được phân bổ trạm bơm. Hãy bỏ gán trước."
     pump_station_readings:
       saved: "Lưu chỉ số công tơ trạm bơm thành công."
       period_locked: "Kỳ này đã khóa, không thể chỉnh sửa chỉ số."
@@ -1004,7 +1004,7 @@ vi:
       title: "Đầu mối ngoài biên chế"
       subtitle: "Đầu mối ngoài biên chế là tập hợp người lao động (VD: Thợ xây, Trạm chế biến) không thuộc đơn vị hay đầu mối nào, nhưng được phân bổ điện bơm theo quân số."
       new_button: "Thêm đầu mối ngoài biên chế"
-      empty: "Chưa có nhóm công tác nào."
+      empty: "Chưa có đầu mối ngoài biên chế nào."
       columns:
         stt: "STT"
         name: "Tên nhóm"
@@ -1022,13 +1022,13 @@ vi:
       personnel_count_hint: "Quân số nhập tay. Không thay đổi theo tháng — nếu cần điều chỉnh hãy cập nhật giá trị tại đây."
       notes: "Ghi chú"
       position: "Thứ tự hiển thị"
-      submit_create: "Tạo nhóm công tác"
+      submit_create: "Tạo đầu mối ngoài biên chế"
       submit_update: "Lưu thay đổi"
       cancel: "Hủy"
     actions:
       edit: "Sửa"
       delete: "Xoá"
-      delete_confirm: "Bạn có chắc muốn xoá nhóm công tác này?"
+      delete_confirm: "Bạn có chắc muốn xoá đầu mối ngoài biên chế này?"
 
   zones:
     index:
