@@ -9,6 +9,11 @@ vi:
       submit: "Tìm kiếm"
       clear: "Xóa bộ lọc"
 
+  confirm_modal:
+    title: "Xác nhận"
+    confirm: "Đồng ý"
+    cancel: "Huỷ"
+
   number:
     format:
       delimiter: "."
@@ -168,6 +173,10 @@ vi:
         main_meter_id: "Công tơ tổng"
       main_meter:
         name: "Tên công tơ tổng"
+      zone:
+        name: "Tên khu vực"
+        manager_organization: "Đơn vị quản lý"
+        manager_organization_id: "Đơn vị quản lý"
       main_meter_reading:
         electricity_supply_kw: "Số điện lực (kW)"
         main_meter: "Công tơ tổng"
