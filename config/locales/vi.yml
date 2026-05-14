@@ -1017,7 +1017,7 @@ vi:
     edit:
       title: "Sửa đầu mối ngoài biên chế"
     form:
-      name: "Tên nhóm công tác"
+      name: "Tên đầu mối ngoài biên chế"
       personnel_count: "Quân số (người)"
       personnel_count_hint: "Quân số nhập tay. Không thay đổi theo tháng — nếu cần điều chỉnh hãy cập nhật giá trị tại đây."
       notes: "Ghi chú"
