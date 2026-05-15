@@ -11,13 +11,23 @@ RSpec.describe "F15 — User management", type: :system do
   describe "admin_level1" do
     before { login_as scenario.admin_level1, scope: :user }
 
-    it "lists every user in the system" do
+    it "lists all users split into division and unit sections" do
       scenario # force creation of the 4 role users
       visit users_path
       expect(page).to have_content(I18n.t("users.index.title"))
+      expect(page).to have_content(I18n.t("users.index.division_section"))
+      expect(page).to have_content(I18n.t("users.index.unit_section"))
+      expect(page).to have_content(scenario.admin_level1.email)
+      expect(page).to have_content(scenario.tech.email)
       expect(page).to have_content(scenario.admin_unit.email)
       expect(page).to have_content(scenario.commander.email)
-      expect(page).to have_content(scenario.tech.email)
+    end
+
+    it "hides the Lock button on the current user's own row (self-lock UI guard)" do
+      visit users_path
+      within("tr", text: scenario.admin_level1.email) do
+        expect(page).not_to have_button(I18n.t("users.actions.lock"))
+      end
     end
 
     it "creates a new admin_unit account tied to an organization" do
@@ -78,13 +88,6 @@ RSpec.describe "F15 — User management", type: :system do
       end
       expect(page).to have_content(I18n.t("flash.users.unlocked"))
       expect(target.reload.access_locked?).to be false
-    end
-
-    it "hides the Lock button on the current user's own row (self-lock UI guard)" do
-      visit users_path
-      within("tr", text: scenario.admin_level1.email) do
-        expect(page).not_to have_button(I18n.t("users.actions.lock"))
-      end
     end
   end
 

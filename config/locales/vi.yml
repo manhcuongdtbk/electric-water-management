@@ -725,7 +725,6 @@ vi:
       title: "Tài khoản"
       new_button: "Thêm tài khoản"
       columns:
-        stt: "STT"
         full_name: "Họ tên"
         email: "Email"
         role: "Vai trò"
@@ -733,7 +732,14 @@ vi:
         status: "Trạng thái"
         last_sign_in: "Đăng nhập cuối"
         actions: "Thao tác"
+      search_placeholder: "Tìm theo họ tên hoặc email..."
+      all_organizations: "Tất cả đơn vị"
+      all_roles: "Tất cả vai trò"
+      all_statuses: "Tất cả trạng thái"
+      division_section: "Cấp Sư đoàn"
+      unit_section: "Đơn vị trực thuộc"
       empty: "Chưa có tài khoản nào."
+      empty_filtered: "Không tìm thấy tài khoản nào phù hợp."
       status:
         active: "Hoạt động"
         locked: "Khóa"

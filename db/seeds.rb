@@ -144,6 +144,35 @@ if Rails.env.development? || ENV["SEED_TEST_ACCOUNTS"] == "true"
   end
 
   puts "Test accounts: #{test_users.count} records seeded"
+
+  # Bulk users for pagination testing — enough to exceed the 50-user limit
+  zone_td2 = Zone.find_or_create_by!(name: "Khu vực Trung đoàn 2")
+  td2 = Organization.find_or_create_by!(name: "Trung đoàn 2") do |org|
+    org.level  = :unit
+    org.parent = division
+    org.zone   = zone_td2
+  end
+
+  [
+    [ sdb,   "sdb"   ],
+    [ tr101, "tr101" ],
+    [ td2,   "td2"   ]
+  ].each do |org, prefix|
+    (1..15).each do |i|
+      role  = i <= 2 ? :admin_unit : :commander
+      email = "#{prefix}_#{i}@dev.local"
+      user  = User.find_or_initialize_by(email: email)
+      user.full_name             = "#{org.name} người dùng #{i}"
+      user.role                  = role
+      user.organization          = org
+      user.password              = "Test1234!"
+      user.password_confirmation = "Test1234!"
+      user.force_password_change = false
+      user.save!
+    end
+  end
+
+  puts "Bulk users seeded (45 records across 3 orgs)"
 end
 
 puts "Seed completed successfully."
