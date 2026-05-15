@@ -11,10 +11,10 @@ class UsersController < ApplicationController
 
     all_users = @q.result.to_a
     all_users = case params[:status]
-                when "active" then all_users.reject(&:access_locked?)
-                when "locked" then all_users.select(&:access_locked?)
-                else all_users
-                end
+    when "active" then all_users.reject(&:access_locked?)
+    when "locked" then all_users.select(&:access_locked?)
+    else all_users
+    end
     all_users = apply_sort(all_users, params[:sort], params[:direction])
 
     @pagy, paged_users = pagy(all_users, limit: 50)
@@ -117,9 +117,9 @@ class UsersController < ApplicationController
       next org_cmp unless org_cmp.zero?
 
       col_cmp = case sort_col
-                when "role" then User.roles[a.role] <=> User.roles[b.role]
-                else             a.full_name <=> b.full_name
-                end
+      when "role" then User.roles[a.role] <=> User.roles[b.role]
+      else             a.full_name <=> b.full_name
+      end
       primary = direction == "desc" ? -col_cmp : col_cmp
       next primary unless primary.zero?
 

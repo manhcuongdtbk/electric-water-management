@@ -89,7 +89,6 @@ RSpec.describe "F15 — User management", type: :system do
       expect(page).to have_content(I18n.t("flash.users.unlocked"))
       expect(target.reload.access_locked?).to be false
     end
-
   end
 
   # ---------------------------------------------------------------------------
