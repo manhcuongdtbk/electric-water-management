@@ -30,6 +30,14 @@ class User < ApplicationRecord
   scope :admins, -> { where(role: [ :admin_level1, :admin_unit ]) }
   scope :ordered, -> { order(:full_name) }
 
+  def self.ransackable_attributes(_auth_object = nil)
+    %w[full_name email organization_id role]
+  end
+
+  def self.ransackable_associations(_auth_object = nil)
+    []
+  end
+
   def last_active_admin_level1?
     admin_level1? && User.where(role: :admin_level1).where(locked_at: nil).where.not(id: id).count == 0
   end
