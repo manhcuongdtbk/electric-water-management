@@ -1,0 +1,26 @@
+vi:
+  activerecord:
+    errors:
+      models:
+        user:
+          attributes:
+            password:
+              complexity: "phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt"
+            base:
+              cannot_delete_default_account: "không thể xóa tài khoản mặc định"
+        contact_point:
+          attributes:
+            base:
+              unit_zone_xor: "phải chọn đúng một trong đơn vị hoặc khu vực"
+            unit_id:
+              must_be_blank: "phải để trống với loại này"
+            block_id:
+              must_be_blank: "phải để trống với loại này"
+            group_id:
+              must_be_blank: "phải để trống với loại này"
+            personnel_count:
+              must_be_blank: "phải để trống với loại này"
+        pump_allocation:
+          attributes:
+            base:
+              unit_or_contact_point_xor: "phải chọn đúng một trong đơn vị hoặc đầu mối"
