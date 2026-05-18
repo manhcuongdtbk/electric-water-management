@@ -1,9 +1,15 @@
 <% page_title "Cấu hình đơn vị#{@unit ? ": #{@unit.name}" : ''}" %>
 
 <% if @unit.nil? %>
-  <div class="bg-yellow-50 border border-yellow-200 rounded p-3 text-sm text-yellow-800">
-    Bạn chưa được gán đơn vị nào. Vui lòng liên hệ quản trị viên hệ thống.
-  </div>
+  <% if current_user.system_admin? %>
+    <div class="bg-blue-50 border border-blue-200 rounded p-3 text-sm text-blue-800 mb-4">
+      Vui lòng chọn đơn vị bên dưới để xem cấu hình.
+    </div>
+  <% else %>
+    <div class="bg-yellow-50 border border-yellow-200 rounded p-3 text-sm text-yellow-800">
+      Bạn chưa được gán đơn vị nào. Vui lòng liên hệ quản trị viên hệ thống.
+    </div>
+  <% end %>
 <% elsif current_period.nil? %>
   <div class="bg-yellow-50 border border-yellow-200 rounded p-3 text-sm text-yellow-800 mb-4">
     Không có kỳ đang mở. Mọi ô nhập đã bị khóa.
@@ -27,9 +33,7 @@
 
 <% if @unit && current_period %>
   <%= form_with url: unit_config_path, method: :patch, local: true, class: "space-y-6" do |f| %>
-    <% unless current_user.system_admin? %>
-      <%= hidden_field_tag :unit_id, @unit.id %>
-    <% end %>
+    <%= hidden_field_tag :unit_id, @unit.id %>
 
     <!-- Phần 1: unit_public_rate -->
     <% if @unit_config %>
@@ -38,7 +42,7 @@
         <%= hidden_field_tag "unit_config[lock_version]", @unit_config.lock_version %>
         <div class="flex items-center space-x-2">
           <%= number_field_tag "unit_config[unit_public_rate]", @unit_config.unit_public_rate,
-              step: "0.01", min: 0, max: 100, disabled: no_open_period?,
+              step: "0.01", disabled: no_open_period?,
               class: "w-32 rounded border border-gray-300 px-3 py-2 text-sm text-right" %>
           <span class="text-sm text-gray-700">%</span>
         </div>

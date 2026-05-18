@@ -5,14 +5,22 @@ class GroupsController < ApplicationController
   before_action :set_group, only: [:show, :edit, :update, :destroy]
   before_action :require_open_period, only: [:create, :update, :destroy]
 
+  SORT_COLUMNS = {
+    name:  "groups.name",
+    block: "blocks.name",
+    unit:  "units.name"
+  }.freeze
+
   def index
     scope = load_collection(Group).includes(:unit, :block)
+    scope = scope.left_joins(:block) if params[:sort].to_s == "block"
+    scope = scope.left_joins(:unit) if params[:sort].to_s == "unit"
     if (q = params[:q]).present?
       scope = scope.where("groups.name ILIKE ?", "%#{q.strip}%")
     end
-    scope = scope.order(:name)
+    scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:name, :asc])
     @total_count = scope.count
-    @pagy, @groups = pagy(scope)
+    @pagy, @groups = pagy_with_per_page(scope)
   end
 
   def show
@@ -27,7 +35,8 @@ class GroupsController < ApplicationController
     @group = Group.new(create_params)
     authorize!(:create, @group)
     if @group.save
-      redirect_to groups_path, notice: "Đã tạo nhóm \"#{@group.name}\"."
+      redirect_to groups_path,
+        notice: t("flash.record_created", resource: t("resources.group"), name: @group.name)
     else
       render :new, status: :unprocessable_entity
     end
@@ -38,7 +47,8 @@ class GroupsController < ApplicationController
 
   def update
     if @group.update(update_params)
-      redirect_to groups_path, notice: "Đã cập nhật nhóm \"#{@group.name}\"."
+      redirect_to groups_path,
+        notice: t("flash.record_updated", resource: t("resources.group"), name: @group.name)
     else
       render :edit, status: :unprocessable_entity
     end
@@ -46,7 +56,8 @@ class GroupsController < ApplicationController
 
   def destroy
     if @group.discard
-      redirect_to groups_path, notice: "Đã xóa nhóm \"#{@group.name}\". Đầu mối trong nhóm đã chuyển về khối/đơn vị."
+      redirect_to groups_path,
+        notice: "#{t("flash.record_destroyed", resource: t("resources.group"), name: @group.name)} Đầu mối trong nhóm đã chuyển về khối/đơn vị."
     else
       redirect_to groups_path, alert: @group.errors.full_messages.join("\n")
     end

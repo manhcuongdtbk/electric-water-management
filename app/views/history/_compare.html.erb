@@ -14,7 +14,7 @@
                                                 ->(p) { "Tháng #{p.month}/#{p.year}" }, @period_a&.id),
             include_blank: "-- Chọn --",
             data: { action: "change->auto-submit#submit" },
-            class: "rounded border-gray-300 text-sm" %>
+            class: "rounded border border-gray-300 text-sm" %>
     </div>
     <div>
       <label class="block text-xs text-gray-600 mb-1">Kỳ B</label>
@@ -23,7 +23,7 @@
                                                 ->(p) { "Tháng #{p.month}/#{p.year}" }, @period_b&.id),
             include_blank: "-- Chọn --",
             data: { action: "change->auto-submit#submit" },
-            class: "rounded border-gray-300 text-sm" %>
+            class: "rounded border border-gray-300 text-sm" %>
     </div>
   <% end %>
 

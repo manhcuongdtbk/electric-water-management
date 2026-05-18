@@ -47,7 +47,7 @@ class ElectricitySupplyController < ApplicationController
       @readings = load_readings
       render :show, status: :unprocessable_entity
     else
-      redirect_to electricity_supply_path, notice: "Đã lưu số sử dụng công tơ tổng."
+      redirect_to electricity_supply_path, notice: t("electricity_supply.flash.saved")
     end
   end
 

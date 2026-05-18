@@ -7,16 +7,32 @@ class ContactPointsController < ApplicationController
 
   TYPES = %w[residential public water_pump non_establishment].freeze
 
+  SORT_COLUMNS = {
+    name:               "contact_points.name",
+    contact_point_type: "contact_points.contact_point_type",
+    unit_or_zone:       "COALESCE(units.name, zones.name)",
+    block_or_group:     "COALESCE(blocks.name, groups.name)"
+  }.freeze
+
+  JOIN_BY_SORT = {
+    "unit_or_zone"   => [:unit, :zone],
+    "block_or_group" => [:block, :group]
+  }.freeze
+
   def index
     @filter_type = params[:type] if TYPES.include?(params[:type])
     scope = load_collection(ContactPoint).includes(:unit, :zone, :block, :group, :meters)
+    if (joins = JOIN_BY_SORT[params[:sort].to_s])
+      scope = scope.left_joins(*joins)
+    end
     scope = scope.where(contact_point_type: @filter_type) if @filter_type
     if (q = params[:q]).present?
       scope = scope.where("contact_points.name ILIKE ?", "%#{q.strip}%")
     end
-    scope = scope.order(:contact_point_type, :name)
+    scope = apply_sort(scope, allowed: SORT_COLUMNS,
+                              default: [:contact_point_type, :asc])
     @total_count = scope.count
-    @pagy, @contact_points = pagy(scope)
+    @pagy, @contact_points = pagy_with_per_page(scope)
   end
 
   def show
@@ -42,7 +58,7 @@ class ContactPointsController < ApplicationController
 
     if @contact_point.save
       redirect_to contact_points_path(type: @contact_point.contact_point_type),
-                  notice: "Đã tạo đầu mối \"#{@contact_point.name}\"."
+                  notice: t("flash.record_created", resource: t("resources.contact_point"), name: @contact_point.name)
     else
       @contact_point.meters.build if @contact_point.meters.empty? && needs_meter?(@contact_point)
       render :new, status: :unprocessable_entity
@@ -62,7 +78,7 @@ class ContactPointsController < ApplicationController
 
       if @contact_point.save
         return redirect_to contact_points_path(type: @contact_point.contact_point_type),
-                           notice: "Đã cập nhật đầu mối \"#{@contact_point.name}\"."
+                           notice: t("flash.record_updated", resource: t("resources.contact_point"), name: @contact_point.name)
       else
         raise ActiveRecord::Rollback
       end
@@ -73,7 +89,7 @@ class ContactPointsController < ApplicationController
   def destroy
     if @contact_point.discard
       redirect_to contact_points_path(type: @contact_point.contact_point_type),
-                  notice: "Đã xóa đầu mối \"#{@contact_point.name}\"."
+                  notice: t("flash.record_destroyed", resource: t("resources.contact_point"), name: @contact_point.name)
     else
       redirect_to contact_points_path,
                   alert: @contact_point.errors.full_messages.join("\n")
@@ -116,9 +132,9 @@ class ContactPointsController < ApplicationController
   def base_permitted_attributes(type)
     case type
     when "residential"
-      [:name, :contact_point_type, :unit_id, :block_id, :group_id]
+      [:name, :contact_point_type, :unit_id, :zone_id, :block_id, :group_id]
     when "public"
-      [:name, :contact_point_type, :unit_id, :block_id, :group_id]
+      [:name, :contact_point_type, :unit_id, :zone_id, :block_id, :group_id]
     when "water_pump"
       [:name, :contact_point_type, :zone_id]
     when "non_establishment"

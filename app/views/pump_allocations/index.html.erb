@@ -1,63 +1,97 @@
-<% page_title "Phân bổ bơm nước" %>
+<% page_title t("sidebar.items.pump_allocations") %>
 
 <% if @period.nil? %>
   <div class="bg-yellow-50 border border-yellow-200 rounded p-3 text-sm text-yellow-800 mb-4">
-    Không có kỳ đang mở.
+    <%= t("flash.no_open_period") %>
   </div>
 <% end %>
 
-<div class="flex justify-between items-center mb-4">
-  <p class="text-sm text-gray-600">
-    <% if @period %>
-      Phân bổ cho <strong><%= period_label(@period) %></strong>
-    <% end %>
-  </p>
-  <% if @period && can?(:create, PumpAllocation) %>
-    <%= link_to "Thêm phân bổ", new_pump_allocation_path,
-        class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700" %>
+<%
+  add_link = (@period && can?(:create, PumpAllocation)) ?
+    link_to(t("common.actions.add") + " " + t("resources.pump_allocation"), new_pump_allocation_path,
+      class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700") : nil
+  total_percentage = @pump_allocations.sum { |a| a.fixed_percentage || BigDecimal("0") }
+%>
+
+<div class="mb-2 text-sm text-gray-600">
+  <% if @period %>
+    Phân bổ cho <strong><%= period_label(@period) %></strong>
   <% end %>
 </div>
 
-<div class="text-sm text-gray-600 mb-2">Tổng số: <strong><%= @total_count %></strong></div>
+<%= render "shared/list_toolbar",
+      url: pump_allocations_path,
+      search_placeholder: t("common.list.search_placeholder"),
+      total_count: @total_count,
+      add_link: add_link %>
 
 <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
   <table class="min-w-full divide-y divide-gray-200">
     <thead class="bg-gray-50">
       <tr>
-        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Khu vực</th>
-        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Đối tượng</th>
-        <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase">% cố định</th>
-        <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Hệ số</th>
-        <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Thao tác</th>
+        <%= sortable_header :zone, t("activerecord.attributes.zone.name"),
+              current_sort: params[:sort], current_dir: params[:dir],
+              extra_params: { q: params[:q], per_page: params[:per_page] } %>
+        <%= sortable_header :target, "Đối tượng",
+              current_sort: params[:sort], current_dir: params[:dir],
+              extra_params: { q: params[:q], per_page: params[:per_page] } %>
+        <%= sortable_header :percentage, "% cố định",
+              current_sort: params[:sort], current_dir: params[:dir],
+              extra_params: { q: params[:q], per_page: params[:per_page] }, align: :right %>
+        <%= sortable_header :coefficient, "Hệ số",
+              current_sort: params[:sort], current_dir: params[:dir],
+              extra_params: { q: params[:q], per_page: params[:per_page] }, align: :right %>
+        <%= list_header t("common.list.actions"), align: :right %>
       </tr>
     </thead>
     <tbody class="divide-y divide-gray-200">
+      <% if @pump_allocations.empty? %>
+        <tr><td colspan="5" class="px-4 py-6 text-center text-gray-500"><%= t("common.list.no_records") %></td></tr>
+      <% end %>
       <% @pump_allocations.each do |alloc| %>
-        <tr>
+        <tr class="hover:bg-gray-50 transition-colors">
           <td class="px-4 py-2 text-sm text-gray-900"><%= alloc.zone.name %></td>
           <td class="px-4 py-2 text-sm text-gray-600">
             <%= alloc.unit&.name || alloc.contact_point&.name %>
             <span class="text-xs text-gray-400 ml-1">
-              (<%= alloc.unit ? "Đơn vị" : "Đầu mối" %>)
+              (<%= alloc.unit ? t("resources.unit").capitalize : t("resources.contact_point").capitalize %>)
             </span>
           </td>
           <td class="px-4 py-2 text-sm text-right text-gray-600">
             <%= alloc.fixed_percentage.present? ? "#{alloc.fixed_percentage}%" : "—" %>
           </td>
-          <td class="px-4 py-2 text-sm text-right text-gray-600"><%= alloc.coefficient %></td>
+          <td class="px-4 py-2 text-sm text-right text-gray-600">
+            <%= alloc.fixed_percentage.present? ? "—" : alloc.coefficient %>
+          </td>
           <td class="px-4 py-2 text-sm text-right space-x-2">
-            <% if can?(:update, alloc) %>
-              <%= link_to "Sửa", edit_pump_allocation_path(alloc), class: "text-blue-600 hover:text-blue-800" %>
-            <% end %>
-            <% if can?(:destroy, alloc) %>
-              <%= button_to "Xóa", pump_allocation_path(alloc), method: :delete,
-                  form: { data: { turbo_confirm: "Xác nhận xóa phân bổ này?" } },
-                  class: "text-red-600 hover:text-red-800 underline inline cursor-pointer bg-transparent border-0 p-0" %>
+            <% if can?(:update, alloc) || can?(:destroy, alloc) %>
+              <% if can?(:update, alloc) %>
+                <%= link_to t("common.actions.edit"), edit_pump_allocation_path(alloc),
+                      class: "text-blue-600 hover:text-blue-800" %>
+              <% end %>
+              <% if can?(:destroy, alloc) %>
+                <%= button_to t("common.actions.destroy"), pump_allocation_path(alloc), method: :delete,
+                      form: { class: "inline", data: { turbo_confirm: t("common.confirm.destroy") } },
+                      class: "text-red-600 hover:text-red-800 underline inline cursor-pointer bg-transparent border-0 p-0" %>
+              <% end %>
+            <% else %>
+              <%= empty_actions_dash %>
             <% end %>
           </td>
         </tr>
       <% end %>
     </tbody>
+    <% if @pump_allocations.any? %>
+      <tfoot>
+        <tr class="bg-gray-100 font-semibold">
+          <td class="px-4 py-2 text-gray-700" colspan="2"><%= t("common.list.total_short") %></td>
+          <td class="px-4 py-2 text-right text-gray-900 <%= "text-red-700" if total_percentage > 100 %>">
+            <%= total_percentage %>%
+          </td>
+          <td colspan="2"></td>
+        </tr>
+      </tfoot>
+    <% end %>
   </table>
 </div>
 

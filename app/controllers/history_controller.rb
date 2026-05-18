@@ -53,8 +53,12 @@ class HistoryController < ApplicationController
   end
 
   def load_range
-    @from = parse_year_month(params[:from]) || default_range_start
-    @to   = parse_year_month(params[:to])   || default_range_end
+    @from = parse_month_year(params[:from_month], params[:from_year]) ||
+            parse_year_month(params[:from]) ||
+            default_range_start
+    @to = parse_month_year(params[:to_month], params[:to_year], end_of_month: true) ||
+          parse_year_month(params[:to]) ||
+          default_range_end
 
     from_key = @from.year * 12 + @from.month
     to_key   = @to.year * 12 + @to.month
@@ -126,6 +130,17 @@ class HistoryController < ApplicationController
     return nil if value.blank?
     Date.strptime(value, "%Y-%m")
   rescue ArgumentError
+    nil
+  end
+
+  def parse_month_year(month, year, end_of_month: false)
+    return nil if month.blank? || year.blank?
+    m = month.to_i
+    y = year.to_i
+    return nil unless m.between?(1, 12) && y.between?(2000, 2100)
+    date = Date.new(y, m, 1)
+    end_of_month ? date.end_of_month : date
+  rescue ArgumentError, Date::Error
     nil
   end
 

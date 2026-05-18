@@ -3,12 +3,22 @@ class RanksController < ApplicationController
 
   before_action :set_rank, only: [:show, :edit, :update, :destroy]
 
+  SORT_COLUMNS = {
+    position: "ranks.position",
+    name:     "ranks.name",
+    quota:    "ranks.quota"
+  }.freeze
+
   def index
     @period = current_period || Period.order(year: :desc, month: :desc).first
-    scope = @period ? @period.ranks.order(:position) : Rank.none
+    scope = @period ? @period.ranks : Rank.none
     authorize!(:read, Rank)
+    if @period && (q = params[:q]).present?
+      scope = scope.where("ranks.name ILIKE ?", "%#{q.strip}%")
+    end
+    scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:position, :asc]) if @period
     @total_count = scope.count
-    @pagy, @ranks = pagy(scope)
+    @pagy, @ranks = pagy_with_per_page(scope)
   end
 
   def show
@@ -25,7 +35,8 @@ class RanksController < ApplicationController
     @rank = Rank.new(rank_params.merge(period: @period))
     authorize!(:create, @rank)
     if @rank.save
-      redirect_to ranks_path, notice: "Đã thêm nhóm cấp bậc \"#{@rank.name}\"."
+      redirect_to ranks_path,
+        notice: t("flash.record_created", resource: t("resources.rank"), name: @rank.name)
     else
       render :new, status: :unprocessable_entity
     end
@@ -36,7 +47,8 @@ class RanksController < ApplicationController
 
   def update
     if @rank.update(rank_params)
-      redirect_to ranks_path, notice: "Đã cập nhật nhóm cấp bậc \"#{@rank.name}\"."
+      redirect_to ranks_path,
+        notice: t("flash.record_updated", resource: t("resources.rank"), name: @rank.name)
     else
       render :edit, status: :unprocessable_entity
     end
@@ -44,7 +56,8 @@ class RanksController < ApplicationController
 
   def destroy
     if @rank.destroy
-      redirect_to ranks_path, notice: "Đã xóa nhóm cấp bậc \"#{@rank.name}\"."
+      redirect_to ranks_path,
+      notice: t("flash.record_destroyed", resource: t("resources.rank"), name: @rank.name)
     else
       redirect_to ranks_path, alert: @rank.errors.full_messages.join("\n")
     end

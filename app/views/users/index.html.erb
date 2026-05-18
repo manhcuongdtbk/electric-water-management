@@ -1,37 +1,46 @@
-<% page_title "Tài khoản" %>
+<% page_title t("sidebar.items.users") %>
 
-<div class="flex justify-between items-center mb-4">
-  <%= form_with url: users_path, method: :get, local: true, class: "flex space-x-2" do %>
-    <%= text_field_tag :q, params[:q], placeholder: "Tìm theo username hoặc tên...",
-        class: "rounded border border-gray-300 px-3 py-2 text-sm" %>
-    <%= submit_tag "Tìm", class: "bg-gray-100 text-gray-700 px-4 py-2 rounded text-sm font-medium hover:bg-gray-200 cursor-pointer" %>
-  <% end %>
-  <% if can?(:create, User) %>
-    <%= link_to "Thêm tài khoản", new_user_path,
-        class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700" %>
-  <% end %>
-</div>
+<%
+  add_link = can?(:create, User) ?
+    link_to(t("common.actions.add") + " " + t("resources.user"), new_user_path,
+      class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700") : nil
+%>
 
-<div class="text-sm text-gray-600 mb-2">Tổng số: <strong><%= @total_count %></strong></div>
+<%= render "shared/list_toolbar",
+      url: users_path,
+      search_placeholder: t("common.list.search_placeholder"),
+      total_count: @total_count,
+      add_link: add_link %>
 
 <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
   <table class="min-w-full divide-y divide-gray-200">
     <thead class="bg-gray-50">
       <tr>
-        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Tên đăng nhập</th>
-        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Tên hiển thị</th>
-        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Vai trò</th>
-        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Đơn vị</th>
-        <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Thao tác</th>
+        <%= sortable_header :username, t("activerecord.attributes.user.username"),
+              current_sort: params[:sort], current_dir: params[:dir],
+              extra_params: { q: params[:q], per_page: params[:per_page] } %>
+        <%= sortable_header :display_name, t("activerecord.attributes.user.display_name"),
+              current_sort: params[:sort], current_dir: params[:dir],
+              extra_params: { q: params[:q], per_page: params[:per_page] } %>
+        <%= sortable_header :role, t("activerecord.attributes.user.role"),
+              current_sort: params[:sort], current_dir: params[:dir],
+              extra_params: { q: params[:q], per_page: params[:per_page] } %>
+        <%= sortable_header :unit, t("activerecord.attributes.user.unit"),
+              current_sort: params[:sort], current_dir: params[:dir],
+              extra_params: { q: params[:q], per_page: params[:per_page] } %>
+        <%= list_header t("common.list.actions"), align: :right %>
       </tr>
     </thead>
     <tbody class="divide-y divide-gray-200">
+      <% if @users.empty? %>
+        <tr><td colspan="5" class="px-4 py-6 text-center text-gray-500"><%= t("common.list.no_records") %></td></tr>
+      <% end %>
       <% @users.each do |u| %>
-        <tr>
+        <tr class="hover:bg-gray-50 transition-colors">
           <td class="px-4 py-2 text-sm font-medium text-gray-900">
             <%= u.username %>
             <% if u.default_account? %>
-              <span class="ml-1 text-xs bg-gray-100 text-gray-600 px-1 rounded">mặc định</span>
+              <span class="ml-1 text-xs bg-gray-100 text-gray-600 px-1 rounded"><%= t("common.badges.default_account") %></span>
             <% end %>
           </td>
           <td class="px-4 py-2 text-sm text-gray-600"><%= u.display_name %></td>
@@ -40,13 +49,18 @@
           </td>
           <td class="px-4 py-2 text-sm text-gray-600"><%= u.unit&.name || "—" %></td>
           <td class="px-4 py-2 text-sm text-right space-x-2">
-            <% if can?(:update, u) %>
-              <%= link_to "Sửa", edit_user_path(u), class: "text-blue-600 hover:text-blue-800" %>
-            <% end %>
-            <% if can?(:destroy, u) %>
-              <%= button_to "Xóa", user_path(u), method: :delete,
-                  form: { data: { turbo_confirm: "Xác nhận xóa tài khoản \"#{u.username}\"?" } },
-                  class: "text-red-600 hover:text-red-800 underline inline cursor-pointer bg-transparent border-0 p-0" %>
+            <% if can?(:update, u) || can?(:destroy, u) %>
+              <% if can?(:update, u) %>
+                <%= link_to t("common.actions.edit"), edit_user_path(u),
+                      class: "text-blue-600 hover:text-blue-800" %>
+              <% end %>
+              <% if can?(:destroy, u) %>
+                <%= button_to t("common.actions.destroy"), user_path(u), method: :delete,
+                      form: { class: "inline", data: { turbo_confirm: t("common.confirm.destroy_named", name: u.username) } },
+                      class: "text-red-600 hover:text-red-800 underline inline cursor-pointer bg-transparent border-0 p-0" %>
+              <% end %>
+            <% else %>
+              <%= empty_actions_dash %>
             <% end %>
           </td>
         </tr>

@@ -38,7 +38,7 @@ class PumpEntriesController < ApplicationController
       @readings = load_readings
       render :show, status: :unprocessable_entity
     else
-      redirect_to pump_entries_path, notice: "Đã lưu chỉ số bơm nước."
+      redirect_to pump_entries_path, notice: t("pump_entries.flash.saved")
     end
   end
 

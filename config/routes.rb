@@ -1,5 +1,7 @@
 Rails.application.routes.draw do
-  devise_for :users, skip: [:registrations, :passwords, :confirmations, :unlocks]
+  devise_for :users,
+    skip: [:registrations, :passwords, :confirmations, :unlocks],
+    controllers: { sessions: "users/sessions" }
 
   root to: "dashboard#show"
 
@@ -40,6 +42,6 @@ Rails.application.routes.draw do
 
   # HỆ THỐNG
   resources :users
-  resources :audit_logs, only: [:index]
-  resources :backups, only: [:index]
+  resources :audit_logs, only: [:index, :show]
+  resources :backups,    only: [:index, :create, :destroy]
 end

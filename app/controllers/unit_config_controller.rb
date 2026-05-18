@@ -45,7 +45,7 @@ class UnitConfigController < ApplicationController
       @other_deductions = scope_other_deductions
       render :show, status: :unprocessable_entity
     else
-      redirect_to unit_config_path(unit_id: @unit&.id), notice: "Đã lưu cấu hình đơn vị."
+      redirect_to unit_config_path(unit_id: @unit&.id), notice: t("unit_config.flash.saved")
     end
   end
 

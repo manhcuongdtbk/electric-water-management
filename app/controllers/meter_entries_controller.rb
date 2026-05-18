@@ -39,7 +39,7 @@ class MeterEntriesController < ApplicationController
       @readings = load_readings
       render :show, status: :unprocessable_entity
     else
-      redirect_to meter_entries_path, notice: "Đã lưu chỉ số công tơ."
+      redirect_to meter_entries_path, notice: t("meter_entries.flash.saved")
     end
   end
 

@@ -31,7 +31,7 @@
             <td class="px-3 py-2 text-right">
               <%= hidden_field_tag "meter_readings[#{r.id}][lock_version]", r.lock_version %>
               <%= number_field_tag "meter_readings[#{r.id}][reading_end]", r.reading_end,
-                  step: "0.01", min: 0, disabled: @period.nil?,
+                  step: "0.01", disabled: @period.nil?,
                   class: "w-28 rounded border border-gray-300 px-2 py-1 text-sm text-right" %>
             </td>
             <td class="px-3 py-2 text-right text-gray-600">
@@ -41,7 +41,7 @@
             </td>
             <td class="px-3 py-2 text-right">
               <%= number_field_tag "meter_readings[#{r.id}][manual_usage]", r.manual_usage,
-                  step: "0.01", min: 0, disabled: @period.nil?,
+                  step: "0.01", disabled: @period.nil?,
                   class: "w-24 rounded border border-gray-300 px-2 py-1 text-sm text-right" %>
             </td>
             <td class="px-3 py-2">

@@ -3,14 +3,18 @@
 <% if @no_period %>
   <%= render "no_period" %>
 <% else %>
+  <% if @period.open? %>
+    <%= render "shared/open_period_banner", period: @period %>
+  <% end %>
+
   <div class="mb-4">
     <h1 class="text-xl font-semibold"><%= period_label(@period) %></h1>
     <p class="text-sm text-gray-600 mt-1">
       Đơn giá: <strong><%= money_to_vi(@period.unit_price) %>/kW</strong>
       <% if @period.open? %>
-        <span class="ml-2 px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs">Đang mở</span>
+        <span class="ml-2 px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs"><%= t("common.badges.open") %></span>
       <% else %>
-        <span class="ml-2 px-2 py-0.5 rounded bg-gray-200 text-gray-700 text-xs">Đã đóng</span>
+        <span class="ml-2 px-2 py-0.5 rounded bg-gray-200 text-gray-700 text-xs"><%= t("common.badges.closed") %></span>
       <% end %>
     </p>
   </div>

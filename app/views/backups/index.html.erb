@@ -1,6 +1,73 @@
-<% page_title "Sao lưu dữ liệu" %>
+<% page_title t("backups.page_title") %>
 
-<div class="bg-blue-50 border border-blue-200 rounded-lg p-6 text-blue-800">
-  <h2 class="text-lg font-semibold mb-2">Sao lưu dữ liệu đang phát triển</h2>
-  <p>Tính năng sao lưu (tối đa 3 bản) và phục hồi dữ liệu (pg_dump/pg_restore) sẽ được hoàn thiện ở phase sau.</p>
+<div class="mb-4 flex items-start justify-between gap-4">
+  <p class="text-sm text-gray-700"><%= t("backups.description", max: @max_count) %></p>
+
+  <%= button_to t("backups.buttons.create"),
+        backups_path,
+        method: :post,
+        data: { turbo_confirm: t("backups.confirm.create") },
+        disabled: @at_capacity,
+        class: "inline-flex items-center px-3 py-2 rounded text-sm font-medium text-white #{@at_capacity ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}" %>
+</div>
+
+<% if @at_capacity %>
+  <div class="bg-yellow-50 border border-yellow-200 rounded p-3 mb-4 text-sm text-yellow-800">
+    <%= t("backups.errors.at_capacity", max: @max_count) %>
+  </div>
+<% end %>
+
+<div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+  <table class="min-w-full divide-y divide-gray-200 text-sm">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase"><%= t("backups.table.filename") %></th>
+        <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase"><%= t("backups.table.size") %></th>
+        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase"><%= t("backups.table.created_at") %></th>
+        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase"><%= t("backups.table.created_by") %></th>
+        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase"><%= t("backups.table.status") %></th>
+        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase"><%= t("backups.table.actions") %></th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200">
+      <% if @backups.empty? %>
+        <tr>
+          <td colspan="6" class="px-4 py-6 text-center text-gray-500"><%= t("common.list.no_records") %></td>
+        </tr>
+      <% end %>
+      <% @backups.each do |backup| %>
+        <tr class="hover:bg-gray-50 transition-colors">
+          <td class="px-4 py-2 text-gray-900 font-mono"><%= backup.filename %></td>
+          <td class="px-4 py-2 text-right text-gray-700"><%= backup.human_size %></td>
+          <td class="px-4 py-2 text-gray-700">
+            <%= backup.created_at.in_time_zone("Asia/Ho_Chi_Minh").strftime("%d/%m/%Y %H:%M") %>
+          </td>
+          <td class="px-4 py-2 text-gray-700"><%= backup.created_by&.username || "—" %></td>
+          <td class="px-4 py-2">
+            <% if backup.status == "completed" %>
+              <span class="px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs"><%= t("backups.statuses.completed") %></span>
+            <% else %>
+              <span class="px-2 py-0.5 rounded bg-red-100 text-red-700 text-xs"><%= t("backups.statuses.failed") %></span>
+            <% end %>
+          </td>
+          <td class="px-4 py-2">
+            <%= button_to t("backups.buttons.destroy"),
+                  backup_path(backup),
+                  method: :delete,
+                  data: { turbo_confirm: t("backups.confirm.destroy", filename: backup.filename) },
+                  class: "text-red-600 hover:text-red-800 text-sm bg-transparent border-0 p-0 cursor-pointer underline" %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+    <% if @backups.any? %>
+      <tfoot>
+        <tr class="bg-gray-100 font-semibold">
+          <td class="px-4 py-2 text-gray-700"><%= t("backups.table.total") %></td>
+          <td class="px-4 py-2 text-right text-gray-900"><%= ActiveSupport::NumberHelper.number_to_human_size(@total_size_bytes) %></td>
+          <td colspan="4"></td>
+        </tr>
+      </tfoot>
+    <% end %>
+  </table>
 </div>

@@ -19,7 +19,7 @@
   <% if user.new_record? %>
     <div>
       <%= f.label :username, "Tên đăng nhập", class: "block text-sm font-medium text-gray-700 mb-1" %>
-      <%= f.text_field :username, required: true, autocomplete: "username",
+      <%= f.text_field :username, autocomplete: "username",
           class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
     </div>
   <% else %>
@@ -32,7 +32,7 @@
 
   <div>
     <%= f.label :display_name, "Tên hiển thị", class: "block text-sm font-medium text-gray-700 mb-1" %>
-    <%= f.text_field :display_name, required: true,
+    <%= f.text_field :display_name,
         class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
   </div>
 
@@ -59,12 +59,12 @@
     <div class="grid grid-cols-2 gap-4">
       <div>
         <%= f.label :password, "Mật khẩu", class: "block text-sm font-medium text-gray-700 mb-1" %>
-        <%= f.password_field :password, autocomplete: "new-password", required: user.new_record?,
+        <%= f.password_field :password, autocomplete: "new-password",
             class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
       </div>
       <div>
         <%= f.label :password_confirmation, "Xác nhận", class: "block text-sm font-medium text-gray-700 mb-1" %>
-        <%= f.password_field :password_confirmation, autocomplete: "new-password", required: user.new_record?,
+        <%= f.password_field :password_confirmation, autocomplete: "new-password",
             class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
       </div>
     </div>

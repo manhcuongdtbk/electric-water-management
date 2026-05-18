@@ -1,18 +1,40 @@
+<%
+  earliest_year = (Period.minimum(:year) || Date.current.year) - 1
+  latest_year   = (Period.maximum(:year) || Date.current.year) + 1
+  year_options  = (earliest_year..latest_year).to_a
+  month_options = (1..12).map { |m| ["Tháng #{m}", m] }
+%>
+
 <%= form_with url: history_path, method: :get, local: true,
       class: "flex flex-wrap gap-4 items-end mb-4" do %>
   <%= hidden_field_tag :mode, "range" %>
+
   <div>
     <label class="block text-xs text-gray-600 mb-1">Từ tháng</label>
-    <input type="month" name="from" value="<%= @from.strftime("%Y-%m") %>"
-           class="rounded border-gray-300 text-sm">
+    <div class="flex gap-2">
+      <%= select_tag :from_month,
+            options_for_select(month_options, @from.month),
+            class: "rounded border border-gray-300 text-sm" %>
+      <%= select_tag :from_year,
+            options_for_select(year_options.map { |y| ["Năm #{y}", y] }, @from.year),
+            class: "rounded border border-gray-300 text-sm" %>
+    </div>
   </div>
+
   <div>
     <label class="block text-xs text-gray-600 mb-1">Đến tháng</label>
-    <input type="month" name="to" value="<%= @to.strftime("%Y-%m") %>"
-           class="rounded border-gray-300 text-sm">
+    <div class="flex gap-2">
+      <%= select_tag :to_month,
+            options_for_select(month_options, @to.month),
+            class: "rounded border border-gray-300 text-sm" %>
+      <%= select_tag :to_year,
+            options_for_select(year_options.map { |y| ["Năm #{y}", y] }, @to.year),
+            class: "rounded border border-gray-300 text-sm" %>
+    </div>
   </div>
+
   <%= submit_tag "Xem",
-        class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700" %>
+        class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 cursor-pointer" %>
 <% end %>
 
 <% if @period_summaries.empty? %>

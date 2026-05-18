@@ -1,0 +1,67 @@
+# Docker Compose cho Hệ thống quản lý điện nội bộ Sư đoàn.
+# 3 services: postgres + app + nginx. Tất cả trong network nội bộ.
+# Deployment LAN (HTTP only), không cần SSL trong container.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-electric_water_management}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-electric_water_management_production}
+      TZ: Asia/Ho_Chi_Minh
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-electric_water_management}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      RAILS_ENV: production
+      DATABASE_URL: postgres://${POSTGRES_USER:-electric_water_management}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-electric_water_management_production}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+      BACKUP_DIR: /rails/storage/backups
+      RAILS_LOG_TO_STDOUT: "1"
+      RAILS_SERVE_STATIC_FILES: "1"
+      DISABLE_SSL_REDIRECT: "1"
+      TZ: Asia/Ho_Chi_Minh
+    volumes:
+      - storage_data:/rails/storage
+      - backups_data:/rails/storage/backups
+    networks:
+      - internal
+    expose:
+      - "3000"
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - internal
+
+volumes:
+  pg_data:
+  storage_data:
+  backups_data:
+
+networks:
+  internal:
+    driver: bridge

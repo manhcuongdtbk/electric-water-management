@@ -5,14 +5,20 @@ class BlocksController < ApplicationController
   before_action :set_block, only: [:show, :edit, :update, :destroy]
   before_action :require_open_period, only: [:create, :update, :destroy]
 
+  SORT_COLUMNS = {
+    name: "blocks.name",
+    unit: "units.name"
+  }.freeze
+
   def index
     scope = load_collection(Block).includes(:unit)
+    scope = scope.left_joins(:unit) if params[:sort].to_s == "unit"
     if (q = params[:q]).present?
       scope = scope.where("blocks.name ILIKE ?", "%#{q.strip}%")
     end
-    scope = scope.order(:name)
+    scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:name, :asc])
     @total_count = scope.count
-    @pagy, @blocks = pagy(scope)
+    @pagy, @blocks = pagy_with_per_page(scope)
   end
 
   def show
@@ -27,7 +33,8 @@ class BlocksController < ApplicationController
     @block = Block.new(create_params)
     authorize!(:create, @block)
     if @block.save
-      redirect_to blocks_path, notice: "Đã tạo khối \"#{@block.name}\"."
+      redirect_to blocks_path,
+        notice: t("flash.record_created", resource: t("resources.block"), name: @block.name)
     else
       render :new, status: :unprocessable_entity
     end
@@ -38,7 +45,8 @@ class BlocksController < ApplicationController
 
   def update
     if @block.update(update_params)
-      redirect_to blocks_path, notice: "Đã cập nhật khối \"#{@block.name}\"."
+      redirect_to blocks_path,
+        notice: t("flash.record_updated", resource: t("resources.block"), name: @block.name)
     else
       render :edit, status: :unprocessable_entity
     end
@@ -46,7 +54,8 @@ class BlocksController < ApplicationController
 
   def destroy
     if @block.discard
-      redirect_to blocks_path, notice: "Đã xóa khối \"#{@block.name}\". Các nhóm và đầu mối trong khối đã chuyển về trực tiếp thuộc đơn vị."
+      redirect_to blocks_path,
+        notice: "#{t("flash.record_destroyed", resource: t("resources.block"), name: @block.name)} Các nhóm và đầu mối trong khối đã chuyển về trực tiếp thuộc đơn vị."
     else
       redirect_to blocks_path, alert: @block.errors.full_messages.join("\n")
     end

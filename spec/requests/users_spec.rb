@@ -83,4 +83,51 @@ RSpec.describe "Users", type: :request do
       expect(tech2.reload.display_name).to eq("T2 New")
     end
   end
+
+  describe "T93: reset mật khẩu user khác → force_password_change = true" do
+    it "technician reset password unit_admin → unit_admin phải đổi mật khẩu lần sau" do
+      sign_in technician
+      target = create(:user, :unit_admin, unit: unit, force_password_change: false)
+      patch user_path(target), params: {
+        user: { password: "Reset@99New", password_confirmation: "Reset@99New" }
+      }
+      target.reload
+      expect(target.valid_password?("Reset@99New")).to be true
+      expect(target.force_password_change).to be true
+    end
+
+    it "system_admin reset password unit_admin → unit_admin phải đổi mật khẩu lần sau" do
+      sign_in system_admin
+      target = create(:user, :unit_admin, unit: unit, force_password_change: false)
+      patch user_path(target), params: {
+        user: { password: "Reset@99New", password_confirmation: "Reset@99New" }
+      }
+      target.reload
+      expect(target.valid_password?("Reset@99New")).to be true
+      expect(target.force_password_change).to be true
+    end
+
+    it "technician tự đổi password chính mình → force_password_change KHÔNG bị set" do
+      sign_in technician
+      patch user_path(technician), params: {
+        user: { password: "Self@99New", password_confirmation: "Self@99New" }
+      }
+      technician.reload
+      expect(technician.valid_password?("Self@99New")).to be true
+      expect(technician.force_password_change).to be false
+    end
+  end
+
+  describe "T47: xóa user A khi A đang đăng nhập từ thiết bị khác" do
+    it "user bị hard-delete → request kế tiếp redirect login" do
+      target = create(:user, :unit_admin, unit: unit, force_password_change: false)
+      sign_in target
+      get root_path
+      expect(response.status).not_to eq(401)
+
+      target.destroy!
+      get root_path
+      expect(response).to redirect_to(new_user_session_path)
+    end
+  end
 end

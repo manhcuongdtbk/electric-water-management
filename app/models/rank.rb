@@ -6,7 +6,9 @@ class Rank < ApplicationRecord
 
   validates :name, presence: true
   validates :quota, presence: true, numericality: { greater_than: 0 }
-  validates :position, presence: true, numericality: { only_integer: true }
+  validates :position, presence: true,
+    numericality: { only_integer: true, greater_than: 0 },
+    uniqueness: { scope: :period_id }
 
   before_destroy :ensure_no_entries_with_personnel, prepend: true
   after_create :seed_personnel_entries_for_residentials

@@ -25,10 +25,11 @@ Rails.application.configure do
   config.active_storage.service = :local
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
-  config.assume_ssl = true
+  # Cho phép tắt SSL khi deploy LAN nội bộ Sư đoàn (HTTP only) qua ENV["DISABLE_SSL_REDIRECT"]=1.
+  config.assume_ssl = ENV["DISABLE_SSL_REDIRECT"] != "1"
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  config.force_ssl = true
+  config.force_ssl = ENV["DISABLE_SSL_REDIRECT"] != "1"
 
   # Skip http-to-https redirect for the default health check endpoint.
   # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }

@@ -1,0 +1,59 @@
+<%
+  # Locals:
+  #   url:                URL string for search form (Rails path).
+  #   search_placeholder: String hiển thị trong text input.
+  #   extra_hidden:       Hash các hidden fields giữ lại filter (vd {type: @filter_type}).
+  #   total_count:        Integer — tổng số bản ghi.
+  #   add_link:           Optional link_to HTML (nil nếu user không có quyền create).
+  extra_hidden ||= {}
+  search_placeholder ||= t("common.list.search_placeholder")
+  add_link ||= nil
+  current_per_page = (params[:per_page].presence || 25).to_i
+  has_filter = params[:q].present? || extra_hidden.values.any?(&:present?)
+%>
+
+<div class="bg-white border border-gray-200 rounded-lg p-3 mb-3 flex items-center justify-between gap-3 flex-wrap">
+  <div class="flex items-center gap-3 flex-wrap">
+    <%= form_with url: url, method: :get, local: true, class: "flex items-center gap-2" do %>
+      <% extra_hidden.each do |k, v| %>
+        <%= hidden_field_tag k, v %>
+      <% end %>
+      <%= hidden_field_tag :per_page, current_per_page %>
+      <%= text_field_tag :q, params[:q],
+            placeholder: search_placeholder,
+            class: "rounded border border-gray-300 text-sm px-3 py-1.5 w-64" %>
+      <%= submit_tag t("common.actions.search"),
+            class: "px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded cursor-pointer" %>
+      <% if has_filter %>
+        <%= link_to t("common.list.clear_filter"), url,
+              class: "text-sm text-gray-600 hover:text-gray-800 underline" %>
+      <% end %>
+    <% end %>
+
+    <%= form_with url: url, method: :get, local: true, class: "flex items-center gap-2" do %>
+      <% extra_hidden.each do |k, v| %>
+        <%= hidden_field_tag k, v %>
+      <% end %>
+      <% if params[:q].present? %>
+        <%= hidden_field_tag :q, params[:q] %>
+      <% end %>
+      <% if params[:sort].present? %>
+        <%= hidden_field_tag :sort, params[:sort] %>
+        <%= hidden_field_tag :dir, params[:dir] %>
+      <% end %>
+      <label class="text-xs text-gray-600 whitespace-nowrap"><%= t("common.list.per_page") %></label>
+      <%= select_tag :per_page,
+            options_for_select([10, 25, 50, 100].map { |n| [n, n] }, current_per_page),
+            data: { controller: "per-page", action: "change->per-page#submit",
+                    per_page_storage_key_value: "list_per_page" },
+            class: "rounded border border-gray-300 text-sm px-2 py-1" %>
+    <% end %>
+  </div>
+
+  <div class="flex items-center gap-3">
+    <span class="text-sm text-gray-600"><%= list_total(total_count) %></span>
+    <% if add_link %>
+      <%= add_link %>
+    <% end %>
+  </div>
+</div>

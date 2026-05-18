@@ -10,14 +10,23 @@ class PumpAllocation < ApplicationRecord
   validates :fixed_percentage,
     numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100, allow_nil: true }
 
+  # Một đơn vị/đầu mối chỉ được phân bổ 1 lần trong cùng (zone, period).
+  # allow_nil: true cần thiết vì XOR — một trong hai luôn nil cho mỗi record.
+  validates :unit_id, uniqueness: { scope: [:zone_id, :period_id], allow_nil: true }
+  validates :contact_point_id, uniqueness: { scope: [:zone_id, :period_id], allow_nil: true }
+
   validate :validate_unit_or_contact_point_xor
   validate :validate_fixed_percentage_sum_within_limit
 
   private
 
   def validate_unit_or_contact_point_xor
-    if unit.present? == contact_point.present?
-      errors.add(:base, :unit_or_contact_point_xor)
+    # Phải chọn đúng 1 trong 2: đơn vị HOẶC đầu mối.
+    # Tách 2 case để message dễ hiểu cho user.
+    if unit.blank? && contact_point.blank?
+      errors.add(:base, :target_required)
+    elsif unit.present? && contact_point.present?
+      errors.add(:base, :target_must_be_one)
     end
   end
 

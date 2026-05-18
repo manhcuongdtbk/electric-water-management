@@ -1,33 +1,40 @@
-<% page_title "Khu vực" %>
+<% page_title t("sidebar.items.zones") %>
 
-<div class="flex justify-between items-center mb-4">
-  <%= form_with url: zones_path, method: :get, local: true, class: "flex space-x-2" do %>
-    <%= text_field_tag :q, params[:q], placeholder: "Tìm theo tên...",
-        class: "rounded border border-gray-300 px-3 py-2 text-sm" %>
-    <%= submit_tag "Tìm", class: "bg-gray-100 text-gray-700 px-4 py-2 rounded text-sm font-medium hover:bg-gray-200 cursor-pointer" %>
-  <% end %>
-  <% if can?(:create, Zone) %>
-    <%= link_to "Thêm khu vực", new_zone_path,
-        class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700" %>
-  <% end %>
-</div>
+<%
+  add_link = can?(:create, Zone) ?
+    link_to(t("common.actions.add") + " " + t("resources.zone"), new_zone_path,
+      class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700") : nil
+%>
 
-<div class="text-sm text-gray-600 mb-2">Tổng số: <strong><%= @total_count %></strong></div>
+<%= render "shared/list_toolbar",
+      url: zones_path,
+      search_placeholder: t("common.list.search_by_name"),
+      total_count: @total_count,
+      add_link: add_link %>
 
 <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
   <table class="min-w-full divide-y divide-gray-200">
     <thead class="bg-gray-50">
       <tr>
-        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Tên</th>
-        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Đơn vị</th>
-        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Đơn vị quản lý</th>
-        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Công tơ tổng</th>
-        <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Thao tác</th>
+        <%= sortable_header :name, t("activerecord.attributes.zone.name"),
+              current_sort: params[:sort], current_dir: params[:dir],
+              extra_params: { q: params[:q], per_page: params[:per_page] } %>
+        <%= sortable_header :units_count, "Số đơn vị",
+              current_sort: params[:sort], current_dir: params[:dir],
+              extra_params: { q: params[:q], per_page: params[:per_page] } %>
+        <%= sortable_header :manager_unit, t("activerecord.attributes.zone.manager_unit"),
+              current_sort: params[:sort], current_dir: params[:dir],
+              extra_params: { q: params[:q], per_page: params[:per_page] } %>
+        <%= list_header t("resources.main_meter").humanize %>
+        <%= list_header t("common.list.actions"), align: :right %>
       </tr>
     </thead>
     <tbody class="divide-y divide-gray-200">
+      <% if @zones.empty? %>
+        <tr><td colspan="5" class="px-4 py-6 text-center text-gray-500"><%= t("common.list.no_records") %></td></tr>
+      <% end %>
       <% @zones.each do |zone| %>
-        <tr>
+        <tr class="hover:bg-gray-50 transition-colors">
           <td class="px-4 py-2 text-sm font-medium text-gray-900"><%= zone.name %></td>
           <td class="px-4 py-2 text-sm text-gray-600">
             <%= zone.units.kept.count %>
@@ -40,13 +47,18 @@
             <%= zone.main_meters.kept.pluck(:name).join(", ") %>
           </td>
           <td class="px-4 py-2 text-sm text-right space-x-2">
-            <% if can?(:update, zone) %>
-              <%= link_to "Sửa", edit_zone_path(zone), class: "text-blue-600 hover:text-blue-800" %>
-            <% end %>
-            <% if can?(:destroy, zone) %>
-              <%= button_to "Xóa", zone_path(zone), method: :delete,
-                  form: { data: { turbo_confirm: "Xác nhận xóa khu vực \"#{zone.name}\"?" } },
-                  class: "text-red-600 hover:text-red-800 underline inline cursor-pointer bg-transparent border-0 p-0" %>
+            <% if can?(:update, zone) || can?(:destroy, zone) %>
+              <% if can?(:update, zone) %>
+                <%= link_to t("common.actions.edit"), edit_zone_path(zone),
+                      class: "text-blue-600 hover:text-blue-800" %>
+              <% end %>
+              <% if can?(:destroy, zone) %>
+                <%= button_to t("common.actions.destroy"), zone_path(zone), method: :delete,
+                      form: { class: "inline", data: { turbo_confirm: t("common.confirm.destroy_named", name: zone.name) } },
+                      class: "text-red-600 hover:text-red-800 underline inline cursor-pointer bg-transparent border-0 p-0" %>
+              <% end %>
+            <% else %>
+              <%= empty_actions_dash %>
             <% end %>
           </td>
         </tr>

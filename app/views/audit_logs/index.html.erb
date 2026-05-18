@@ -1,28 +1,124 @@
-<% page_title "Nhật ký hoạt động" %>
+<% page_title t("audit_logs.page_title") %>
 
-<div class="bg-blue-50 border border-blue-200 rounded p-4 text-sm text-blue-800 mb-4">
-  <p>Hệ thống đang ghi nhận lịch sử thay đổi qua PaperTrail. Giao diện lọc đầy đủ (theo loại thao tác, người thao tác, khoảng thời gian, model) sẽ được hoàn thiện ở phase sau.</p>
-</div>
+<%= form_with url: audit_logs_path, method: :get, local: true,
+      class: "bg-white border border-gray-200 rounded-lg p-4 mb-4" do %>
+  <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+    <div>
+      <label class="block text-xs font-semibold text-gray-600 mb-1"><%= t("audit_logs.filters.event_label") %></label>
+      <select name="event" class="w-full rounded border border-gray-300 text-sm">
+        <option value=""><%= t("audit_logs.filters.any") %></option>
+        <% @events.each do |ev| %>
+          <option value="<%= ev %>" <%= "selected" if params[:event] == ev %>><%= t("audit_logs.events.#{ev}") %></option>
+        <% end %>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-xs font-semibold text-gray-600 mb-1"><%= t("audit_logs.filters.item_type_label") %></label>
+      <select name="item_type" class="w-full rounded border border-gray-300 text-sm">
+        <option value=""><%= t("audit_logs.filters.any") %></option>
+        <% @audited_models.each do |model| %>
+          <option value="<%= model %>" <%= "selected" if params[:item_type] == model %>><%= t("audit_logs.item_types.#{model}", default: model) %></option>
+        <% end %>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-xs font-semibold text-gray-600 mb-1"><%= t("audit_logs.filters.whodunnit_label") %></label>
+      <select name="whodunnit" class="w-full rounded border border-gray-300 text-sm">
+        <option value=""><%= t("audit_logs.filters.any") %></option>
+        <% @users.each do |username, id| %>
+          <option value="<%= id %>" <%= "selected" if params[:whodunnit].to_s == id.to_s %>><%= username %></option>
+        <% end %>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-xs font-semibold text-gray-600 mb-1"><%= t("audit_logs.filters.from_label") %></label>
+      <input type="text" name="from" value="<%= params[:from] %>"
+             placeholder="ngày/tháng/năm (ví dụ: 01/05/2026)"
+             class="w-full rounded border border-gray-300 text-sm" />
+    </div>
+
+    <div>
+      <label class="block text-xs font-semibold text-gray-600 mb-1"><%= t("audit_logs.filters.to_label") %></label>
+      <input type="text" name="to" value="<%= params[:to] %>"
+             placeholder="ngày/tháng/năm (ví dụ: 31/05/2026)"
+             class="w-full rounded border border-gray-300 text-sm" />
+    </div>
+  </div>
+
+  <div class="mt-3 flex items-center justify-between gap-3">
+    <div class="flex items-center gap-2">
+      <label class="text-xs text-gray-600"><%= t("audit_logs.filters.per_page_label") %></label>
+      <select name="per_page" class="rounded border border-gray-300 text-sm">
+        <% [10, 25, 50, 100].each do |opt| %>
+          <option value="<%= opt %>" <%= "selected" if params[:per_page].to_i == opt %>><%= opt %></option>
+        <% end %>
+      </select>
+    </div>
+
+    <div class="flex gap-2">
+      <%= link_to t("audit_logs.filters.reset"), audit_logs_path,
+            class: "px-3 py-1.5 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded" %>
+      <%= submit_tag t("audit_logs.filters.submit"),
+            class: "px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded cursor-pointer" %>
+    </div>
+  </div>
+<% end %>
+
+<div class="mb-2 text-sm text-gray-600"><%= t("common.list.total", count: @total_count) %></div>
 
 <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
   <table class="min-w-full divide-y divide-gray-200 text-sm">
     <thead class="bg-gray-50">
       <tr>
-        <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Thời gian</th>
-        <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Đối tượng</th>
-        <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Thao tác</th>
-        <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Người thực hiện</th>
+        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase"><%= t("audit_logs.table.time") %></th>
+        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase"><%= t("audit_logs.table.item") %></th>
+        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase"><%= t("audit_logs.table.event") %></th>
+        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase"><%= t("audit_logs.table.whodunnit") %></th>
+        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase"><%= t("audit_logs.table.actions") %></th>
       </tr>
     </thead>
     <tbody class="divide-y divide-gray-200">
+      <% if @versions.empty? %>
+        <tr><td colspan="5" class="px-4 py-6 text-center text-gray-500"><%= t("common.list.no_records") %></td></tr>
+      <% end %>
       <% @versions.each do |v| %>
-        <tr>
-          <td class="px-3 py-2 text-gray-700"><%= v.created_at.in_time_zone("Asia/Ho_Chi_Minh").strftime("%d/%m/%Y %H:%M") %></td>
-          <td class="px-3 py-2 text-gray-700"><%= v.item_type %> #<%= v.item_id %></td>
-          <td class="px-3 py-2 text-gray-700"><%= v.event %></td>
-          <td class="px-3 py-2 text-gray-700"><%= User.find_by(id: v.whodunnit)&.username || v.whodunnit %></td>
+        <tr class="hover:bg-gray-50 transition-colors">
+          <td class="px-4 py-2 text-gray-700 whitespace-nowrap">
+            <%= v.created_at.in_time_zone("Asia/Ho_Chi_Minh").strftime("%d/%m/%Y %H:%M:%S") %>
+          </td>
+          <td class="px-4 py-2 text-gray-900">
+            <%= t("audit_logs.item_types.#{v.item_type}", default: v.item_type) %>
+            <span class="text-gray-400">#<%= v.item_id %></span>
+          </td>
+          <td class="px-4 py-2">
+            <%
+              event_color = case v.event
+                            when "create" then "bg-green-100 text-green-700"
+                            when "update" then "bg-blue-100 text-blue-700"
+                            when "destroy" then "bg-red-100 text-red-700"
+                            else "bg-gray-100 text-gray-700"
+                            end
+            %>
+            <span class="px-2 py-0.5 rounded text-xs <%= event_color %>">
+              <%= t("audit_logs.events.#{v.event}", default: v.event) %>
+            </span>
+          </td>
+          <td class="px-4 py-2 text-gray-700">
+            <%= @whodunnit_by_id[v.whodunnit.to_i] || (v.whodunnit.presence || "—") %>
+          </td>
+          <td class="px-4 py-2">
+            <%= link_to t("common.actions.view_detail"), audit_log_path(v),
+                  class: "text-blue-600 hover:text-blue-800 underline text-sm" %>
+          </td>
         </tr>
       <% end %>
     </tbody>
   </table>
+</div>
+
+<div class="mt-4">
+  <%== pagy_nav(@pagy) if @pagy.pages > 1 %>
 </div>

@@ -3,15 +3,23 @@ class UsersController < ApplicationController
 
   before_action :set_user, only: [:show, :edit, :update, :destroy]
 
+  SORT_COLUMNS = {
+    username:     "users.username",
+    display_name: "users.display_name",
+    role:         "users.role",
+    unit:         "units.name"
+  }.freeze
+
   def index
     scope = User.accessible_by(current_ability).includes(:unit)
+    scope = scope.left_joins(:unit) if params[:sort].to_s == "unit"
     if (q = params[:q]).present?
       scope = scope.where("users.username ILIKE ? OR users.display_name ILIKE ?",
                           "%#{q.strip}%", "%#{q.strip}%")
     end
-    scope = scope.order(:username)
+    scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:username, :asc])
     @total_count = scope.count
-    @pagy, @users = pagy(scope)
+    @pagy, @users = pagy_with_per_page(scope)
   end
 
   def show
@@ -26,7 +34,8 @@ class UsersController < ApplicationController
     @user = User.new(create_user_params)
     authorize!(:create, @user)
     if @user.save
-      redirect_to users_path, notice: "Đã tạo tài khoản \"#{@user.username}\"."
+      redirect_to users_path,
+        notice: t("flash.record_created", resource: t("resources.user"), name: @user.username)
     else
       render :new, status: :unprocessable_entity
     end
@@ -37,7 +46,8 @@ class UsersController < ApplicationController
 
   def update
     if @user.update(update_user_params)
-      redirect_to users_path, notice: "Đã cập nhật tài khoản \"#{@user.username}\"."
+      redirect_to users_path,
+        notice: t("flash.record_updated", resource: t("resources.user"), name: @user.username)
     else
       render :edit, status: :unprocessable_entity
     end
@@ -48,7 +58,8 @@ class UsersController < ApplicationController
       redirect_to users_path, alert: I18n.t("errors.cannot_destroy_self") and return
     end
     if @user.destroy
-      redirect_to users_path, notice: "Đã xóa tài khoản \"#{@user.username}\"."
+      redirect_to users_path,
+        notice: t("flash.record_destroyed", resource: t("resources.user"), name: @user.username)
     else
       redirect_to users_path, alert: @user.errors.full_messages.join("\n")
     end
@@ -75,8 +86,15 @@ class UsersController < ApplicationController
 
   def update_user_params
     permitted = [:display_name, :role, :unit_id]
-    # Cho phép đổi password nếu cung cấp
     permitted += [:password, :password_confirmation] if params[:user][:password].present?
-    params.require(:user).permit(*permitted)
+    attrs = params.require(:user).permit(*permitted)
+
+    # T93: khi admin/technician reset password cho user khác,
+    # set force_password_change để user phải đổi mật khẩu lần đăng nhập sau.
+    if params[:user][:password].present? && @user != current_user
+      attrs[:force_password_change] = true
+    end
+
+    attrs
   end
 end

@@ -24,6 +24,7 @@ class Ability
   def technician_abilities(_user)
     can :manage, User
     can :read, PaperTrail::Version
+    can :manage, Backup
   end
 
   def system_admin_abilities(_user)

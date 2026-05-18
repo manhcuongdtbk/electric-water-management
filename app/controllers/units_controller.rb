@@ -3,14 +3,21 @@ class UnitsController < ApplicationController
 
   before_action :set_unit, only: [:show, :edit, :update, :destroy]
 
+  SORT_COLUMNS = {
+    name:       "units.name",
+    zone:       "zones.name",
+    is_manager: "(SELECT COUNT(*) FROM zones WHERE zones.manager_unit_id = units.id)"
+  }.freeze
+
   def index
     scope = load_collection(Unit).includes(:zone)
+    scope = scope.left_joins(:zone) if params[:sort].to_s == "zone"
     if (q = params[:q]).present?
       scope = scope.where("units.name ILIKE ?", "%#{q.strip}%")
     end
-    scope = scope.order(:name)
+    scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:name, :asc])
     @total_count = scope.count
-    @pagy, @units = pagy(scope)
+    @pagy, @units = pagy_with_per_page(scope)
   end
 
   def show
@@ -25,7 +32,8 @@ class UnitsController < ApplicationController
     @unit = Unit.new(unit_params)
     authorize!(:create, @unit)
     if @unit.save
-      redirect_to units_path, notice: "Đã tạo đơn vị \"#{@unit.name}\"."
+      redirect_to units_path,
+        notice: t("flash.record_created", resource: t("resources.unit"), name: @unit.name)
     else
       render :new, status: :unprocessable_entity
     end
@@ -36,7 +44,8 @@ class UnitsController < ApplicationController
 
   def update
     if @unit.update(unit_update_params)
-      redirect_to units_path, notice: "Đã cập nhật đơn vị \"#{@unit.name}\"."
+      redirect_to units_path,
+        notice: t("flash.record_updated", resource: t("resources.unit"), name: @unit.name)
     else
       render :edit, status: :unprocessable_entity
     end
@@ -48,7 +57,7 @@ class UnitsController < ApplicationController
     affected_zones = Zone.where(manager_unit_id: @unit.id).pluck(:name)
 
     if @unit.discard
-      msg = "Đã xóa đơn vị \"#{@unit.name}\"."
+      msg = t("flash.record_destroyed", resource: t("resources.unit"), name: @unit.name)
       if affected_zones.any?
         msg += " Cảnh báo: khu vực #{affected_zones.join(', ')} hiện không còn đơn vị quản lý."
       end
