@@ -40,3 +40,4 @@
 # Ignore Claude Code local-only config + worktrees
 /.claude/settings.local.json
 /.claude/worktrees/
+docs/.DS_Store
