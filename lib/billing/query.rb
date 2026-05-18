@@ -37,7 +37,10 @@ module Billing
         )
       end
       scope = scope.where("contact_points.unit_id = ?", unit.id) if unit
-      scope = scope.where("contact_points.name ILIKE ?", "%#{q.strip}%") if q.present?
+      if q.present?
+        sanitized = ActiveRecord::Base.sanitize_sql_like(q.strip)
+        scope = scope.where("contact_points.name ILIKE ?", "%#{sanitized}%")
+      end
       scope
     end
 
