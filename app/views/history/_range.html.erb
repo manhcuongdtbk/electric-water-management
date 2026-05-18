@@ -1,0 +1,67 @@
+<%= form_with url: history_path, method: :get, local: true,
+      class: "flex flex-wrap gap-4 items-end mb-4" do %>
+  <%= hidden_field_tag :mode, "range" %>
+  <div>
+    <label class="block text-xs text-gray-600 mb-1">Từ tháng</label>
+    <input type="month" name="from" value="<%= @from.strftime("%Y-%m") %>"
+           class="rounded border-gray-300 text-sm">
+  </div>
+  <div>
+    <label class="block text-xs text-gray-600 mb-1">Đến tháng</label>
+    <input type="month" name="to" value="<%= @to.strftime("%Y-%m") %>"
+           class="rounded border-gray-300 text-sm">
+  </div>
+  <%= submit_tag "Xem",
+        class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700" %>
+<% end %>
+
+<% if @period_summaries.empty? %>
+  <div class="bg-gray-50 border border-gray-200 rounded p-4 text-gray-600">
+    Không có kỳ nào trong khoảng <strong><%= @from.strftime("%m/%Y") %></strong> đến <strong><%= @to.strftime("%m/%Y") %></strong>.
+  </div>
+<% else %>
+  <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Kỳ</th>
+          <th class="px-4 py-2 text-right text-xs font-semibold text-gray-700">Tổng thâm điện (kW)</th>
+          <th class="px-4 py-2 text-right text-xs font-semibold text-gray-700">Thành tiền phải thu</th>
+          <th class="px-4 py-2 text-center text-xs font-semibold text-gray-700">Trạng thái</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @period_summaries.each do |period, summary| %>
+          <tr class="border-t border-gray-100 hover:bg-yellow-50">
+            <td class="px-4 py-2">
+              <%= link_to period_label(period),
+                    history_path(mode: "single", period_id: period.id),
+                    class: "text-blue-700 hover:underline" %>
+            </td>
+            <td class="px-4 py-2 text-right text-red-700">
+              <% if summary.respond_to?(:deficit_kw) %>
+                <%= number_to_vi(summary.deficit_kw) %>
+              <% elsif summary.respond_to?(:units) %>
+                <%= number_to_vi(summary.units.sum { |d| d[:deficit_kw].to_f }) %>
+              <% end %>
+            </td>
+            <td class="px-4 py-2 text-right">
+              <% if summary.respond_to?(:deficit_amount) %>
+                <%= money_to_vi(summary.deficit_amount) %>
+              <% elsif summary.respond_to?(:units) %>
+                <%= money_to_vi(summary.units.sum { |d| d[:deficit_amount].to_f }) %>
+              <% end %>
+            </td>
+            <td class="px-4 py-2 text-center">
+              <% if period.open? %>
+                <span class="inline-block px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs">Đang mở</span>
+              <% else %>
+                <span class="inline-block px-2 py-0.5 rounded bg-gray-200 text-gray-700 text-xs">Đã đóng</span>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>

@@ -1,0 +1,109 @@
+<% if @available_periods.size < 2 %>
+  <div class="bg-yellow-50 border border-yellow-300 text-yellow-900 rounded p-4">
+    Cần ít nhất 2 kỳ để so sánh. Hiện tại hệ thống chỉ có <%= @available_periods.size %> kỳ.
+  </div>
+<% else %>
+  <%= form_with url: history_path, method: :get, local: true,
+        class: "flex flex-wrap gap-4 items-end mb-4",
+        data: { controller: "auto-submit" } do %>
+    <%= hidden_field_tag :mode, "compare" %>
+    <div>
+      <label class="block text-xs text-gray-600 mb-1">Kỳ A</label>
+      <%= select_tag :period_a,
+            options_from_collection_for_select(@available_periods, :id,
+                                                ->(p) { "Tháng #{p.month}/#{p.year}" }, @period_a&.id),
+            include_blank: "-- Chọn --",
+            data: { action: "change->auto-submit#submit" },
+            class: "rounded border-gray-300 text-sm" %>
+    </div>
+    <div>
+      <label class="block text-xs text-gray-600 mb-1">Kỳ B</label>
+      <%= select_tag :period_b,
+            options_from_collection_for_select(@available_periods, :id,
+                                                ->(p) { "Tháng #{p.month}/#{p.year}" }, @period_b&.id),
+            include_blank: "-- Chọn --",
+            data: { action: "change->auto-submit#submit" },
+            class: "rounded border-gray-300 text-sm" %>
+    </div>
+  <% end %>
+
+  <% if @comparison.nil? %>
+    <div class="bg-gray-50 border border-gray-200 rounded p-4 text-gray-600">
+      Vui lòng chọn cả 2 kỳ để so sánh.
+    </div>
+  <% elsif @comparison.empty? %>
+    <div class="bg-gray-50 border border-gray-200 rounded p-4 text-gray-600">
+      Không có dữ liệu để so sánh.
+    </div>
+  <% else %>
+    <%
+      a_label = "#{@period_a.month}/#{@period_a.year}"
+      b_label = "#{@period_b.month}/#{@period_b.year}"
+      cell      = "border border-gray-300 px-2 py-1 text-xs"
+      num_cell  = "#{cell} text-right whitespace-nowrap"
+      text_cell = "#{cell} whitespace-nowrap"
+      header_cell = "#{cell} bg-gray-50 font-semibold text-center"
+      empty_mark = '<span class="text-gray-400">—</span>'.html_safe
+
+      metric_groups = [
+        ["Quân số", :total_personnel, :int],
+        ["Tiêu chuẩn sinh hoạt", :residential_standard, :num],
+        ["Tiêu chuẩn bơm nước", :water_pump_standard, :num],
+        ["Tổng tiêu chuẩn", :total_standard, :num],
+        ["Tổng trừ", :total_deduction, :num],
+        ["Tiêu chuẩn còn lại", :remaining_standard, :num],
+        ["Sử dụng sinh hoạt", :residential_usage, :num],
+        ["Sử dụng bơm nước", :water_pump_usage, :num],
+        ["Tổng sử dụng", :total_usage, :num],
+        ["Thiếu (kW)", :deficit, :num],
+        ["Thừa (kW)", :surplus, :num],
+        ["Thành tiền thiếu", :deficit_amount, :money],
+        ["Thành tiền thừa", :surplus_amount, :money]
+      ]
+
+      format_cell = ->(value, type) do
+        return empty_mark if value.nil?
+        case type
+        when :int   then value.to_i.to_s
+        when :money then money_to_vi_plain(value)
+        else             number_to_vi(value)
+        end
+      end
+    %>
+    <div class="-mx-6">
+      <div class="overflow-x-auto px-6 max-h-[70vh] overflow-y-auto">
+        <table class="border-collapse w-full text-xs" data-billing-table>
+          <thead class="sticky top-0 z-10">
+            <tr>
+              <th rowspan="2" class="<%= header_cell %>">Đầu mối</th>
+              <% metric_groups.each do |label, _attr, _type| %>
+                <th colspan="3" class="<%= header_cell %>"><%= label %></th>
+              <% end %>
+              <th rowspan="2" class="<%= header_cell %>">Ghi chú</th>
+            </tr>
+            <tr>
+              <% metric_groups.size.times do %>
+                <th class="<%= header_cell %>"><%= a_label %></th>
+                <th class="<%= header_cell %>"><%= b_label %></th>
+                <th class="<%= header_cell %>">Δ</th>
+              <% end %>
+            </tr>
+          </thead>
+          <tbody>
+            <% @comparison.each do |row| %>
+              <tr class="hover:bg-yellow-50">
+                <td class="<%= text_cell %>"><%= row.contact_point&.name %></td>
+                <% metric_groups.each do |_label, attr, type| %>
+                  <td class="<%= num_cell %>"><%= row.calc_a ? format_cell.call(row.calc_a.send(attr), type) : empty_mark %></td>
+                  <td class="<%= num_cell %>"><%= row.calc_b ? format_cell.call(row.calc_b.send(attr), type) : empty_mark %></td>
+                  <td class="<%= num_cell %>"><%= row.diff ? format_cell.call(row.diff[attr], type) : empty_mark %></td>
+                <% end %>
+                <td class="<%= text_cell %> text-amber-700"><%= row.note %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% end %>
+<% end %>

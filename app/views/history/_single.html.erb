@@ -1,0 +1,101 @@
+<% if @available_periods.empty? %>
+  <div class="bg-yellow-50 border border-yellow-300 text-yellow-900 rounded p-4">
+    Chưa có kỳ nào trong hệ thống.
+  </div>
+<% elsif @period.nil? %>
+  <div class="bg-yellow-50 border border-yellow-300 text-yellow-900 rounded p-4">
+    Vui lòng chọn một kỳ để xem.
+  </div>
+<% else %>
+  <div class="flex flex-wrap items-end justify-between gap-4 mb-4">
+    <%= form_with url: history_path, method: :get, local: true,
+          class: "flex gap-2 items-end",
+          data: { controller: "auto-submit" } do %>
+      <%= hidden_field_tag :mode, "single" %>
+      <div>
+        <label class="block text-xs text-gray-600 mb-1">Kỳ</label>
+        <%= select_tag :period_id,
+              options_from_collection_for_select(@available_periods, :id,
+                                                  ->(p) { "Tháng #{p.month}/#{p.year}" }, @period.id),
+              data: { action: "change->auto-submit#submit" },
+              class: "rounded border-gray-300 text-sm" %>
+      </div>
+      <% if current_user.role == "system_admin" %>
+        <div>
+          <label class="block text-xs text-gray-600 mb-1">Khu vực</label>
+          <%= select_tag :zone_id,
+                options_from_collection_for_select(@available_zones, :id, :name, @zone&.id),
+                include_blank: "Tất cả khu vực",
+                data: { action: "change->auto-submit#submit" },
+                class: "rounded border-gray-300 text-sm" %>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-600 mb-1">Đơn vị</label>
+          <%= select_tag :unit_id,
+                options_from_collection_for_select(@available_units, :id, :name, @unit&.id),
+                include_blank: "Tất cả đơn vị",
+                data: { action: "change->auto-submit#submit" },
+                class: "rounded border-gray-300 text-sm" %>
+        </div>
+      <% end %>
+    <% end %>
+
+    <div>
+      <p class="text-sm text-gray-700">
+        <strong><%= period_label(@period) %></strong>
+        — Đơn giá: <strong><%= money_to_vi(@period.unit_price) %>/kW</strong>
+      </p>
+      <% unless @period.open? %>
+        <span class="inline-block mt-1 px-2 py-0.5 rounded bg-gray-200 text-gray-700 text-xs">Đã đóng</span>
+      <% end %>
+    </div>
+  </div>
+
+  <%= render "dashboard/warnings", warnings: @warnings %>
+
+  <% if @dashboard_summary.role == :system_admin %>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div class="bg-white border border-gray-200 rounded p-4">
+        <h3 class="text-xs text-gray-500 uppercase font-semibold mb-1">Sử dụng điện công cộng</h3>
+        <p class="text-xl font-semibold"><%= number_to_vi(@dashboard_summary.public_total_usage) %> kW</p>
+      </div>
+      <div class="bg-white border border-gray-200 rounded p-4">
+        <h3 class="text-xs text-gray-500 uppercase font-semibold mb-1">Sử dụng điện bơm nước</h3>
+        <p class="text-xl font-semibold"><%= number_to_vi(@dashboard_summary.pump_total_usage) %> kW</p>
+      </div>
+    </div>
+  <% elsif @dashboard_summary.unit %>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+      <div class="bg-white border border-gray-200 rounded p-4">
+        <h3 class="text-xs text-gray-500 uppercase font-semibold mb-1">Tổng thâm điện</h3>
+        <p class="text-xl font-semibold text-red-700"><%= number_to_vi(@dashboard_summary.deficit_kw) %> kW</p>
+      </div>
+      <div class="bg-white border border-gray-200 rounded p-4">
+        <h3 class="text-xs text-gray-500 uppercase font-semibold mb-1">Thành tiền phải thu</h3>
+        <p class="text-xl font-semibold"><%= money_to_vi(@dashboard_summary.deficit_amount) %></p>
+      </div>
+      <div class="bg-white border border-gray-200 rounded p-4">
+        <h3 class="text-xs text-gray-500 uppercase font-semibold mb-1">Số đầu mối thiếu</h3>
+        <p class="text-xl font-semibold text-red-700"><%= @dashboard_summary.deficit_count %></p>
+      </div>
+      <div class="bg-white border border-gray-200 rounded p-4">
+        <h3 class="text-xs text-gray-500 uppercase font-semibold mb-1">Số đầu mối thừa</h3>
+        <p class="text-xl font-semibold text-green-700"><%= @dashboard_summary.surplus_count %></p>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="text-sm text-gray-600 mb-2">Tổng số đầu mối: <strong><%= @total_count %></strong></div>
+
+  <div class="-mx-6">
+    <div class="overflow-x-auto px-6 max-h-[70vh] overflow-y-auto"
+         data-controller="column-resize"
+         data-column-resize-storage-key-value="history-<%= current_user.role %>-<%= billing_column_signature(show_zone: @show_zone_column, show_unit: @show_unit_column) %>">
+      <%= render "billing/table" %>
+    </div>
+  </div>
+
+  <% if @pagy && @pagy.pages > 1 %>
+    <div class="mt-4"><%== pagy_nav(@pagy) %></div>
+  <% end %>
+<% end %>

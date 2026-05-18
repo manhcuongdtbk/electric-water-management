@@ -1,0 +1,42 @@
+<%
+  info_colspan = (@show_zone_column ? 1 : 0) + (@show_unit_column ? 1 : 0) + 3 + @ranks.size + 1
+  header_cell = "border border-gray-300 px-2 py-1 bg-gray-50 text-xs font-semibold text-gray-700"
+%>
+<tr>
+  <th colspan="<%= info_colspan %>" class="<%= header_cell %>">Thông tin đầu mối</th>
+  <th colspan="3" class="<%= header_cell %>">Tiêu chuẩn</th>
+  <th colspan="6" class="<%= header_cell %>">Khoản trừ</th>
+  <th rowspan="3" class="<%= header_cell %>">Tiêu chuẩn còn lại</th>
+  <th colspan="3" class="<%= header_cell %>">Sử dụng</th>
+  <th colspan="4" class="<%= header_cell %>">Kết quả</th>
+</tr>
+<tr>
+  <% if @show_zone_column %><th rowspan="2" class="<%= header_cell %>">Khu vực</th><% end %>
+  <% if @show_unit_column %><th rowspan="2" class="<%= header_cell %>">Đơn vị</th><% end %>
+  <th rowspan="2" class="<%= header_cell %>">Khối</th>
+  <th rowspan="2" class="<%= header_cell %>">Nhóm</th>
+  <th rowspan="2" class="<%= header_cell %>">Tên đầu mối</th>
+  <th colspan="<%= @ranks.size %>" class="<%= header_cell %>">Quân số theo nhóm cấp bậc</th>
+  <th rowspan="2" class="<%= header_cell %>">Tổng quân số</th>
+  <th rowspan="2" class="<%= header_cell %>">Tiêu chuẩn điện sinh hoạt</th>
+  <th rowspan="2" class="<%= header_cell %>">Tiêu chuẩn điện bơm nước</th>
+  <th rowspan="2" class="<%= header_cell %>">Tổng tiêu chuẩn</th>
+  <th rowspan="2" class="<%= header_cell %>">Tiết kiệm của Bộ</th>
+  <th rowspan="2" class="<%= header_cell %>">Tổn hao</th>
+  <th rowspan="2" class="<%= header_cell %>">Công cộng dùng chung Sư đoàn</th>
+  <th rowspan="2" class="<%= header_cell %>">Công cộng dùng chung đơn vị</th>
+  <th rowspan="2" class="<%= header_cell %>">Khác</th>
+  <th rowspan="2" class="<%= header_cell %>">Tổng trừ</th>
+  <th rowspan="2" class="<%= header_cell %>">Sử dụng điện sinh hoạt</th>
+  <th rowspan="2" class="<%= header_cell %>">Sử dụng điện bơm nước</th>
+  <th rowspan="2" class="<%= header_cell %>">Tổng sử dụng</th>
+  <th rowspan="2" class="<%= header_cell %>">Thừa (kW)</th>
+  <th rowspan="2" class="<%= header_cell %>">Thiếu (kW)</th>
+  <th rowspan="2" class="<%= header_cell %>">Thành tiền thừa</th>
+  <th rowspan="2" class="<%= header_cell %>">Thành tiền thiếu</th>
+</tr>
+<tr>
+  <% @ranks.each do |rank| %>
+    <th class="<%= header_cell %>"><%= rank.name %></th>
+  <% end %>
+</tr>

@@ -182,4 +182,40 @@ RSpec.describe Ability do
       expect(ability).not_to be_able_to(:update, reading)
     end
   end
+
+  describe "Calculation accessible_by + :recalculate" do
+    let(:zone_a) { create(:zone, name: "Zone A") }
+    let(:zone_b) { create(:zone, name: "Zone B") }
+    let(:unit_a) { create(:unit, zone: zone_a) }
+    let(:unit_b) { create(:unit, zone: zone_b) }
+    let(:period) { create(:period, closed: false) }
+    let(:cp_a) { create(:contact_point, :residential, unit: unit_a) }
+    let(:cp_b) { create(:contact_point, :residential, unit: unit_b) }
+    let!(:calc_a) { create(:calculation, contact_point: cp_a, period: period) }
+    let!(:calc_b) { create(:calculation, contact_point: cp_b, period: period) }
+
+    it "system_admin :recalculate cho mọi Calculation" do
+      admin = create(:user, :system_admin)
+      expect(Ability.new(admin)).to be_able_to(:recalculate, Calculation.new)
+    end
+
+    it "unit_admin A KHÔNG read được calc của unit B (T87)" do
+      ua = create(:user, :unit_admin, unit: unit_a)
+      ability = Ability.new(ua)
+      accessible_ids = Calculation.accessible_by(ability).pluck(:id)
+      expect(accessible_ids).to include(calc_a.id)
+      expect(accessible_ids).not_to include(calc_b.id)
+    end
+
+    it "unit_admin :recalculate calc đơn vị mình" do
+      ua = create(:user, :unit_admin, unit: unit_a)
+      expect(Ability.new(ua)).to be_able_to(:recalculate, calc_a)
+      expect(Ability.new(ua)).not_to be_able_to(:recalculate, calc_b)
+    end
+
+    it "commander KHÔNG :recalculate" do
+      cmd = create(:user, :commander, unit: unit_a)
+      expect(Ability.new(cmd)).not_to be_able_to(:recalculate, calc_a)
+    end
+  end
 end

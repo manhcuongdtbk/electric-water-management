@@ -15,4 +15,12 @@ module NumberHelperVi
       delimiter: "."
     ) + " đ"
   end
+
+  def money_to_vi_plain(number)
+    return "" if number.nil?
+    number_with_delimiter(
+      BigDecimal(number.to_s).round(0, BigDecimal::ROUND_HALF_UP).to_i,
+      delimiter: "."
+    )
+  end
 end

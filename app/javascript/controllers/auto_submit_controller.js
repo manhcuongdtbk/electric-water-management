@@ -1,0 +1,8 @@
+import { Controller } from "@hotwired/stimulus"
+
+export default class extends Controller {
+  submit() {
+    const form = this.element.closest("form") || this.element
+    form.requestSubmit()
+  }
+}

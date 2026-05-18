@@ -32,6 +32,7 @@ class Ability
      MeterReading, MainMeterReading, PersonnelEntry,
      NonEstablishmentSnapshot, UnitConfig, OtherDeduction, Calculation
     ].each { |m| can :manage, m }
+    can :recalculate, Calculation
 
     can :read, User
     can :manage, User, role: %w[system_admin unit_admin commander]
@@ -55,6 +56,7 @@ class Ability
     can [:read, :update], OtherDeduction, contact_point: { unit_id: uid }
     can [:read, :update], UnitConfig, unit_id: uid
     can :read, Calculation, contact_point: { unit_id: uid }
+    can :recalculate, Calculation, contact_point: { unit_id: uid }
     can :read, Period
     can :read, Rank
 
@@ -73,6 +75,7 @@ class Ability
     can [:read, :update], OtherDeduction,
       contact_point: { zone_id: managed_zone_ids, contact_point_type: "residential" }
     can :read, Calculation, contact_point: { zone_id: managed_zone_ids }
+    can :recalculate, Calculation, contact_point: { zone_id: managed_zone_ids }
   end
 
   def commander_abilities(user)
