@@ -1,0 +1,61 @@
+<% page_title "Chỉ số đầu mối" %>
+
+<% if @period.nil? %>
+  <div class="bg-yellow-50 border border-yellow-200 rounded p-4 text-sm text-yellow-800 mb-4">
+    <%= t("flash.no_open_period") %>
+  </div>
+<% else %>
+  <p class="text-sm text-gray-600 mb-4">Nhập chỉ số cuối kỳ cho <strong><%= period_label(@period) %></strong>. Khi cuối kỳ < đầu kỳ (thay công tơ), điền cột "Nhập thủ công".</p>
+<% end %>
+
+<%= form_with url: meter_entries_path, method: :patch, local: true do %>
+  <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden mb-4">
+    <table class="min-w-full divide-y divide-gray-200 text-sm">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Đầu mối</th>
+          <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Công tơ</th>
+          <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Đầu kỳ</th>
+          <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Cuối kỳ</th>
+          <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Sử dụng tự tính</th>
+          <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Nhập thủ công</th>
+          <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Ghi chú</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <% @readings.each do |r| %>
+          <tr>
+            <td class="px-3 py-2 text-gray-900"><%= r.meter.contact_point.name %></td>
+            <td class="px-3 py-2 text-gray-600"><%= r.meter.name %></td>
+            <td class="px-3 py-2 text-right text-gray-600"><%= r.reading_start %></td>
+            <td class="px-3 py-2 text-right">
+              <%= hidden_field_tag "meter_readings[#{r.id}][lock_version]", r.lock_version %>
+              <%= number_field_tag "meter_readings[#{r.id}][reading_end]", r.reading_end,
+                  step: "0.01", min: 0, disabled: @period.nil?,
+                  class: "w-28 rounded border border-gray-300 px-2 py-1 text-sm text-right" %>
+            </td>
+            <td class="px-3 py-2 text-right text-gray-600">
+              <% if r.reading_end && r.reading_start %>
+                <%= [r.reading_end - r.reading_start, 0].max %>
+              <% end %>
+            </td>
+            <td class="px-3 py-2 text-right">
+              <%= number_field_tag "meter_readings[#{r.id}][manual_usage]", r.manual_usage,
+                  step: "0.01", min: 0, disabled: @period.nil?,
+                  class: "w-24 rounded border border-gray-300 px-2 py-1 text-sm text-right" %>
+            </td>
+            <td class="px-3 py-2">
+              <%= text_field_tag "meter_readings[#{r.id}][manual_usage_note]", r.manual_usage_note,
+                  placeholder: "Ghi chú nếu thay công tơ", disabled: @period.nil?,
+                  class: "w-48 rounded border border-gray-300 px-2 py-1 text-sm" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <%= submit_tag "Lưu toàn bộ",
+      disabled: @period.nil?,
+      class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 disabled:bg-gray-300 cursor-pointer" %>
+<% end %>

@@ -1,5 +1,48 @@
 vi:
   activerecord:
+    attributes:
+      contact_point:
+        name: "Tên đầu mối"
+        contact_point_type: "Loại đầu mối"
+        unit: "Đơn vị"
+        zone: "Khu vực"
+        block: "Khối"
+        group: "Nhóm"
+        personnel_count: "Quân số"
+        types:
+          residential: "Sinh hoạt"
+          public: "Công cộng"
+          water_pump: "Bơm nước"
+          non_establishment: "Ngoài biên chế"
+      meter:
+        name: "Tên công tơ"
+        no_loss: "Không tổn hao"
+      block:
+        name: "Tên khối"
+        unit: "Đơn vị"
+      group:
+        name: "Tên nhóm"
+        unit: "Đơn vị"
+        block: "Khối"
+      zone:
+        name: "Tên khu vực"
+        manager_unit: "Đơn vị quản lý"
+      unit:
+        name: "Tên đơn vị"
+        zone: "Khu vực"
+      user:
+        username: "Tên đăng nhập"
+        display_name: "Tên hiển thị"
+        password: "Mật khẩu"
+        password_confirmation: "Xác nhận mật khẩu"
+        role: "Vai trò"
+        unit: "Đơn vị"
+        unit_id: "Đơn vị"
+        roles:
+          technician: "Kỹ thuật viên"
+          system_admin: "Quản trị viên hệ thống"
+          unit_admin: "Quản trị viên đơn vị"
+          commander: "Chỉ huy đơn vị"
     errors:
       models:
         user:
@@ -12,6 +55,8 @@ vi:
           attributes:
             base:
               unit_zone_xor: "phải chọn đúng một trong đơn vị hoặc khu vực"
+              residential_personnel_sum_too_low: "Tổng quân số đầu mối sinh hoạt phải lớn hơn hoặc bằng 1"
+              must_have_at_least_one_meter: "Đầu mối phải có ít nhất một công tơ"
             unit_id:
               must_be_blank: "phải để trống với loại này"
             block_id:
@@ -20,11 +65,38 @@ vi:
               must_be_blank: "phải để trống với loại này"
             personnel_count:
               must_be_blank: "phải để trống với loại này"
+            contact_point_type:
+              immutable: "Loại đầu mối không thể thay đổi sau khi tạo"
+        unit:
+          attributes:
+            zone_id:
+              immutable: "Không thể chuyển đơn vị sang khu vực khác"
+            base:
+              has_kept_contact_points: "Phải xóa hết đầu mối trong đơn vị trước khi xóa đơn vị"
+              has_users: "Phải xóa hết tài khoản thuộc đơn vị trước khi xóa đơn vị"
+        meter:
+          attributes:
+            base:
+              last_meter_cannot_be_destroyed: "Không thể xóa công tơ cuối cùng của đầu mối"
+        zone:
+          attributes:
+            base:
+              must_have_at_least_one_main_meter: "Khu vực phải có ít nhất một công tơ tổng"
+              has_kept_units: "Phải xóa hết đơn vị trong khu vực trước khi xóa khu vực"
+        rank:
+          attributes:
+            base:
+              has_personnel_entries_in_use: "Phải chuyển hết quân số sang nhóm cấp bậc khác trước khi xóa nhóm cấp bậc này"
         pump_allocation:
           attributes:
             base:
               unit_or_contact_point_xor: "phải chọn đúng một trong đơn vị hoặc đầu mối"
-              fixed_percentage_sum_exceeds_one_hundred: "tổng phần trăm cố định của tất cả phân bổ trong khu vực không được vượt quá 100"
+              fixed_percentage_sum_exceeds_one_hundred: "Tổng phần trăm cố định của tất cả phân bổ trong khu vực không được vượt quá 100"
+  errors:
+    access_denied: "Bạn không có quyền truy cập trang này."
+    stale_object: "Dữ liệu đã bị thay đổi bởi người khác. Vui lòng kiểm tra lại."
+    cannot_destroy_self: "Không thể tự xóa tài khoản của chính mình."
+    no_open_period_for_action: "Không có kỳ đang mở. Vui lòng liên hệ quản trị viên hệ thống."
   services:
     loss_calculator:
       warnings:
@@ -44,3 +116,32 @@ vi:
         unit_price_required: "Đơn giá là bắt buộc khi mở kỳ đầu tiên."
       warnings:
         meter_reading_mismatch: "Công tơ %{meter}: số cuối kỳ tháng %{period_month}/%{period_year} (%{reading_end}) không khớp số đầu kỳ tháng %{next_month}/%{next_year} (%{reading_start})."
+  sidebar:
+    groups:
+      view_results: "XEM KẾT QUẢ"
+      monthly_entry: "NHẬP LIỆU HÀNG THÁNG"
+      declarations: "KHAI BÁO"
+      settings: "THIẾT LẬP"
+      system: "HỆ THỐNG"
+    items:
+      dashboard: "Tổng quan"
+      billing: "Bảng tính tiền"
+      history: "Tra cứu lịch sử"
+      electricity_supply: "Nhập số điện lực"
+      meter_entries: "Chỉ số đầu mối"
+      pump_entries: "Chỉ số bơm nước"
+      contact_points: "Đầu mối"
+      blocks: "Khối"
+      groups: "Nhóm"
+      unit_config: "Cấu hình đơn vị"
+      zones: "Khu vực"
+      units: "Đơn vị"
+      pump_allocations: "Phân bổ bơm nước"
+      pricing: "Đơn giá điện"
+      ranks: "Nhóm cấp bậc"
+      users: "Tài khoản"
+      audit_logs: "Nhật ký hoạt động"
+      backups: "Sao lưu dữ liệu"
+  flash:
+    no_open_period: "Không có kỳ đang mở. Mọi ô nhập đã bị khóa. Vui lòng liên hệ quản trị viên hệ thống."
+    password_changed: "Đã đổi mật khẩu thành công."

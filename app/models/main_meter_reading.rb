@@ -1,4 +1,6 @@
 class MainMeterReading < ApplicationRecord
+  include Auditable
+
   belongs_to :main_meter
   belongs_to :period
 

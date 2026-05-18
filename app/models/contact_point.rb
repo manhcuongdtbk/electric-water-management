@@ -1,5 +1,6 @@
 class ContactPoint < ApplicationRecord
   include Discard::Model
+  include Auditable
 
   enum :contact_point_type, {
     residential: "residential",
@@ -15,6 +16,9 @@ class ContactPoint < ApplicationRecord
 
   has_many :meters
   has_many :meter_readings, through: :meters
+
+  accepts_nested_attributes_for :meters, allow_destroy: false,
+    reject_if: ->(attrs) { attrs[:name].blank? }
   has_many :personnel_entries
   has_many :non_establishment_snapshots
   has_many :other_deductions
@@ -30,8 +34,14 @@ class ContactPoint < ApplicationRecord
   validate :validate_unit_zone_xor, if: -> { type_residential? || type_public? }
   validate :validate_water_pump_constraints, if: :type_water_pump?
   validate :validate_non_establishment_constraints, if: :type_non_establishment?
+  validate :validate_residential_personnel_sum_on_create, on: :create,
+    if: -> { type_residential? && initial_personnel_counts.present? }
+  validate :validate_residential_personnel_sum_on_update, on: :update,
+    if: :type_residential?
+  validate :immutable_contact_point_type, on: :update
 
   after_create :create_current_period_snapshots
+  before_discard :discard_current_period_pump_allocations
 
   after_discard do
     meters.kept.find_each(&:discard)
@@ -62,7 +72,6 @@ class ContactPoint < ApplicationRecord
     end
   end
 
-
   def validate_unit_zone_xor
     if unit.present? == zone.present?
       errors.add(:base, :unit_zone_xor)
@@ -85,5 +94,29 @@ class ContactPoint < ApplicationRecord
     if personnel_count.nil? || personnel_count < 1
       errors.add(:personnel_count, :greater_than_or_equal_to, count: 1)
     end
+  end
+
+  def validate_residential_personnel_sum_on_create
+    total = (initial_personnel_counts || {}).values.sum(&:to_i)
+    errors.add(:base, :residential_personnel_sum_too_low) if total < 1
+  end
+
+  def validate_residential_personnel_sum_on_update
+    period = Period.current
+    return unless period
+    entries = personnel_entries.where(period: period)
+    return if entries.empty?
+    total = entries.sum(:count)
+    errors.add(:base, :residential_personnel_sum_too_low) if total < 1
+  end
+
+  def immutable_contact_point_type
+    errors.add(:contact_point_type, :immutable) if contact_point_type_changed?
+  end
+
+  def discard_current_period_pump_allocations
+    period = Period.current
+    return unless period
+    PumpAllocation.where(contact_point_id: id, period_id: period.id).destroy_all
   end
 end

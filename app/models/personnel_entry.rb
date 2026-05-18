@@ -1,4 +1,6 @@
 class PersonnelEntry < ApplicationRecord
+  include Auditable
+
   belongs_to :contact_point
   belongs_to :period
   belongs_to :rank

@@ -1,0 +1,16 @@
+<aside class="w-64 bg-white border-r border-gray-200 overflow-y-auto flex-shrink-0">
+  <nav class="p-4 space-y-6">
+    <% sidebar_groups.each do |group| %>
+      <div>
+        <h3 class="text-xs font-bold uppercase text-gray-500 mb-2 tracking-wider"><%= group[:label] %></h3>
+        <ul class="space-y-1">
+          <% group[:items].each do |item| %>
+            <li>
+              <%= link_to item[:label], item[:path], class: sidebar_item_class(item[:path]) %>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+  </nav>
+</aside>

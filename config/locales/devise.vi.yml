@@ -1,0 +1,15 @@
+vi:
+  devise:
+    failure:
+      already_authenticated: "Bạn đã đăng nhập."
+      inactive: "Tài khoản chưa được kích hoạt."
+      invalid: "Tên đăng nhập hoặc mật khẩu không đúng."
+      locked: "Tài khoản đã bị khóa."
+      not_found_in_database: "Tên đăng nhập hoặc mật khẩu không đúng."
+      timeout: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."
+      unauthenticated: "Vui lòng đăng nhập để tiếp tục."
+      unconfirmed: "Vui lòng xác nhận tài khoản trước khi tiếp tục."
+    sessions:
+      signed_in: "Đăng nhập thành công."
+      signed_out: "Đăng xuất thành công."
+      already_signed_out: "Đăng xuất thành công."

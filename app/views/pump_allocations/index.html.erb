@@ -1,0 +1,66 @@
+<% page_title "Phân bổ bơm nước" %>
+
+<% if @period.nil? %>
+  <div class="bg-yellow-50 border border-yellow-200 rounded p-3 text-sm text-yellow-800 mb-4">
+    Không có kỳ đang mở.
+  </div>
+<% end %>
+
+<div class="flex justify-between items-center mb-4">
+  <p class="text-sm text-gray-600">
+    <% if @period %>
+      Phân bổ cho <strong><%= period_label(@period) %></strong>
+    <% end %>
+  </p>
+  <% if @period && can?(:create, PumpAllocation) %>
+    <%= link_to "Thêm phân bổ", new_pump_allocation_path,
+        class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700" %>
+  <% end %>
+</div>
+
+<div class="text-sm text-gray-600 mb-2">Tổng số: <strong><%= @total_count %></strong></div>
+
+<div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Khu vực</th>
+        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Đối tượng</th>
+        <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase">% cố định</th>
+        <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Hệ số</th>
+        <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Thao tác</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200">
+      <% @pump_allocations.each do |alloc| %>
+        <tr>
+          <td class="px-4 py-2 text-sm text-gray-900"><%= alloc.zone.name %></td>
+          <td class="px-4 py-2 text-sm text-gray-600">
+            <%= alloc.unit&.name || alloc.contact_point&.name %>
+            <span class="text-xs text-gray-400 ml-1">
+              (<%= alloc.unit ? "Đơn vị" : "Đầu mối" %>)
+            </span>
+          </td>
+          <td class="px-4 py-2 text-sm text-right text-gray-600">
+            <%= alloc.fixed_percentage.present? ? "#{alloc.fixed_percentage}%" : "—" %>
+          </td>
+          <td class="px-4 py-2 text-sm text-right text-gray-600"><%= alloc.coefficient %></td>
+          <td class="px-4 py-2 text-sm text-right space-x-2">
+            <% if can?(:update, alloc) %>
+              <%= link_to "Sửa", edit_pump_allocation_path(alloc), class: "text-blue-600 hover:text-blue-800" %>
+            <% end %>
+            <% if can?(:destroy, alloc) %>
+              <%= button_to "Xóa", pump_allocation_path(alloc), method: :delete,
+                  form: { data: { turbo_confirm: "Xác nhận xóa phân bổ này?" } },
+                  class: "text-red-600 hover:text-red-800 underline inline cursor-pointer bg-transparent border-0 p-0" %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<div class="mt-4">
+  <%== pagy_nav(@pagy) if @pagy.pages > 1 %>
+</div>

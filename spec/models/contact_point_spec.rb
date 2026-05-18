@@ -150,6 +150,89 @@ RSpec.describe ContactPoint do
     end
   end
 
+  describe "before_discard :discard_current_period_pump_allocations" do
+    let!(:period) { create(:period, closed: false) }
+
+    it "xóa pump_allocations của contact_point trong kỳ đang mở" do
+      zone = create(:zone)
+      cp = create(:contact_point, :zone_residential, zone: zone)
+      allocation = create(:pump_allocation, :for_contact_point,
+                          zone: zone, period: period, contact_point: cp)
+      cp.discard
+      expect(PumpAllocation.where(id: allocation.id)).to be_empty
+    end
+
+    it "không xóa pump_allocations của kỳ khác" do
+      zone = create(:zone)
+      old_period = create(:period, year: 2025, month: 12, closed: true)
+      cp = create(:contact_point, :zone_residential, zone: zone)
+      old_allocation = create(:pump_allocation, :for_contact_point,
+                              zone: zone, period: old_period, contact_point: cp)
+      cp.discard
+      expect(PumpAllocation.where(id: old_allocation.id)).to be_present
+    end
+  end
+
+  describe "validate :immutable_contact_point_type (T48)" do
+    it "không cho đổi contact_point_type sau khi tạo" do
+      unit = create(:unit)
+      cp = create(:contact_point, :residential, unit: unit)
+      cp.contact_point_type = "public"
+      expect(cp).not_to be_valid
+      expect(cp.errors[:contact_point_type]).to include(
+        I18n.t("activerecord.errors.models.contact_point.attributes.contact_point_type.immutable")
+      )
+    end
+  end
+
+  describe "validate :validate_residential_personnel_sum_on_create (T34)" do
+    let!(:period) { create(:period, closed: false) }
+    let!(:rank) { create(:rank, period: period, position: 1, name: "R1") }
+
+    it "không cho tạo khi tổng quân số = 0 (initial_personnel_counts được set)" do
+      unit = create(:unit)
+      cp = build(:contact_point, :residential, unit: unit,
+                 initial_personnel_counts: { rank.id => 0 })
+      expect(cp).not_to be_valid
+      expect(cp.errors[:base]).to include(
+        I18n.t("activerecord.errors.models.contact_point.attributes.base.residential_personnel_sum_too_low")
+      )
+    end
+
+    it "cho tạo khi tổng quân số ≥ 1" do
+      unit = create(:unit)
+      cp = build(:contact_point, :residential, unit: unit,
+                 initial_personnel_counts: { rank.id => 1 })
+      expect(cp).to be_valid
+    end
+  end
+
+  describe "validate :validate_residential_personnel_sum_on_update (T34)" do
+    let!(:period) { create(:period, closed: false) }
+    let!(:rank) { create(:rank, period: period, position: 1, name: "R1") }
+
+    it "không cho update khi tổng quân số = 0 (entries có nhưng cộng = 0)" do
+      unit = create(:unit)
+      cp = create(:contact_point, :residential, unit: unit,
+                  initial_personnel_counts: { rank.id => 2 })
+      cp.personnel_entries.where(period: period).update_all(count: 0)
+      cp.name = "Tên mới"
+      expect(cp).not_to be_valid
+      expect(cp.errors[:base]).to include(
+        I18n.t("activerecord.errors.models.contact_point.attributes.base.residential_personnel_sum_too_low")
+      )
+    end
+
+    it "cho update khi không có entries trong period (CP chưa snapshot)" do
+      unit = create(:unit)
+      cp = create(:contact_point, :residential, unit: unit,
+                  initial_personnel_counts: { rank.id => 2 })
+      cp.personnel_entries.where(period: period).delete_all
+      cp.name = "Tên mới"
+      expect(cp).to be_valid
+    end
+  end
+
   describe "scope :in_zone" do
     let(:zone) { create(:zone) }
     let(:unit_in_zone) { create(:unit, zone: zone) }

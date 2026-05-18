@@ -1,0 +1,13 @@
+<% available_zones = Zone.accessible_by(current_ability) %>
+
+<div>
+  <%= f.label :zone_id, "Khu vực", class: "block text-sm font-medium text-gray-700 mb-1" %>
+  <%= f.select :zone_id, available_zones.order(:name).pluck(:name, :id),
+      { include_blank: "— Chọn khu vực —" },
+      class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
+      disabled: contact_point.persisted? %>
+</div>
+
+<% unless contact_point.persisted? %>
+  <%= render "meters_fields", f: f, contact_point: contact_point %>
+<% end %>

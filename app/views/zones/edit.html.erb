@@ -1,0 +1,20 @@
+<% page_title "Sửa khu vực: #{@zone.name}" %>
+<div class="bg-white rounded-lg shadow border border-gray-200 p-6 max-w-xl space-y-6">
+  <%= render "form", zone: @zone %>
+
+  <% if can?(:update, @zone) %>
+    <div class="border-t border-gray-200 pt-4">
+      <h3 class="text-base font-semibold text-gray-900 mb-3">Đơn vị quản lý khu vực</h3>
+      <%= form_with url: reassign_manager_zone_path(@zone), method: :patch, local: true, class: "flex space-x-2 items-end" do %>
+        <div class="flex-1">
+          <%= select_tag :manager_unit_id,
+              options_from_collection_for_select(@zone.units.kept.order(:name), :id, :name, @zone.manager_unit_id),
+              include_blank: "— Không có đơn vị quản lý —",
+              class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+        </div>
+        <%= submit_tag "Cập nhật", class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 cursor-pointer" %>
+      <% end %>
+      <p class="text-xs text-gray-500 mt-1">Đơn vị quản lý có quyền nhập số điện công tơ tổng và phụ trách bơm nước khu vực.</p>
+    </div>
+  <% end %>
+</div>

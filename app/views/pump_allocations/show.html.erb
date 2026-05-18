@@ -1,0 +1,20 @@
+<% page_title "Phân bổ bơm nước" %>
+
+<div class="bg-white rounded-lg shadow border border-gray-200 p-6 max-w-xl space-y-2">
+  <div><strong>Khu vực:</strong> <%= @pump_allocation.zone.name %></div>
+  <div><strong>Đối tượng:</strong>
+    <%= @pump_allocation.unit&.name || @pump_allocation.contact_point&.name %>
+    (<%= @pump_allocation.unit ? "Đơn vị" : "Đầu mối" %>)
+  </div>
+  <div><strong>% cố định:</strong>
+    <%= @pump_allocation.fixed_percentage.present? ? "#{@pump_allocation.fixed_percentage}%" : "—" %>
+  </div>
+  <div><strong>Hệ số:</strong> <%= @pump_allocation.coefficient %></div>
+</div>
+
+<div class="mt-4 space-x-2">
+  <% if can?(:update, @pump_allocation) %>
+    <%= link_to "Sửa", edit_pump_allocation_path(@pump_allocation), class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700" %>
+  <% end %>
+  <%= link_to "Quay lại", pump_allocations_path, class: "text-gray-600 hover:text-gray-800" %>
+</div>

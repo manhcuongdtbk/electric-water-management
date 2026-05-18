@@ -66,4 +66,40 @@ RSpec.describe Meter do
       end
     end
   end
+
+  describe "propagate_no_loss khi update meter.no_loss" do
+    let!(:period) { create(:period, closed: false) }
+    let!(:meter) { create(:meter, no_loss: false) }
+
+    it "cập nhật meter_reading của kỳ đang mở khi đổi no_loss" do
+      reading = meter.meter_readings.find_by(period: period)
+      expect(reading.no_loss).to be false
+      meter.update!(no_loss: true)
+      expect(reading.reload.no_loss).to be true
+    end
+
+    it "không lỗi khi không có kỳ đang mở" do
+      period.update!(closed: true)
+      expect { meter.update!(no_loss: true) }.not_to raise_error
+    end
+  end
+
+  describe "before_discard :ensure_not_last_meter (T38)" do
+    let(:cp) { create(:contact_point, :residential) }
+
+    it "chặn discard meter cuối cùng của contact_point residential" do
+      meter = create(:meter, contact_point: cp)
+      expect(meter.discard).to be false
+      expect(meter.errors[:base]).to include(
+        I18n.t("activerecord.errors.models.meter.attributes.base.last_meter_cannot_be_destroyed")
+      )
+    end
+
+    it "cho discard nếu còn meter khác" do
+      meter1 = create(:meter, contact_point: cp, name: "M1")
+      _meter2 = create(:meter, contact_point: cp, name: "M2")
+      expect(meter1.discard).to be true
+      expect(meter1.reload).to be_discarded
+    end
+  end
 end

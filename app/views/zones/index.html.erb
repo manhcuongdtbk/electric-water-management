@@ -1,0 +1,60 @@
+<% page_title "Khu vực" %>
+
+<div class="flex justify-between items-center mb-4">
+  <%= form_with url: zones_path, method: :get, local: true, class: "flex space-x-2" do %>
+    <%= text_field_tag :q, params[:q], placeholder: "Tìm theo tên...",
+        class: "rounded border border-gray-300 px-3 py-2 text-sm" %>
+    <%= submit_tag "Tìm", class: "bg-gray-100 text-gray-700 px-4 py-2 rounded text-sm font-medium hover:bg-gray-200 cursor-pointer" %>
+  <% end %>
+  <% if can?(:create, Zone) %>
+    <%= link_to "Thêm khu vực", new_zone_path,
+        class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700" %>
+  <% end %>
+</div>
+
+<div class="text-sm text-gray-600 mb-2">Tổng số: <strong><%= @total_count %></strong></div>
+
+<div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Tên</th>
+        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Đơn vị</th>
+        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Đơn vị quản lý</th>
+        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Công tơ tổng</th>
+        <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Thao tác</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200">
+      <% @zones.each do |zone| %>
+        <tr>
+          <td class="px-4 py-2 text-sm font-medium text-gray-900"><%= zone.name %></td>
+          <td class="px-4 py-2 text-sm text-gray-600">
+            <%= zone.units.kept.count %>
+            <% if zone.units.kept.empty? %>
+              <span class="ml-2 text-yellow-700 text-xs">(Chưa có đơn vị)</span>
+            <% end %>
+          </td>
+          <td class="px-4 py-2 text-sm text-gray-600"><%= zone.manager_unit&.name || "—" %></td>
+          <td class="px-4 py-2 text-sm text-gray-600">
+            <%= zone.main_meters.kept.pluck(:name).join(", ") %>
+          </td>
+          <td class="px-4 py-2 text-sm text-right space-x-2">
+            <% if can?(:update, zone) %>
+              <%= link_to "Sửa", edit_zone_path(zone), class: "text-blue-600 hover:text-blue-800" %>
+            <% end %>
+            <% if can?(:destroy, zone) %>
+              <%= button_to "Xóa", zone_path(zone), method: :delete,
+                  form: { data: { turbo_confirm: "Xác nhận xóa khu vực \"#{zone.name}\"?" } },
+                  class: "text-red-600 hover:text-red-800 underline inline cursor-pointer bg-transparent border-0 p-0" %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<div class="mt-4">
+  <%== pagy_nav(@pagy) if @pagy.pages > 1 %>
+</div>

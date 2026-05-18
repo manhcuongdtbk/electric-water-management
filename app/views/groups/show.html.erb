@@ -1,0 +1,14 @@
+<% page_title "Nhóm: #{@group.name}" %>
+
+<div class="bg-white rounded-lg shadow border border-gray-200 p-6 max-w-xl space-y-2">
+  <div><strong>Tên:</strong> <%= @group.name %></div>
+  <div><strong>Đơn vị:</strong> <%= @group.unit.name %></div>
+  <div><strong>Khối:</strong> <%= @group.block&.name || "—" %></div>
+</div>
+
+<div class="mt-4 space-x-2">
+  <% if can?(:update, @group) %>
+    <%= link_to "Sửa", edit_group_path(@group), class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700" %>
+  <% end %>
+  <%= link_to "Quay lại", groups_path, class: "text-gray-600 hover:text-gray-800" %>
+</div>

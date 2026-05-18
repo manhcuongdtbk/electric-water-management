@@ -1,0 +1,19 @@
+vi:
+  pagy:
+    aria_label:
+      nav: "Phân trang"
+      prev: "Trang trước"
+      next: "Trang sau"
+      page: "Trang %{page}"
+      current: "Trang hiện tại %{page}"
+      gap: "Bỏ qua các trang"
+    nav:
+      prev: "← Trước"
+      next: "Sau →"
+      gap: "…"
+    info:
+      no_items: "Không có bản ghi nào"
+      single_page: "Hiển thị %{count} bản ghi"
+      multiple_pages: "Hiển thị %{from} - %{to} trong tổng %{count} bản ghi"
+    items: "Hiển thị"
+    page: "trang"

@@ -1,30 +1,41 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
   <head>
-    <title><%= content_for(:title) || "Electric Water Management" %></title>
+    <title><%= content_for(:title).presence || "Hệ thống quản lý điện nội bộ Sư đoàn" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Electric Water Management">
+    <meta name="application-name" content="Hệ thống quản lý điện">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
     <%= yield :head %>
 
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
-    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
-
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
   </head>
 
-  <body>
-    <main class="container mx-auto mt-28 px-5 flex">
-      <%= yield %>
-    </main>
+  <body class="h-screen flex flex-col bg-gray-50 text-gray-900 antialiased">
+    <% if user_signed_in? && !current_user.force_password_change? %>
+      <%= render "layouts/topbar" %>
+      <div class="flex flex-1 overflow-hidden">
+        <%= render "layouts/sidebar" %>
+        <main class="flex-1 overflow-y-auto">
+          <div class="px-6 py-4 max-w-7xl mx-auto">
+            <%= render "layouts/breadcrumb" %>
+            <%= render "layouts/flash" %>
+            <%= yield %>
+          </div>
+        </main>
+      </div>
+    <% else %>
+      <main class="container mx-auto mt-16 px-5 max-w-xl">
+        <%= render "layouts/flash" %>
+        <%= yield %>
+      </main>
+    <% end %>
   </body>
 </html>

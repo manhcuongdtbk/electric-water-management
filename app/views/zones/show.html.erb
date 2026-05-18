@@ -1,0 +1,15 @@
+<% page_title "Khu vực: #{@zone.name}" %>
+
+<div class="bg-white rounded-lg shadow border border-gray-200 p-6 max-w-xl space-y-2">
+  <div><strong>Tên:</strong> <%= @zone.name %></div>
+  <div><strong>Đơn vị quản lý:</strong> <%= @zone.manager_unit&.name || "—" %></div>
+  <div><strong>Số đơn vị:</strong> <%= @zone.units.kept.count %></div>
+  <div><strong>Công tơ tổng:</strong> <%= @zone.main_meters.kept.pluck(:name).join(", ") %></div>
+</div>
+
+<div class="mt-4 space-x-2">
+  <% if can?(:update, @zone) %>
+    <%= link_to "Sửa", edit_zone_path(@zone), class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700" %>
+  <% end %>
+  <%= link_to "Quay lại", zones_path, class: "text-gray-600 hover:text-gray-800" %>
+</div>

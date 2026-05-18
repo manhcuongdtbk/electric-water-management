@@ -1,0 +1,54 @@
+<%= form_with model: contact_point, local: true, class: "space-y-4" do |f| %>
+  <% if contact_point.errors.any? %>
+    <div class="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-700">
+      <ul class="list-disc list-inside space-y-1">
+        <% contact_point.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <% if contact_point.new_record? %>
+    <div>
+      <%= f.label :contact_point_type, "Loại đầu mối", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.select :contact_point_type, [
+            ["Sinh hoạt", "residential"],
+            ["Công cộng", "public"],
+            ["Bơm nước", "water_pump"],
+            ["Ngoài biên chế", "non_establishment"]
+          ], { selected: contact_point.contact_point_type },
+          class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
+          disabled: contact_point.persisted? %>
+      <p class="text-xs text-gray-500 mt-1">Loại đầu mối không thể thay đổi sau khi tạo.</p>
+    </div>
+  <% else %>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Loại đầu mối</label>
+      <input type="text" disabled value="<%= t("activerecord.attributes.contact_point.types.#{contact_point.contact_point_type}", default: contact_point.contact_point_type) %>"
+             class="block w-full rounded border border-gray-300 px-3 py-2 text-sm bg-gray-50">
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.label :name, "Tên đầu mối", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.text_field :name, required: true,
+        class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+  </div>
+
+  <% case contact_point.contact_point_type %>
+  <% when "residential" %>
+    <%= render "form_residential", f: f, contact_point: contact_point %>
+  <% when "public" %>
+    <%= render "form_public", f: f, contact_point: contact_point %>
+  <% when "water_pump" %>
+    <%= render "form_water_pump", f: f, contact_point: contact_point %>
+  <% when "non_establishment" %>
+    <%= render "form_non_establishment", f: f, contact_point: contact_point %>
+  <% end %>
+
+  <div class="flex space-x-2 pt-4">
+    <%= f.submit "Lưu", class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 cursor-pointer" %>
+    <%= link_to "Hủy", contact_points_path, class: "text-gray-600 px-4 py-2 hover:text-gray-800" %>
+  </div>
+<% end %>

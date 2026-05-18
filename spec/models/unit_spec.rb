@@ -34,6 +34,54 @@ RSpec.describe Unit do
     end
   end
 
+  describe "validate :immutable_zone_id (T30)" do
+    it "không cho đổi zone_id sau khi tạo" do
+      zone_a = create(:zone)
+      zone_b = create(:zone)
+      unit = create(:unit, zone: zone_a)
+      unit.zone_id = zone_b.id
+      expect(unit).not_to be_valid
+      expect(unit.errors[:zone_id]).to include(
+        I18n.t("activerecord.errors.models.unit.attributes.zone_id.immutable")
+      )
+    end
+  end
+
+  describe "before_discard :ensure_no_kept_dependents (T39)" do
+    let(:unit) { create(:unit) }
+
+    it "chặn discard nếu còn contact_point kept" do
+      create(:contact_point, :residential, unit: unit)
+      expect(unit.discard).to be false
+      expect(unit.errors[:base]).to include(
+        I18n.t("activerecord.errors.models.unit.attributes.base.has_kept_contact_points")
+      )
+    end
+
+    it "chặn discard nếu còn user" do
+      create(:user, :unit_admin, unit: unit)
+      expect(unit.discard).to be false
+      expect(unit.errors[:base]).to include(
+        I18n.t("activerecord.errors.models.unit.attributes.base.has_users")
+      )
+    end
+
+    it "cho discard khi đã xóa hết dependents" do
+      expect(unit.discard).to be true
+      expect(unit.reload).to be_discarded
+    end
+  end
+
+  describe "before_discard :clear_zone_manager_if_self (T41)" do
+    it "set zones.manager_unit_id = nil khi discard unit là manager" do
+      zone = create(:zone)
+      unit = create(:unit, zone: zone)
+      expect(zone.reload.manager_unit_id).to eq(unit.id)
+      unit.discard
+      expect(zone.reload.manager_unit_id).to be_nil
+    end
+  end
+
   describe "discard" do
     it "có scope kept" do
       kept = create(:unit)

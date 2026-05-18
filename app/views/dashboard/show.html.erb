@@ -1,0 +1,32 @@
+<% page_title "Tổng quan" %>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <h3 class="text-sm font-semibold text-gray-500 uppercase mb-2">Vai trò</h3>
+    <p class="text-xl font-medium text-gray-900">
+      <%= t("activerecord.attributes.user.roles.#{current_user.role}", default: current_user.role.humanize) %>
+    </p>
+  </div>
+
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <h3 class="text-sm font-semibold text-gray-500 uppercase mb-2">Kỳ tính toán</h3>
+    <p class="text-xl font-medium text-gray-900">
+      <% if current_period %>
+        <%= period_label(current_period) %> (Đang mở)
+      <% else %>
+        <span class="text-yellow-700">Không có kỳ đang mở</span>
+      <% end %>
+    </p>
+  </div>
+
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <h3 class="text-sm font-semibold text-gray-500 uppercase mb-2">Đơn vị</h3>
+    <p class="text-xl font-medium text-gray-900">
+      <%= current_user.unit&.name.presence || "—" %>
+    </p>
+  </div>
+</div>
+
+<div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+  Trang tổng quan chi tiết (chỉ số sử dụng kỳ này, cảnh báo thiếu dữ liệu, tổn hao toàn khu vực) sẽ được hoàn thiện ở phase sau.
+</div>

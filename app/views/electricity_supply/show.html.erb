@@ -1,0 +1,55 @@
+<% page_title "Nhập số điện lực" %>
+
+<% if @period.nil? %>
+  <div class="bg-yellow-50 border border-yellow-200 rounded p-4 text-sm text-yellow-800 mb-4">
+    <%= t("flash.no_open_period") %>
+  </div>
+<% else %>
+  <p class="text-sm text-gray-600 mb-4">Nhập số sử dụng công tơ tổng cho <strong><%= period_label(@period) %></strong>.</p>
+<% end %>
+
+<%= form_with url: electricity_supply_path, method: :patch, local: true do %>
+  <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden mb-4">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Khu vực</th>
+          <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Công tơ tổng</th>
+          <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Số sử dụng (kWh)</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <% @readings.each do |r| %>
+          <tr>
+            <td class="px-4 py-2 text-sm text-gray-900"><%= r.main_meter.zone.name %></td>
+            <td class="px-4 py-2 text-sm text-gray-600"><%= r.main_meter.name %></td>
+            <td class="px-4 py-2 text-sm text-right">
+              <%= hidden_field_tag "main_meter_readings[#{r.id}][lock_version]", r.lock_version %>
+              <%= number_field_tag "main_meter_readings[#{r.id}][usage]", r.usage,
+                  step: "0.01", min: 0, disabled: @period.nil?,
+                  class: "w-40 rounded border border-gray-300 px-2 py-1 text-sm text-right" %>
+            </td>
+          </tr>
+        <% end %>
+        <% if @period %>
+          <% existing_meter_ids = @readings.pluck(:main_meter_id) %>
+          <% MainMeter.kept.accessible_by(current_ability).where.not(id: existing_meter_ids).order(:name).each do |mm| %>
+            <tr>
+              <td class="px-4 py-2 text-sm text-gray-900"><%= mm.zone.name %></td>
+              <td class="px-4 py-2 text-sm text-gray-600"><%= mm.name %> <span class="text-xs text-yellow-600">(Chưa nhập)</span></td>
+              <td class="px-4 py-2 text-sm text-right">
+                <%= number_field_tag "new_main_meter_readings[#{mm.id}][usage]", "",
+                    step: "0.01", min: 0,
+                    class: "w-40 rounded border border-gray-300 px-2 py-1 text-sm text-right" %>
+              </td>
+            </tr>
+          <% end %>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <%= submit_tag "Lưu toàn bộ",
+      disabled: @period.nil?,
+      class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 disabled:bg-gray-300 cursor-pointer" %>
+<% end %>
