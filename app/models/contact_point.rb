@@ -25,9 +25,13 @@ class ContactPoint < ApplicationRecord
     uniqueness: { scope: [:unit_id, :zone_id, :contact_point_type] }
   validates :contact_point_type, presence: true
 
+  attr_accessor :initial_personnel_counts
+
   validate :validate_unit_zone_xor, if: -> { type_residential? || type_public? }
   validate :validate_water_pump_constraints, if: :type_water_pump?
   validate :validate_non_establishment_constraints, if: :type_non_establishment?
+
+  after_create :create_current_period_snapshots
 
   after_discard do
     meters.kept.find_each(&:discard)
@@ -42,6 +46,22 @@ class ContactPoint < ApplicationRecord
   end
 
   private
+
+  def create_current_period_snapshots
+    period = Period.current
+    return unless period
+
+    if type_residential?
+      period.ranks.find_each do |rank|
+        count = (initial_personnel_counts || {})[rank.id] || 0
+        personnel_entries.create!(period: period, rank: rank, count: count)
+      end
+      other_deductions.create!(period: period, other_type: "fixed", other_value: 0)
+    elsif type_non_establishment?
+      non_establishment_snapshots.create!(period: period, personnel_count: personnel_count)
+    end
+  end
+
 
   def validate_unit_zone_xor
     if unit.present? == zone.present?

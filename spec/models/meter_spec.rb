@@ -38,4 +38,32 @@ RSpec.describe Meter do
       expect(Meter).to respond_to(:kept)
     end
   end
+
+  describe "auto-snapshot khi tạo meter lúc kỳ đang mở" do
+    context "khi không có kỳ đang mở" do
+      it "không tạo meter_reading" do
+        meter = create(:meter)
+        expect(meter.meter_readings).to be_empty
+      end
+    end
+
+    context "khi kỳ đang mở" do
+      let!(:period) { create(:period, closed: false) }
+
+      it "tạo meter_reading với reading_start=0, reading_end=nil, no_loss từ meter" do
+        meter = create(:meter, no_loss: true)
+        reading = meter.meter_readings.find_by(period: period)
+        expect(reading).to be_present
+        expect(reading.reading_start).to eq(0)
+        expect(reading.reading_end).to be_nil
+        expect(reading.no_loss).to be true
+      end
+
+      it "no_loss=false khi meter no_loss=false" do
+        meter = create(:meter, no_loss: false)
+        reading = meter.meter_readings.find_by(period: period)
+        expect(reading.no_loss).to be false
+      end
+    end
+  end
 end

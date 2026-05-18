@@ -177,4 +177,71 @@ RSpec.describe ContactPoint do
       expect(cp.effective_zone).to eq(unit.zone)
     end
   end
+
+  describe "auto-snapshot khi tạo đầu mối lúc kỳ đang mở (T25, T26)" do
+    context "khi không có kỳ đang mở (T26)" do
+      it "không tạo personnel_entries cho residential" do
+        cp = create(:contact_point, :residential)
+        expect(cp.personnel_entries).to be_empty
+        expect(cp.other_deductions).to be_empty
+      end
+
+      it "không tạo non_establishment_snapshot cho non_establishment" do
+        cp = create(:contact_point, :non_establishment)
+        expect(cp.non_establishment_snapshots).to be_empty
+      end
+    end
+
+    context "khi kỳ đang mở (T25)" do
+      let!(:period) { create(:period, year: 2026, month: 5, closed: false) }
+      let!(:ranks) {
+        7.times.map { |i| create(:rank, period: period, name: "Cấp #{i + 1}", quota: 100, position: i + 1) }
+      }
+
+      it "tạo personnel_entries cho residential — count = 0 mặc định cho mọi rank" do
+        cp = create(:contact_point, :residential)
+        expect(cp.personnel_entries.count).to eq(7)
+        expect(cp.personnel_entries.pluck(:count)).to all(eq(0))
+      end
+
+      it "dùng initial_personnel_counts khi cung cấp" do
+        ha_si_quan_rank = ranks.last
+        cp = create(:contact_point, :residential,
+                    initial_personnel_counts: { ha_si_quan_rank.id => 3 })
+        expect(cp.personnel_entries.count).to eq(7)
+        expect(cp.personnel_entries.find_by(rank: ha_si_quan_rank).count).to eq(3)
+        other_entries = cp.personnel_entries.where.not(rank_id: ha_si_quan_rank.id)
+        expect(other_entries.pluck(:count)).to all(eq(0))
+      end
+
+      it "tạo other_deduction mặc định fixed 0 cho residential" do
+        cp = create(:contact_point, :residential)
+        deduction = cp.other_deductions.find_by(period: period)
+        expect(deduction).to be_present
+        expect(deduction.other_type).to eq("fixed")
+        expect(deduction.other_value).to eq(0)
+      end
+
+      it "tạo non_establishment_snapshot cho non_establishment với personnel_count từ contact_point" do
+        cp = create(:contact_point, :non_establishment, personnel_count: 7)
+        snapshot = cp.non_establishment_snapshots.find_by(period: period)
+        expect(snapshot).to be_present
+        expect(snapshot.personnel_count).to eq(7)
+      end
+
+      it "không tạo snapshots cho public" do
+        cp = create(:contact_point, :public_type)
+        expect(cp.personnel_entries).to be_empty
+        expect(cp.other_deductions).to be_empty
+        expect(cp.non_establishment_snapshots).to be_empty
+      end
+
+      it "không tạo snapshots cho water_pump" do
+        cp = create(:contact_point, :water_pump)
+        expect(cp.personnel_entries).to be_empty
+        expect(cp.other_deductions).to be_empty
+        expect(cp.non_establishment_snapshots).to be_empty
+      end
+    end
+  end
 end

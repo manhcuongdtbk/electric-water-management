@@ -41,6 +41,55 @@ RSpec.describe PumpAllocation do
         expect(allocation).not_to be_valid
       end
     end
+
+    describe "tổng fixed_percentage trong cùng zone+period không vượt quá 100" do
+      let(:zone) { create(:zone) }
+      let(:period) { create(:period, closed: true) }
+      let(:unit_one) { create(:unit, zone: zone) }
+      let(:unit_two) { create(:unit, zone: zone) }
+      let(:unit_three) { create(:unit, zone: zone) }
+
+      it "hợp lệ khi tổng = 100" do
+        create(:pump_allocation, zone: zone, period: period, unit: unit_one, fixed_percentage: 60)
+        allocation = build(:pump_allocation, zone: zone, period: period, unit: unit_two, fixed_percentage: 40)
+        expect(allocation).to be_valid
+      end
+
+      it "không hợp lệ khi tổng > 100" do
+        create(:pump_allocation, zone: zone, period: period, unit: unit_one, fixed_percentage: 60)
+        allocation = build(:pump_allocation, zone: zone, period: period, unit: unit_two, fixed_percentage: 41)
+        expect(allocation).not_to be_valid
+        expect(allocation.errors[:base])
+          .to include(I18n.t("activerecord.errors.models.pump_allocation.attributes.base.fixed_percentage_sum_exceeds_one_hundred"))
+      end
+
+      it "không tính chính bản ghi đang update" do
+        allocation = create(:pump_allocation, zone: zone, period: period, unit: unit_one, fixed_percentage: 70)
+        allocation.fixed_percentage = 80
+        expect(allocation).to be_valid
+      end
+
+      it "không ảnh hưởng giữa các zone khác nhau" do
+        other_zone = create(:zone)
+        other_unit = create(:unit, zone: other_zone)
+        create(:pump_allocation, zone: other_zone, period: period, unit: other_unit, fixed_percentage: 90)
+        allocation = build(:pump_allocation, zone: zone, period: period, unit: unit_one, fixed_percentage: 90)
+        expect(allocation).to be_valid
+      end
+
+      it "không ảnh hưởng giữa các period khác nhau" do
+        other_period = create(:period, year: 2027, month: 1, closed: true)
+        create(:pump_allocation, zone: zone, period: other_period, unit: unit_one, fixed_percentage: 90)
+        allocation = build(:pump_allocation, zone: zone, period: period, unit: unit_one, fixed_percentage: 90)
+        expect(allocation).to be_valid
+      end
+
+      it "không cấm khi fixed_percentage = nil" do
+        create(:pump_allocation, zone: zone, period: period, unit: unit_one, fixed_percentage: 100)
+        allocation = build(:pump_allocation, zone: zone, period: period, unit: unit_two, fixed_percentage: nil, coefficient: 2)
+        expect(allocation).to be_valid
+      end
+    end
   end
 
   describe "optimistic locking" do
