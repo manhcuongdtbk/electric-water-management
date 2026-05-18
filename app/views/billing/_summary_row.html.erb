@@ -1,0 +1,31 @@
+<%
+  cell      = "border border-gray-300 px-2 py-1 text-xs"
+  num_cell  = "#{cell} text-right whitespace-nowrap"
+  text_cell = "#{cell} whitespace-nowrap"
+  empty_info_cols = (@show_zone_column ? 1 : 0) + (@show_unit_column ? 1 : 0) + 2
+%>
+<tr class="bg-gray-100 font-semibold">
+  <% empty_info_cols.times do %><td class="<%= text_cell %>"></td><% end %>
+  <td class="<%= text_cell %>">TỔNG</td>
+  <% @ranks.each do |rank| %>
+    <td class="<%= num_cell %>"><%= @summary[:personnel_by_rank][rank.id] || 0 %></td>
+  <% end %>
+  <td class="<%= num_cell %>"><%= @summary[:total_personnel] %></td>
+  <td class="<%= num_cell %>"><%= number_to_vi(@summary[:residential_standard]) %></td>
+  <td class="<%= num_cell %>"><%= number_to_vi(@summary[:water_pump_standard]) %></td>
+  <td class="<%= num_cell %>"><%= number_to_vi(@summary[:total_standard]) %></td>
+  <td class="<%= num_cell %>"><%= number_to_vi(@summary[:savings_deduction]) %></td>
+  <td class="<%= num_cell %>"><%= number_to_vi(@summary[:loss_deduction]) %></td>
+  <td class="<%= num_cell %>"><%= number_to_vi(@summary[:division_public_deduction]) %></td>
+  <td class="<%= num_cell %>"><%= number_to_vi(@summary[:unit_public_deduction]) %></td>
+  <td class="<%= num_cell %>"><%= number_to_vi(@summary[:other_deduction]) %></td>
+  <td class="<%= num_cell %>"><%= number_to_vi(@summary[:total_deduction]) %></td>
+  <td class="<%= num_cell %>"><%= number_to_vi(@summary[:remaining_standard]) %></td>
+  <td class="<%= num_cell %>"><%= number_to_vi(@summary[:residential_usage]) %></td>
+  <td class="<%= num_cell %>"><%= number_to_vi(@summary[:water_pump_usage]) %></td>
+  <td class="<%= num_cell %>"><%= number_to_vi(@summary[:total_usage]) %></td>
+  <td class="<%= num_cell %> text-green-700"><%= @summary[:surplus] > 0 ? number_to_vi(@summary[:surplus]) : "" %></td>
+  <td class="<%= num_cell %> text-red-700"><%= @summary[:deficit] > 0 ? number_to_vi(@summary[:deficit]) : "" %></td>
+  <td class="<%= num_cell %> text-green-700"><%= @summary[:surplus_amount] > 0 ? money_to_vi_plain(@summary[:surplus_amount]) : "" %></td>
+  <td class="<%= num_cell %> text-red-700"><%= @summary[:deficit_amount] > 0 ? money_to_vi_plain(@summary[:deficit_amount]) : "" %></td>
+</tr>

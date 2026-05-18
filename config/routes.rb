@@ -9,7 +9,9 @@ Rails.application.routes.draw do
 
   # XEM KẾT QUẢ
   resource :dashboard, only: [:show], controller: "dashboard"
-  resource :billing, only: [:show], controller: "billing"
+  resource :billing, only: [:show], controller: "billing" do
+    post :recalculate
+  end
   resource :history, only: [:show], controller: "history"
 
   # NHẬP LIỆU

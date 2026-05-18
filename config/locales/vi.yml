@@ -145,3 +145,33 @@ vi:
   flash:
     no_open_period: "Không có kỳ đang mở. Mọi ô nhập đã bị khóa. Vui lòng liên hệ quản trị viên hệ thống."
     password_changed: "Đã đổi mật khẩu thành công."
+  billing:
+    flash:
+      recalculated: "Đã tính toán lại bảng tính tiền."
+      no_data: "Chưa có dữ liệu tính toán. Bấm \"Tính toán lại\" để tính toán kỳ này."
+    buttons:
+      recalculate: "Tính toán lại"
+      export_xlsx: "Xuất Excel"
+      search: "Tìm kiếm"
+    confirm:
+      recalculate: "Xác nhận tính toán lại bảng tính tiền?"
+  dashboard:
+    sections:
+      public_total: "Sử dụng điện công cộng toàn khu vực"
+      pump_total: "Sử dụng điện bơm nước toàn khu vực"
+      deficit_kw: "Tổng thâm điện"
+      deficit_amount: "Thành tiền phải thu"
+      deficit_count: "Số đầu mối thiếu"
+      surplus_count: "Số đầu mối thừa"
+      input_status: "Trạng thái nhập liệu kỳ hiện tại"
+    status:
+      entered: "Đã nhập"
+      pending: "Chưa nhập"
+  history:
+    tabs:
+      single: "Xem kỳ cũ"
+      compare: "So sánh 2 kỳ"
+      range: "Theo khoảng thời gian"
+    compare:
+      only_in_a: "chỉ có ở kỳ %{label}"
+      only_in_b: "mới ở kỳ %{label}"

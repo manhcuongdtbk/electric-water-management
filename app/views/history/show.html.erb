@@ -1,6 +1,14 @@
 <% page_title "Tra cứu lịch sử" %>
 
-<div class="bg-blue-50 border border-blue-200 rounded-lg p-6 text-blue-800">
-  <h2 class="text-lg font-semibold mb-2">Tra cứu lịch sử đang phát triển</h2>
-  <p>Tính năng tra cứu và so sánh dữ liệu giữa các kỳ sẽ được hoàn thiện ở phase sau.</p>
+<div class="mb-4 border-b border-gray-200">
+  <nav class="flex gap-1" aria-label="Tabs">
+    <% tabs = [["single", "Xem kỳ cũ"], ["compare", "So sánh 2 kỳ"], ["range", "Theo khoảng thời gian"]] %>
+    <% tabs.each do |key, label| %>
+      <%= link_to label,
+            history_path(mode: key),
+            class: "px-4 py-2 text-sm font-medium rounded-t #{@mode == key ? "bg-blue-50 text-blue-700 border border-blue-200 border-b-0" : "text-gray-600 hover:text-gray-900"}" %>
+    <% end %>
+  </nav>
 </div>
+
+<%= render @mode %>

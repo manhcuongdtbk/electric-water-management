@@ -1,7 +1,60 @@
 <% page_title "Bảng tính tiền" %>
 
-<div class="bg-blue-50 border border-blue-200 rounded-lg p-6 text-blue-800">
-  <h2 class="text-lg font-semibold mb-2">Bảng tính tiền đang phát triển</h2>
-  <p>Tính năng hiển thị bảng tính tiền chi tiết (cache, tính toán lại, xuất Excel) sẽ được hoàn thiện ở phase sau.</p>
-  <p class="mt-2 text-sm">Hệ thống tính toán nền (CalculationOrchestrator) đã sẵn sàng từ Phase 2.</p>
-</div>
+<% if @period.nil? %>
+  <div class="bg-yellow-50 border border-yellow-200 rounded p-6 text-yellow-900">
+    <%= t("flash.no_open_period") %>
+  </div>
+<% else %>
+  <div class="flex flex-wrap items-end justify-between gap-4 mb-4">
+    <div>
+      <h1 class="text-xl font-semibold"><%= period_label(@period) %></h1>
+      <p class="text-sm text-gray-700 mt-1">
+        Đơn giá điện: <strong><%= money_to_vi(@period.unit_price) %>/kW</strong>
+        <% unless @period.open? %>
+          <span class="ml-2 px-2 py-0.5 rounded bg-gray-200 text-gray-700 text-xs">Đã đóng</span>
+        <% end %>
+      </p>
+    </div>
+    <%= render "filter" %>
+  </div>
+
+  <%= render "warnings" %>
+
+  <div class="flex flex-wrap justify-between items-center gap-3 mb-3">
+    <%= form_with url: billing_path, method: :get, local: true, class: "flex gap-2" do %>
+      <%= hidden_field_tag :period_id, @period.id %>
+      <%= hidden_field_tag :zone_id, @zone&.id %>
+      <%= hidden_field_tag :unit_id, @unit&.id %>
+      <%= text_field_tag :q, params[:q], placeholder: "Tìm đầu mối...",
+            class: "rounded border-gray-300 px-3 py-2 text-sm" %>
+      <%= submit_tag "Tìm kiếm",
+            class: "bg-gray-100 text-gray-700 px-4 py-2 rounded text-sm font-medium hover:bg-gray-200" %>
+    <% end %>
+
+    <div class="flex gap-2">
+      <% if @period.open? && can?(:recalculate, Calculation) %>
+        <%= button_to "Tính toán lại", recalculate_billing_path(billing_filter_params),
+              method: :post,
+              form: { data: { turbo_confirm: "Xác nhận tính toán lại bảng tính tiền?" } },
+              class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700" %>
+      <% end %>
+      <%= link_to "Xuất Excel",
+            billing_path(billing_filter_params.merge(format: :xlsx)),
+            class: "bg-green-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-700" %>
+    </div>
+  </div>
+
+  <div class="text-sm text-gray-600 mb-2">Tổng số đầu mối: <strong><%= @total_count %></strong></div>
+
+  <div class="-mx-6">
+    <div class="overflow-x-auto px-6 max-h-[70vh] overflow-y-auto"
+         data-controller="column-resize"
+         data-column-resize-storage-key-value="billing-<%= current_user.role %>-<%= billing_column_signature(show_zone: @show_zone_column, show_unit: @show_unit_column) %>">
+      <%= render "table" %>
+    </div>
+  </div>
+
+  <% if @pagy && @pagy.pages > 1 %>
+    <div class="mt-4"><%== pagy_nav(@pagy) %></div>
+  <% end %>
+<% end %>

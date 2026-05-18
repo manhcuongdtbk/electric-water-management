@@ -1,0 +1,243 @@
+wb = xlsx_package.workbook
+
+  num_style    = wb.styles.add_style(format_code: "#,##0.00", alignment: { horizontal: :right })
+  money_style  = wb.styles.add_style(format_code: "#,##0", alignment: { horizontal: :right })
+  int_style    = wb.styles.add_style(format_code: "0", alignment: { horizontal: :right })
+  header_style = wb.styles.add_style(
+    b: true,
+    bg_color: "EEEEEE",
+    alignment: { horizontal: :center, vertical: :center, wrap_text: true },
+    border: { style: :thin, color: "999999" }
+  )
+  text_style   = wb.styles.add_style(border: { style: :thin, color: "BBBBBB" })
+  total_style  = wb.styles.add_style(
+    b: true,
+    bg_color: "F3F4F6",
+    border: { style: :thin, color: "999999" }
+  )
+
+  show_zone_count = @show_zone_column ? 1 : 0
+  show_unit_count = @show_unit_column ? 1 : 0
+  fixed_text_cols = show_zone_count + show_unit_count + 3
+  rank_count      = @ranks.size
+
+  col_zone               = @show_zone_column ? 0 : nil
+  col_unit               = @show_unit_column ? show_zone_count : nil
+  col_block              = show_zone_count + show_unit_count
+  col_group              = col_block + 1
+  col_name               = col_group + 1
+  col_rank_first         = col_name + 1
+  col_rank_last          = col_rank_first + rank_count - 1
+  col_total_personnel    = col_rank_last + 1
+  col_residential_std    = col_total_personnel + 1
+  col_water_pump_std     = col_residential_std + 1
+  col_total_std          = col_water_pump_std + 1
+  col_savings            = col_total_std + 1
+  col_loss               = col_savings + 1
+  col_division_public    = col_loss + 1
+  col_unit_public        = col_division_public + 1
+  col_other              = col_unit_public + 1
+  col_total_deduction    = col_other + 1
+  col_remaining_std      = col_total_deduction + 1
+  col_residential_usage  = col_remaining_std + 1
+  col_water_pump_usage   = col_residential_usage + 1
+  col_total_usage        = col_water_pump_usage + 1
+  col_surplus_kw         = col_total_usage + 1
+  col_deficit_kw         = col_surplus_kw + 1
+  col_surplus_amount     = col_deficit_kw + 1
+  col_deficit_amount     = col_surplus_amount + 1
+  total_columns          = col_deficit_amount + 1
+
+  letter = ->(idx) { Axlsx.col_ref(idx) }
+  unit_price_cell = "$B$1"
+
+  wb.add_worksheet(name: "Bảng tính tiền #{@period.month}-#{@period.year}") do |sheet|
+    sheet.add_row ["Đơn giá:", @period.unit_price.to_f] + Array.new(total_columns - 2),
+                  style: [text_style, money_style]
+    sheet.add_row []
+
+    # Row 3: nhóm lớn
+    row3 = Array.new(total_columns)
+    row3[0] = "Thông tin đầu mối"
+    row3[fixed_text_cols + rank_count + 1] = "Tiêu chuẩn"
+    row3[col_savings] = "Khoản trừ"
+    row3[col_remaining_std] = "Tiêu chuẩn còn lại"
+    row3[col_residential_usage] = "Sử dụng"
+    row3[col_surplus_kw] = "Kết quả"
+    sheet.add_row row3, style: header_style, height: 30
+
+    # Row 4
+    row4 = Array.new(total_columns)
+    if @show_zone_column
+      row4[col_zone] = "Khu vực"
+    end
+    if @show_unit_column
+      row4[col_unit] = "Đơn vị"
+    end
+    row4[col_block] = "Khối"
+    row4[col_group] = "Nhóm"
+    row4[col_name] = "Tên đầu mối"
+    row4[col_rank_first] = "Quân số theo nhóm cấp bậc"
+    row4[col_total_personnel] = "Tổng quân số"
+    row4[col_residential_std] = "Tiêu chuẩn điện sinh hoạt"
+    row4[col_water_pump_std] = "Tiêu chuẩn điện bơm nước"
+    row4[col_total_std] = "Tổng tiêu chuẩn"
+    row4[col_savings] = "Tiết kiệm của Bộ"
+    row4[col_loss] = "Tổn hao"
+    row4[col_division_public] = "Công cộng dùng chung Sư đoàn"
+    row4[col_unit_public] = "Công cộng dùng chung đơn vị"
+    row4[col_other] = "Khác"
+    row4[col_total_deduction] = "Tổng trừ"
+    row4[col_residential_usage] = "Sử dụng điện sinh hoạt"
+    row4[col_water_pump_usage] = "Sử dụng điện bơm nước"
+    row4[col_total_usage] = "Tổng sử dụng"
+    row4[col_surplus_kw] = "Thừa (kW)"
+    row4[col_deficit_kw] = "Thiếu (kW)"
+    row4[col_surplus_amount] = "Thành tiền thừa"
+    row4[col_deficit_amount] = "Thành tiền thiếu"
+    sheet.add_row row4, style: header_style, height: 40
+
+    # Row 5: rank names
+    row5 = Array.new(total_columns)
+    @ranks.each_with_index do |rank, idx|
+      row5[col_rank_first + idx] = rank.name
+    end
+    sheet.add_row row5, style: header_style, height: 30
+
+    # Merge cells for nhóm lớn (row 3)
+    sheet.merge_cells("#{letter.call(0)}3:#{letter.call(fixed_text_cols + rank_count)}3")
+    sheet.merge_cells("#{letter.call(col_residential_std)}3:#{letter.call(col_total_std)}3")
+    sheet.merge_cells("#{letter.call(col_savings)}3:#{letter.call(col_total_deduction)}3")
+    sheet.merge_cells("#{letter.call(col_remaining_std)}3:#{letter.call(col_remaining_std)}5")
+    sheet.merge_cells("#{letter.call(col_residential_usage)}3:#{letter.call(col_total_usage)}3")
+    sheet.merge_cells("#{letter.call(col_surplus_kw)}3:#{letter.call(col_deficit_amount)}3")
+
+    # Merge cells for row 4 rowspan=2 columns into row 5
+    rowspan_columns = []
+    rowspan_columns << col_zone if @show_zone_column
+    rowspan_columns << col_unit if @show_unit_column
+    rowspan_columns += [col_block, col_group, col_name, col_total_personnel,
+                        col_residential_std, col_water_pump_std, col_total_std,
+                        col_savings, col_loss, col_division_public, col_unit_public,
+                        col_other, col_total_deduction,
+                        col_residential_usage, col_water_pump_usage, col_total_usage,
+                        col_surplus_kw, col_deficit_kw, col_surplus_amount, col_deficit_amount]
+    rowspan_columns.each do |c|
+      sheet.merge_cells("#{letter.call(c)}4:#{letter.call(c)}5")
+    end
+
+    # Merge "Quân số theo nhóm cấp bậc" colspan in row 4
+    if rank_count > 1
+      sheet.merge_cells("#{letter.call(col_rank_first)}4:#{letter.call(col_rank_last)}4")
+    end
+
+    data_start_row = 6
+
+    rowspans = Billing::RowspanComputer.compute(@calculations,
+                                                show_zone: @show_zone_column,
+                                                show_unit: @show_unit_column)
+
+    @calculations.each_with_index do |calc, idx|
+      excel_row = data_start_row + idx
+      cp = calc.contact_point
+      row = Array.new(total_columns)
+      styles = Array.new(total_columns, text_style)
+
+      row[col_zone] = cp.effective_zone&.name if @show_zone_column
+      row[col_unit] = cp.unit&.name if @show_unit_column
+      row[col_block] = cp.block&.name
+      row[col_group] = cp.group&.name
+      row[col_name]  = cp.name
+
+      @ranks.each_with_index do |rank, ri|
+        c = col_rank_first + ri
+        row[c] = ((@personnel_by_cp_id[cp.id] || {})[rank.id] || 0)
+        styles[c] = int_style
+      end
+
+      # Tổng quân số = SUM(rank cols)
+      row[col_total_personnel] =
+        "=SUM(#{letter.call(col_rank_first)}#{excel_row}:#{letter.call(col_rank_last)}#{excel_row})"
+      styles[col_total_personnel] = int_style
+
+      row[col_residential_std] = calc.residential_standard.to_f
+      row[col_water_pump_std]  = calc.water_pump_standard.to_f
+      row[col_total_std] = "=#{letter.call(col_residential_std)}#{excel_row}+#{letter.call(col_water_pump_std)}#{excel_row}"
+      styles[col_residential_std] = num_style
+      styles[col_water_pump_std]  = num_style
+      styles[col_total_std]       = num_style
+
+      row[col_savings] = calc.savings_deduction.to_f
+      row[col_loss] = calc.loss_deduction.to_f
+      row[col_division_public] = calc.division_public_deduction.to_f
+      row[col_unit_public] = calc.unit_public_deduction.to_f
+      row[col_other] = calc.other_deduction.to_f
+      row[col_total_deduction] =
+        "=SUM(#{letter.call(col_savings)}#{excel_row}:#{letter.call(col_other)}#{excel_row})"
+      [col_savings, col_loss, col_division_public, col_unit_public, col_other, col_total_deduction].each do |c|
+        styles[c] = num_style
+      end
+
+      row[col_remaining_std] =
+        "=#{letter.call(col_total_std)}#{excel_row}-#{letter.call(col_total_deduction)}#{excel_row}"
+      styles[col_remaining_std] = num_style
+
+      row[col_residential_usage] = calc.residential_usage.to_f
+      row[col_water_pump_usage]  = calc.water_pump_usage.to_f
+      row[col_total_usage] =
+        "=#{letter.call(col_residential_usage)}#{excel_row}+#{letter.call(col_water_pump_usage)}#{excel_row}"
+      [col_residential_usage, col_water_pump_usage, col_total_usage].each { |c| styles[c] = num_style }
+
+      row[col_surplus_kw] = calc.surplus.to_f
+      row[col_deficit_kw] = calc.deficit.to_f
+      styles[col_surplus_kw] = num_style
+      styles[col_deficit_kw] = num_style
+
+      row[col_surplus_amount] = "=#{letter.call(col_surplus_kw)}#{excel_row}*#{unit_price_cell}"
+      row[col_deficit_amount] = "=#{letter.call(col_deficit_kw)}#{excel_row}*#{unit_price_cell}"
+      styles[col_surplus_amount] = money_style
+      styles[col_deficit_amount] = money_style
+
+      sheet.add_row row, style: styles
+    end
+
+    # Merge cells theo rowspan computer
+    rowspans.each_with_index do |spec, i|
+      excel_row = data_start_row + i
+      spec.each do |col_sym, rs|
+        next if rs.nil? || rs <= 1
+        col_idx = case col_sym
+                  when :zone  then col_zone
+                  when :unit  then col_unit
+                  when :block then col_block
+                  when :group then col_group
+                  end
+        next unless col_idx
+        sheet.merge_cells("#{letter.call(col_idx)}#{excel_row}:#{letter.call(col_idx)}#{excel_row + rs - 1}")
+      end
+    end
+
+    # Total row
+    last_data_row = data_start_row + @calculations.size - 1
+    if @calculations.any?
+      total_row = Array.new(total_columns)
+      total_row[col_name] = "TỔNG"
+      [col_total_personnel,
+       col_residential_std, col_water_pump_std, col_total_std,
+       col_savings, col_loss, col_division_public, col_unit_public,
+       col_other, col_total_deduction, col_remaining_std,
+       col_residential_usage, col_water_pump_usage, col_total_usage,
+       col_surplus_kw, col_deficit_kw, col_surplus_amount, col_deficit_amount].each do |c|
+        total_row[c] = "=SUM(#{letter.call(c)}#{data_start_row}:#{letter.call(c)}#{last_data_row})"
+      end
+      @ranks.each_with_index do |_r, ri|
+        c = col_rank_first + ri
+        total_row[c] = "=SUM(#{letter.call(c)}#{data_start_row}:#{letter.call(c)}#{last_data_row})"
+      end
+
+      total_styles = Array.new(total_columns, total_style)
+      sheet.add_row total_row, style: total_styles
+    end
+
+    sheet.column_widths(*Array.new(total_columns, 14))
+  end
