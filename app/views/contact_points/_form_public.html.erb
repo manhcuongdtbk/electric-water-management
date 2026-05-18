@@ -1,0 +1,30 @@
+<% available_units = Unit.kept.accessible_by(current_ability) %>
+<% available_blocks = Block.kept.accessible_by(current_ability) %>
+<% available_groups = Group.kept.accessible_by(current_ability) %>
+
+<div>
+  <%= f.label :unit_id, "Đơn vị", class: "block text-sm font-medium text-gray-700 mb-1" %>
+  <%= f.select :unit_id, available_units.order(:name).pluck(:name, :id),
+      { include_blank: "— Chọn đơn vị —" },
+      class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
+      disabled: contact_point.persisted? %>
+</div>
+
+<div class="grid grid-cols-2 gap-4">
+  <div>
+    <%= f.label :block_id, "Khối (tùy chọn)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.select :block_id, available_blocks.order(:name).pluck(:name, :id),
+        { include_blank: "— Không thuộc khối —" },
+        class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+  </div>
+  <div>
+    <%= f.label :group_id, "Nhóm (tùy chọn)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.select :group_id, available_groups.order(:name).pluck(:name, :id),
+        { include_blank: "— Không thuộc nhóm —" },
+        class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+  </div>
+</div>
+
+<% unless contact_point.persisted? %>
+  <%= render "meters_fields", f: f, contact_point: contact_point %>
+<% end %>

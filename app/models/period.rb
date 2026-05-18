@@ -1,4 +1,6 @@
 class Period < ApplicationRecord
+  include Auditable
+
   has_many :ranks, dependent: :restrict_with_error
   has_many :meter_readings, dependent: :restrict_with_error
   has_many :main_meter_readings, dependent: :restrict_with_error

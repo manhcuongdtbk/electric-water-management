@@ -1,0 +1,15 @@
+<% page_title "Nhóm cấp bậc: #{@rank.name}" %>
+
+<div class="bg-white rounded-lg shadow border border-gray-200 p-6 max-w-xl space-y-2">
+  <div><strong>Thứ tự:</strong> <%= @rank.position %></div>
+  <div><strong>Tên:</strong> <%= @rank.name %></div>
+  <div><strong>Định mức:</strong> <%= @rank.quota %> kWh/người</div>
+  <div><strong>Kỳ:</strong> Tháng <%= @rank.period.month %>/<%= @rank.period.year %></div>
+</div>
+
+<div class="mt-4 space-x-2">
+  <% if can?(:update, @rank) %>
+    <%= link_to "Sửa", edit_rank_path(@rank), class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700" %>
+  <% end %>
+  <%= link_to "Quay lại", ranks_path, class: "text-gray-600 hover:text-gray-800" %>
+</div>

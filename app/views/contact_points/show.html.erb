@@ -1,0 +1,24 @@
+<% page_title "Đầu mối: #{@contact_point.name}" %>
+
+<div class="bg-white rounded-lg shadow border border-gray-200 p-6 max-w-3xl space-y-2">
+  <div><strong>Tên:</strong> <%= @contact_point.name %></div>
+  <div><strong>Loại:</strong>
+    <%= t("activerecord.attributes.contact_point.types.#{@contact_point.contact_point_type}", default: @contact_point.contact_point_type) %>
+  </div>
+  <div><strong>Đơn vị / Khu vực:</strong> <%= @contact_point.unit&.name || @contact_point.zone&.name %></div>
+  <% if @contact_point.block || @contact_point.group %>
+    <div><strong>Khối / Nhóm:</strong> <%= [@contact_point.block&.name, @contact_point.group&.name].compact.join(" / ") %></div>
+  <% end %>
+  <div><strong>Công tơ:</strong> <%= @contact_point.meters.kept.pluck(:name).join(", ") %></div>
+  <% if @contact_point.type_non_establishment? %>
+    <div><strong>Quân số:</strong> <%= @contact_point.personnel_count %></div>
+  <% end %>
+</div>
+
+<div class="mt-4 space-x-2">
+  <% if can?(:update, @contact_point) %>
+    <%= link_to "Sửa", edit_contact_point_path(@contact_point),
+        class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700" %>
+  <% end %>
+  <%= link_to "Quay lại", contact_points_path, class: "text-gray-600 hover:text-gray-800" %>
+</div>

@@ -1,0 +1,16 @@
+<% page_title "Đơn vị: #{@unit.name}" %>
+
+<div class="bg-white rounded-lg shadow border border-gray-200 p-6 max-w-xl space-y-2">
+  <div><strong>Tên:</strong> <%= @unit.name %></div>
+  <div><strong>Khu vực:</strong> <%= @unit.zone.name %></div>
+  <div><strong>Là đơn vị quản lý khu vực:</strong>
+    <%= @unit.managed_zones.any? ? @unit.managed_zones.pluck(:name).join(", ") : "—" %>
+  </div>
+</div>
+
+<div class="mt-4 space-x-2">
+  <% if can?(:update, @unit) %>
+    <%= link_to "Sửa", edit_unit_path(@unit), class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700" %>
+  <% end %>
+  <%= link_to "Quay lại", units_path, class: "text-gray-600 hover:text-gray-800" %>
+</div>

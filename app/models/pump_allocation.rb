@@ -1,4 +1,6 @@
 class PumpAllocation < ApplicationRecord
+  include Auditable
+
   belongs_to :zone
   belongs_to :period
   belongs_to :unit, optional: true

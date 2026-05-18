@@ -1,4 +1,6 @@
 class UnitConfig < ApplicationRecord
+  include Auditable
+
   belongs_to :unit
   belongs_to :period
 

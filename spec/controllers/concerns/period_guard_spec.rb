@@ -1,7 +1,7 @@
 require "rails_helper"
 
 RSpec.describe PeriodGuard, type: :controller do
-  controller(ApplicationController) do
+  controller(ActionController::Base) do
     include PeriodGuard
 
     before_action :require_open_period, only: [:create, :update, :destroy]

@@ -1,0 +1,122 @@
+<% page_title "Đơn giá điện" %>
+
+<div class="space-y-6">
+  <!-- 1. Đơn giá kỳ hiện tại -->
+  <% if @current_period %>
+    <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+      <h2 class="text-lg font-semibold mb-4">Kỳ đang mở: <%= period_label(@current_period) %></h2>
+      <%= form_with model: @current_period, url: pricing_path, method: :patch, local: true,
+          html: { class: "space-y-4" } do |f| %>
+        <% if @current_period.errors.any? %>
+          <div class="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-700">
+            <ul class="list-disc list-inside">
+              <% @current_period.errors.full_messages.each do |msg| %>
+                <li><%= msg %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <%= f.label :unit_price, "Đơn giá (VND/kWh)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+            <%= f.number_field :unit_price, step: "0.01", min: "0",
+                class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+          </div>
+          <div>
+            <%= f.label :water_pump_standard, "Tiêu chuẩn bơm nước (kWh/người)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+            <%= f.number_field :water_pump_standard, step: "0.01", min: "0",
+                class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+          </div>
+          <div>
+            <%= f.label :savings_rate, "Tỷ lệ tiết kiệm của Bộ (%)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+            <%= f.number_field :savings_rate, step: "0.01", min: "0", max: "100",
+                class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+          </div>
+          <div>
+            <%= f.label :division_public_rate, "Công cộng Sư đoàn (%)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+            <%= f.number_field :division_public_rate, step: "0.01", min: "0", max: "100",
+                class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center pt-2">
+          <%= f.submit "Lưu cập nhật", class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 cursor-pointer" %>
+          <%= button_to "Đóng kỳ hiện tại", close_period_pricing_path,
+              method: :post,
+              params: { period_id: @current_period.id },
+              form: { data: { turbo_confirm: "Xác nhận đóng kỳ tháng #{@current_period.month}/#{@current_period.year}?" } },
+              class: "bg-red-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-red-700 cursor-pointer" %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <!-- 2. Mở kỳ mới -->
+  <% if @current_period.nil? %>
+    <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+      <h2 class="text-lg font-semibold mb-4">Mở kỳ mới</h2>
+      <%= form_with url: open_period_pricing_path, method: :post, local: true, class: "space-y-3" do %>
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Năm</label>
+            <%= number_field_tag :year, Date.current.year, min: 2000,
+                class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tháng</label>
+            <%= number_field_tag :month, Date.current.month, min: 1, max: 12,
+                class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Đơn giá (kỳ đầu tiên)</label>
+            <%= number_field_tag :unit_price, "", step: "0.01", min: 0,
+                class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500">Nếu đã có kỳ trước, hệ thống tự kế thừa đơn giá, các tỷ lệ và phân bổ bơm nước.</p>
+        <%= submit_tag "Mở kỳ mới", class: "bg-green-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-700 cursor-pointer" %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <!-- 3. Danh sách các kỳ -->
+  <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+    <div class="p-4 border-b border-gray-200">
+      <h2 class="text-base font-semibold">Danh sách các kỳ</h2>
+    </div>
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Kỳ</th>
+          <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Đơn giá</th>
+          <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Trạng thái</th>
+          <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <% @all_periods.each do |p| %>
+          <tr>
+            <td class="px-4 py-2 text-sm text-gray-900">Tháng <%= p.month %>/<%= p.year %></td>
+            <td class="px-4 py-2 text-sm text-right text-gray-600"><%= p.unit_price %></td>
+            <td class="px-4 py-2 text-sm">
+              <% if p.open? %>
+                <span class="text-green-700 bg-green-100 px-2 py-1 rounded text-xs">Đang mở</span>
+              <% else %>
+                <span class="text-gray-700 bg-gray-100 px-2 py-1 rounded text-xs">Đã đóng</span>
+              <% end %>
+            </td>
+            <td class="px-4 py-2 text-sm text-right">
+              <% if !p.open? && @current_period.nil? %>
+                <%= button_to "Mở lại", reopen_period_pricing_path, method: :post,
+                    params: { period_id: p.id },
+                    form: { data: { turbo_confirm: "Mở lại kỳ tháng #{p.month}/#{p.year}?" } },
+                    class: "text-blue-600 hover:text-blue-800 underline inline cursor-pointer bg-transparent border-0 p-0" %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

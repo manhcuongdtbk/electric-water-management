@@ -1,0 +1,13 @@
+<% page_title "Khối: #{@block.name}" %>
+
+<div class="bg-white rounded-lg shadow border border-gray-200 p-6 max-w-xl space-y-2">
+  <div><strong>Tên:</strong> <%= @block.name %></div>
+  <div><strong>Đơn vị:</strong> <%= @block.unit.name %></div>
+</div>
+
+<div class="mt-4 space-x-2">
+  <% if can?(:update, @block) %>
+    <%= link_to "Sửa", edit_block_path(@block), class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700" %>
+  <% end %>
+  <%= link_to "Quay lại", blocks_path, class: "text-gray-600 hover:text-gray-800" %>
+</div>

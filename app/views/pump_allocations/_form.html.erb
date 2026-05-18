@@ -1,0 +1,55 @@
+<%= form_with model: pump_allocation, local: true, class: "space-y-4" do |f| %>
+  <% if pump_allocation.errors.any? %>
+    <div class="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-700">
+      <ul class="list-disc list-inside">
+        <% pump_allocation.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= f.hidden_field :lock_version if pump_allocation.persisted? %>
+
+  <div>
+    <%= f.label :zone_id, "Khu vực", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.select :zone_id, Zone.order(:name).pluck(:name, :id),
+        { include_blank: "— Chọn khu vực —" },
+        class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+  </div>
+
+  <div>
+    <%= f.label :unit_id, "Đơn vị (chọn một trong hai)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.select :unit_id, Unit.kept.order(:name).pluck(:name, :id),
+        { include_blank: "— Không chọn —" },
+        class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+  </div>
+
+  <div>
+    <%= f.label :contact_point_id, "Hoặc đầu mối", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.select :contact_point_id,
+        ContactPoint.kept.where(contact_point_type: ["residential", "non_establishment"]).order(:name).pluck(:name, :id),
+        { include_blank: "— Không chọn —" },
+        class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+    <p class="text-xs text-gray-500 mt-1">Chỉ chọn một trong hai: đơn vị HOẶC đầu mối.</p>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <%= f.label :fixed_percentage, "% cố định (tùy chọn)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.number_field :fixed_percentage, step: "0.01", min: 0, max: 100,
+          class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+      <p class="text-xs text-gray-500 mt-1">Tổng % cố định không quá 100.</p>
+    </div>
+    <div>
+      <%= f.label :coefficient, "Hệ số", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.number_field :coefficient, step: "0.01", min: 0, required: true,
+          class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+    </div>
+  </div>
+
+  <div class="flex space-x-2">
+    <%= f.submit "Lưu", class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 cursor-pointer" %>
+    <%= link_to "Hủy", pump_allocations_path, class: "text-gray-600 px-4 py-2 hover:text-gray-800" %>
+  </div>
+<% end %>

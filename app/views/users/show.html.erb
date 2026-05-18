@@ -1,0 +1,20 @@
+<% page_title "Tài khoản: #{@user.username}" %>
+
+<div class="bg-white rounded-lg shadow border border-gray-200 p-6 max-w-xl space-y-2">
+  <div><strong>Tên đăng nhập:</strong> <%= @user.username %></div>
+  <div><strong>Tên hiển thị:</strong> <%= @user.display_name %></div>
+  <div><strong>Vai trò:</strong>
+    <%= t("activerecord.attributes.user.roles.#{@user.role}", default: @user.role) %>
+  </div>
+  <div><strong>Đơn vị:</strong> <%= @user.unit&.name || "—" %></div>
+  <% if @user.default_account? %>
+    <div class="text-xs text-yellow-700 bg-yellow-50 p-2 rounded">Đây là tài khoản mặc định, không thể xóa.</div>
+  <% end %>
+</div>
+
+<div class="mt-4 space-x-2">
+  <% if can?(:update, @user) %>
+    <%= link_to "Sửa", edit_user_path(@user), class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700" %>
+  <% end %>
+  <%= link_to "Quay lại", users_path, class: "text-gray-600 hover:text-gray-800" %>
+</div>

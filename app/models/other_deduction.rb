@@ -1,4 +1,6 @@
 class OtherDeduction < ApplicationRecord
+  include Auditable
+
   enum :other_type, { fixed: "fixed", coefficient: "coefficient" }, prefix: :other
 
   belongs_to :contact_point

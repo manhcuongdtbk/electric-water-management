@@ -1,17 +1,21 @@
-<h2>Đăng nhập</h2>
+<div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+  <h1 class="text-2xl font-semibold mb-4 text-gray-900">Đăng nhập</h1>
+  <p class="text-sm text-gray-600 mb-6">Hệ thống quản lý điện nội bộ Sư đoàn</p>
 
-<%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
-  <div class="field">
-    <p><%= f.label :username, "Tên đăng nhập" %></p>
-    <p><%= f.text_field :username, autofocus: true, autocomplete: "username" %></p>
-  </div>
+  <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "space-y-4" }) do |f| %>
+    <div>
+      <%= f.label :username, "Tên đăng nhập", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.text_field :username, autofocus: true, autocomplete: "username", required: true,
+          class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+    </div>
 
-  <div class="field">
-    <p><%= f.label :password, "Mật khẩu" %></p>
-    <p><%= f.password_field :password, autocomplete: "current-password" %></p>
-  </div>
+    <div>
+      <%= f.label :password, "Mật khẩu", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.password_field :password, autocomplete: "current-password", required: true,
+          class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+    </div>
 
-  <div class="actions">
-    <%= f.submit "Đăng nhập" %>
-  </div>
-<% end %>
+    <%= f.submit "Đăng nhập",
+        class: "w-full bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 cursor-pointer" %>
+  <% end %>
+</div>

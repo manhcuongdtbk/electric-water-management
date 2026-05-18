@@ -1,0 +1,55 @@
+<% page_title "Nhóm cấp bậc" %>
+
+<% if @period.nil? %>
+  <div class="bg-yellow-50 border border-yellow-200 rounded p-3 text-sm text-yellow-800 mb-4">
+    Chưa có kỳ nào trong hệ thống. Tạo kỳ mới ở trang Đơn giá điện trước.
+  </div>
+<% else %>
+  <p class="text-sm text-gray-600 mb-2">
+    Nhóm cấp bậc cho <strong><%= period_label(@period) %></strong> (<%= @period.open? ? "đang mở" : "đã đóng" %>).
+  </p>
+<% end %>
+
+<div class="flex justify-between items-center mb-4">
+  <div class="text-sm text-gray-600">Tổng số: <strong><%= @total_count %></strong></div>
+  <% if @period&.open? && can?(:create, Rank) %>
+    <%= link_to "Thêm nhóm cấp bậc", new_rank_path,
+        class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700" %>
+  <% end %>
+</div>
+
+<div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">#</th>
+        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Tên nhóm cấp bậc</th>
+        <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Định mức (kWh/người)</th>
+        <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Thao tác</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200">
+      <% @ranks.each do |rank| %>
+        <tr>
+          <td class="px-4 py-2 text-sm text-gray-900"><%= rank.position %></td>
+          <td class="px-4 py-2 text-sm text-gray-900"><%= rank.name %></td>
+          <td class="px-4 py-2 text-sm text-right text-gray-600"><%= rank.quota %></td>
+          <td class="px-4 py-2 text-sm text-right space-x-2">
+            <% if @period&.open? && can?(:update, rank) %>
+              <%= link_to "Sửa", edit_rank_path(rank), class: "text-blue-600 hover:text-blue-800" %>
+            <% end %>
+            <% if @period&.open? && can?(:destroy, rank) %>
+              <%= button_to "Xóa", rank_path(rank), method: :delete,
+                  form: { data: { turbo_confirm: "Xác nhận xóa \"#{rank.name}\"?" } },
+                  class: "text-red-600 hover:text-red-800 underline inline cursor-pointer bg-transparent border-0 p-0" %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<div class="mt-4">
+  <%== pagy_nav(@pagy) if @pagy.pages > 1 %>
+</div>

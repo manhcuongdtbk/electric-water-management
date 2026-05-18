@@ -1,4 +1,6 @@
 class User < ApplicationRecord
+  include Auditable
+
   devise :database_authenticatable, :timeoutable
 
   enum :role, {

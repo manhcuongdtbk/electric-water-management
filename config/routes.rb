@@ -1,14 +1,43 @@
 Rails.application.routes.draw do
   devise_for :users, skip: [:registrations, :passwords, :confirmations, :unlocks]
 
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
+  root to: "dashboard#show"
+
   get "up" => "rails/health#show", as: :rails_health_check
 
-  # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
-  # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
-  # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
+  resource :password_change, only: [:edit, :update]
 
-  # Defines the root path route ("/")
-  # root "posts#index"
+  # XEM KẾT QUẢ
+  resource :dashboard, only: [:show], controller: "dashboard"
+  resource :billing, only: [:show], controller: "billing"
+  resource :history, only: [:show], controller: "history"
+
+  # NHẬP LIỆU
+  resource :electricity_supply, only: [:show, :update], controller: "electricity_supply"
+  resource :meter_entries, only: [:show, :update], controller: "meter_entries"
+  resource :pump_entries, only: [:show, :update], controller: "pump_entries"
+
+  # KHAI BÁO
+  resources :contact_points
+  resources :blocks
+  resources :groups
+  resource :unit_config, only: [:show, :update], controller: "unit_config"
+
+  # THIẾT LẬP
+  resources :zones do
+    member { patch :reassign_manager }
+  end
+  resources :units
+  resources :pump_allocations
+  resource :pricing, only: [:show, :update], controller: "pricing" do
+    post :open_period
+    post :close_period
+    post :reopen_period
+  end
+  resources :ranks
+
+  # HỆ THỐNG
+  resources :users
+  resources :audit_logs, only: [:index]
+  resources :backups, only: [:index]
 end

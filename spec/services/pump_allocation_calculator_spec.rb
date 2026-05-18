@@ -52,7 +52,7 @@ RSpec.describe PumpAllocationCalculator do
       let(:loss_results) { LossCalculator.new(zone: sample.zone, period: sample.period).call }
 
       before do
-        sample.meters[:ct_bn1].discard
+        sample.contact_points[:tram_bom_1].discard
       end
 
       it "d = 0 + cảnh báo" do

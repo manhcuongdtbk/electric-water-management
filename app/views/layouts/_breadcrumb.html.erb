@@ -1,0 +1,5 @@
+<% if content_for?(:breadcrumb) %>
+  <nav class="mb-4 text-sm text-gray-600">
+    <h2 class="text-2xl font-semibold text-gray-900"><%= yield :breadcrumb %></h2>
+  </nav>
+<% end %>

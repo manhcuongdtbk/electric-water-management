@@ -1,0 +1,23 @@
+<header class="bg-white border-b border-gray-200 h-14 flex items-center px-6 justify-between flex-shrink-0">
+  <div class="flex items-center space-x-4">
+    <h1 class="text-base font-semibold text-gray-900">Hệ thống quản lý điện nội bộ Sư đoàn</h1>
+    <% if current_period %>
+      <span class="text-sm text-gray-600 bg-blue-50 px-3 py-1 rounded">
+        <%= period_label(current_period) %>
+      </span>
+    <% else %>
+      <span class="text-sm text-yellow-700 bg-yellow-50 px-3 py-1 rounded">
+        Không có kỳ đang mở
+      </span>
+    <% end %>
+  </div>
+  <div class="flex items-center space-x-4">
+    <span class="text-sm text-gray-700">
+      <%= current_user.display_name %>
+      <span class="text-gray-400">(<%= t("activerecord.attributes.user.roles.#{current_user.role}", default: current_user.role) %>)</span>
+    </span>
+    <%= button_to "Đăng xuất", destroy_user_session_path, method: :delete,
+        class: "text-sm text-red-600 hover:text-red-800 underline cursor-pointer",
+        form: { data: { turbo: false } } %>
+  </div>
+</header>

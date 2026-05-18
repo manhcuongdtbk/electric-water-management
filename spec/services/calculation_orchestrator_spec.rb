@@ -98,7 +98,7 @@ RSpec.describe CalculationOrchestrator do
 
   describe "thu thập warnings từ engine" do
     before do
-      sample.meters[:ct_bn1].discard
+      sample.contact_points[:tram_bom_1].discard
     end
 
     it "warning từ PumpAllocationCalculator được include trong result" do
