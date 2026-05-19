@@ -71,6 +71,7 @@ RSpec.configure do |config|
   config.include FactoryBot::Syntax::Methods
   config.include DecimalHelpers
   config.include SampleData
+  config.include ActiveSupport::Testing::TimeHelpers
 end
 
 Shoulda::Matchers.configure do |config|

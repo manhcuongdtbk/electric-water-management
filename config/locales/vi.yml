@@ -5,9 +5,13 @@ vi:
         name: "Tên đầu mối"
         contact_point_type: "Loại đầu mối"
         unit: "Đơn vị"
+        unit_id: "Đơn vị"
         zone: "Khu vực"
+        zone_id: "Khu vực"
         block: "Khối"
+        block_id: "Khối"
         group: "Nhóm"
+        group_id: "Nhóm"
         personnel_count: "Quân số"
         types:
           residential: "Sinh hoạt"
@@ -17,24 +21,35 @@ vi:
       meter:
         name: "Tên công tơ"
         no_loss: "Không tổn hao"
+        contact_point: "Đầu mối"
+        contact_point_id: "Đầu mối"
       block:
         name: "Tên khối"
         unit: "Đơn vị"
+        unit_id: "Đơn vị"
       group:
         name: "Tên nhóm"
         unit: "Đơn vị"
+        unit_id: "Đơn vị"
         block: "Khối"
+        block_id: "Khối"
       zone:
         name: "Tên khu vực"
         manager_unit: "Đơn vị quản lý"
+        manager_unit_id: "Đơn vị quản lý"
       unit:
         name: "Tên đơn vị"
         zone: "Khu vực"
+        zone_id: "Khu vực"
       user:
         username: "Tên đăng nhập"
         display_name: "Tên hiển thị"
         password: "Mật khẩu"
         password_confirmation: "Xác nhận mật khẩu"
+        current_password: "Mật khẩu hiện tại"
+        encrypted_password: "Mật khẩu mã hóa"
+        force_password_change: "Yêu cầu đổi mật khẩu"
+        default_account: "Tài khoản mặc định"
         role: "Vai trò"
         unit: "Đơn vị"
         unit_id: "Đơn vị"
@@ -43,6 +58,86 @@ vi:
           system_admin: "Quản trị viên hệ thống"
           unit_admin: "Quản trị viên đơn vị"
           commander: "Chỉ huy đơn vị"
+      backup:
+        filename: "Tên file"
+        size_bytes: "Kích thước"
+        status: "Trạng thái"
+        error_message: "Thông báo lỗi"
+        created_by: "Người tạo"
+        created_by_id: "Người tạo"
+        created_at: "Thời gian tạo"
+      period:
+        year: "Năm"
+        month: "Tháng"
+        closed: "Đã đóng"
+        unit_price: "Đơn giá"
+        savings_rate: "Tỷ lệ tiết kiệm"
+        division_public_rate: "Tỷ lệ công cộng Sư đoàn"
+        water_pump_standard: "Tiêu chuẩn bơm nước"
+      rank:
+        name: "Tên nhóm cấp bậc"
+        position: "Vị trí"
+        quota: "Định mức"
+        period: "Kỳ tính toán"
+        period_id: "Kỳ tính toán"
+      meter_reading:
+        meter: "Công tơ"
+        meter_id: "Công tơ"
+        period: "Kỳ tính toán"
+        period_id: "Kỳ tính toán"
+        reading_start: "Chỉ số đầu kỳ"
+        reading_end: "Chỉ số cuối kỳ"
+        no_loss: "Không tổn hao"
+        manual_usage: "Số sử dụng nhập tay"
+        manual_usage_note: "Ghi chú số sử dụng nhập tay"
+      main_meter_reading:
+        main_meter: "Công tơ tổng"
+        main_meter_id: "Công tơ tổng"
+        period: "Kỳ tính toán"
+        period_id: "Kỳ tính toán"
+        usage: "Số sử dụng"
+      personnel_entry:
+        contact_point: "Đầu mối"
+        contact_point_id: "Đầu mối"
+        period: "Kỳ tính toán"
+        period_id: "Kỳ tính toán"
+        rank: "Nhóm cấp bậc"
+        rank_id: "Nhóm cấp bậc"
+        count: "Quân số"
+      non_establishment_snapshot:
+        contact_point: "Đầu mối"
+        contact_point_id: "Đầu mối"
+        period: "Kỳ tính toán"
+        period_id: "Kỳ tính toán"
+        personnel_count: "Quân số"
+      unit_config:
+        unit: "Đơn vị"
+        unit_id: "Đơn vị"
+        period: "Kỳ tính toán"
+        period_id: "Kỳ tính toán"
+        unit_public_rate: "Tỷ lệ công cộng đơn vị"
+      other_deduction:
+        contact_point: "Đầu mối"
+        contact_point_id: "Đầu mối"
+        period: "Kỳ tính toán"
+        period_id: "Kỳ tính toán"
+        other_type: "Loại khấu trừ khác"
+        other_value: "Giá trị khấu trừ khác"
+      pump_allocation:
+        zone: "Khu vực"
+        zone_id: "Khu vực"
+        unit: "Đơn vị"
+        unit_id: "Đơn vị"
+        contact_point: "Đầu mối"
+        contact_point_id: "Đầu mối"
+        period: "Kỳ tính toán"
+        period_id: "Kỳ tính toán"
+        fixed_percentage: "Phần trăm cố định"
+        coefficient: "Hệ số"
+      main_meter:
+        name: "Tên công tơ tổng"
+        zone: "Khu vực"
+        zone_id: "Khu vực"
     errors:
       models:
         user:
@@ -54,7 +149,8 @@ vi:
         contact_point:
           attributes:
             base:
-              unit_zone_xor: "phải chọn đúng một trong đơn vị hoặc khu vực"
+              assignment_required: "Vui lòng chọn nơi đầu mối thuộc về — đơn vị hoặc khu vực."
+              assignment_must_be_one: "Chỉ được chọn 1 nơi đầu mối thuộc về — đơn vị hoặc khu vực, không phải cả 2."
               residential_personnel_sum_too_low: "Tổng quân số đầu mối sinh hoạt phải lớn hơn hoặc bằng 1"
               must_have_at_least_one_meter: "Đầu mối phải có ít nhất một công tơ"
             unit_id:
@@ -90,7 +186,8 @@ vi:
         pump_allocation:
           attributes:
             base:
-              unit_or_contact_point_xor: "phải chọn đúng một trong đơn vị hoặc đầu mối"
+              target_required: "Vui lòng chọn đối tượng nhận phân bổ (đơn vị hoặc đầu mối)."
+              target_must_be_one: "Chỉ được chọn 1 đối tượng nhận phân bổ — đơn vị hoặc đầu mối, không phải cả 2."
               fixed_percentage_sum_exceeds_one_hundred: "Tổng phần trăm cố định của tất cả phân bổ trong khu vực không được vượt quá 100"
   errors:
     access_denied: "Bạn không có quyền truy cập trang này."
@@ -113,7 +210,6 @@ vi:
         has_open_period: "Kỳ tháng %{month}/%{year} đang mở. Phải đóng kỳ hiện tại trước khi mở kỳ mới."
         reopen_blocked_by_open_period: "Kỳ tháng %{month}/%{year} đang mở. Phải đóng kỳ tháng %{month}/%{year} trước khi mở lại kỳ cũ."
         first_period_requires_year_month: "Kỳ đầu tiên phải có năm, tháng và đơn giá."
-        unit_price_required: "Đơn giá là bắt buộc khi mở kỳ đầu tiên."
       warnings:
         meter_reading_mismatch: "Công tơ %{meter}: số cuối kỳ tháng %{period_month}/%{period_year} (%{reading_end}) không khớp số đầu kỳ tháng %{next_month}/%{next_year} (%{reading_start})."
   sidebar:
@@ -145,6 +241,186 @@ vi:
   flash:
     no_open_period: "Không có kỳ đang mở. Mọi ô nhập đã bị khóa. Vui lòng liên hệ quản trị viên hệ thống."
     password_changed: "Đã đổi mật khẩu thành công."
+    period_now_open: "Kỳ tháng %{month}/%{year} đã mở. Vui lòng nhập liệu."
+    record_created: "Đã tạo %{resource} \"%{name}\"."
+    record_updated: "Đã cập nhật %{resource} \"%{name}\"."
+    record_destroyed: "Đã xóa %{resource} \"%{name}\"."
+  common:
+    actions:
+      save: "Lưu"
+      cancel: "Hủy"
+      edit: "Sửa"
+      destroy: "Xóa"
+      add: "Thêm"
+      search: "Tìm"
+      back: "Quay lại"
+      submit: "Gửi"
+      update: "Cập nhật"
+      logout: "Đăng xuất"
+      view_detail: "Xem chi tiết"
+      change_password: "Đổi mật khẩu"
+    confirm:
+      destroy: "Xác nhận xóa?"
+      destroy_named: "Xác nhận xóa \"%{name}\"?"
+    list:
+      total: "Tổng: %{count} bản ghi"
+      total_short: "Tổng số"
+      per_page: "Số dòng mỗi trang:"
+      search_placeholder: "Tìm kiếm..."
+      search_by_name: "Tìm theo tên..."
+      clear_filter: "Xóa bộ lọc"
+      no_records: "Không có bản ghi nào."
+      sort_asc: "Sắp xếp tăng dần"
+      sort_desc: "Sắp xếp giảm dần"
+      actions: "Thao tác"
+    filter:
+      all: "Tất cả"
+    badges:
+      open: "Đang mở"
+      closed: "Đã đóng"
+      entered: "Đã nhập"
+      pending: "Chưa nhập"
+      default_account: "Mặc định"
+  validation:
+    presence: "Trường này là bắt buộc"
+    numericality: "Phải là số"
+    min: "Giá trị tối thiểu là %{min}"
+    max: "Giá trị tối đa là %{max}"
+    length_min: "Tối thiểu %{n} ký tự"
+  resources:
+    contact_point: "đầu mối"
+    user: "tài khoản"
+    block: "khối"
+    group: "nhóm"
+    zone: "khu vực"
+    unit: "đơn vị"
+    rank: "nhóm cấp bậc"
+    pump_allocation: "phân bổ bơm nước"
+    backup: "bản sao lưu"
+    meter: "công tơ"
+    main_meter: "công tơ tổng"
+  audit_logs:
+    page_title: "Nhật ký hoạt động"
+    filters:
+      event_label: "Loại thao tác"
+      item_type_label: "Đối tượng"
+      whodunnit_label: "Người thao tác"
+      from_label: "Từ ngày"
+      to_label: "Đến ngày"
+      per_page_label: "Hiển thị / trang"
+      submit: "Lọc"
+      reset: "Xóa lọc"
+      any: "— Tất cả —"
+    events:
+      create: "Thêm mới"
+      update: "Sửa"
+      destroy: "Xóa"
+    table:
+      time: "Thời gian"
+      item: "Đối tượng"
+      event: "Thao tác"
+      whodunnit: "Người thực hiện"
+      actions: "Thao tác"
+    show:
+      page_title: "Chi tiết thay đổi"
+      metadata: "Thông tin chung"
+      changes: "Nội dung thay đổi"
+      field: "Trường"
+      before: "Giá trị trước"
+      after: "Giá trị sau"
+      no_changes: "Không có thay đổi chi tiết được ghi nhận."
+      back: "Quay lại danh sách"
+    item_types:
+      User: "Tài khoản"
+      Zone: "Khu vực"
+      Unit: "Đơn vị"
+      ContactPoint: "Đầu mối"
+      Meter: "Công tơ"
+      MainMeter: "Công tơ tổng"
+      Block: "Khối"
+      Group: "Nhóm"
+      Period: "Kỳ tính toán"
+      Rank: "Nhóm cấp bậc"
+      PumpAllocation: "Phân bổ bơm nước"
+      MeterReading: "Chỉ số công tơ"
+      MainMeterReading: "Chỉ số công tơ tổng"
+      PersonnelEntry: "Quân số kỳ"
+      NonEstablishmentSnapshot: "Snapshot ngoài biên chế"
+      UnitConfig: "Cấu hình đơn vị"
+      OtherDeduction: "Khấu trừ khác"
+      Backup: "Bản sao lưu"
+  backups:
+    page_title: "Sao lưu dữ liệu"
+    description: "Tối đa %{max} bản sao lưu cùng lúc. Để tạo bản mới khi đã đạt giới hạn, vui lòng xóa bản cũ trước."
+    table:
+      filename: "Tên file"
+      size: "Kích thước"
+      created_at: "Thời gian tạo"
+      created_by: "Người tạo"
+      status: "Trạng thái"
+      actions: "Thao tác"
+      total: "Tổng dung lượng"
+    statuses:
+      completed: "Thành công"
+      failed: "Thất bại"
+    buttons:
+      create: "Tạo bản sao lưu mới"
+      destroy: "Xóa"
+    confirm:
+      destroy: "Xác nhận xóa bản sao lưu \"%{filename}\"? Hành động không thể hoàn tác."
+      create: "Xác nhận tạo bản sao lưu mới? Thao tác có thể mất vài giây."
+    flash:
+      created: "Đã tạo bản sao lưu \"%{filename}\"."
+      destroyed: "Đã xóa bản sao lưu \"%{filename}\"."
+    errors:
+      at_capacity: "Đã đạt giới hạn %{max} bản sao lưu. Vui lòng xóa bản cũ trước khi tạo bản mới."
+      pg_dump_failed: "Tạo bản sao lưu thất bại: %{message}"
+      pg_restore_failed: "Khôi phục bản sao lưu thất bại:\n%{message}"
+      file_missing: "File bản sao lưu không tồn tại trên đĩa."
+  password_changes:
+    edit:
+      title_force: "Đổi mật khẩu lần đầu"
+      title_voluntary: "Đổi mật khẩu"
+      current_password_label: "Mật khẩu hiện tại"
+      new_password_label: "Mật khẩu mới"
+      confirm_label: "Xác nhận mật khẩu mới"
+      submit: "Đổi mật khẩu"
+      force_note: "Bạn đang đăng nhập với mật khẩu mặc định. Vui lòng đổi mật khẩu trước khi sử dụng hệ thống."
+    errors:
+      current_password_invalid: "không đúng"
+  password_validator:
+    rules:
+      length: "Tối thiểu 8 ký tự"
+      upper: "Có chữ hoa"
+      lower: "Có chữ thường"
+      digit: "Có chữ số"
+      special: "Có ký tự đặc biệt (ví dụ: ! @ # $ %)"
+      match: "Mật khẩu xác nhận khớp"
+  application:
+    name: "Hệ thống quản lý điện nội bộ Sư đoàn"
+  meter_entries:
+    flash:
+      saved: "Đã lưu chỉ số công tơ."
+  pump_entries:
+    flash:
+      saved: "Đã lưu chỉ số bơm nước."
+  electricity_supply:
+    flash:
+      saved: "Đã lưu số sử dụng công tơ tổng."
+  unit_config:
+    flash:
+      saved: "Đã lưu cấu hình đơn vị."
+  pricing:
+    flash:
+      updated: "Đã cập nhật đơn giá và các thông số kỳ."
+      opened: "Đã mở kỳ tháng %{month}/%{year}."
+      closed: "Đã đóng kỳ tháng %{month}/%{year}."
+      reopened: "Đã mở lại kỳ tháng %{month}/%{year}."
+  zones:
+    flash:
+      manager_must_belong_to_zone: "Đơn vị mới phải thuộc khu vực này."
+      manager_reassigned: "Đã chuyển đơn vị quản lý sang \"%{name}\"."
+      manager_removed: "Đã xóa đơn vị quản lý."
   billing:
     flash:
       recalculated: "Đã tính toán lại bảng tính tiền."
@@ -167,6 +443,9 @@ vi:
     status:
       entered: "Đã nhập"
       pending: "Chưa nhập"
+    open_period_banner:
+      title: "Kỳ tháng %{month}/%{year} đã mở."
+      subtitle: "Vui lòng nhập liệu trước khi đóng kỳ."
   history:
     tabs:
       single: "Xem kỳ cũ"

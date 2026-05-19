@@ -1,0 +1,13 @@
+#!/bin/bash -e
+
+# Đảm bảo thư mục backup tồn tại (mount qua volume riêng).
+mkdir -p "${BACKUP_DIR:-/rails/storage/backups}"
+
+# Chỉ chạy db:prepare khi command là `./bin/rails server` (tránh chạy mỗi
+# lần exec console/rake task).
+if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1}" == "server" ]; then
+  echo "Running pending migrations..."
+  ./bin/rails db:prepare
+fi
+
+exec "${@}"

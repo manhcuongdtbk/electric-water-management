@@ -1,4 +1,10 @@
-<%= form_with model: pump_allocation, local: true, class: "space-y-4" do |f| %>
+<%
+  target_mode_default = pump_allocation.contact_point_id.present? ? "contact_point" : "unit"
+  alloc_mode_default  = pump_allocation.fixed_percentage.present? ? "fixed" : "coefficient"
+%>
+
+<%= form_with model: pump_allocation, local: true, class: "space-y-4",
+      data: { controller: "pump-allocation-form" } do |f| %>
   <% if pump_allocation.errors.any? %>
     <div class="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-700">
       <ul class="list-disc list-inside">
@@ -18,38 +24,83 @@
         class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
   </div>
 
-  <div>
-    <%= f.label :unit_id, "Đơn vị (chọn một trong hai)", class: "block text-sm font-medium text-gray-700 mb-1" %>
-    <%= f.select :unit_id, Unit.kept.order(:name).pluck(:name, :id),
-        { include_blank: "— Không chọn —" },
-        class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
-  </div>
+  <%# ====== Đối tượng nhận: Đơn vị HOẶC Đầu mối ====== %>
+  <fieldset class="border border-gray-200 rounded p-3">
+    <legend class="text-sm font-medium text-gray-700 px-1">Đối tượng nhận phân bổ</legend>
 
-  <div>
-    <%= f.label :contact_point_id, "Hoặc đầu mối", class: "block text-sm font-medium text-gray-700 mb-1" %>
-    <%= f.select :contact_point_id,
-        ContactPoint.kept.where(contact_point_type: ["residential", "non_establishment"]).order(:name).pluck(:name, :id),
-        { include_blank: "— Không chọn —" },
-        class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
-    <p class="text-xs text-gray-500 mt-1">Chỉ chọn một trong hai: đơn vị HOẶC đầu mối.</p>
-  </div>
-
-  <div class="grid grid-cols-2 gap-4">
-    <div>
-      <%= f.label :fixed_percentage, "% cố định (tùy chọn)", class: "block text-sm font-medium text-gray-700 mb-1" %>
-      <%= f.number_field :fixed_percentage, step: "0.01", min: 0, max: 100,
-          class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
-      <p class="text-xs text-gray-500 mt-1">Tổng % cố định không quá 100.</p>
+    <div class="flex gap-4 mb-3">
+      <label class="flex items-center gap-2 text-sm">
+        <input type="radio" name="target_mode" value="unit"
+               <%= "checked" if target_mode_default == "unit" %>
+               data-pump-allocation-form-target="targetMode"
+               data-action="change->pump-allocation-form#refreshTarget">
+        <span>Đơn vị</span>
+      </label>
+      <label class="flex items-center gap-2 text-sm">
+        <input type="radio" name="target_mode" value="contact_point"
+               <%= "checked" if target_mode_default == "contact_point" %>
+               data-pump-allocation-form-target="targetMode"
+               data-action="change->pump-allocation-form#refreshTarget">
+        <span>Đầu mối</span>
+      </label>
     </div>
-    <div>
+
+    <div data-pump-allocation-form-target="targetUnit">
+      <%= f.label :unit_id, "Chọn đơn vị", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.select :unit_id, Unit.kept.order(:name).pluck(:name, :id),
+          { include_blank: "— Chọn đơn vị —" },
+          class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+    </div>
+
+    <div data-pump-allocation-form-target="targetContact">
+      <%= f.label :contact_point_id, "Chọn đầu mối", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.select :contact_point_id,
+          ContactPoint.kept.where(contact_point_type: ["residential", "non_establishment"]).order(:name).pluck(:name, :id),
+          { include_blank: "— Chọn đầu mối —" },
+          class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+    </div>
+  </fieldset>
+
+  <%# ====== Chế độ phân bổ: % cố định HOẶC Hệ số ====== %>
+  <fieldset class="border border-gray-200 rounded p-3">
+    <legend class="text-sm font-medium text-gray-700 px-1">Chế độ phân bổ</legend>
+
+    <div class="flex gap-4 mb-3">
+      <label class="flex items-center gap-2 text-sm">
+        <input type="radio" name="alloc_mode" value="coefficient"
+               <%= "checked" if alloc_mode_default == "coefficient" %>
+               data-pump-allocation-form-target="allocMode"
+               data-action="change->pump-allocation-form#refreshAlloc">
+        <span>Theo hệ số</span>
+      </label>
+      <label class="flex items-center gap-2 text-sm">
+        <input type="radio" name="alloc_mode" value="fixed"
+               <%= "checked" if alloc_mode_default == "fixed" %>
+               data-pump-allocation-form-target="allocMode"
+               data-action="change->pump-allocation-form#refreshAlloc">
+        <span>Theo phần trăm cố định</span>
+      </label>
+    </div>
+
+    <div data-pump-allocation-form-target="allocFixed">
+      <%= f.label :fixed_percentage, "% cố định", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.number_field :fixed_percentage, step: "0.01",
+          class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+      <p class="text-xs text-gray-500 mt-1">Đối tượng nhận đúng X% của tổng bơm nước. Tổng % cố định trong khu vực không quá 100.</p>
+    </div>
+
+    <div data-pump-allocation-form-target="allocCoefficient">
       <%= f.label :coefficient, "Hệ số", class: "block text-sm font-medium text-gray-700 mb-1" %>
-      <%= f.number_field :coefficient, step: "0.01", min: 0, required: true,
+      <%= f.number_field :coefficient, step: "0.01",
           class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+      <p class="text-xs text-gray-500 mt-1">Trọng số phân bổ = hệ số × quân số. Mặc định: 1.</p>
     </div>
-  </div>
+  </fieldset>
 
   <div class="flex space-x-2">
-    <%= f.submit "Lưu", class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 cursor-pointer" %>
-    <%= link_to "Hủy", pump_allocations_path, class: "text-gray-600 px-4 py-2 hover:text-gray-800" %>
+    <%= f.submit (pump_allocation.new_record? ? t("common.actions.save") : t("common.actions.update")),
+          class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 cursor-pointer" %>
+    <%= link_to t("common.actions.cancel"), pump_allocations_path,
+          class: "text-gray-600 px-4 py-2 hover:text-gray-800" %>
   </div>
 <% end %>

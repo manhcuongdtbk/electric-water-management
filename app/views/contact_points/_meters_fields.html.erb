@@ -3,7 +3,7 @@
   <p class="text-xs text-gray-500 mb-2">Đầu mối phải có ít nhất 1 công tơ khi tạo.</p>
   <%= f.fields_for :meters do |mf| %>
     <div class="flex items-center space-x-2 mb-2">
-      <%= mf.text_field :name, placeholder: "Tên công tơ (VD: CT-A1)", required: true,
+      <%= mf.text_field :name, placeholder: "Tên công tơ (VD: CT-A1)",
           class: "flex-1 rounded border border-gray-300 px-3 py-2 text-sm" %>
       <label class="text-sm text-gray-700 flex items-center space-x-1">
         <%= mf.check_box :no_loss %>

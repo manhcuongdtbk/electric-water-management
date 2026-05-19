@@ -11,25 +11,31 @@
 
   <div>
     <%= f.label :name, "Tên nhóm cấp bậc", class: "block text-sm font-medium text-gray-700 mb-1" %>
-    <%= f.text_field :name, required: true,
+    <%= f.text_field :name,
         class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
   </div>
 
   <div class="grid grid-cols-2 gap-4">
     <div>
       <%= f.label :quota, "Định mức (kWh/người)", class: "block text-sm font-medium text-gray-700 mb-1" %>
-      <%= f.number_field :quota, step: "0.01", min: "0.01", required: true,
+      <%= f.number_field :quota, step: "0.01",
           class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
     </div>
     <div>
-      <%= f.label :position, "Thứ tự", class: "block text-sm font-medium text-gray-700 mb-1" %>
-      <%= f.number_field :position, min: 1, required: true,
+      <%= f.label :position, "Thứ tự hiển thị", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.number_field :position,
           class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+      <p class="text-xs text-gray-500 mt-1">
+        Số nhỏ hiển thị trước. Dùng để sắp xếp các nhóm cấp bậc theo cấp bậc giảm dần
+        (ví dụ: 1 = Đại tá, 7 = Hạ sĩ quan). Không được trùng số trong cùng kỳ.
+      </p>
     </div>
   </div>
 
   <div class="flex space-x-2">
-    <%= f.submit "Lưu", class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 cursor-pointer" %>
-    <%= link_to "Hủy", ranks_path, class: "text-gray-600 px-4 py-2 hover:text-gray-800" %>
+    <%= f.submit (rank.new_record? ? t("common.actions.save") : t("common.actions.update")),
+          class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 cursor-pointer" %>
+    <%= link_to t("common.actions.cancel"), ranks_path,
+          class: "text-gray-600 px-4 py-2 hover:text-gray-800" %>
   </div>
 <% end %>

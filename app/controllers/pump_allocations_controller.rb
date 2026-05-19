@@ -5,14 +5,27 @@ class PumpAllocationsController < ApplicationController
   before_action :set_allocation, only: [:show, :edit, :update, :destroy]
   before_action :require_open_period, only: [:create, :update, :destroy]
 
+  SORT_COLUMNS = {
+    zone:        "zones.name",
+    target:      "COALESCE(units.name, contact_points.name)",
+    percentage:  "pump_allocations.fixed_percentage",
+    coefficient: "pump_allocations.coefficient"
+  }.freeze
+
   def index
     @period = current_period
-    scope = PumpAllocation.accessible_by(current_ability).includes(:zone, :unit, :contact_point)
+    scope = PumpAllocation.accessible_by(current_ability)
+                          .includes(:zone, :unit, :contact_point)
+                          .joins(:zone)
+                          .left_joins(:unit, :contact_point)
     scope = scope.where(period: @period) if @period
-    scope = scope.order("zones.name", :fixed_percentage)
-                 .joins(:zone)
+    if (q = params[:q]).present?
+      like = "%#{q.strip}%"
+      scope = scope.where("zones.name ILIKE :q OR units.name ILIKE :q OR contact_points.name ILIKE :q", q: like)
+    end
+    scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:zone, :asc])
     @total_count = scope.count
-    @pagy, @pump_allocations = pagy(scope)
+    @pagy, @pump_allocations = pagy_with_per_page(scope)
   end
 
   def show
@@ -28,7 +41,8 @@ class PumpAllocationsController < ApplicationController
     @pump_allocation.period = current_period
     authorize!(:create, @pump_allocation)
     if @pump_allocation.save
-      redirect_to pump_allocations_path, notice: "Đã tạo phân bổ bơm nước."
+      redirect_to pump_allocations_path,
+        notice: t("flash.record_created", resource: t("resources.pump_allocation"), name: @pump_allocation.zone.name)
     else
       render :new, status: :unprocessable_entity
     end
@@ -39,7 +53,8 @@ class PumpAllocationsController < ApplicationController
 
   def update
     if @pump_allocation.update(allocation_params)
-      redirect_to pump_allocations_path, notice: "Đã cập nhật phân bổ bơm nước."
+      redirect_to pump_allocations_path,
+        notice: t("flash.record_updated", resource: t("resources.pump_allocation"), name: @pump_allocation.zone.name)
     else
       render :edit, status: :unprocessable_entity
     end
@@ -47,7 +62,8 @@ class PumpAllocationsController < ApplicationController
 
   def destroy
     @pump_allocation.destroy
-    redirect_to pump_allocations_path, notice: "Đã xóa phân bổ bơm nước."
+    redirect_to pump_allocations_path,
+      notice: t("flash.record_destroyed", resource: t("resources.pump_allocation"), name: @pump_allocation.zone.name)
   end
 
   private

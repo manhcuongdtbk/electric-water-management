@@ -55,4 +55,57 @@ RSpec.describe "PasswordChanges", type: :request do
       expect(response).to have_http_status(:ok)
     end
   end
+
+  describe "T92: đổi mật khẩu tự nguyện (KHÔNG force change)" do
+    let(:voluntary_user) do
+      create(:user, :system_admin, force_password_change: false,
+                                     password: "Current@1", password_confirmation: "Current@1")
+    end
+
+    before do
+      sign_out user
+      sign_in voluntary_user
+    end
+
+    it "form edit có field current_password khi không force change" do
+      get edit_password_change_path
+      expect(response.body).to include("Mật khẩu hiện tại")
+    end
+
+    it "đổi thành công khi nhập đúng mật khẩu cũ" do
+      patch password_change_path, params: {
+        user: {
+          current_password: "Current@1",
+          password: "NewSecure@99",
+          password_confirmation: "NewSecure@99"
+        }
+      }
+      expect(response).to redirect_to(root_path)
+      voluntary_user.reload
+      expect(voluntary_user.valid_password?("NewSecure@99")).to be true
+    end
+
+    it "chặn khi nhập sai mật khẩu cũ" do
+      patch password_change_path, params: {
+        user: {
+          current_password: "WrongOldPass@1",
+          password: "NewSecure@99",
+          password_confirmation: "NewSecure@99"
+        }
+      }
+      expect(response).to have_http_status(:unprocessable_entity)
+      voluntary_user.reload
+      expect(voluntary_user.valid_password?("NewSecure@99")).to be false
+      expect(voluntary_user.valid_password?("Current@1")).to be true
+    end
+
+    it "chặn khi bỏ trống mật khẩu cũ" do
+      patch password_change_path, params: {
+        user: { password: "NewSecure@99", password_confirmation: "NewSecure@99" }
+      }
+      expect(response).to have_http_status(:unprocessable_entity)
+      voluntary_user.reload
+      expect(voluntary_user.valid_password?("Current@1")).to be true
+    end
+  end
 end

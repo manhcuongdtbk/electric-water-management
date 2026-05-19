@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_18_053421) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_18_220701) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -19,6 +19,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_18_053421) do
   create_enum "contact_point_type", ["residential", "public", "water_pump", "non_establishment"]
   create_enum "other_deduction_type", ["fixed", "coefficient"]
   create_enum "user_role", ["technician", "system_admin", "unit_admin", "commander"]
+
+  create_table "backups", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.text "error_message"
+    t.string "filename", null: false
+    t.bigint "size_bytes", default: 0, null: false
+    t.string "status", default: "completed", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_at"], name: "index_backups_on_created_at"
+    t.index ["filename"], name: "index_backups_on_filename", unique: true
+  end
 
   create_table "blocks", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -263,8 +275,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_18_053421) do
     t.bigint "item_id", null: false
     t.string "item_type", null: false
     t.text "object"
+    t.text "object_changes"
     t.string "whodunnit"
+    t.index ["created_at"], name: "index_versions_on_created_at"
+    t.index ["event"], name: "index_versions_on_event"
     t.index ["item_type", "item_id"], name: "index_versions_on_item_type_and_item_id"
+    t.index ["whodunnit"], name: "index_versions_on_whodunnit"
   end
 
   create_table "zones", force: :cascade do |t|
@@ -276,6 +292,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_18_053421) do
     t.index ["name"], name: "index_zones_on_name", unique: true
   end
 
+  add_foreign_key "backups", "users", column: "created_by_id", on_delete: :nullify
   add_foreign_key "blocks", "units"
   add_foreign_key "calculations", "contact_points"
   add_foreign_key "calculations", "periods"

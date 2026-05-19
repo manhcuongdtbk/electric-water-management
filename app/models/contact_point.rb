@@ -72,9 +72,14 @@ class ContactPoint < ApplicationRecord
     end
   end
 
+  # Cho residential/public: phải chọn ĐÚNG 1 trong 2 — đơn vị HOẶC khu vực.
+  # Đầu mối sinh hoạt thuộc khu vực (vd "Chỉ huy khu vực") không thuộc đơn vị nào.
+  # Tách 2 case lỗi để message dễ hiểu cho user:
   def validate_unit_zone_xor
-    if unit.present? == zone.present?
-      errors.add(:base, :unit_zone_xor)
+    if unit.blank? && zone.blank?
+      errors.add(:base, :assignment_required)
+    elsif unit.present? && zone.present?
+      errors.add(:base, :assignment_must_be_one)
     end
   end
 

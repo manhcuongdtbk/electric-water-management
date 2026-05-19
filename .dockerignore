@@ -1,0 +1,49 @@
+# Loại các files không cần thiết khỏi build context.
+# Bỏ dòng "spec" và "test" nếu cần chạy test bên trong container (CI hoặc debug).
+
+.git
+.gitignore
+.github
+.dockerignore
+.env*
+.bundle
+
+# Tests
+spec
+test
+coverage
+
+# Logs and temp
+log/*
+tmp/*
+!log/.keep
+!tmp/.keep
+!tmp/pids/.keep
+!tmp/storage/.keep
+
+# Storage (sẽ mount volume riêng trong production)
+storage/*
+!storage/.keep
+
+# Build artifacts
+public/assets
+app/assets/builds/*
+!app/assets/builds/.keep
+node_modules
+
+# Documentation (không cần ở runtime)
+README.md
+docs
+CLAUDE.md
+
+# OS files
+.DS_Store
+
+# Credentials key — KHÔNG bao giờ copy vào image
+config/master.key
+config/credentials/*.key
+
+# IDE & local tooling
+.idea
+.vscode
+.claude

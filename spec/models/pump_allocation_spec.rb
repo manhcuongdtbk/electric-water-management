@@ -78,7 +78,8 @@ RSpec.describe PumpAllocation do
       end
 
       it "không ảnh hưởng giữa các period khác nhau" do
-        other_period = create(:period, year: 2027, month: 1, closed: true)
+        # Dùng năm xa để tránh đụng sequence của :period factory.
+        other_period = create(:period, year: 2099, month: 12, closed: true)
         create(:pump_allocation, zone: zone, period: other_period, unit: unit_one, fixed_percentage: 90)
         allocation = build(:pump_allocation, zone: zone, period: period, unit: unit_one, fixed_percentage: 90)
         expect(allocation).to be_valid

@@ -52,6 +52,10 @@ wb = xlsx_package.workbook
   unit_price_cell = "$B$1"
 
   wb.add_worksheet(name: "Bảng tính tiền #{@period.month}-#{@period.year}") do |sheet|
+    # Cho phép công thức Excel (caxlsx mặc định escape "=" để chống CSV injection).
+    # An toàn vì mọi dữ liệu trong sheet đều từ server, không có input user.
+    sheet.escape_formulas = false
+
     sheet.add_row ["Đơn giá:", @period.unit_price.to_f] + Array.new(total_columns - 2),
                   style: [text_style, money_style]
     sheet.add_row []
