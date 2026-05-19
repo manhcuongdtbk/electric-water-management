@@ -2,6 +2,8 @@ require "open3"
 require "fileutils"
 
 class BackupService
+  include DatabaseConfig
+
   Error = Class.new(StandardError)
   CapacityError = Class.new(Error)
   DumpError = Class.new(Error)
@@ -83,23 +85,5 @@ class BackupService
     cmd << "--port=#{db[:port]}" if db[:port]
     cmd << "--username=#{db[:user]}" if db[:user]
     cmd
-  end
-
-  def pg_env
-    db = db_config
-    env = { "LANG" => "C", "PGCLIENTENCODING" => "UTF8" }
-    env["PGPASSWORD"] = db[:password] if db[:password]
-    env
-  end
-
-  def db_config
-    cfg = ActiveRecord::Base.connection_db_config.configuration_hash
-    {
-      dbname:   cfg[:database],
-      host:     cfg[:host],
-      port:     cfg[:port],
-      user:     cfg[:username],
-      password: cfg[:password]
-    }
   end
 end

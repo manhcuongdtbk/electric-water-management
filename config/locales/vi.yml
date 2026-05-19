@@ -375,6 +375,7 @@ vi:
     errors:
       at_capacity: "Đã đạt giới hạn %{max} bản sao lưu. Vui lòng xóa bản cũ trước khi tạo bản mới."
       pg_dump_failed: "Tạo bản sao lưu thất bại: %{message}"
+      pg_restore_failed: "Khôi phục bản sao lưu thất bại:\n%{message}"
       file_missing: "File bản sao lưu không tồn tại trên đĩa."
   password_changes:
     edit:

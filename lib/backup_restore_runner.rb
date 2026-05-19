@@ -1,6 +1,8 @@
 require "open3"
 
 class BackupRestoreRunner
+  include DatabaseConfig
+
   Error = Class.new(StandardError)
 
   def initialize(backup:)
@@ -18,7 +20,7 @@ class BackupRestoreRunner
 
     return if status.success?
 
-    raise Error, "pg_restore lỗi:\n#{stderr}"
+    raise Error, I18n.t("backups.errors.pg_restore_failed", message: stderr.to_s)
   ensure
     ActiveRecord::Base.establish_connection
   end
@@ -40,23 +42,5 @@ class BackupRestoreRunner
     cmd << "--username=#{db[:user]}" if db[:user]
     cmd << @backup.absolute_path.to_s
     cmd
-  end
-
-  def pg_env
-    db = db_config
-    env = { "LANG" => "C", "PGCLIENTENCODING" => "UTF8" }
-    env["PGPASSWORD"] = db[:password] if db[:password]
-    env
-  end
-
-  def db_config
-    cfg = ActiveRecord::Base.connection_db_config.configuration_hash
-    {
-      dbname:   cfg[:database],
-      host:     cfg[:host],
-      port:     cfg[:port],
-      user:     cfg[:username],
-      password: cfg[:password]
-    }
   end
 end
