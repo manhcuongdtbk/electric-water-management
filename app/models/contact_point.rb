@@ -17,8 +17,8 @@ class ContactPoint < ApplicationRecord
   has_many :meters
   has_many :meter_readings, through: :meters
 
-  accepts_nested_attributes_for :meters, allow_destroy: false,
-    reject_if: ->(attrs) { attrs[:name].blank? }
+  accepts_nested_attributes_for :meters,
+    reject_if: ->(attrs) { attrs[:name].blank? && attrs[:id].blank? }
   has_many :personnel_entries
   has_many :non_establishment_snapshots
   has_many :other_deductions
