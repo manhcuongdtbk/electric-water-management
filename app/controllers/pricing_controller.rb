@@ -26,9 +26,9 @@ class PricingController < ApplicationController
     authorize!(:create, Period)
     begin
       result = PeriodService.new.open_new_period(
-        year: params[:year]&.to_i,
-        month: params[:month]&.to_i,
-        unit_price: params[:unit_price]
+        year: params[:year].presence&.to_i,
+        month: params[:month].presence&.to_i,
+        unit_price: params[:unit_price].presence
       )
       msg = t("pricing.flash.opened", month: result.period.month, year: result.period.year)
       msg += " Cảnh báo: #{result.warnings.join('; ')}" if result.warnings.any?
