@@ -62,5 +62,17 @@ RSpec.describe ZoneWarningCollector do
         )
       end
     end
+
+    context "đầu mối chưa nhập đã bị discard (v2.4.0)" do
+      it "không cảnh báo 'chưa nhập chỉ số' cho đầu mối đã discard" do
+        cp = sample.contact_points[:ban_tac_huan]
+        cp.meters.first.meter_readings.find_by(period: sample.period)
+          .update!(reading_end: nil, manual_usage: nil)
+        cp.discard
+
+        warnings = described_class.new(zone: sample.zone, period: sample.period).call
+        expect(warnings.join(" ")).not_to include("Ban Tác huấn")
+      end
+    end
   end
 end

@@ -173,6 +173,79 @@ RSpec.describe ContactPoint do
     end
   end
 
+  describe "before_discard :delete_current_period_records (cleanup data kỳ đang mở v2.4.0)" do
+    context "khi có kỳ đang mở" do
+      let!(:period) { create(:period, year: 2026, month: 5, closed: false) }
+      let!(:ranks) {
+        7.times.map { |i| create(:rank, period: period, name: "Cấp #{i + 1}", quota: 100, position: i + 1) }
+      }
+
+      it "discard đầu mối sinh hoạt → xóa meter_readings, personnel_entries, calculations, other_deductions kỳ đang mở" do
+        cp = create(:contact_point, :residential,
+                    initial_personnel_counts: { ranks.first.id => 1 })
+        meter = create(:meter, contact_point: cp)
+        create(:calculation, contact_point: cp, period: period)
+
+        expect(MeterReading.where(meter: meter, period: period)).to be_present
+        expect(PersonnelEntry.where(contact_point: cp, period: period)).to be_present
+        expect(OtherDeduction.where(contact_point: cp, period: period)).to be_present
+
+        cp.discard
+
+        expect(MeterReading.where(meter: meter, period: period)).to be_empty
+        expect(PersonnelEntry.where(contact_point: cp, period: period)).to be_empty
+        expect(Calculation.where(contact_point: cp, period: period)).to be_empty
+        expect(OtherDeduction.where(contact_point: cp, period: period)).to be_empty
+      end
+
+      it "discard đầu mối ngoài biên chế → xóa non_establishment_snapshots kỳ đang mở" do
+        cp = create(:contact_point, :non_establishment)
+        expect(NonEstablishmentSnapshot.where(contact_point: cp, period: period)).to be_present
+
+        cp.discard
+
+        expect(NonEstablishmentSnapshot.where(contact_point: cp, period: period)).to be_empty
+      end
+
+      it "chỉ xóa data kỳ đang mở — data kỳ cũ (đã đóng) giữ nguyên" do
+        old_period = create(:period, year: 2025, month: 12, closed: true)
+        old_rank = create(:rank, period: old_period, name: "Cấp cũ", quota: 100, position: 1)
+        cp = create(:contact_point, :residential,
+                    initial_personnel_counts: { ranks.first.id => 1 })
+        meter = create(:meter, contact_point: cp)
+        old_reading = create(:meter_reading, meter: meter, period: old_period)
+        old_entry = create(:personnel_entry, contact_point: cp, period: old_period,
+                           rank: old_rank, count: 2)
+        old_calc = create(:calculation, contact_point: cp, period: old_period)
+        old_deduction = create(:other_deduction, contact_point: cp, period: old_period)
+
+        cp.discard
+
+        expect(MeterReading.where(meter: meter, period: period)).to be_empty
+        expect(PersonnelEntry.where(contact_point: cp, period: period)).to be_empty
+        expect(MeterReading.where(id: old_reading.id)).to be_present
+        expect(PersonnelEntry.where(id: old_entry.id)).to be_present
+        expect(Calculation.where(id: old_calc.id)).to be_present
+        expect(OtherDeduction.where(id: old_deduction.id)).to be_present
+      end
+    end
+
+    context "khi không có kỳ đang mở" do
+      it "discard đầu mối → không xóa data kỳ cũ" do
+        old_period = create(:period, year: 2025, month: 12, closed: true)
+        cp = create(:contact_point, :residential)
+        meter = create(:meter, contact_point: cp)
+        old_reading = create(:meter_reading, meter: meter, period: old_period)
+        old_calc = create(:calculation, contact_point: cp, period: old_period)
+
+        cp.discard
+
+        expect(MeterReading.where(id: old_reading.id)).to be_present
+        expect(Calculation.where(id: old_calc.id)).to be_present
+      end
+    end
+  end
+
   describe "validate :immutable_contact_point_type (T48)" do
     it "không cho đổi contact_point_type sau khi tạo" do
       unit = create(:unit)

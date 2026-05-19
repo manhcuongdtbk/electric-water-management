@@ -53,11 +53,14 @@ RSpec.describe PeriodComparison do
         new_period = PeriodService.new
                                   .open_new_period(year: 2026, month: 6,
                                                    unit_price: BigDecimal("2336.4")).period
-        # Thêm contact_point "Lái xe" mới ở kỳ 6
+        # Thêm contact_point "Lái xe" mới ở kỳ 6 (kèm công tơ — residential luôn có ≥ 1 công tơ)
         rank_id = new_period.ranks.first.id
-        ContactPoint.create!(name: "Lái xe", contact_point_type: "residential",
-                             unit: sample.unit_a, block: nil, group: nil,
-                             initial_personnel_counts: { rank_id => 2 })
+        lai_xe = ContactPoint.create!(name: "Lái xe", contact_point_type: "residential",
+                                      unit: sample.unit_a, block: nil, group: nil,
+                                      initial_personnel_counts: { rank_id => 2 })
+        lai_xe_meter = create(:meter, name: "CT-LX", contact_point: lai_xe, no_loss: false)
+        lai_xe_meter.meter_readings.find_by(period: new_period)
+                    .update!(reading_end: BigDecimal("100"))
         sample.main_meter.main_meter_readings.create!(period: new_period, usage: 2100)
         sample.meters.each do |key, meter|
           attrs = SampleData::SAMPLE_METER_READINGS[key]

@@ -213,17 +213,17 @@ RSpec.describe "Cách ly kỳ giữa các period" do
   describe "T16 — Xóa đầu mối ở kỳ sau" do
     include_context "với kỳ tháng 5 đã đóng + kỳ tháng 6 mở"
 
-    it "đầu mối discarded giữa kỳ vẫn tính ở kỳ 6 (engine .with_discarded), kỳ 5 vẫn giữ (v2.3.0)" do
+    it "đầu mối discarded giữa kỳ → engine skip ở kỳ 6 (v2.4.0), kỳ 5 vẫn giữ" do
       kho_vat_tu = sample.contact_points[:kho_vat_tu]
       kho_vat_tu.discard
 
       CalculationOrchestrator.new(zone: sample.zone, period: period_6).call
 
-      # v2.3.0: discard giữa kỳ → snapshot kỳ 6 đã tạo trước discard nên engine vẫn tính.
-      # Engine dùng .with_discarded để thấy CP đã discard cùng với data snapshot kỳ 6.
-      expect(calc_for(period_6, kho_vat_tu)).to be_present
+      # v2.4.0: discard lúc đang mở kỳ → cleanup hard delete meter_readings/personnel_entries/
+      # calculations kỳ 6 → engine không thấy data kỳ 6 → skip hoàn toàn, không tạo Calculation.
+      expect(calc_for(period_6, kho_vat_tu)).to be_nil
+      # Kỳ 5 (đã đóng) không bị cleanup → calculation kỳ 5 vẫn còn, không đổi.
       expect(calc_for(period_5, kho_vat_tu)).to be_present
-      # Kỳ 5 (đã đóng) vẫn không thay đổi — đây là điểm chính của cách ly kỳ.
       expect(snapshot_calculations(period_5)).to eq(snapshot_period_5_before)
     end
   end

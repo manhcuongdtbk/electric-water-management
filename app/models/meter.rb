@@ -14,6 +14,7 @@ class Meter < ApplicationRecord
   after_create :create_current_period_reading
   after_update :propagate_no_loss_to_current_period_reading, if: :saved_change_to_no_loss?
   before_discard :ensure_not_last_meter
+  before_discard :delete_current_period_meter_readings
 
   private
 
@@ -35,5 +36,15 @@ class Meter < ApplicationRecord
     return if contact_point.meters.kept.where.not(id: id).exists?
     errors.add(:base, :last_meter_cannot_be_destroyed)
     throw(:abort)
+  end
+
+  # Khi discard công tơ đơn lẻ lúc đang mở kỳ: hard delete meter_readings kỳ đang mở.
+  # Bỏ qua khi discard cascade từ contact_point (ContactPoint#delete_current_period_records
+  # đã xóa hết) — lúc đó contact_point đã discarded.
+  def delete_current_period_meter_readings
+    return if contact_point.discarded?
+    period = Period.current
+    return unless period
+    meter_readings.where(period: period).destroy_all
   end
 end

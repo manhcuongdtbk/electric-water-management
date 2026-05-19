@@ -25,6 +25,11 @@ RSpec.describe ZoneQuery do
         expect(result).to include(meter)
       end
     end
+
+    it "skip công tơ không có meter_reading cho period — đầu mối discard kỳ đang mở (v2.4.0)" do
+      sample.contact_points[:ban_tac_huan].discard
+      expect(query.meters).not_to include(sample.meters[:ct_a1])
+    end
   end
 
   describe "#meter_readings" do
@@ -69,6 +74,27 @@ RSpec.describe ZoneQuery do
       expect(result.map(&:name)).to contain_exactly(
         "Ban Tác huấn", "Văn thư", "Kho vật tư", "Đại đội 1", "Chỉ huy khu vực"
       )
+    end
+
+    it "skip đầu mối sinh hoạt không có meter_readings cho period — discard kỳ đang mở (v2.4.0)" do
+      cp = sample.contact_points[:ban_tac_huan]
+      cp.discard
+      expect(query.residential_contact_points).not_to include(cp)
+    end
+  end
+
+  describe "kỳ cũ (đã đóng) — engine vẫn tính đầu mối đã discard (v2.4.0)" do
+    let(:sample) { setup_zone_one_full_sample(open_period: false) }
+
+    it "#meters vẫn gồm công tơ của đầu mối đã discard (meter_readings kỳ cũ còn)" do
+      sample.contact_points[:ban_tac_huan].discard
+      expect(query.meters).to include(sample.meters[:ct_a1])
+    end
+
+    it "#residential_contact_points vẫn gồm đầu mối sinh hoạt đã discard" do
+      cp = sample.contact_points[:ban_tac_huan]
+      cp.discard
+      expect(query.residential_contact_points).to include(cp)
     end
   end
 end

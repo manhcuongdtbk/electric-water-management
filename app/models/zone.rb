@@ -15,6 +15,7 @@ class Zone < ApplicationRecord
   validate :validate_has_at_least_one_main_meter, on: :create
 
   before_discard :ensure_no_kept_dependents
+  before_discard :delete_current_period_main_meter_readings
   before_discard :discard_main_meters
 
   private
@@ -38,5 +39,14 @@ class Zone < ApplicationRecord
 
   def discard_main_meters
     main_meters.kept.find_each(&:discard)
+  end
+
+  # Khi discard khu vực lúc đang mở kỳ: hard delete main_meter_readings kỳ đang mở của
+  # mọi công tơ tổng thuộc khu vực. Dữ liệu kỳ cũ (đã đóng) giữ nguyên.
+  def delete_current_period_main_meter_readings
+    period = Period.current
+    return unless period
+    MainMeterReading.where(main_meter_id: main_meters.select(:id),
+                           period_id: period.id).destroy_all
   end
 end

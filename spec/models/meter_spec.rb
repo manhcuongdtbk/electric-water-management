@@ -102,4 +102,47 @@ RSpec.describe Meter do
       expect(meter1.reload).to be_discarded
     end
   end
+
+  describe "before_discard :delete_current_period_meter_readings (cleanup data kỳ đang mở v2.4.0)" do
+    context "khi có kỳ đang mở" do
+      let!(:period) { create(:period, closed: false) }
+
+      it "discard công tơ đơn lẻ → xóa meter_reading kỳ đang mở" do
+        cp = create(:contact_point, :residential)
+        meter1 = create(:meter, contact_point: cp, name: "M1")
+        create(:meter, contact_point: cp, name: "M2")
+
+        expect(MeterReading.where(meter: meter1, period: period)).to be_present
+        expect(meter1.discard).to be true
+        expect(MeterReading.where(meter: meter1, period: period)).to be_empty
+      end
+
+      it "không xóa meter_reading kỳ cũ (đã đóng)" do
+        old_period = create(:period, year: 2025, month: 12, closed: true)
+        cp = create(:contact_point, :residential)
+        meter1 = create(:meter, contact_point: cp, name: "M1")
+        create(:meter, contact_point: cp, name: "M2")
+        old_reading = create(:meter_reading, meter: meter1, period: old_period)
+
+        meter1.discard
+
+        expect(MeterReading.where(meter: meter1, period: period)).to be_empty
+        expect(MeterReading.where(id: old_reading.id)).to be_present
+      end
+    end
+
+    context "khi không có kỳ đang mở" do
+      it "discard công tơ → không xóa meter_reading kỳ cũ" do
+        old_period = create(:period, closed: true)
+        cp = create(:contact_point, :residential)
+        meter1 = create(:meter, contact_point: cp, name: "M1")
+        create(:meter, contact_point: cp, name: "M2")
+        old_reading = create(:meter_reading, meter: meter1, period: old_period)
+
+        meter1.discard
+
+        expect(MeterReading.where(id: old_reading.id)).to be_present
+      end
+    end
+  end
 end
