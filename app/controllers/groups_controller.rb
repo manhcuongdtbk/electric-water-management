@@ -30,12 +30,13 @@ class GroupsController < ApplicationController
   end
 
   def new
-    @group = Group.new
+    @group = Group.new(unit_id: current_user.unit_id)
     authorize!(:create, @group)
   end
 
   def create
     @group = Group.new(create_params)
+    @group.unit_id = current_user.unit_id if current_user.unit_id.present?
     authorize!(:create, @group)
     if @group.save
       redirect_to groups_path,
