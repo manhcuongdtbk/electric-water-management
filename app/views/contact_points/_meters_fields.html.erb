@@ -10,13 +10,20 @@
 
   <div data-nested-meters-target="container">
     <%= f.fields_for :meters, contact_point.meters.select(&:kept?) do |mf| %>
+      <% meter = mf.object %>
+      <% prefix = mf.object_name %>
+      <% has_name_error = meter.errors[:name].any? %>
       <div class="flex items-center space-x-2 mb-2" data-nested-meters-target="entry">
-        <%= mf.hidden_field :id if mf.object.persisted? %>
-        <%= mf.hidden_field :_destroy, value: "0" %>
-        <%= mf.text_field :name, placeholder: "Tên công tơ (VD: CT-A1)",
-            class: "flex-1 rounded border border-gray-300 px-3 py-2 text-sm" %>
+        <% if meter.persisted? %>
+          <input type="hidden" name="<%= prefix %>[id]" value="<%= meter.id %>">
+        <% end %>
+        <input type="hidden" name="<%= prefix %>[_destroy]" value="0">
+        <input type="text" name="<%= prefix %>[name]" value="<%= meter.name %>"
+               placeholder="Tên công tơ (VD: CT-A1)"
+               class="flex-1 rounded border px-3 py-2 text-sm <%= has_name_error ? 'border-red-500' : 'border-gray-300' %>">
         <label class="text-sm text-gray-700 flex items-center space-x-1">
-          <%= mf.check_box :no_loss %>
+          <input type="hidden" name="<%= prefix %>[no_loss]" value="0">
+          <input type="checkbox" name="<%= prefix %>[no_loss]" value="1" <%= "checked" if meter.no_loss? %>>
           <span>Không tổn hao</span>
         </label>
         <button type="button" data-action="nested-meters#remove"

@@ -3,16 +3,18 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = ["container", "entry", "template"]
 
+  entryTargetConnected() { this.toggleRemoveButtons() }
+  entryTargetDisconnected() { this.toggleRemoveButtons() }
+
   add() {
     const html = this.templateTarget.innerHTML.replace(/NEW_INDEX/g, Date.now())
     this.containerTarget.insertAdjacentHTML("beforeend", html)
+    this.toggleRemoveButtons()
   }
 
   remove(event) {
     const entry = event.target.closest("[data-nested-meters-target='entry']")
-    const visibleCount = this.entryTargets.filter(e => !e.classList.contains("hidden")).length
-
-    if (visibleCount <= 1) return
+    if (!confirm("Bạn có chắc chắn muốn xóa công tơ này?")) return
 
     const idField = entry.querySelector("input[name*='[id]']")
     if (idField) {
@@ -22,5 +24,18 @@ export default class extends Controller {
     } else {
       entry.remove()
     }
+    this.toggleRemoveButtons()
+  }
+
+  toggleRemoveButtons() {
+    const visible = this.entryTargets.filter(e => !e.classList.contains("hidden"))
+    const only = visible.length <= 1
+    visible.forEach(entry => {
+      const btn = entry.querySelector("[data-action='nested-meters#remove']")
+      if (!btn) return
+      btn.disabled = only
+      btn.classList.toggle("opacity-50", only)
+      btn.classList.toggle("cursor-not-allowed", only)
+    })
   }
 }
