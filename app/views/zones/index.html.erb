@@ -36,15 +36,19 @@
       <% @zones.each do |zone| %>
         <tr class="hover:bg-gray-50 transition-colors">
           <td class="px-4 py-2 text-sm font-medium text-gray-900"><%= zone.name %></td>
+          <%
+            kept_units = zone.units.reject(&:discarded?)
+            kept_main_meters = zone.main_meters.reject(&:discarded?)
+          %>
           <td class="px-4 py-2 text-sm text-gray-600">
-            <%= zone.units.kept.count %>
-            <% if zone.units.kept.empty? %>
+            <%= kept_units.size %>
+            <% if kept_units.empty? %>
               <span class="ml-2 text-yellow-700 text-xs">(Chưa có đơn vị)</span>
             <% end %>
           </td>
           <td class="px-4 py-2 text-sm text-gray-600"><%= zone.manager_unit&.name || "—" %></td>
           <td class="px-4 py-2 text-sm text-gray-600">
-            <%= zone.main_meters.kept.pluck(:name).join(", ") %>
+            <%= kept_main_meters.map(&:name).join(", ") %>
           </td>
           <td class="px-4 py-2 text-sm text-right space-x-2">
             <% if can?(:update, zone) || can?(:destroy, zone) %>

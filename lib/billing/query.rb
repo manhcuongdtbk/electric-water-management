@@ -26,7 +26,7 @@ module Billing
         .where(contact_points: { contact_point_type: "residential" })
         .merge(ContactPoint.kept)
         .accessible_by(ability)
-        .includes(contact_point: [:unit, :block, :group, :zone])
+        .includes(contact_point: [:block, :group, :zone, { unit: :zone }])
     end
 
     def self.apply_filters(scope, zone:, unit:, q: nil)

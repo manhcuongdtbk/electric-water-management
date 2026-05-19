@@ -1,6 +1,7 @@
 class MeterEntriesController < ApplicationController
   include PeriodGuard
   include AuthorizeResource
+  include BusinessRoleRequired
 
   before_action :require_open_period, only: [:update]
 
@@ -51,6 +52,8 @@ class MeterEntriesController < ApplicationController
                 .where(period: @period)
                 .accessible_by(current_ability)
                 .joins(meter: :contact_point)
+                .merge(Meter.kept)
+                .merge(ContactPoint.kept)
                 .where.not(contact_points: { contact_point_type: "water_pump" })
                 .order("contact_points.name, meters.name")
   end

@@ -3,7 +3,7 @@
                      else
                        %w[system_admin unit_admin commander]
                      end %>
-<% available_units = Unit.kept.order(:name) %>
+<% available_units = Unit.kept.accessible_by(current_ability).order(:name) %>
 
 <%= form_with model: user, local: true, class: "space-y-4" do |f| %>
   <% if user.errors.any? %>

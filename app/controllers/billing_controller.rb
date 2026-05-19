@@ -1,5 +1,6 @@
 class BillingController < ApplicationController
   include AuthorizeResource
+  include BusinessRoleRequired
 
   def show
     @period = resolve_period

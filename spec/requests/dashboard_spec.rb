@@ -31,10 +31,13 @@ RSpec.describe "Dashboard", type: :request do
       let(:user) { create(:user) }
       before { sign_in user }
 
-      it "render sidebar không có data nghiệp vụ" do
+      it "redirect khỏi dashboard về trang phù hợp (technician không có quyền xem nghiệp vụ)" do
         get root_path
-        expect(response.body).not_to include("Đầu mối")
+        expect(response).to redirect_to(users_path)
+        follow_redirect!
+        expect(flash[:alert]).to eq(I18n.t("errors.access_denied"))
         expect(response.body).to include("Tài khoản")
+        expect(response.body).not_to include("Đầu mối")
       end
     end
 

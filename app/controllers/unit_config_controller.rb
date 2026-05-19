@@ -1,6 +1,7 @@
 class UnitConfigController < ApplicationController
   include PeriodGuard
   include AuthorizeResource
+  include BusinessRoleRequired
 
   before_action :require_open_period, only: [:update]
 
@@ -15,7 +16,11 @@ class UnitConfigController < ApplicationController
     @unit = load_unit
     @period = current_period
     @unit_config = UnitConfig.find_by(unit: @unit, period: @period)
-    authorize!(:update, @unit_config) if @unit_config
+    if @unit_config
+      authorize!(:update, @unit_config)
+    else
+      authorize!(:update, UnitConfig.new(unit: @unit, period: @period))
+    end
 
     errors_collected = []
     ActiveRecord::Base.transaction do
@@ -65,6 +70,7 @@ class UnitConfigController < ApplicationController
                   .where(period: @period,
                          contact_points: { unit_id: @unit.id,
                                            contact_point_type: "residential" })
+                  .merge(ContactPoint.kept)
                   .accessible_by(current_ability)
                   .order("contact_points.name")
   end

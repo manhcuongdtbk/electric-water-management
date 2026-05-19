@@ -20,7 +20,7 @@ class ZoneWarningCollector
 
   def missing_main_meter_warnings
     readings = query.main_meter_readings
-    if readings.empty? || readings.sum(:usage).to_f.zero?
+    if readings.empty? || readings.sum(:usage).zero?
       ["Khu vực #{@zone.name}: chưa nhập số sử dụng công tơ tổng."]
     else
       []

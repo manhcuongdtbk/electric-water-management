@@ -73,7 +73,7 @@ class ContactPointsController < ApplicationController
       @contact_point.assign_attributes(update_params)
 
       if @contact_point.type_residential? && personnel_counts_param.present?
-        update_personnel_entries_for_open_period(personnel_counts_param)
+        update_personnel_entries_for_open_period(personnel_counts_param, personnel_lock_versions_param)
       end
 
       if @contact_point.save
@@ -134,7 +134,7 @@ class ContactPointsController < ApplicationController
     when "residential"
       [:name, :contact_point_type, :unit_id, :zone_id, :block_id, :group_id]
     when "public"
-      [:name, :contact_point_type, :unit_id, :zone_id, :block_id, :group_id]
+      [:name, :contact_point_type, :unit_id, :zone_id]
     when "water_pump"
       [:name, :contact_point_type, :zone_id]
     when "non_establishment"
@@ -151,14 +151,25 @@ class ContactPointsController < ApplicationController
     hash.transform_keys(&:to_i).transform_values(&:to_i)
   end
 
-  def update_personnel_entries_for_open_period(counts)
+  def personnel_lock_versions_param
+    raw = params.dig(:contact_point, :personnel_lock_versions)
+    return {} if raw.blank?
+    hash = raw.is_a?(ActionController::Parameters) ? raw.to_unsafe_h : raw.to_h
+    hash.transform_keys(&:to_i).transform_values(&:to_i)
+  end
+
+  def update_personnel_entries_for_open_period(counts, lock_versions)
     period = Period.current
     return unless period
 
     counts.each do |rank_id, count|
       entry = @contact_point.personnel_entries.find_by(period: period, rank_id: rank_id)
       next unless entry
-      entry.update(count: count)
+      attrs = { count: count }
+      # Optimistic locking: nếu form gửi lock_version → gán vào entry để Rails compare
+      # với giá trị trong DB. Mismatch → StaleObjectError (catch ở OptimisticLockingGuard).
+      attrs[:lock_version] = lock_versions[rank_id] if lock_versions.key?(rank_id)
+      entry.update(attrs)
     end
   end
 end

@@ -19,9 +19,10 @@
 
   <div>
     <%= f.label :zone_id, "Khu vực", class: "block text-sm font-medium text-gray-700 mb-1" %>
-    <%= f.select :zone_id, Zone.order(:name).pluck(:name, :id),
+    <%= f.select :zone_id, Zone.accessible_by(current_ability).order(:name).pluck(:name, :id),
         { include_blank: "— Chọn khu vực —" },
-        class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+        class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
+        data: { pump_allocation_form_target: "zoneSelect", action: "change->pump-allocation-form#refreshZoneScope" } %>
   </div>
 
   <%# ====== Đối tượng nhận: Đơn vị HOẶC Đầu mối ====== %>
@@ -47,17 +48,27 @@
 
     <div data-pump-allocation-form-target="targetUnit">
       <%= f.label :unit_id, "Chọn đơn vị", class: "block text-sm font-medium text-gray-700 mb-1" %>
-      <%= f.select :unit_id, Unit.kept.order(:name).pluck(:name, :id),
+      <%= f.select :unit_id,
+          Unit.kept.accessible_by(current_ability).order(:name)
+              .map { |u| [u.name, u.id, { "data-zone-id": u.zone_id }] },
           { include_blank: "— Chọn đơn vị —" },
-          class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+          class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
+          data: { pump_allocation_form_target: "unitSelect" } %>
     </div>
 
     <div data-pump-allocation-form-target="targetContact">
       <%= f.label :contact_point_id, "Chọn đầu mối", class: "block text-sm font-medium text-gray-700 mb-1" %>
-      <%= f.select :contact_point_id,
-          ContactPoint.kept.where(contact_point_type: ["residential", "non_establishment"]).order(:name).pluck(:name, :id),
+      <%
+        contact_point_options = ContactPoint.kept
+          .where(contact_point_type: ["residential", "non_establishment"])
+          .includes(:unit)
+          .order(:name)
+          .map { |cp| [cp.name, cp.id, { "data-zone-id": cp.zone_id || cp.unit&.zone_id }] }
+      %>
+      <%= f.select :contact_point_id, contact_point_options,
           { include_blank: "— Chọn đầu mối —" },
-          class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+          class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
+          data: { pump_allocation_form_target: "contactSelect" } %>
     </div>
   </fieldset>
 

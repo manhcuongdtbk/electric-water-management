@@ -1,4 +1,6 @@
 class HistoryController < ApplicationController
+  include BusinessRoleRequired
+
   MODES = %w[single compare range].freeze
 
   def show

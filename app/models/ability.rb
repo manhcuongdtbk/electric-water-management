@@ -23,6 +23,7 @@ class Ability
 
   def technician_abilities(_user)
     can :manage, User
+    can :read, Unit
     can :read, PaperTrail::Version
     can :manage, Backup
   end

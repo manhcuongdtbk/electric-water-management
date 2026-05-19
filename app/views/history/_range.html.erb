@@ -64,14 +64,14 @@
               <% if summary.respond_to?(:deficit_kw) %>
                 <%= number_to_vi(summary.deficit_kw) %>
               <% elsif summary.respond_to?(:units) %>
-                <%= number_to_vi(summary.units.sum { |d| d[:deficit_kw].to_f }) %>
+                <%= number_to_vi(summary.units.sum(BigDecimal("0")) { |d| BigDecimal(d[:deficit_kw].to_s) }) %>
               <% end %>
             </td>
             <td class="px-4 py-2 text-right">
               <% if summary.respond_to?(:deficit_amount) %>
                 <%= money_to_vi(summary.deficit_amount) %>
               <% elsif summary.respond_to?(:units) %>
-                <%= money_to_vi(summary.units.sum { |d| d[:deficit_amount].to_f }) %>
+                <%= money_to_vi(summary.units.sum(BigDecimal("0")) { |d| BigDecimal(d[:deficit_amount].to_s) }) %>
               <% end %>
             </td>
             <td class="px-4 py-2 text-center">

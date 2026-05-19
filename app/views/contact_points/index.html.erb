@@ -64,7 +64,7 @@
             <%= [cp.block&.name, cp.group&.name].compact.join(" / ") %>
           </td>
           <td class="px-4 py-2 text-sm text-gray-600">
-            <%= cp.meters.kept.pluck(:name).join(", ") %>
+            <%= cp.meters.reject(&:discarded?).map(&:name).join(", ") %>
           </td>
           <td class="px-4 py-2 text-sm text-right space-x-2">
             <% if can?(:update, cp) || can?(:destroy, cp) %>

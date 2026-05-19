@@ -4,6 +4,7 @@ class PumpAllocationsController < ApplicationController
 
   before_action :set_allocation, only: [:show, :edit, :update, :destroy]
   before_action :require_open_period, only: [:create, :update, :destroy]
+  before_action :ensure_allocation_belongs_to_open_period, only: [:edit, :update, :destroy]
 
   SORT_COLUMNS = {
     zone:        "zones.name",
@@ -71,6 +72,14 @@ class PumpAllocationsController < ApplicationController
   def set_allocation
     @pump_allocation = PumpAllocation.accessible_by(current_ability).find(params[:id])
     authorize!(action_auth_key, @pump_allocation)
+  end
+
+  # Vi phạm cách ly kỳ: chỉ cho sửa/xóa pump_allocation thuộc kỳ đang mở.
+  # User có thể click link cũ trỏ tới allocation kỳ đã đóng → redirect kèm cảnh báo.
+  def ensure_allocation_belongs_to_open_period
+    return if @pump_allocation.period_id == Period.current&.id
+    redirect_to pump_allocations_path,
+                alert: I18n.t("pump_allocations.flash.belongs_to_closed_period")
   end
 
   def action_auth_key
