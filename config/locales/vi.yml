@@ -18,6 +18,8 @@ vi:
           public: "Công cộng"
           water_pump: "Bơm nước"
           non_establishment: "Ngoài biên chế"
+      contact_point/meters:
+        name: "Tên công tơ"
       meter:
         name: "Tên công tơ"
         no_loss: "Không tổn hao"
@@ -176,6 +178,8 @@ vi:
               has_users: "Phải xóa hết tài khoản thuộc đơn vị trước khi xóa đơn vị"
         meter:
           attributes:
+            name:
+              taken: "đã tồn tại trong đầu mối này"
             base:
               last_meter_cannot_be_destroyed: "Không thể xóa công tơ cuối cùng của đầu mối"
         zone:
