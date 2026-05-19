@@ -43,6 +43,7 @@ class ContactPointsController < ApplicationController
 
   def new
     @contact_point = ContactPoint.new(contact_point_type: params[:type] || "residential")
+    @contact_point.unit_id = current_user.unit_id if current_user.unit_id.present?
     @contact_point.meters.build if needs_meter?(@contact_point)
     authorize!(:create, @contact_point)
   end
@@ -50,6 +51,9 @@ class ContactPointsController < ApplicationController
   def create
     @contact_point = ContactPoint.new(create_params)
     @contact_point.initial_personnel_counts = personnel_counts_param
+    if current_user.unit_id.present? && @contact_point.zone_id.blank?
+      @contact_point.unit_id = current_user.unit_id
+    end
     authorize!(:create, @contact_point)
 
     if needs_meter?(@contact_point) && @contact_point.meters.empty?

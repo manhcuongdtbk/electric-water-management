@@ -28,12 +28,13 @@ class BlocksController < ApplicationController
   end
 
   def new
-    @block = Block.new
+    @block = Block.new(unit_id: current_user.unit_id)
     authorize!(:create, @block)
   end
 
   def create
     @block = Block.new(create_params)
+    @block.unit_id = current_user.unit_id if current_user.unit_id.present?
     authorize!(:create, @block)
     if @block.save
       redirect_to blocks_path,
