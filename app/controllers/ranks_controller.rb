@@ -1,9 +1,12 @@
 class RanksController < ApplicationController
   include PeriodGuard
+  include StructureChangeGuard
   include AuthorizeResource
 
   before_action :set_rank, only: [:show, :edit, :update, :destroy]
   before_action :require_open_period, only: [:create, :update, :destroy]
+  before_action :require_latest_period_when_open,
+    only: [:new, :create, :edit, :update, :destroy]
   before_action :ensure_rank_belongs_to_open_period, only: [:edit, :update, :destroy]
 
   SORT_COLUMNS = {

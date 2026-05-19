@@ -26,7 +26,7 @@ class DashboardSummary
     public_total_usage = aggregate_usage("public")
     pump_total_usage   = aggregate_usage("water_pump")
 
-    warnings = Zone.all.flat_map { |z| ZoneWarningCollector.new(zone: z, period: @period).call }
+    warnings = Zone.kept.flat_map { |z| ZoneWarningCollector.new(zone: z, period: @period).call }
 
     OpenStruct.new(
       role: :system_admin,
@@ -55,7 +55,7 @@ class DashboardSummary
     unit = @user.unit
     return OpenStruct.new(role: @user.role.to_sym, period: @period, unit: nil, warnings: []) unless unit
 
-    managed_zone_ids = Zone.where(manager_unit_id: unit.id).pluck(:id)
+    managed_zone_ids = Zone.kept.where(manager_unit_id: unit.id).pluck(:id)
     cp_scope = ContactPoint.kept.where(unit_id: unit.id)
     if managed_zone_ids.any?
       cp_scope = cp_scope.or(
@@ -67,7 +67,7 @@ class DashboardSummary
     calcs = Calculation.where(period_id: @period.id, contact_point_id: cp_ids)
 
     zone_ids = ([unit.zone_id] + managed_zone_ids).compact.uniq
-    warnings = Zone.where(id: zone_ids)
+    warnings = Zone.kept.where(id: zone_ids)
                     .flat_map { |z| ZoneWarningCollector.new(zone: z, period: @period).call }
 
     OpenStruct.new(

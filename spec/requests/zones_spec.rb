@@ -45,12 +45,63 @@ RSpec.describe "Zones", type: :request do
   end
 
   describe "DELETE /zones/:id (T40)" do
-    it "chặn xóa zone còn unit kept" do
+    it "chặn discard zone còn unit kept" do
       zone = Zone.create!(name: "KV-X", main_meters_attributes: [{ name: "CT" }])
       create(:unit, zone: zone)
       delete zone_path(zone)
       expect(response).to redirect_to(zones_path)
       expect(flash[:alert]).to include("Phải xóa hết đơn vị")
+      expect(zone.reload.discarded_at).to be_nil
+    end
+
+    it "chặn discard zone còn đầu mối trực tiếp kept (v2.3.0)" do
+      zone = Zone.create!(name: "KV-Y", main_meters_attributes: [{ name: "CT" }])
+      cp = ContactPoint.new(name: "Trạm bơm", contact_point_type: "water_pump", zone: zone)
+      cp.meters.build(name: "Công tơ bơm")
+      cp.save!
+      delete zone_path(zone)
+      expect(response).to redirect_to(zones_path)
+      expect(flash[:alert]).to include("đầu mối")
+      expect(zone.reload.discarded_at).to be_nil
+    end
+
+    it "discard zone thành công và cascade discard main_meters (v2.3.0)" do
+      zone = Zone.create!(name: "KV-Z", main_meters_attributes: [{ name: "CT-Tổng" }])
+      delete zone_path(zone)
+      expect(response).to redirect_to(zones_path)
+      expect(zone.reload.discarded_at).not_to be_nil
+      expect(zone.main_meters.kept).to be_empty
+    end
+  end
+
+  describe "StructureChangeGuard: chặn khi đang mở kỳ cũ (v2.3.0)" do
+    let!(:period_jan) { create(:period, year: 2026, month: 1, closed: false) }
+    let!(:period_feb) { create(:period, year: 2026, month: 2, closed: true) }
+    let(:expected_message) {
+      I18n.t("services.period_service.errors.structure_change_blocked_old_period")
+    }
+
+    it "GET /zones/new bị chặn khi mở kỳ cũ" do
+      get new_zone_path
+      expect(response).to be_redirect
+      expect(flash[:alert]).to eq(expected_message)
+    end
+
+    it "POST /zones bị chặn khi mở kỳ cũ" do
+      post zones_path, params: {
+        zone: { name: "KV-mới", main_meters_attributes: [{ name: "CT" }] }
+      }
+      expect(response).to be_redirect
+      expect(flash[:alert]).to eq(expected_message)
+      expect(Zone.find_by(name: "KV-mới")).to be_nil
+    end
+
+    it "DELETE /zones/:id bị chặn khi mở kỳ cũ" do
+      zone = Zone.create!(name: "KV-cũ", main_meters_attributes: [{ name: "CT" }])
+      delete zone_path(zone)
+      expect(response).to be_redirect
+      expect(flash[:alert]).to eq(expected_message)
+      expect(zone.reload.discarded_at).to be_nil
     end
   end
 end

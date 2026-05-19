@@ -1,4 +1,5 @@
 class Zone < ApplicationRecord
+  include Discard::Model
   include Auditable
 
   has_many :units
@@ -13,7 +14,8 @@ class Zone < ApplicationRecord
   validates :name, presence: true, uniqueness: true
   validate :validate_has_at_least_one_main_meter, on: :create
 
-  before_destroy :ensure_no_kept_units, prepend: true
+  before_discard :ensure_no_kept_dependents
+  before_discard :discard_main_meters
 
   private
 
@@ -23,10 +25,18 @@ class Zone < ApplicationRecord
     end
   end
 
-  def ensure_no_kept_units
+  def ensure_no_kept_dependents
     if units.kept.exists?
       errors.add(:base, :has_kept_units)
       throw(:abort)
     end
+    if contact_points.kept.exists?
+      errors.add(:base, :has_kept_contact_points)
+      throw(:abort)
+    end
+  end
+
+  def discard_main_meters
+    main_meters.kept.find_each(&:discard)
   end
 end

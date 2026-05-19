@@ -1,9 +1,12 @@
 class ContactPointsController < ApplicationController
   include PeriodGuard
+  include StructureChangeGuard
   include AuthorizeResource
 
   before_action :set_contact_point, only: [:show, :edit, :update, :destroy]
   before_action :require_open_period, only: [:create, :update, :destroy]
+  before_action :require_latest_period_when_open,
+    only: [:new, :create, :edit, :update, :destroy]
 
   TYPES = %w[residential public water_pump non_establishment].freeze
 

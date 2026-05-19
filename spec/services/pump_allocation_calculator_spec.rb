@@ -47,12 +47,17 @@ RSpec.describe PumpAllocationCalculator do
   end
 
   describe "edge cases" do
-    context "không có công tơ bơm nước" do
+    context "không có công tơ bơm nước (hard delete để engine với .with_discarded vẫn không thấy)" do
       let(:sample) { setup_zone_one_full_sample }
       let(:loss_results) { LossCalculator.new(zone: sample.zone, period: sample.period).call }
 
       before do
-        sample.contact_points[:tram_bom_1].discard
+        # v2.3.0: engine query với .with_discarded, nên discard không đủ.
+        # Hard delete meter_readings + meter + contact_point để thật sự không còn pump meter.
+        MeterReading.where(meter_id: sample.meters[:ct_bn1].id).delete_all
+        PumpAllocation.where(contact_point_id: sample.contact_points[:tram_bom_1].id).delete_all
+        Meter.with_discarded.where(id: sample.meters[:ct_bn1].id).delete_all
+        ContactPoint.with_discarded.where(id: sample.contact_points[:tram_bom_1].id).delete_all
       end
 
       it "d = 0 + cảnh báo" do

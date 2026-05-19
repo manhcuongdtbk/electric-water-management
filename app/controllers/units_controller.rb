@@ -1,7 +1,10 @@
 class UnitsController < ApplicationController
   include AuthorizeResource
+  include StructureChangeGuard
 
   before_action :set_unit, only: [:show, :edit, :update, :destroy]
+  before_action :require_latest_period_when_open,
+    only: [:new, :create, :edit, :update, :destroy]
 
   SORT_COLUMNS = {
     name:       "units.name",
@@ -54,7 +57,7 @@ class UnitsController < ApplicationController
   def destroy
     # Lấy danh sách zones bị ảnh hưởng TRƯỚC discard (before_discard
     # :clear_zone_manager_if_self sẽ set manager_unit_id = nil ngay sau đó)
-    affected_zones = Zone.where(manager_unit_id: @unit.id).pluck(:name)
+    affected_zones = Zone.kept.where(manager_unit_id: @unit.id).pluck(:name)
 
     if @unit.discard
       msg = t("flash.record_destroyed", resource: t("resources.unit"), name: @unit.name)

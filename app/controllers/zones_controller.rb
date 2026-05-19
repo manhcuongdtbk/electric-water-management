@@ -1,7 +1,10 @@
 class ZonesController < ApplicationController
   include AuthorizeResource
+  include StructureChangeGuard
 
   before_action :set_zone, only: [:show, :edit, :update, :destroy, :reassign_manager]
+  before_action :require_latest_period_when_open,
+    only: [:new, :create, :edit, :update, :destroy, :reassign_manager]
 
   SORT_COLUMNS = {
     name:         "zones.name",
@@ -71,7 +74,7 @@ class ZonesController < ApplicationController
   end
 
   def destroy
-    if @zone.destroy
+    if @zone.discard
       redirect_to zones_path,
         notice: t("flash.record_destroyed", resource: t("resources.zone"), name: @zone.name)
     else

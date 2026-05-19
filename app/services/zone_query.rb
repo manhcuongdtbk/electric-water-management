@@ -5,11 +5,11 @@ class ZoneQuery
   end
 
   def contact_points
-    ContactPoint.kept.in_zone(@zone)
+    ContactPoint.with_discarded.in_zone(@zone)
   end
 
   def meters
-    Meter.kept.in_zone(@zone)
+    Meter.with_discarded.in_zone(@zone)
   end
 
   def meter_readings
@@ -20,7 +20,7 @@ class ZoneQuery
     MainMeterReading.joins(:main_meter)
                     .where(main_meters: { zone_id: @zone.id })
                     .where(period_id: @period.id)
-                    .merge(MainMeter.kept)
+                    .merge(MainMeter.with_discarded)
   end
 
   def meter_usages

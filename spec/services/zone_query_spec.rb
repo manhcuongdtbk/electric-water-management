@@ -12,9 +12,9 @@ RSpec.describe ZoneQuery do
       end
     end
 
-    it "không bao gồm đầu mối đã discard" do
+    it "vẫn bao gồm đầu mối đã discard (v2.3.0 — engine tính toán lại kỳ cũ)" do
       sample.contact_points[:ban_tac_huan].discard
-      expect(query.contact_points).not_to include(sample.contact_points[:ban_tac_huan])
+      expect(query.contact_points).to include(sample.contact_points[:ban_tac_huan])
     end
   end
 

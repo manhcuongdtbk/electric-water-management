@@ -98,7 +98,12 @@ RSpec.describe CalculationOrchestrator do
 
   describe "thu thập warnings từ engine" do
     before do
-      sample.contact_points[:tram_bom_1].discard
+      # v2.3.0: engine query với .with_discarded, nên discard không đủ.
+      # Hard delete pump-related rows để thật sự không còn pump meter.
+      MeterReading.where(meter_id: sample.meters[:ct_bn1].id).delete_all
+      PumpAllocation.where(contact_point_id: sample.contact_points[:tram_bom_1].id).delete_all
+      Meter.with_discarded.where(id: sample.meters[:ct_bn1].id).delete_all
+      ContactPoint.with_discarded.where(id: sample.contact_points[:tram_bom_1].id).delete_all
     end
 
     it "warning từ PumpAllocationCalculator được include trong result" do

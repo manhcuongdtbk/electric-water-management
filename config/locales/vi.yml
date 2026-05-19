@@ -181,6 +181,7 @@ vi:
             base:
               must_have_at_least_one_main_meter: "Khu vực phải có ít nhất một công tơ tổng"
               has_kept_units: "Phải xóa hết đơn vị trong khu vực trước khi xóa khu vực"
+              has_kept_contact_points: "Phải xóa hết đầu mối thuộc trực tiếp khu vực trước khi xóa khu vực"
         rank:
           attributes:
             base:
@@ -220,6 +221,7 @@ vi:
         has_open_period: "Kỳ tháng %{month}/%{year} đang mở. Phải đóng kỳ hiện tại trước khi mở kỳ mới."
         reopen_blocked_by_open_period: "Kỳ tháng %{month}/%{year} đang mở. Phải đóng kỳ tháng %{month}/%{year} trước khi mở lại kỳ cũ."
         first_period_requires_year_month: "Kỳ đầu tiên phải có năm, tháng và đơn giá."
+        structure_change_blocked_old_period: "Đang mở kỳ cũ. Chỉ cho phép sửa số liệu, không cho phép thay đổi cấu trúc (tạo, xóa, sửa khu vực, đơn vị, đầu mối, công tơ, khối, nhóm, nhóm cấp bậc). Đóng kỳ này và mở kỳ mới nhất nếu cần thay đổi cấu trúc."
       warnings:
         meter_reading_mismatch: "Công tơ %{meter}: số cuối kỳ tháng %{period_month}/%{period_year} (%{reading_end}) không khớp số đầu kỳ tháng %{next_month}/%{next_year} (%{reading_start})."
   sidebar:
