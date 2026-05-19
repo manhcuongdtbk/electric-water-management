@@ -1,7 +1,8 @@
 <% available_units = Unit.kept.accessible_by(current_ability) %>
-<% available_blocks = Block.kept.accessible_by(current_ability) %>
+<% available_blocks = Block.kept.accessible_by(current_ability).order(:name) %>
 
-<%= form_with model: group, local: true, class: "space-y-4" do |f| %>
+<%= form_with model: group, local: true, class: "space-y-4",
+      data: { controller: "scoped-block-select" } do |f| %>
   <% if group.errors.any? %>
     <div class="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-700">
       <ul class="list-disc list-inside">
@@ -22,14 +23,18 @@
     <%= f.label :unit_id, "Đơn vị", class: "block text-sm font-medium text-gray-700 mb-1" %>
     <%= f.select :unit_id, available_units.order(:name).pluck(:name, :id),
         { include_blank: "— Chọn đơn vị —" },
-        class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+        class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
+        data: { scoped_block_select_target: "unitSelect",
+                action: "change->scoped-block-select#refresh" } %>
   </div>
 
   <div>
     <%= f.label :block_id, "Khối (tùy chọn)", class: "block text-sm font-medium text-gray-700 mb-1" %>
-    <%= f.select :block_id, available_blocks.order(:name).pluck(:name, :id),
+    <%= f.select :block_id,
+        available_blocks.map { |b| [b.name, b.id, { "data-unit-id": b.unit_id }] },
         { include_blank: "— Không thuộc khối —" },
-        class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+        class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
+        data: { scoped_block_select_target: "blockSelect" } %>
   </div>
 
   <div class="flex space-x-2">

@@ -3,7 +3,7 @@
 <div class="bg-white rounded-lg shadow border border-gray-200 p-6 max-w-xl space-y-2">
   <div><strong>Thứ tự:</strong> <%= @rank.position %></div>
   <div><strong>Tên:</strong> <%= @rank.name %></div>
-  <div><strong>Định mức:</strong> <%= @rank.quota %> kWh/người</div>
+  <div><strong>Định mức:</strong> <%= number_to_vi(@rank.quota) %> kWh/người</div>
   <div><strong>Kỳ:</strong> Tháng <%= @rank.period.month %>/<%= @rank.period.year %></div>
 </div>
 

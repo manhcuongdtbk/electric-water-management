@@ -22,7 +22,7 @@
              class="block w-full rounded border border-gray-300 px-3 py-2 text-sm bg-gray-50">
       <p class="text-xs text-gray-500 mt-1">Khu vực không thể thay đổi sau khi tạo đơn vị.</p>
     <% else %>
-      <%= f.select :zone_id, Zone.order(:name).pluck(:name, :id),
+      <%= f.select :zone_id, Zone.accessible_by(current_ability).order(:name).pluck(:name, :id),
           { include_blank: "— Chọn khu vực —" },
           class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
     <% end %>

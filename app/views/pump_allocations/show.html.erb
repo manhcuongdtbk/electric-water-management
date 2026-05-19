@@ -7,9 +7,9 @@
     (<%= @pump_allocation.unit ? "Đơn vị" : "Đầu mối" %>)
   </div>
   <div><strong>% cố định:</strong>
-    <%= @pump_allocation.fixed_percentage.present? ? "#{@pump_allocation.fixed_percentage}%" : "—" %>
+    <%= @pump_allocation.fixed_percentage.present? ? "#{number_to_vi(@pump_allocation.fixed_percentage)}%" : "—" %>
   </div>
-  <div><strong>Hệ số:</strong> <%= @pump_allocation.coefficient %></div>
+  <div><strong>Hệ số:</strong> <%= number_to_vi(@pump_allocation.coefficient) %></div>
 </div>
 
 <div class="mt-4 space-x-2">

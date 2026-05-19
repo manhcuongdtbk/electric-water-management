@@ -33,7 +33,7 @@
         <% end %>
         <% if @period %>
           <% existing_meter_ids = @readings.pluck(:main_meter_id) %>
-          <% MainMeter.kept.accessible_by(current_ability).where.not(id: existing_meter_ids).order(:name).each do |mm| %>
+          <% MainMeter.kept.accessible_by(current_ability).includes(:zone).where.not(id: existing_meter_ids).order(:name).each do |mm| %>
             <tr>
               <td class="px-4 py-2 text-sm text-gray-900"><%= mm.zone.name %></td>
               <td class="px-4 py-2 text-sm text-gray-600"><%= mm.name %> <span class="text-xs text-yellow-600">(Chưa nhập)</span></td>

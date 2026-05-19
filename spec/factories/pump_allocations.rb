@@ -2,13 +2,16 @@ FactoryBot.define do
   factory :pump_allocation do
     association :zone
     association :period
-    association :unit
+    unit { association(:unit, zone: zone) }
     contact_point { nil }
     coefficient { 1 }
 
     trait :for_contact_point do
       unit { nil }
-      association :contact_point, factory: [:contact_point, :residential]
+      contact_point do
+        cp_unit = association(:unit, zone: zone)
+        association(:contact_point, :residential, unit: cp_unit, zone: nil)
+      end
     end
   end
 end

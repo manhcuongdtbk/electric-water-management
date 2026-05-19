@@ -32,6 +32,8 @@ class ContactPoint < ApplicationRecord
   attr_accessor :initial_personnel_counts
 
   validate :validate_unit_zone_xor, if: -> { type_residential? || type_public? }
+  validate :validate_block_group_unit_match, if: :type_residential?
+  validate :validate_public_constraints, if: :type_public?
   validate :validate_water_pump_constraints, if: :type_water_pump?
   validate :validate_non_establishment_constraints, if: :type_non_establishment?
   validate :validate_residential_personnel_sum_on_create, on: :create,
@@ -41,6 +43,8 @@ class ContactPoint < ApplicationRecord
   validate :immutable_contact_point_type, on: :update
 
   after_create :create_current_period_snapshots
+  after_update :propagate_personnel_count_to_current_snapshot,
+    if: -> { type_non_establishment? && saved_change_to_personnel_count? }
   before_discard :discard_current_period_pump_allocations
 
   after_discard do
@@ -83,6 +87,27 @@ class ContactPoint < ApplicationRecord
     end
   end
 
+  def validate_block_group_unit_match
+    if block.present? && unit.present? && block.unit_id != unit.id
+      errors.add(:block_id, :unit_mismatch)
+    end
+    if group.present? && unit.present? && group.unit_id != unit.id
+      errors.add(:group_id, :unit_mismatch)
+    end
+    if block.present? && unit.blank?
+      errors.add(:block_id, :must_be_blank)
+    end
+    if group.present? && unit.blank?
+      errors.add(:group_id, :must_be_blank)
+    end
+  end
+
+  def validate_public_constraints
+    errors.add(:block_id, :must_be_blank) if block.present?
+    errors.add(:group_id, :must_be_blank) if group.present?
+    errors.add(:personnel_count, :must_be_blank) if personnel_count.present?
+  end
+
   def validate_water_pump_constraints
     errors.add(:zone_id, :blank) if zone.blank?
     errors.add(:unit_id, :must_be_blank) if unit.present?
@@ -123,5 +148,12 @@ class ContactPoint < ApplicationRecord
     period = Period.current
     return unless period
     PumpAllocation.where(contact_point_id: id, period_id: period.id).destroy_all
+  end
+
+  def propagate_personnel_count_to_current_snapshot
+    period = Period.current
+    return unless period
+    non_establishment_snapshots.find_by(period: period)
+      &.update_column(:personnel_count, personnel_count)
   end
 end

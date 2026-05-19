@@ -103,6 +103,28 @@ RSpec.describe "ContactPoints", type: :request do
       expect(cp.contact_point_type).to eq("residential")
       expect(cp.name).to eq("Test renamed")
     end
+
+    it "personnel_entries dùng optimistic locking — stale lock_version → StaleObjectError redirect" do
+      cp = create(:contact_point, :residential, unit: unit_a, name: "LockTest",
+                  initial_personnel_counts: { ranks.last.id => 1 })
+      entry = cp.personnel_entries.find_by(period: period, rank: ranks.last)
+      # Simulate concurrent update bumping lock_version trong DB
+      entry.update_column(:lock_version, entry.lock_version + 1)
+      stale_version = entry.lock_version - 1
+
+      patch contact_point_path(cp), params: {
+        contact_point: {
+          name: "LockTest",
+          personnel_counts: { ranks.last.id.to_s => "5" },
+          personnel_lock_versions: { ranks.last.id.to_s => stale_version.to_s }
+        }
+      }
+      # OptimisticLockingGuard rescue → flash + redirect_back
+      expect(response).to be_redirect
+      expect(flash[:alert]).to eq(I18n.t("errors.stale_object"))
+      # Count vẫn giữ nguyên (rollback transaction)
+      expect(entry.reload.count).to eq(1)
+    end
   end
 
   describe "Phân quyền (T61)" do

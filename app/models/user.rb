@@ -1,5 +1,7 @@
 class User < ApplicationRecord
-  include Auditable
+  # KHÔNG include Auditable: cần ignore encrypted_password trong PaperTrail
+  # tránh leak bcrypt hash qua audit_logs view (system_admin + technician xem được).
+  has_paper_trail ignore: [:encrypted_password]
 
   devise :database_authenticatable, :timeoutable
 

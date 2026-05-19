@@ -21,7 +21,7 @@ class DashboardSummary
   def build_system_admin_summary
     units = Unit.kept.includes(:zone).to_a
     unit_data = units.map { |u| build_unit_card(u) }
-                     .sort_by { |d| -d[:deficit_kw].to_f }
+                     .sort_by { |d| -BigDecimal(d[:deficit_kw].to_s) }
 
     public_total_usage = aggregate_usage("public")
     pump_total_usage   = aggregate_usage("water_pump")

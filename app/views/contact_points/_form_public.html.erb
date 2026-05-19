@@ -1,7 +1,5 @@
 <% available_units = Unit.kept.accessible_by(current_ability) %>
 <% available_zones = Zone.accessible_by(current_ability) %>
-<% available_blocks = Block.kept.accessible_by(current_ability) %>
-<% available_groups = Group.kept.accessible_by(current_ability) %>
 <% mode_default = contact_point.zone_id.present? ? "zone" : "unit" %>
 
 <fieldset class="border border-gray-200 rounded p-3"
@@ -27,29 +25,12 @@
     </label>
   </div>
 
-  <div data-contact-point-assignment-target="unitGroup" class="space-y-3">
-    <div>
-      <%= f.label :unit_id, "Đơn vị", class: "block text-sm font-medium text-gray-700 mb-1" %>
-      <%= f.select :unit_id, available_units.order(:name).pluck(:name, :id),
-          { include_blank: "— Chọn đơn vị —" },
-          class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
-          disabled: contact_point.persisted? %>
-    </div>
-
-    <div class="grid grid-cols-2 gap-4">
-      <div>
-        <%= f.label :block_id, "Khối (tùy chọn)", class: "block text-sm font-medium text-gray-700 mb-1" %>
-        <%= f.select :block_id, available_blocks.order(:name).pluck(:name, :id),
-            { include_blank: "— Không thuộc khối —" },
-            class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
-      </div>
-      <div>
-        <%= f.label :group_id, "Nhóm (tùy chọn)", class: "block text-sm font-medium text-gray-700 mb-1" %>
-        <%= f.select :group_id, available_groups.order(:name).pluck(:name, :id),
-            { include_blank: "— Không thuộc nhóm —" },
-            class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
-      </div>
-    </div>
+  <div data-contact-point-assignment-target="unitGroup">
+    <%= f.label :unit_id, "Đơn vị", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.select :unit_id, available_units.order(:name).pluck(:name, :id),
+        { include_blank: "— Chọn đơn vị —" },
+        class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
+        disabled: contact_point.persisted? %>
   </div>
 
   <div data-contact-point-assignment-target="zoneGroup">
@@ -59,7 +40,7 @@
         class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
         disabled: contact_point.persisted? %>
     <p class="text-xs text-gray-500 mt-1">
-      Đầu mối công cộng cấp khu vực. Không thuộc đơn vị, không có khối/nhóm.
+      Đầu mối công cộng cấp khu vực. Không thuộc đơn vị nào.
     </p>
   </div>
 

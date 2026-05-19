@@ -1,7 +1,10 @@
 class RanksController < ApplicationController
+  include PeriodGuard
   include AuthorizeResource
 
   before_action :set_rank, only: [:show, :edit, :update, :destroy]
+  before_action :require_open_period, only: [:create, :update, :destroy]
+  before_action :ensure_rank_belongs_to_open_period, only: [:edit, :update, :destroy]
 
   SORT_COLUMNS = {
     position: "ranks.position",
@@ -68,6 +71,13 @@ class RanksController < ApplicationController
   def set_rank
     @rank = Rank.accessible_by(current_ability).find(params[:id])
     authorize!(action_auth_key, @rank)
+  end
+
+  # Vi phạm cách ly kỳ: chỉ cho sửa/xóa rank thuộc kỳ đang mở.
+  # User có thể click link cũ trỏ tới rank kỳ đã đóng → redirect kèm cảnh báo.
+  def ensure_rank_belongs_to_open_period
+    return if @rank.period_id == Period.current&.id
+    redirect_to ranks_path, alert: I18n.t("ranks.flash.belongs_to_closed_period")
   end
 
   def action_auth_key

@@ -47,7 +47,7 @@
         <tr class="hover:bg-gray-50 transition-colors">
           <td class="px-4 py-2 text-sm text-gray-900"><%= rank.position %></td>
           <td class="px-4 py-2 text-sm text-gray-900"><%= rank.name %></td>
-          <td class="px-4 py-2 text-sm text-right text-gray-600"><%= rank.quota %></td>
+          <td class="px-4 py-2 text-sm text-right text-gray-600"><%= number_to_vi(rank.quota) %></td>
           <td class="px-4 py-2 text-sm text-right space-x-2">
             <% if @period&.open? && (can?(:update, rank) || can?(:destroy, rank)) %>
               <% if can?(:update, rank) %>

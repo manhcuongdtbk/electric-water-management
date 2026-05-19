@@ -64,7 +64,7 @@ class ElectricitySupplyController < ApplicationController
 
   def load_readings
     return MainMeterReading.none unless @period
-    MainMeterReading.includes(:main_meter)
+    MainMeterReading.includes(main_meter: :zone)
                     .where(period: @period)
                     .where(main_meter_id: accessible_main_meters.select(:id))
                     .order("main_meters.name")

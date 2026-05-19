@@ -58,10 +58,10 @@
             </span>
           </td>
           <td class="px-4 py-2 text-sm text-right text-gray-600">
-            <%= alloc.fixed_percentage.present? ? "#{alloc.fixed_percentage}%" : "—" %>
+            <%= alloc.fixed_percentage.present? ? "#{number_to_vi(alloc.fixed_percentage)}%" : "—" %>
           </td>
           <td class="px-4 py-2 text-sm text-right text-gray-600">
-            <%= alloc.fixed_percentage.present? ? "—" : alloc.coefficient %>
+            <%= alloc.fixed_percentage.present? ? "—" : number_to_vi(alloc.coefficient) %>
           </td>
           <td class="px-4 py-2 text-sm text-right space-x-2">
             <% if can?(:update, alloc) || can?(:destroy, alloc) %>

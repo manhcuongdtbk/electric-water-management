@@ -1,4 +1,6 @@
 class DashboardController < ApplicationController
+  include BusinessRoleRequired
+
   def show
     @period = current_period
     if @period.nil?

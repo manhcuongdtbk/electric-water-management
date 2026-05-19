@@ -157,8 +157,10 @@ vi:
               must_be_blank: "phải để trống với loại này"
             block_id:
               must_be_blank: "phải để trống với loại này"
+              unit_mismatch: "phải thuộc cùng đơn vị với đầu mối"
             group_id:
               must_be_blank: "phải để trống với loại này"
+              unit_mismatch: "phải thuộc cùng đơn vị với đầu mối"
             personnel_count:
               must_be_blank: "phải để trống với loại này"
             contact_point_type:
@@ -189,6 +191,14 @@ vi:
               target_required: "Vui lòng chọn đối tượng nhận phân bổ (đơn vị hoặc đầu mối)."
               target_must_be_one: "Chỉ được chọn 1 đối tượng nhận phân bổ — đơn vị hoặc đầu mối, không phải cả 2."
               fixed_percentage_sum_exceeds_one_hundred: "Tổng phần trăm cố định của tất cả phân bổ trong khu vực không được vượt quá 100"
+            unit_id:
+              zone_mismatch: "phải thuộc cùng khu vực với phân bổ"
+            contact_point_id:
+              zone_mismatch: "phải thuộc cùng khu vực với phân bổ"
+        group:
+          attributes:
+            block_id:
+              unit_mismatch: "phải thuộc cùng đơn vị với nhóm"
   errors:
     access_denied: "Bạn không có quyền truy cập trang này."
     stale_object: "Dữ liệu đã bị thay đổi bởi người khác. Vui lòng kiểm tra lại."
@@ -416,6 +426,12 @@ vi:
       opened: "Đã mở kỳ tháng %{month}/%{year}."
       closed: "Đã đóng kỳ tháng %{month}/%{year}."
       reopened: "Đã mở lại kỳ tháng %{month}/%{year}."
+  ranks:
+    flash:
+      belongs_to_closed_period: "Nhóm cấp bậc này thuộc kỳ đã đóng. Chỉ được sửa nhóm cấp bậc của kỳ đang mở."
+  pump_allocations:
+    flash:
+      belongs_to_closed_period: "Phân bổ này thuộc kỳ đã đóng. Chỉ được sửa phân bổ của kỳ đang mở."
   zones:
     flash:
       manager_must_belong_to_zone: "Đơn vị mới phải thuộc khu vực này."

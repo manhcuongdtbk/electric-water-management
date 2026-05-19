@@ -27,7 +27,7 @@
           <tr>
             <td class="px-3 py-2 text-gray-900"><%= r.meter.contact_point.name %></td>
             <td class="px-3 py-2 text-gray-600"><%= r.meter.name %></td>
-            <td class="px-3 py-2 text-right text-gray-600"><%= r.reading_start %></td>
+            <td class="px-3 py-2 text-right text-gray-600"><%= number_to_vi(r.reading_start) %></td>
             <td class="px-3 py-2 text-right">
               <%= hidden_field_tag "meter_readings[#{r.id}][lock_version]", r.lock_version %>
               <%= number_field_tag "meter_readings[#{r.id}][reading_end]", r.reading_end,
@@ -36,7 +36,7 @@
             </td>
             <td class="px-3 py-2 text-right text-gray-600">
               <% if r.reading_end && r.reading_start %>
-                <%= [r.reading_end - r.reading_start, 0].max %>
+                <%= number_to_vi([r.reading_end - r.reading_start, 0].max) %>
               <% end %>
             </td>
             <td class="px-3 py-2 text-right">

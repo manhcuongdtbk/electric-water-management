@@ -1,7 +1,7 @@
 <% available_units = Unit.kept.accessible_by(current_ability) %>
 <% available_zones = Zone.accessible_by(current_ability) %>
-<% available_blocks = Block.kept.accessible_by(current_ability) %>
-<% available_groups = Group.kept.accessible_by(current_ability) %>
+<% available_blocks = Block.kept.accessible_by(current_ability).order(:name) %>
+<% available_groups = Group.kept.accessible_by(current_ability).order(:name) %>
 <% mode_default = contact_point.zone_id.present? ? "zone" : "unit" %>
 
 <fieldset class="border border-gray-200 rounded p-3"
@@ -33,21 +33,27 @@
       <%= f.select :unit_id, available_units.order(:name).pluck(:name, :id),
           { include_blank: "— Chọn đơn vị —" },
           class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
-          disabled: contact_point.persisted? %>
+          disabled: contact_point.persisted?,
+          data: { contact_point_assignment_target: "unitSelect",
+                  action: "change->contact-point-assignment#refreshUnitScope" } %>
     </div>
 
     <div class="grid grid-cols-2 gap-4">
       <div>
         <%= f.label :block_id, "Khối (tùy chọn)", class: "block text-sm font-medium text-gray-700 mb-1" %>
-        <%= f.select :block_id, available_blocks.order(:name).pluck(:name, :id),
+        <%= f.select :block_id,
+            available_blocks.map { |b| [b.name, b.id, { "data-unit-id": b.unit_id }] },
             { include_blank: "— Không thuộc khối —" },
-            class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+            class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
+            data: { contact_point_assignment_target: "blockSelect" } %>
       </div>
       <div>
         <%= f.label :group_id, "Nhóm (tùy chọn)", class: "block text-sm font-medium text-gray-700 mb-1" %>
-        <%= f.select :group_id, available_groups.order(:name).pluck(:name, :id),
+        <%= f.select :group_id,
+            available_groups.map { |g| [g.name, g.id, { "data-unit-id": g.unit_id }] },
             { include_blank: "— Không thuộc nhóm —" },
-            class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+            class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
+            data: { contact_point_assignment_target: "groupSelect" } %>
       </div>
     </div>
   </div>
@@ -70,17 +76,21 @@
 
 <% if current_period %>
   <% ranks = current_period.ranks.order(:position) %>
-  <% existing_counts = contact_point.persisted? ?
-       contact_point.personnel_entries.where(period: current_period).index_by(&:rank_id).transform_values(&:count) :
+  <% existing_entries = contact_point.persisted? ?
+       contact_point.personnel_entries.where(period: current_period).index_by(&:rank_id) :
        {} %>
   <div>
     <h3 class="text-sm font-semibold text-gray-700 mb-2">Quân số theo nhóm cấp bậc (kỳ tháng <%= current_period.month %>/<%= current_period.year %>)</h3>
     <div class="space-y-2">
       <% ranks.each do |rank| %>
+        <% entry = existing_entries[rank.id] %>
         <div class="flex items-center space-x-2">
           <label class="flex-1 text-sm text-gray-700"><%= rank.name %></label>
+          <% if entry %>
+            <%= hidden_field_tag "contact_point[personnel_lock_versions][#{rank.id}]", entry.lock_version %>
+          <% end %>
           <%= number_field_tag "contact_point[personnel_counts][#{rank.id}]",
-              existing_counts[rank.id] || 0, step: 1,
+              entry&.count || 0, step: 1,
               class: "w-24 rounded border border-gray-300 px-2 py-1 text-sm text-right" %>
         </div>
       <% end %>

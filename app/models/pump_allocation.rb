@@ -16,9 +16,21 @@ class PumpAllocation < ApplicationRecord
   validates :contact_point_id, uniqueness: { scope: [:zone_id, :period_id], allow_nil: true }
 
   validate :validate_unit_or_contact_point_xor
+  validate :validate_target_belongs_to_zone
   validate :validate_fixed_percentage_sum_within_limit
 
   private
+
+  def validate_target_belongs_to_zone
+    return if zone_id.blank?
+    if unit.present? && unit.zone_id != zone_id
+      errors.add(:unit_id, :zone_mismatch)
+    end
+    if contact_point.present?
+      cp_zone_id = contact_point.zone_id || contact_point.unit&.zone_id
+      errors.add(:contact_point_id, :zone_mismatch) if cp_zone_id != zone_id
+    end
+  end
 
   def validate_unit_or_contact_point_xor
     # Phải chọn đúng 1 trong 2: đơn vị HOẶC đầu mối.
