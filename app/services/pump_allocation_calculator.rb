@@ -67,7 +67,7 @@ class PumpAllocationCalculator
     cp_ids = allocations.map(&:contact_point_id).compact.uniq
 
     if unit_ids.any?
-      ContactPoint.kept.where(unit_id: unit_ids, contact_point_type: "residential")
+      ContactPoint.with_discarded.where(unit_id: unit_ids, contact_point_type: "residential")
                   .each do |cp|
         cache[:residential_in_unit][cp.unit_id] ||= []
         cache[:residential_in_unit][cp.unit_id] << cp

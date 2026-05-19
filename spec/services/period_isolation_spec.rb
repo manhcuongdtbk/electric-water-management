@@ -213,14 +213,45 @@ RSpec.describe "Cách ly kỳ giữa các period" do
   describe "T16 — Xóa đầu mối ở kỳ sau" do
     include_context "với kỳ tháng 5 đã đóng + kỳ tháng 6 mở"
 
-    it "đầu mối discarded không tính ở kỳ 6, kỳ 5 vẫn giữ" do
+    it "đầu mối discarded giữa kỳ vẫn tính ở kỳ 6 (engine .with_discarded), kỳ 5 vẫn giữ (v2.3.0)" do
       kho_vat_tu = sample.contact_points[:kho_vat_tu]
       kho_vat_tu.discard
 
       CalculationOrchestrator.new(zone: sample.zone, period: period_6).call
 
-      expect(calc_for(period_6, kho_vat_tu)).to be_nil
+      # v2.3.0: discard giữa kỳ → snapshot kỳ 6 đã tạo trước discard nên engine vẫn tính.
+      # Engine dùng .with_discarded để thấy CP đã discard cùng với data snapshot kỳ 6.
+      expect(calc_for(period_6, kho_vat_tu)).to be_present
       expect(calc_for(period_5, kho_vat_tu)).to be_present
+      # Kỳ 5 (đã đóng) vẫn không thay đổi — đây là điểm chính của cách ly kỳ.
+      expect(snapshot_calculations(period_5)).to eq(snapshot_period_5_before)
+    end
+  end
+
+  describe "T16b — Tính toán lại kỳ cũ với thực thể đã discard (v2.3.0)" do
+    include_context "với kỳ tháng 5 đã đóng + kỳ tháng 6 mở"
+
+    it "discard contact_point sau kỳ đóng → recalc kỳ 5 vẫn ra số gốc" do
+      kho_vat_tu = sample.contact_points[:kho_vat_tu]
+      kho_vat_tu.discard
+
+      CalculationOrchestrator.new(zone: sample.zone, period: period_5).call
+
+      expect(snapshot_calculations(period_5)).to eq(snapshot_period_5_before)
+    end
+
+    it "discard zone sau kỳ đóng → recalc kỳ 5 vẫn ra số gốc" do
+      sample.contact_points.each_value(&:discard)
+      sample.contact_points.each_value { |cp| sample.contact_points.delete(cp) if cp.discarded? }
+
+      original_zone = sample.zone
+      Unit.where(zone_id: original_zone.id).find_each(&:discard)
+      # Zone giờ có thể discard (không còn kept units/CPs)
+      original_zone.discard
+      expect(original_zone.reload.discarded?).to be true
+
+      CalculationOrchestrator.new(zone: original_zone, period: period_5).call
+
       expect(snapshot_calculations(period_5)).to eq(snapshot_period_5_before)
     end
   end

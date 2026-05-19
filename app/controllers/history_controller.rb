@@ -77,7 +77,7 @@ class HistoryController < ApplicationController
 
   def resolve_filter_for_history
     if current_user.role == "system_admin"
-      zone = params[:zone_id].present? ? Zone.find_by(id: params[:zone_id]) : nil
+      zone = params[:zone_id].present? ? Zone.kept.find_by(id: params[:zone_id]) : nil
       unit = params[:unit_id].present? ? Unit.kept.find_by(id: params[:unit_id]) : nil
       [zone, unit]
     else
@@ -103,22 +103,22 @@ class HistoryController < ApplicationController
   end
 
   def zones_in_scope_for_history
-    return Zone.where(id: @zone.id) if @zone
+    return Zone.kept.where(id: @zone.id) if @zone
 
     if current_user.role == "system_admin"
-      Zone.all
+      Zone.kept
     else
       zone_ids = [current_user.unit&.zone_id].compact
-      zone_ids += Zone.where(manager_unit_id: current_user.unit_id).pluck(:id) if current_user.unit_id
-      Zone.where(id: zone_ids.uniq)
+      zone_ids += Zone.kept.where(manager_unit_id: current_user.unit_id).pluck(:id) if current_user.unit_id
+      Zone.kept.where(id: zone_ids.uniq)
     end
   end
 
   def available_zones_for_filter
     if current_user.role == "system_admin"
-      Zone.order(:name)
+      Zone.kept.order(:name)
     else
-      [current_user.unit&.zone].compact
+      [current_user.unit&.zone].compact.select(&:kept?)
     end
   end
 

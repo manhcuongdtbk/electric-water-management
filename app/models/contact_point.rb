@@ -52,7 +52,7 @@ class ContactPoint < ApplicationRecord
   end
 
   scope :in_zone, ->(zone) {
-    where(zone_id: zone.id).or(where(unit_id: zone.units.kept.select(:id)))
+    where(zone_id: zone.id).or(where(unit_id: zone.units.with_discarded.select(:id)))
   }
 
   def effective_zone

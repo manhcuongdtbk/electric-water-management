@@ -187,6 +187,47 @@ RSpec.describe PeriodService do
     end
   end
 
+  describe "#open_new_period — snapshot pump_allocations skip discarded entities (v2.3.0)" do
+    let(:sample) { setup_zone_one_full_sample }
+
+    it "skip allocation khi zone đã discard" do
+      sample.period.update!(closed: true)
+      sample.contact_points.each_value(&:discard)
+      Unit.where(zone_id: sample.zone.id).find_each(&:discard)
+      sample.zone.discard
+
+      result = service.open_new_period
+      expect(result.period.pump_allocations.where(zone_id: sample.zone.id)).to be_empty
+    end
+
+    it "skip allocation khi unit đã discard" do
+      sample.period.update!(closed: true)
+      ContactPoint.kept.where(unit_id: sample.unit_a.id).find_each(&:discard)
+      sample.unit_a.discard
+
+      result = service.open_new_period
+      copied = result.period.pump_allocations.where(unit_id: sample.unit_a.id)
+      expect(copied).to be_empty
+    end
+
+    it "skip allocation khi contact_point đã discard" do
+      cp = sample.contact_points[:chi_huy_khu_vuc]
+      sample.period.update!(closed: true)
+      cp.discard
+
+      result = service.open_new_period
+      copied = result.period.pump_allocations.where(contact_point_id: cp.id)
+      expect(copied).to be_empty
+    end
+
+    it "vẫn copy allocations cho thực thể kept" do
+      sample.period.update!(closed: true)
+      result = service.open_new_period
+      kept_allocation_count = result.period.pump_allocations.count
+      expect(kept_allocation_count).to eq(sample.period.pump_allocations.count)
+    end
+  end
+
   describe "#reopen_period (T14)" do
     let(:closed_period) { create(:period, year: 2026, month: 5, closed: true) }
 

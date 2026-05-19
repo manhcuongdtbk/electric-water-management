@@ -57,7 +57,7 @@ class SummaryCalculator
                       unit_public_deduction + other_deduction
     remaining_standard = total_standard - total_deduction
 
-    residential_usage = contact_point.meters.kept.sum(BigDecimal("0")) do |meter|
+    residential_usage = contact_point.meters.with_discarded.sum(BigDecimal("0")) do |meter|
       @meter_usages[meter.id] || BigDecimal("0")
     end
     water_pump_usage = @pump_results.contact_point_allocations[contact_point.id] || BigDecimal("0")

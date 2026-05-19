@@ -104,7 +104,13 @@ class PeriodService
   end
 
   def copy_pump_allocations_from(previous, new_period)
-    previous.pump_allocations.find_each do |allocation|
+    previous.pump_allocations
+            .includes(:zone, :unit, :contact_point)
+            .find_each do |allocation|
+      next if allocation.zone&.discarded?
+      next if allocation.unit_id.present? && allocation.unit&.discarded?
+      next if allocation.contact_point_id.present? && allocation.contact_point&.discarded?
+
       new_period.pump_allocations.create!(
         zone_id: allocation.zone_id,
         unit_id: allocation.unit_id,

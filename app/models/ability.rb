@@ -29,11 +29,12 @@ class Ability
   end
 
   def system_admin_abilities(_user)
-    [Zone, Unit, ContactPoint, Meter, MainMeter, Block, Group,
+    [Unit, ContactPoint, Meter, MainMeter, Block, Group,
      Period, Rank, PumpAllocation,
      MeterReading, MainMeterReading, PersonnelEntry,
      NonEstablishmentSnapshot, UnitConfig, OtherDeduction, Calculation
     ].each { |m| can :manage, m }
+    can :manage, Zone, discarded_at: nil
     can :recalculate, Calculation
 
     can :read, User
@@ -45,10 +46,10 @@ class Ability
 
   def unit_admin_abilities(user)
     uid = user.unit_id
-    managed_zone_ids = Zone.where(manager_unit_id: uid).pluck(:id)
+    managed_zone_ids = Zone.kept.where(manager_unit_id: uid).pluck(:id)
 
     can :read, Unit, id: uid
-    can :read, Zone
+    can :read, Zone, discarded_at: nil
     can [:create, :read, :update, :destroy], ContactPoint, unit_id: uid
     can [:create, :read, :update, :destroy], Meter, contact_point: { unit_id: uid }
     can [:create, :read, :update, :destroy], Block, unit_id: uid
@@ -82,10 +83,10 @@ class Ability
 
   def commander_abilities(user)
     uid = user.unit_id
-    managed_zone_ids = Zone.where(manager_unit_id: uid).pluck(:id)
+    managed_zone_ids = Zone.kept.where(manager_unit_id: uid).pluck(:id)
 
     can :read, Unit, id: uid
-    can :read, Zone
+    can :read, Zone, discarded_at: nil
     can :read, ContactPoint, unit_id: uid
     can :read, Meter, contact_point: { unit_id: uid }
     can :read, Block, unit_id: uid
