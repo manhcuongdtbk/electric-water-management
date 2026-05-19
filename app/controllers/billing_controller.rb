@@ -119,7 +119,7 @@ class BillingController < ApplicationController
     if current_user.role == "system_admin"
       Zone.kept.order(:name)
     else
-      [current_user.unit&.zone].compact.select { |z| z.respond_to?(:kept?) ? z.kept? : true }
+      [current_user.unit&.zone].compact.select(&:kept?)
     end
   end
 
