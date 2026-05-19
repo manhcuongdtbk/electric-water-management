@@ -1,5 +1,22 @@
 @import "tailwindcss";
 
+/* Pagy pagination — based on pagy.tailwind.css from gem */
+.pagy {
+  @apply flex justify-center space-x-1 font-semibold text-sm text-gray-500;
+  a:not(.gap) {
+    @apply block rounded-lg px-3 py-1 bg-gray-200;
+    &:hover {
+      @apply bg-gray-300;
+    }
+    &:not([href]) {
+      @apply text-gray-300 bg-gray-100 cursor-default;
+    }
+    &.current {
+      @apply text-white bg-blue-600;
+    }
+  }
+}
+
 /* Thin scrollbar — dùng cho sidebar và các vùng scroll trong app.
    Firefox: scrollbar-width + scrollbar-color (CSS standard).
    WebKit (Chrome, Safari, Edge): ::-webkit-scrollbar pseudo-elements. */
