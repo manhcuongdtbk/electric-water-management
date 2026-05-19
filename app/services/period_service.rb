@@ -73,7 +73,7 @@ class PeriodService
         water_pump_standard: previous.water_pump_standard
       }
     else
-      if year.nil? || month.nil? || unit_price.nil?
+      if year.blank? || month.blank? || unit_price.blank?
         raise Error, I18n.t("services.period_service.errors.first_period_requires_year_month")
       end
       {
