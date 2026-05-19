@@ -1058,7 +1058,7 @@ Khi discard thực thể cấu trúc, nếu có kỳ đang mở → hard delete 
 
 | Thực thể | before_discard cleanup (kỳ đang mở) |
 |---|---|
-| ContactPoint | Hard delete: meter_readings (của tất cả meters thuộc contact_point), personnel_entries, calculations, non_establishment_snapshots — WHERE period_id = kỳ đang mở |
+| ContactPoint | Hard delete: meter_readings (của tất cả meters thuộc contact_point), personnel_entries, calculations, non_establishment_snapshots, other_deductions — WHERE period_id = kỳ đang mở |
 | Meter | Hard delete: meter_readings — WHERE period_id = kỳ đang mở |
 | Zone | Hard delete: main_meter_readings (của tất cả main_meters thuộc zone) — WHERE period_id = kỳ đang mở |
 | MainMeter | Hard delete: main_meter_readings — WHERE period_id = kỳ đang mở |
@@ -1222,7 +1222,7 @@ Mọi thao tác trên hệ thống đều được ghi lại (PaperTrail). Syste
 
 ### v2.4.0 (20/05/2026)
 
-- Thêm mục "Cleanup data khi discard": khi discard thực thể cấu trúc, hard delete data per kỳ đang mở (meter_readings, personnel_entries, calculations, non_establishment_snapshots, main_meter_readings). Kỳ cũ giữ nguyên.
+- Thêm mục "Cleanup data khi discard": khi discard thực thể cấu trúc, hard delete data per kỳ đang mở (meter_readings, personnel_entries, calculations, non_establishment_snapshots, other_deductions, main_meter_readings). Kỳ cũ giữ nguyên.
 - Thêm mục "Engine skip thực thể không có data kỳ đang tính": engine kiểm tra có meter_readings kỳ đó không, không có thì skip hoàn toàn.
 - Cập nhật bảng xóa dữ liệu: thêm tham chiếu đến mục Cleanup data cho xóa khu vực và xóa đầu mối/công tơ.
 
