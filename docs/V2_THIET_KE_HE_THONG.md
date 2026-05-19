@@ -1,7 +1,7 @@
 # Thiết kế hệ thống quản lý điện nội bộ Sư đoàn — Hệ thống v2
 
-> **Phiên bản tài liệu:** 2.3.0
-> **Ngày:** 19/05/2026
+> **Phiên bản tài liệu:** 2.4.0
+> **Ngày:** 20/05/2026
 > **Tính chất:** Tài liệu thiết kế hệ thống v2, nguồn sự thật cho implementation.
 > **Nguồn nghiệp vụ:** V2_XAC_NHAN_NGHIEP_VU (phiên bản mới nhất tại thời điểm thiết kế: v2.8.0)
 
@@ -1040,13 +1040,39 @@ Quy tắc xóa theo nghiệp vụ mục 23. Soft delete dùng gem discard (đán
 | Xóa đơn vị đang có đầu mối | Không | Validation: phải xóa (discard) hết đầu mối trước |
 | Xóa đơn vị đang có tài khoản | Không | Validation: phải xóa hết tài khoản (users) thuộc đơn vị trước. Nếu không, users.unit_id trỏ tới discarded unit → user không thể đăng nhập đúng |
 | Xóa khu vực đang có đơn vị | Không | Validation: phải xóa (discard) hết đơn vị trước |
-| Xóa khu vực | Có | Soft delete (discard). Discard các main_meters thuộc khu vực (before_discard callback). Dữ liệu kỳ cũ (main_meter_readings) giữ nguyên. Chỉ cho phép khi kỳ đang mở là kỳ mới nhất hoặc không có kỳ nào đang mở (xem mục Hạn chế thay đổi cấu trúc khi mở kỳ cũ) |
+| Xóa khu vực | Có | Soft delete (discard). Discard các main_meters thuộc khu vực (before_discard callback). Cleanup main_meter_readings kỳ đang mở (xem mục Cleanup data khi discard). Dữ liệu kỳ cũ (main_meter_readings) giữ nguyên. Chỉ cho phép khi kỳ đang mở là kỳ mới nhất hoặc không có kỳ nào đang mở (xem mục Hạn chế thay đổi cấu trúc khi mở kỳ cũ) |
 | Xóa đơn vị quản lý khu vực | Có (cảnh báo) | Phải qua validation "đơn vị đang có đầu mối" và "đơn vị đang có tài khoản" trước. Sau khi pass validation, hiển thị cảnh báo. Nếu xóa, zones.manager_unit_id → null. System_admin tự quản lý khu vực cho đến khi chỉ định đơn vị khác |
 | Xóa khối đang có nhóm/đầu mối | Có | Nhóm/đầu mối bên trong: group.block_id → null, contact_point.block_id → null. Chuyển thành trực tiếp thuộc đơn vị |
 | Xóa nhóm đang có đầu mối | Có | Đầu mối: contact_point.group_id → null. Nếu nhóm thuộc khối → đầu mối lên khối (contact_point.block_id giữ nguyên). Nếu nhóm thuộc đơn vị trực tiếp → đầu mối lên đơn vị |
-| Xóa đầu mối, công tơ có dữ liệu kỳ cũ | Có | Soft delete (discard). Dữ liệu kỳ cũ (meter_readings, personnel_entries, calculations...) giữ nguyên. Nếu đầu mối đang có pump_allocation trong kỳ đang mở → discard pump_allocation đó luôn (xóa thật, không soft delete vì pump_allocations không có discarded_at). Kỳ cũ đã đóng: pump_allocations kỳ cũ giữ nguyên, calculations đã cache |
+| Xóa đầu mối, công tơ có dữ liệu kỳ cũ | Có | Soft delete (discard). Dữ liệu kỳ cũ (meter_readings, personnel_entries, calculations...) giữ nguyên. Cleanup data kỳ đang mở (xem mục Cleanup data khi discard). Nếu đầu mối đang có pump_allocation trong kỳ đang mở → discard pump_allocation đó luôn (xóa thật, không soft delete vì pump_allocations không có discarded_at). Kỳ cũ đã đóng: pump_allocations kỳ cũ giữ nguyên, calculations đã cache |
 | Xóa nhóm cấp bậc đang có đầu mối sử dụng | Không | Validation: phải chuyển hết quân số sang nhóm cấp bậc khác trước |
 | Xóa tài khoản | Có | Trừ 2 tài khoản mặc định (technician + system_admin ban đầu). Không cho tự xóa chính mình. Tài khoản đang đăng nhập bị xóa → buộc thoát ngay |
+
+### Cleanup data khi discard (v2.4.0)
+
+Khi discard thực thể cấu trúc, nếu có kỳ đang mở → hard delete data per kỳ đang mở của thực thể đó. Kỳ cũ giữ nguyên. Nếu không có kỳ đang mở → không xóa gì.
+
+> **Lý do:** Engine dùng `.with_discarded` để thấy thực thể đã xóa khi tính toán lại kỳ cũ. Nhưng nếu data per kỳ đang mở vẫn còn, engine sẽ cảnh báo/tính toán sai cho thực thể đã xóa. Xóa data per kỳ đang mở → engine kiểm tra có meter_readings kỳ đó không → không có → skip.
+
+> **StructureChangeGuard đảm bảo:** discard thực thể cấu trúc chỉ xảy ra khi kỳ đang mở là kỳ mới nhất hoặc không có kỳ nào mở. Không bao giờ xảy ra khi đang mở kỳ cũ.
+
+| Thực thể | before_discard cleanup (kỳ đang mở) |
+|---|---|
+| ContactPoint | Hard delete: meter_readings (của tất cả meters thuộc contact_point), personnel_entries, calculations, non_establishment_snapshots — WHERE period_id = kỳ đang mở |
+| Meter | Hard delete: meter_readings — WHERE period_id = kỳ đang mở |
+| Zone | Hard delete: main_meter_readings (của tất cả main_meters thuộc zone) — WHERE period_id = kỳ đang mở |
+| MainMeter | Hard delete: main_meter_readings — WHERE period_id = kỳ đang mở |
+
+### Engine skip thực thể không có data kỳ đang tính (v2.4.0)
+
+Engine (LossCalculator, PumpAllocationCalculator, SummaryCalculator) khi iterate qua đầu mối/công tơ phải kiểm tra: đầu mối có meter_readings cho kỳ đang tính không?
+
+- Có meter_readings → tính (dù đầu mối đã discard — đúng cho kỳ cũ)
+- Không có meter_readings → skip hoàn toàn, không cảnh báo
+
+Cách phân biệt "tồn tại trong kỳ nhưng chưa nhập" vs "không tồn tại trong kỳ":
+- Có meter_readings bản ghi (reading_end = 0 hoặc chưa nhập) → tồn tại, chưa nhập → cảnh báo "chưa nhập chỉ số"
+- Không có meter_readings bản ghi → không tồn tại trong kỳ → skip, không cảnh báo
 
 ### Sửa dữ liệu
 
@@ -1193,6 +1219,21 @@ Mọi thao tác trên hệ thống đều được ghi lại (PaperTrail). Syste
 ---
 
 ## Lịch sử thay đổi
+
+### v2.4.0 (20/05/2026)
+
+- Thêm mục "Cleanup data khi discard": khi discard thực thể cấu trúc, hard delete data per kỳ đang mở (meter_readings, personnel_entries, calculations, non_establishment_snapshots, main_meter_readings). Kỳ cũ giữ nguyên.
+- Thêm mục "Engine skip thực thể không có data kỳ đang tính": engine kiểm tra có meter_readings kỳ đó không, không có thì skip hoàn toàn.
+- Cập nhật bảng xóa dữ liệu: thêm tham chiếu đến mục Cleanup data cho xóa khu vực và xóa đầu mối/công tơ.
+
+### v2.3.0 (19/05/2026)
+
+- Zone chuyển từ hard delete sang soft delete (discard). Thêm cột discarded_at vào bảng zones, index.
+- Thêm quyết định zones soft delete kèm lý do và hệ quả (before_discard discard main_meters).
+- Engine tính toán: thêm quy tắc dùng .with_discarded cho zones, units, contact_points, meters, main_meters.
+- Thêm mục "Hạn chế thay đổi cấu trúc khi mở kỳ cũ" (StructureChangeGuard).
+- Mở kỳ mới: thêm ghi chú snapshot chỉ copy cho thực thể .kept.
+- Cập nhật bảng xóa dữ liệu: thêm dòng "Xóa khu vực" với soft delete + điều kiện.
 
 ### v2.2.0 (18/05/2026)
 
