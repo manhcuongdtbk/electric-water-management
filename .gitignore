@@ -40,4 +40,5 @@
 # Ignore Claude Code local-only config + worktrees
 /.claude/settings.local.json
 /.claude/worktrees/
-docs/.DS_Store
+# macOS Finder metadata (apply globally — covers root, docs/, and any subdir)
+.DS_Store
