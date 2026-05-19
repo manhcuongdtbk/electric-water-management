@@ -73,19 +73,25 @@ class ContactPointsController < ApplicationController
 
   def update
     ContactPoint.transaction do
+      meter_ids_to_discard = extract_meters_to_discard
       @contact_point.assign_attributes(update_params)
 
       if @contact_point.type_residential? && personnel_counts_param.present?
         update_personnel_entries_for_open_period(personnel_counts_param, personnel_lock_versions_param)
       end
 
-      if @contact_point.save
-        return redirect_to contact_points_path(type: @contact_point.contact_point_type),
-                           notice: t("flash.record_updated", resource: t("resources.contact_point"), name: @contact_point.name)
-      else
+      validate_minimum_meters(meter_ids_to_discard)
+
+      if @contact_point.errors.any? || !@contact_point.save
         raise ActiveRecord::Rollback
       end
+
+      discard_meters!(meter_ids_to_discard)
+
+      return redirect_to contact_points_path(type: @contact_point.contact_point_type),
+                         notice: t("flash.record_updated", resource: t("resources.contact_point"), name: @contact_point.name)
     end
+    @contact_point.meters.build if @contact_point.meters.kept.empty? && needs_meter?(@contact_point)
     render :edit, status: :unprocessable_entity
   end
 
@@ -159,6 +165,37 @@ class ContactPointsController < ApplicationController
     return {} if raw.blank?
     hash = raw.is_a?(ActionController::Parameters) ? raw.to_unsafe_h : raw.to_h
     hash.transform_keys(&:to_i).transform_values(&:to_i)
+  end
+
+  def extract_meters_to_discard
+    raw = params.dig(:contact_point, :meters_attributes)
+    return [] unless raw
+
+    ids = []
+    raw.each do |key, attrs|
+      if attrs[:_destroy] == "1" && attrs[:id].present?
+        ids << attrs[:id].to_i
+        raw.delete(key)
+      end
+    end
+    ids
+  end
+
+  def validate_minimum_meters(meter_ids_to_discard)
+    return if meter_ids_to_discard.empty?
+    return unless needs_meter?(@contact_point)
+
+    remaining = @contact_point.meters.kept.where.not(id: meter_ids_to_discard).count +
+                @contact_point.meters.select(&:new_record?).size
+    if remaining < 1
+      @contact_point.errors.add(:base,
+        I18n.t("activerecord.errors.models.contact_point.attributes.base.must_have_at_least_one_meter"))
+    end
+  end
+
+  def discard_meters!(meter_ids)
+    return if meter_ids.empty?
+    @contact_point.meters.kept.where(id: meter_ids).find_each(&:discard)
   end
 
   def update_personnel_entries_for_open_period(counts, lock_versions)

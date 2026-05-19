@@ -49,6 +49,4 @@
   <% end %>
 </fieldset>
 
-<% unless contact_point.persisted? %>
-  <%= render "meters_fields", f: f, contact_point: contact_point %>
-<% end %>
+<%= render "meters_fields", f: f, contact_point: contact_point %>

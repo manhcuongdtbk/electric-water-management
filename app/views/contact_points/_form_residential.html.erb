@@ -103,10 +103,4 @@
   </div>
 <% end %>
 
-<% unless contact_point.persisted? %>
-  <%= render "meters_fields", f: f, contact_point: contact_point %>
-<% else %>
-  <div class="bg-blue-50 border border-blue-200 rounded p-3 text-sm text-blue-800">
-    Quản lý công tơ ở trang Đầu mối → xem chi tiết. (Tính năng quản lý công tơ trực tiếp sẽ ở phase sau.)
-  </div>
-<% end %>
+<%= render "meters_fields", f: f, contact_point: contact_point %>
