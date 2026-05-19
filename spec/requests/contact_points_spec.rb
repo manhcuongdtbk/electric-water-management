@@ -171,7 +171,7 @@ RSpec.describe "ContactPoints", type: :request do
   describe "DELETE /contact_points/:id (T59)" do
     before { sign_in system_admin }
 
-    it "discard CP, giữ data kỳ cũ" do
+    it "discard CP, xóa data kỳ đang mở (v2.4.0)" do
       cp = create(:contact_point, :residential, unit: unit_a, name: "ToDiscard",
                   initial_personnel_counts: { ranks.last.id => 2 })
       meter = create(:meter, contact_point: cp, name: "CT-D1")
@@ -179,8 +179,9 @@ RSpec.describe "ContactPoints", type: :request do
       cp.reload
       expect(cp).to be_discarded
       expect(meter.reload).to be_discarded
-      # PersonnelEntries giữ nguyên
-      expect(cp.personnel_entries.where(period: period)).to be_present
+      # v2.4.0: discard lúc đang mở kỳ → xóa data per kỳ đang mở để engine không
+      # cảnh báo/tính toán sai cho đầu mối đã xóa (kỳ cũ giữ nguyên — xem model spec).
+      expect(cp.personnel_entries.where(period: period)).to be_empty
     end
   end
 end

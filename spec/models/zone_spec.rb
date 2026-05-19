@@ -79,6 +79,45 @@ RSpec.describe Zone do
     end
   end
 
+  describe "before_discard :delete_current_period_main_meter_readings (cleanup data kỳ đang mở v2.4.0)" do
+    context "khi có kỳ đang mở" do
+      let!(:period) { create(:period, closed: false) }
+
+      it "discard khu vực → xóa main_meter_readings kỳ đang mở" do
+        zone = create(:zone)
+        reading = create(:main_meter_reading, main_meter: zone.main_meters.first, period: period)
+
+        expect(zone.discard).to be true
+        expect(MainMeterReading.where(id: reading.id)).to be_empty
+      end
+
+      it "không xóa main_meter_readings kỳ cũ (đã đóng)" do
+        old_period = create(:period, year: 2025, month: 12, closed: true)
+        zone = create(:zone)
+        main_meter = zone.main_meters.first
+        current_reading = create(:main_meter_reading, main_meter: main_meter, period: period)
+        old_reading = create(:main_meter_reading, main_meter: main_meter, period: old_period)
+
+        zone.discard
+
+        expect(MainMeterReading.where(id: current_reading.id)).to be_empty
+        expect(MainMeterReading.where(id: old_reading.id)).to be_present
+      end
+    end
+
+    context "khi không có kỳ đang mở" do
+      it "discard khu vực → không xóa main_meter_readings kỳ cũ" do
+        old_period = create(:period, closed: true)
+        zone = create(:zone)
+        old_reading = create(:main_meter_reading, main_meter: zone.main_meters.first, period: old_period)
+
+        zone.discard
+
+        expect(MainMeterReading.where(id: old_reading.id)).to be_present
+      end
+    end
+  end
+
   describe ".kept scope (v2.3.0)" do
     it "không trả zones đã discard" do
       zone = Zone.create!(name: "Khu vực 7",

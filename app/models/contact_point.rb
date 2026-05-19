@@ -46,6 +46,7 @@ class ContactPoint < ApplicationRecord
   after_update :propagate_personnel_count_to_current_snapshot,
     if: -> { type_non_establishment? && saved_change_to_personnel_count? }
   before_discard :discard_current_period_pump_allocations
+  before_discard :delete_current_period_records
 
   after_discard do
     meters.kept.find_each(&:discard)
@@ -148,6 +149,21 @@ class ContactPoint < ApplicationRecord
     period = Period.current
     return unless period
     PumpAllocation.where(contact_point_id: id, period_id: period.id).destroy_all
+  end
+
+  # Khi discard đầu mối lúc đang mở kỳ: hard delete dữ liệu per kỳ đang mở để engine
+  # (dùng .with_discarded) không cảnh báo/tính toán sai cho đầu mối đã xóa. Dữ liệu kỳ
+  # cũ (đã đóng) giữ nguyên. Dùng meters.with_discarded để không bỏ sót reading của công
+  # tơ đã discard.
+  def delete_current_period_records
+    period = Period.current
+    return unless period
+    MeterReading.where(meter_id: meters.with_discarded.select(:id),
+                       period_id: period.id).destroy_all
+    personnel_entries.where(period: period).destroy_all
+    calculations.where(period: period).destroy_all
+    non_establishment_snapshots.where(period: period).destroy_all
+    other_deductions.where(period: period).destroy_all
   end
 
   def propagate_personnel_count_to_current_snapshot

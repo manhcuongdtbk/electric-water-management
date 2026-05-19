@@ -178,4 +178,37 @@ RSpec.describe SummaryCalculator do
       expect(Calculation.where(period: sample.period).count).to eq(5)
     end
   end
+
+  describe "#call — đầu mối đã discard (v2.4.0)" do
+    let(:sample) { setup_zone_one_full_sample }
+
+    def run_summary(period)
+      loss = LossCalculator.new(zone: sample.zone, period: period).call
+      pump = PumpAllocationCalculator.new(zone: sample.zone, period: period, loss_results: loss).call
+      described_class.new(zone: sample.zone, period: period,
+                          loss_results: loss, pump_results: pump).call
+    end
+
+    it "không tạo lại Calculation cho đầu mối discard ở kỳ đang mở" do
+      cp = sample.contact_points[:ban_tac_huan]
+      run_summary(sample.period)
+      expect(Calculation.where(contact_point: cp, period: sample.period)).to be_present
+
+      cp.discard
+      run_summary(sample.period)
+
+      expect(Calculation.where(contact_point: cp, period: sample.period)).to be_empty
+    end
+
+    context "kỳ cũ (đã đóng)" do
+      let(:sample) { setup_zone_one_full_sample(open_period: false) }
+
+      it "vẫn tính Calculation cho đầu mối đã discard (có meter_readings kỳ đó)" do
+        cp = sample.contact_points[:ban_tac_huan]
+        cp.discard
+        run_summary(sample.period)
+        expect(Calculation.where(contact_point: cp, period: sample.period)).to be_present
+      end
+    end
+  end
 end
