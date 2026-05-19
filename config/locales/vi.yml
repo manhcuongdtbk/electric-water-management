@@ -144,6 +144,8 @@ vi:
           attributes:
             password:
               complexity: "phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt"
+            password_confirmation:
+              confirmation: "không khớp"
             base:
               cannot_delete_default_account: "không thể xóa tài khoản mặc định"
         contact_point:

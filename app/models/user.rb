@@ -19,6 +19,8 @@ class User < ApplicationRecord
   validates :role, presence: true
   validates :unit_id, presence: true, if: -> { unit_admin? || commander? }
   validates :password, presence: true, on: :create
+  validates :password, confirmation: true
+  validates :password_confirmation, presence: true, if: :password_required?
   validate :password_complexity, if: :password_required?
 
   before_destroy :prevent_default_account_destroy
