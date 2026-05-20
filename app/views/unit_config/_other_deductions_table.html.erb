@@ -1,0 +1,28 @@
+<table class="min-w-full divide-y divide-gray-200">
+  <thead class="bg-gray-50">
+    <tr>
+      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Đầu mối</th>
+      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Kiểu</th>
+      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Giá trị</th>
+    </tr>
+  </thead>
+  <tbody class="divide-y divide-gray-200">
+    <% other_deductions.each do |od| %>
+      <tr>
+        <td class="px-4 py-2 text-sm text-gray-900"><%= od.contact_point.name %></td>
+        <td class="px-4 py-2 text-sm">
+          <%= hidden_field_tag "other_deductions[#{od.id}][lock_version]", od.lock_version %>
+          <%= select_tag "other_deductions[#{od.id}][other_type]",
+              options_for_select([["Cố định", "fixed"], ["Theo hệ số", "coefficient"]], od.other_type),
+              disabled: !can_edit,
+              class: "rounded border border-gray-300 px-2 py-1 text-sm" %>
+        </td>
+        <td class="px-4 py-2 text-sm">
+          <%= number_field_tag "other_deductions[#{od.id}][other_value]", od.other_value,
+              step: "0.01", disabled: !can_edit,
+              class: "w-32 rounded border border-gray-300 px-2 py-1 text-sm text-right" %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
