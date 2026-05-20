@@ -34,6 +34,24 @@ RSpec.describe Unit do
     end
   end
 
+  describe "after_create :create_current_period_unit_config" do
+    let(:zone) { create(:zone) }
+    let!(:period) { create(:period, closed: false) }
+
+    it "tạo UnitConfig cho kỳ đang mở khi tạo đơn vị mới" do
+      unit = create(:unit, zone: zone)
+      config = UnitConfig.find_by(unit: unit, period: period)
+      expect(config).to be_present
+      expect(config.unit_public_rate).to eq(0)
+    end
+
+    it "không tạo UnitConfig khi không có kỳ đang mở" do
+      period.update!(closed: true)
+      unit = create(:unit, zone: zone)
+      expect(UnitConfig.where(unit: unit)).to be_empty
+    end
+  end
+
   describe "validate :immutable_zone_id (T30)" do
     it "không cho đổi zone_id sau khi tạo" do
       zone_a = create(:zone)

@@ -15,6 +15,7 @@ class Unit < ApplicationRecord
   validate :immutable_zone_id, on: :update
 
   after_create :assign_as_zone_manager
+  after_create :create_current_period_unit_config
   before_discard :ensure_no_kept_dependents
   before_discard :clear_zone_manager_if_self
 
@@ -22,6 +23,12 @@ class Unit < ApplicationRecord
 
   def immutable_zone_id
     errors.add(:zone_id, :immutable) if zone_id_changed?
+  end
+
+  def create_current_period_unit_config
+    period = Period.current
+    return unless period
+    unit_configs.create!(period: period, unit_public_rate: 0)
   end
 
   def assign_as_zone_manager
