@@ -13,6 +13,27 @@ RSpec.describe "PumpAllocations", type: :request do
       get pump_allocations_path
       expect(response).to have_http_status(:ok)
     end
+
+    it "ẩn allocation khi unit đã bị discard" do
+      alloc = create(:pump_allocation, zone: zone, period: period, unit: unit, contact_point: nil)
+      get pump_allocations_path
+      expect(response.body).to include(unit.name)
+
+      unit.discard
+      get pump_allocations_path
+      expect(response.body).not_to include(unit.name)
+    end
+
+    it "ẩn allocation khi contact_point đã bị discard" do
+      contact_point = create(:contact_point, :residential, unit: unit, zone: nil)
+      alloc = create(:pump_allocation, zone: zone, period: period, unit: nil, contact_point: contact_point)
+      get pump_allocations_path
+      expect(response.body).to include(contact_point.name)
+
+      contact_point.discard
+      get pump_allocations_path
+      expect(response.body).not_to include(contact_point.name)
+    end
   end
 
   describe "POST /pump_allocations" do
