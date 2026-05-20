@@ -35,6 +35,61 @@ RSpec.describe "Pricing", type: :request do
     end
   end
 
+  describe "view permission guards" do
+    let!(:zone) { create(:zone) }
+    let!(:unit) { create(:unit, zone: zone) }
+    let!(:period) { create(:period, year: 2026, month: 5, closed: false, unit_price: 2336.4) }
+    let(:html) { Nokogiri::HTML(response.body) }
+
+    context "as unit_admin" do
+      let(:admin) { create(:user, :unit_admin, unit: unit) }
+      before { sign_in admin }
+
+      it "hiển thị giá trị chỉ đọc, không có form sửa đơn giá" do
+        get pricing_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Đơn giá:")
+        expect(response.body).not_to include("Lưu cập nhật")
+      end
+
+      it "không hiển thị nút Đóng kỳ" do
+        get pricing_path
+        expect(response.body).not_to include("Đóng kỳ hiện tại")
+      end
+
+      it "không hiển thị form Mở kỳ mới khi không có kỳ đang mở" do
+        period.update!(closed: true)
+        get pricing_path
+        expect(html.css("form[action='#{open_period_pricing_path}']")).to be_empty
+      end
+
+      it "không hiển thị nút Mở lại" do
+        period.update!(closed: true)
+        get pricing_path
+        expect(response.body).not_to include("Mở lại")
+      end
+    end
+
+    context "as commander" do
+      let(:commander) { create(:user, :commander, unit: unit) }
+      before { sign_in commander }
+
+      it "hiển thị giá trị chỉ đọc, không có nút sửa" do
+        get pricing_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Đơn giá:")
+        expect(response.body).not_to include("Lưu cập nhật")
+        expect(response.body).not_to include("Đóng kỳ hiện tại")
+      end
+
+      it "không hiển thị nút Mở lại khi kỳ đã đóng" do
+        period.update!(closed: true)
+        get pricing_path
+        expect(response.body).not_to include("Mở lại")
+      end
+    end
+  end
+
   describe "POST /pricing/close_period + reopen_period" do
     let!(:period) { create(:period, year: 2026, month: 5, closed: false) }
 

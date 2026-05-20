@@ -1,5 +1,7 @@
 <% page_title "Chỉ số bơm nước" %>
 
+<% can_edit = @period.present? && can?(:update, MeterReading) %>
+
 <% if @period.nil? %>
   <div class="bg-yellow-50 border border-yellow-200 rounded p-4 text-sm text-yellow-800 mb-4">
     <%= t("flash.no_open_period") %>
@@ -31,7 +33,7 @@
             <td class="px-3 py-2 text-right">
               <%= hidden_field_tag "meter_readings[#{r.id}][lock_version]", r.lock_version %>
               <%= number_field_tag "meter_readings[#{r.id}][reading_end]", r.reading_end,
-                  step: "0.01", disabled: @period.nil?,
+                  step: "0.01", disabled: !can_edit,
                   class: "w-28 rounded border border-gray-300 px-2 py-1 text-sm text-right" %>
             </td>
             <td class="px-3 py-2 text-right text-gray-600">
@@ -41,12 +43,12 @@
             </td>
             <td class="px-3 py-2 text-right">
               <%= number_field_tag "meter_readings[#{r.id}][manual_usage]", r.manual_usage,
-                  step: "0.01", disabled: @period.nil?,
+                  step: "0.01", disabled: !can_edit,
                   class: "w-24 rounded border border-gray-300 px-2 py-1 text-sm text-right" %>
             </td>
             <td class="px-3 py-2">
               <%= text_field_tag "meter_readings[#{r.id}][manual_usage_note]", r.manual_usage_note,
-                  placeholder: "Ghi chú nếu thay công tơ", disabled: @period.nil?,
+                  placeholder: "Ghi chú nếu thay công tơ", disabled: !can_edit,
                   class: "w-48 rounded border border-gray-300 px-2 py-1 text-sm" %>
             </td>
           </tr>
@@ -56,6 +58,6 @@
   </div>
 
   <%= submit_tag "Lưu toàn bộ",
-      disabled: @period.nil?,
+      disabled: !can_edit,
       class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 disabled:bg-gray-300 cursor-pointer" %>
 <% end %>

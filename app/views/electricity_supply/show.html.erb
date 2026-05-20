@@ -1,5 +1,7 @@
 <% page_title "Nhập số điện lực" %>
 
+<% can_edit = @period.present? && can?(:update, MainMeterReading) %>
+
 <% if @period.nil? %>
   <div class="bg-yellow-50 border border-yellow-200 rounded p-4 text-sm text-yellow-800 mb-4">
     <%= t("flash.no_open_period") %>
@@ -26,12 +28,12 @@
             <td class="px-4 py-2 text-sm text-right">
               <%= hidden_field_tag "main_meter_readings[#{r.id}][lock_version]", r.lock_version %>
               <%= number_field_tag "main_meter_readings[#{r.id}][usage]", r.usage,
-                  step: "0.01", disabled: @period.nil?,
+                  step: "0.01", disabled: !can_edit,
                   class: "w-40 rounded border border-gray-300 px-2 py-1 text-sm text-right" %>
             </td>
           </tr>
         <% end %>
-        <% if @period %>
+        <% if can_edit %>
           <% existing_meter_ids = @readings.pluck(:main_meter_id) %>
           <% MainMeter.kept.accessible_by(current_ability).includes(:zone).where.not(id: existing_meter_ids).order(:name).each do |mm| %>
             <tr>
@@ -50,6 +52,6 @@
   </div>
 
   <%= submit_tag "Lưu toàn bộ",
-      disabled: @period.nil?,
+      disabled: !can_edit,
       class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 disabled:bg-gray-300 cursor-pointer" %>
 <% end %>

@@ -1,7 +1,8 @@
 require "rails_helper"
 
 RSpec.describe "UnitConfig", type: :request do
-  let!(:unit) { create(:unit) }
+  let!(:zone) { create(:zone) }
+  let!(:unit) { create(:unit, zone: zone) }
   let(:admin) { create(:user, :unit_admin, unit: unit) }
   let!(:period) { create(:period, closed: false) }
   let!(:rank) { create(:rank, period: period, name: "R1", position: 1) }
@@ -69,6 +70,91 @@ RSpec.describe "UnitConfig", type: :request do
       period.update!(closed: true)
       patch unit_config_path, params: { unit_config: { unit_public_rate: "5" } }
       expect(response).to redirect_to("/")
+    end
+  end
+
+  describe "view permission guards" do
+    let(:html) { Nokogiri::HTML(response.body) }
+
+    context "as commander" do
+      let(:commander) { create(:user, :commander, unit: unit) }
+      before { sign_in commander }
+
+      it "hiển thị dữ liệu nhưng tất cả input đều disabled" do
+        get unit_config_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("CP-1")
+        html.css("input[type='number'], select").each do |input|
+          next if input["type"] == "hidden"
+          expect(input["disabled"]).to be_present,
+            "Expected input '#{input['name']}' to be disabled for commander"
+        end
+      end
+
+      it "không hiển thị nút Lưu cấu hình" do
+        get unit_config_path
+        expect(html.css("input[name='commit']")).to be_empty
+      end
+    end
+
+    context "as unit_admin (zone-manager)" do
+      let!(:zone_cp) {
+        create(:contact_point, :zone_residential, zone: zone, name: "Zone-CP-1",
+               initial_personnel_counts: { rank.id => 1 })
+      }
+      before do
+        zone.update!(manager_unit: unit)
+        sign_in admin
+      end
+
+      it "hiển thị cả OD thuộc đơn vị và OD thuộc khu vực" do
+        get unit_config_path
+        expect(response.body).to include("thuộc đơn vị")
+        expect(response.body).to include("thuộc khu vực")
+        expect(response.body).to include("CP-1")
+        expect(response.body).to include("Zone-CP-1")
+      end
+
+      it "input không bị disabled" do
+        get unit_config_path
+        html.css("input[type='number'], select").each do |input|
+          next if input["type"] == "hidden"
+          expect(input["disabled"]).to be_nil,
+            "Expected input '#{input['name']}' to NOT be disabled for zone-manager"
+        end
+      end
+
+      it "hiển thị nút Lưu cấu hình" do
+        get unit_config_path
+        expect(html.css("input[name='commit']")).to be_present
+      end
+    end
+
+    context "as unit_admin (non zone-manager)" do
+      it "không hiển thị section OD thuộc khu vực" do
+        get unit_config_path
+        expect(response.body).to include("thuộc đơn vị")
+        expect(response.body).not_to include("thuộc khu vực")
+      end
+    end
+
+    context "as system_admin viewing zone-managing unit" do
+      let(:system_admin) { create(:user, :system_admin) }
+      let!(:zone_cp) {
+        create(:contact_point, :zone_residential, zone: zone, name: "Zone-CP-SA",
+               initial_personnel_counts: { rank.id => 1 })
+      }
+      before do
+        zone.update!(manager_unit: unit)
+        sign_in system_admin
+      end
+
+      it "hiển thị cả OD đơn vị và OD khu vực khi chọn đơn vị quản lý khu vực" do
+        get unit_config_path(unit_id: unit.id)
+        expect(response.body).to include("thuộc đơn vị")
+        expect(response.body).to include("thuộc khu vực")
+        expect(response.body).to include("Zone-CP-SA")
+      end
     end
   end
 end
