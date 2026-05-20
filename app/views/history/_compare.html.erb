@@ -75,6 +75,8 @@
         <table class="border-collapse w-full text-xs" data-billing-table>
           <thead class="sticky top-0 z-10">
             <tr>
+              <th rowspan="2" class="<%= header_cell %>">Khu vực</th>
+              <th rowspan="2" class="<%= header_cell %>">Đơn vị</th>
               <th rowspan="2" class="<%= header_cell %>">Đầu mối</th>
               <% metric_groups.each do |label, _attr, _type| %>
                 <th colspan="3" class="<%= header_cell %>"><%= label %></th>
@@ -92,6 +94,8 @@
           <tbody>
             <% @comparison.each do |row| %>
               <tr class="hover:bg-yellow-50">
+                <td class="<%= text_cell %>"><%= row.contact_point&.effective_zone&.name %></td>
+                <td class="<%= text_cell %>"><%= row.contact_point&.unit&.name %></td>
                 <td class="<%= text_cell %>"><%= row.contact_point&.name %></td>
                 <% metric_groups.each do |_label, attr, type| %>
                   <td class="<%= num_cell %>"><%= row.calc_a ? format_cell.call(row.calc_a.send(attr), type) : empty_mark %></td>

@@ -60,6 +60,8 @@ RSpec.describe "History", type: :request do
         get history_path(mode: "compare", period_a: sample.period.id, period_b: period_b.id)
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Δ")
+        expect(response.body).to include("Khu vực 1")
+        expect(response.body).to include("Đơn vị A")
       end
     end
 

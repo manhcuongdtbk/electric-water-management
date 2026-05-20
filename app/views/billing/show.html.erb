@@ -38,9 +38,11 @@
               form: { data: { turbo_confirm: "Xác nhận tính toán lại bảng tính tiền?" } },
               class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700" %>
       <% end %>
-      <%= link_to "Xuất Excel",
-            billing_path(billing_filter_params.merge(format: :xlsx)),
-            class: "bg-green-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-700" %>
+      <% if can?(:read, Calculation) %>
+        <%= link_to "Xuất Excel",
+              billing_path(billing_filter_params.merge(format: :xlsx)),
+              class: "bg-green-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-700" %>
+      <% end %>
     </div>
   </div>
 

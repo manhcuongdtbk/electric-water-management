@@ -29,7 +29,7 @@ class ApplicationController < ActionController::Base
 
   def current_zone_manager?
     return false unless current_user&.unit_id
-    Zone.exists?(manager_unit_id: current_user.unit_id)
+    Zone.kept.exists?(manager_unit_id: current_user.unit_id)
   end
 
   private
