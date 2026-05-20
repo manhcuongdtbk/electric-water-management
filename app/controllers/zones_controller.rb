@@ -14,6 +14,9 @@ class ZonesController < ApplicationController
 
   def index
     scope = load_collection(Zone).includes(:units, :main_meters, :manager_unit)
+    if current_zone_manager?
+      scope = scope.where(manager_unit_id: current_user.unit_id)
+    end
     if params[:sort].to_s == "manager_unit"
       scope = scope.joins("LEFT JOIN units manager_units ON manager_units.id = zones.manager_unit_id")
     end
@@ -91,7 +94,8 @@ class ZonesController < ApplicationController
   def action_auth_key
     case action_name
     when "show" then :read
-    when "edit", "update", "reassign_manager" then :update
+    when "edit", "update" then :update
+    when "reassign_manager" then :manage
     when "destroy" then :destroy
     end
   end
@@ -101,7 +105,6 @@ class ZonesController < ApplicationController
   end
 
   def zone_update_params
-    # Bỏ main_meters_attributes ở update (quản lý riêng nếu cần)
-    params.require(:zone).permit(:name)
+    params.require(:zone).permit(:name, main_meters_attributes: [:id, :name])
   end
 end

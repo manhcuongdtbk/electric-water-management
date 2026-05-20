@@ -43,11 +43,11 @@ module SidebarHelper
          users audit_logs]
     when :unit_admin
       base = %i[dashboard billing history meter_entries contact_points blocks groups unit_config]
-      base += %i[electricity_supply pump_entries zones] if zone_manager
+      base += %i[electricity_supply pump_entries zones pump_allocations] if zone_manager
       base
     when :commander
       base = %i[dashboard billing history contact_points blocks groups]
-      base += %i[zones] if zone_manager
+      base += %i[zones pump_allocations] if zone_manager
       base
     else
       []

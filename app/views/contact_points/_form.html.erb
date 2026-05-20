@@ -12,7 +12,7 @@
   <% if contact_point.new_record? %>
     <%
       available_types = [["Sinh hoạt", "residential"], ["Công cộng", "public"]]
-      unless current_user.unit_id.present?
+      unless current_user.unit_id.present? && !current_zone_manager?
         available_types += [["Bơm nước", "water_pump"], ["Ngoài biên chế", "non_establishment"]]
       end
     %>

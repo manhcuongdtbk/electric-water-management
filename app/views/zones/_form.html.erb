@@ -15,16 +15,18 @@
         class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
   </div>
 
-  <% if zone.new_record? %>
-    <div class="border-t border-gray-200 pt-4">
-      <h3 class="text-sm font-semibold text-gray-700 mb-2">Công tơ tổng</h3>
+  <div class="border-t border-gray-200 pt-4">
+    <h3 class="text-sm font-semibold text-gray-700 mb-2">Công tơ tổng</h3>
+    <% if zone.new_record? %>
       <p class="text-xs text-gray-500 mb-2">Khu vực phải có ít nhất một công tơ tổng để theo dõi tổng điện cấp.</p>
-      <%= f.fields_for :main_meters do |mf| %>
+    <% end %>
+    <%= f.fields_for :main_meters do |mf| %>
+      <div class="mb-2">
         <%= mf.text_field :name, placeholder: "Tên công tơ tổng (VD: CT-Tổng-KV1)",
             class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
-      <% end %>
-    </div>
-  <% end %>
+      </div>
+    <% end %>
+  </div>
 
   <div class="flex space-x-2">
     <%= f.submit "Lưu", class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 cursor-pointer" %>

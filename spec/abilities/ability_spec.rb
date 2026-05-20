@@ -148,9 +148,12 @@ RSpec.describe Ability do
       expect(ability).to be_able_to(:update, entry)
     end
 
-    it "không quản lý pump_allocations (vẫn chỉ system_admin)" do
+    it "CRUD pump_allocations khu vực mình quản lý" do
       alloc = build(:pump_allocation, zone: zone, unit: my_unit, contact_point: nil)
-      expect(ability).not_to be_able_to(:update, alloc)
+      expect(ability).to be_able_to(:create, alloc)
+      expect(ability).to be_able_to(:read, alloc)
+      expect(ability).to be_able_to(:update, alloc)
+      expect(ability).to be_able_to(:destroy, alloc)
     end
   end
 

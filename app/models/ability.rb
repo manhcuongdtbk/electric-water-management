@@ -64,10 +64,12 @@ class Ability
 
     return if managed_zone_ids.empty?
 
+    can :update, Zone, id: managed_zone_ids
     can :read, MainMeter, zone_id: managed_zone_ids
-    can [:read, :update], MainMeterReading, main_meter: { zone_id: managed_zone_ids }
-    can :read, ContactPoint, zone_id: managed_zone_ids
-    can :read, Meter, contact_point: { zone_id: managed_zone_ids }
+    can [:create, :read, :update, :destroy], MainMeterReading, main_meter: { zone_id: managed_zone_ids }
+    can [:create, :read, :update, :destroy], ContactPoint, zone_id: managed_zone_ids
+    can [:create, :read, :update, :destroy], Meter, contact_point: { zone_id: managed_zone_ids }
+    can [:create, :read, :update, :destroy], PumpAllocation, zone_id: managed_zone_ids
     can [:read, :update], MeterReading,
       meter: { contact_point: { zone_id: managed_zone_ids } }
     can [:read, :update], PersonnelEntry,
@@ -104,6 +106,7 @@ class Ability
     can :read, MainMeterReading, main_meter: { zone_id: managed_zone_ids }
     can :read, ContactPoint, zone_id: managed_zone_ids
     can :read, Meter, contact_point: { zone_id: managed_zone_ids }
+    can :read, PumpAllocation, zone_id: managed_zone_ids
     can :read, MeterReading, meter: { contact_point: { zone_id: managed_zone_ids } }
     can :read, PersonnelEntry, contact_point: { zone_id: managed_zone_ids }
     can :read, NonEstablishmentSnapshot, contact_point: { zone_id: managed_zone_ids }

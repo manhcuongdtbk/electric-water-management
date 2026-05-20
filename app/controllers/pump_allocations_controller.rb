@@ -34,7 +34,10 @@ class PumpAllocationsController < ApplicationController
 
   def new
     @pump_allocation = PumpAllocation.new(period: current_period, coefficient: 1)
-    authorize!(:create, @pump_allocation)
+    if current_zone_manager?
+      @pump_allocation.zone = Zone.kept.find_by(manager_unit_id: current_user.unit_id)
+    end
+    authorize!(:create, PumpAllocation)
   end
 
   def create
