@@ -19,7 +19,10 @@
 
   <div>
     <%= f.label :zone_id, "Khu vực", class: "block text-sm font-medium text-gray-700 mb-1" %>
-    <%= f.select :zone_id, Zone.accessible_by(current_ability).order(:name).pluck(:name, :id),
+    <% available_zones = can?(:manage, PumpAllocation) ?
+         Zone.kept.order(:name) :
+         Zone.kept.where(manager_unit_id: current_user.unit_id).order(:name) %>
+    <%= f.select :zone_id, available_zones.pluck(:name, :id),
         { include_blank: "— Chọn khu vực —" },
         class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
         data: { pump_allocation_form_target: "zoneSelect", action: "change->pump-allocation-form#refreshZoneScope" } %>
@@ -60,7 +63,7 @@
     <div data-pump-allocation-form-target="targetContact">
       <%= f.label :contact_point_id, "Chọn đầu mối", class: "block text-sm font-medium text-gray-700 mb-1" %>
       <%
-        contact_point_options = ContactPoint.kept
+        contact_point_options = ContactPoint.kept.accessible_by(current_ability)
           .where(contact_point_type: ["residential", "non_establishment"])
           .includes(:unit)
           .order(:name)
