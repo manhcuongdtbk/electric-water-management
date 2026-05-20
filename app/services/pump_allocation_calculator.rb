@@ -22,7 +22,15 @@ class PumpAllocationCalculator
     pump_loss = pump_meters.sum(BigDecimal("0")) { |m| @loss_results.meter_losses[m.id] || BigDecimal("0") }
     d = raw_pump_usage + pump_loss
 
-    allocations = @period.pump_allocations.where(zone: @zone).includes(:unit, :contact_point).to_a
+    scope = @period.pump_allocations
+                    .where(zone: @zone)
+                    .left_joins(:unit, :contact_point)
+                    .includes(:unit, :contact_point)
+    unless @period.closed?
+      scope = scope.where("units.discarded_at IS NULL OR units.id IS NULL")
+                   .where("contact_points.discarded_at IS NULL OR contact_points.id IS NULL")
+    end
+    allocations = scope.to_a
     return Result.new(contact_point_allocations: {}, total_d: d, warnings: warnings) if allocations.empty?
 
     @personnel_cache = build_personnel_cache(allocations)
@@ -67,7 +75,8 @@ class PumpAllocationCalculator
     cp_ids = allocations.map(&:contact_point_id).compact.uniq
 
     if unit_ids.any?
-      ContactPoint.with_discarded.where(unit_id: unit_ids, contact_point_type: "residential")
+      contact_point_scope = @period.closed? ? ContactPoint.with_discarded : ContactPoint.kept
+      contact_point_scope.where(unit_id: unit_ids, contact_point_type: "residential")
                   .each do |cp|
         cache[:residential_in_unit][cp.unit_id] ||= []
         cache[:residential_in_unit][cp.unit_id] << cp
