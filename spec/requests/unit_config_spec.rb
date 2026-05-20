@@ -58,6 +58,28 @@ RSpec.describe "UnitConfig", type: :request do
     end
   end
 
+  describe "khi đơn vị chưa có UnitConfig cho kỳ hiện tại" do
+    before { UnitConfig.where(unit: unit, period: period).delete_all }
+
+    it "tự tạo UnitConfig với giá trị mặc định và hiển thị Tỷ lệ công cộng đơn vị" do
+      expect { get unit_config_path }.to change { UnitConfig.where(unit: unit, period: period).count }.from(0).to(1)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Tỷ lệ công cộng đơn vị")
+      created = UnitConfig.find_by!(unit: unit, period: period)
+      expect(created.unit_public_rate).to eq(0)
+    end
+
+    it "cho phép cập nhật UnitConfig vừa tạo" do
+      get unit_config_path
+      uc = UnitConfig.find_by!(unit: unit, period: period)
+      patch unit_config_path, params: {
+        unit_config: { unit_public_rate: "3.5", lock_version: uc.lock_version }
+      }
+      expect(response).to redirect_to(unit_config_path(unit_id: unit.id))
+      expect(uc.reload.unit_public_rate.to_s).to eq("3.5")
+    end
+  end
+
   describe "khi không có kỳ đang mở" do
     it "show vẫn truy cập được" do
       period.update!(closed: true)
