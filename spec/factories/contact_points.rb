@@ -4,6 +4,8 @@ FactoryBot.define do
     contact_point_type { "residential" }
     association :unit
     zone { nil }
+    # 1 người để đầu mối sinh hoạt qua validation tạo mới; key 0 không trùng rank id thật
+    initial_personnel_counts { { 0 => 1 } }
 
     trait :residential do
       contact_point_type { "residential" }

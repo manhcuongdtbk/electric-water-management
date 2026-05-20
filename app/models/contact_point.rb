@@ -37,7 +37,7 @@ class ContactPoint < ApplicationRecord
   validate :validate_water_pump_constraints, if: :type_water_pump?
   validate :validate_non_establishment_constraints, if: :type_non_establishment?
   validate :validate_residential_personnel_sum_on_create, on: :create,
-    if: -> { type_residential? && initial_personnel_counts.present? }
+    if: :type_residential?
   validate :validate_residential_personnel_sum_on_update, on: :update,
     if: :type_residential?
   validate :immutable_contact_point_type, on: :update
