@@ -43,7 +43,7 @@ class ContactPointsController < ApplicationController
 
   def new
     requested_type = params[:type] || "residential"
-    if current_user.unit_id.present? && %w[water_pump non_establishment].include?(requested_type)
+    if current_user.unit_id.present? && !current_zone_manager? && %w[water_pump non_establishment].include?(requested_type)
       requested_type = "residential"
     end
     @contact_point = ContactPoint.new(contact_point_type: requested_type)
@@ -55,7 +55,11 @@ class ContactPointsController < ApplicationController
   def create
     @contact_point = ContactPoint.new(create_params)
     @contact_point.initial_personnel_counts = personnel_counts_param
-    if current_user.unit_id.present? && @contact_point.zone_id.blank?
+    if @contact_point.zone_id.present?
+      @contact_point.unit_id = nil
+      @contact_point.block_id = nil
+      @contact_point.group_id = nil
+    elsif current_user.unit_id.present?
       @contact_point.unit_id = current_user.unit_id
     end
     authorize!(:create, @contact_point)

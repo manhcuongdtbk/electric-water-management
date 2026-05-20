@@ -2,7 +2,7 @@
 <div class="bg-white rounded-lg shadow border border-gray-200 p-6 max-w-xl space-y-6">
   <%= render "form", zone: @zone %>
 
-  <% if can?(:update, @zone) %>
+  <% if can?(:manage, Zone) %>
     <div class="border-t border-gray-200 pt-4">
       <h3 class="text-base font-semibold text-gray-900 mb-3">Đơn vị quản lý khu vực</h3>
       <%= form_with url: reassign_manager_zone_path(@zone), method: :patch, local: true, class: "flex space-x-2 items-end" do %>
@@ -14,7 +14,7 @@
         </div>
         <%= submit_tag "Cập nhật", class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 cursor-pointer" %>
       <% end %>
-      <p class="text-xs text-gray-500 mt-1">Đơn vị quản lý có quyền nhập số điện công tơ tổng và phụ trách bơm nước khu vực.</p>
+      <p class="text-xs text-gray-500 mt-1">Đơn vị quản lý có quyền khai báo và nhập liệu phần khu vực (đầu mối, công tơ, quân số, phân bổ bơm nước, chỉ số công tơ tổng).</p>
     </div>
   <% end %>
 </div>

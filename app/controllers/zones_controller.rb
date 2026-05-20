@@ -91,7 +91,8 @@ class ZonesController < ApplicationController
   def action_auth_key
     case action_name
     when "show" then :read
-    when "edit", "update", "reassign_manager" then :update
+    when "edit", "update" then :update
+    when "reassign_manager" then :manage
     when "destroy" then :destroy
     end
   end
@@ -101,7 +102,6 @@ class ZonesController < ApplicationController
   end
 
   def zone_update_params
-    # Bỏ main_meters_attributes ở update (quản lý riêng nếu cần)
-    params.require(:zone).permit(:name)
+    params.require(:zone).permit(:name, main_meters_attributes: [:id, :name])
   end
 end
