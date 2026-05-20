@@ -1,10 +1,16 @@
 
 <div>
   <%= f.label :zone_id, "Khu vực", class: "block text-sm font-medium text-gray-700 mb-1" %>
-  <%= f.select :zone_id, available_zones.order(:name).pluck(:name, :id),
-      { include_blank: "— Chọn khu vực —" },
-      class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
-      disabled: contact_point.persisted? %>
+  <% if current_user.unit_id.present? %>
+    <%= f.hidden_field :zone_id, value: current_user.unit.zone_id %>
+    <input type="text" disabled value="<%= current_user.unit.zone&.name %>"
+           class="block w-full rounded border border-gray-300 px-3 py-2 text-sm bg-gray-50">
+  <% else %>
+    <%= f.select :zone_id, available_zones.order(:name).pluck(:name, :id),
+        { include_blank: "— Chọn khu vực —" },
+        class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
+        disabled: contact_point.persisted? %>
+  <% end %>
 </div>
 
 <div>

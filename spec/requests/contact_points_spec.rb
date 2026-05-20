@@ -256,35 +256,40 @@ RSpec.describe "ContactPoints", type: :request do
     end
   end
 
-  describe "zone dropdown scoping on new/edit form" do
-    let!(:zone_a) { create(:zone, name: "KV Alpha", manager_unit: unit_a) }
-    let!(:zone_b) { create(:zone, name: "KV Beta", manager_unit: unit_b) }
+  describe "zone field on new/edit form" do
+    let!(:zone_managed) { create(:zone, name: "KV Alpha") }
+    let!(:zone_other) { create(:zone, name: "KV Beta") }
+    let!(:unit_mgr) { create(:unit, name: "Đơn vị Quản lý", zone: zone_managed) }
+    let!(:admin_mgr) { create(:user, :unit_admin, unit: unit_mgr) }
 
-    context "as unit admin who manages zone A only" do
-      before { sign_in admin_a }
+    before { zone_managed.update!(manager_unit: unit_mgr) }
 
-      it "residential form shows only managed zone in dropdown" do
+    context "as unit admin who manages a zone" do
+      before { sign_in admin_mgr }
+
+      it "residential form auto-fills zone without dropdown" do
         get new_contact_point_path(type: "residential")
         expect(response.body).to include("KV Alpha")
         expect(response.body).not_to include("KV Beta")
+        expect(response.body).not_to include("— Chọn khu vực —")
       end
 
-      it "public form shows only managed zone in dropdown" do
+      it "public form auto-fills zone without dropdown" do
         get new_contact_point_path(type: "public")
         expect(response.body).to include("KV Alpha")
-        expect(response.body).not_to include("KV Beta")
+        expect(response.body).not_to include("— Chọn khu vực —")
       end
 
-      it "water_pump form shows only managed zone in dropdown" do
+      it "water_pump form auto-fills zone without dropdown" do
         get new_contact_point_path(type: "water_pump")
         expect(response.body).to include("KV Alpha")
-        expect(response.body).not_to include("KV Beta")
+        expect(response.body).not_to include("— Chọn khu vực —")
       end
 
-      it "non_establishment form shows only managed zone in dropdown" do
+      it "non_establishment form auto-fills zone without dropdown" do
         get new_contact_point_path(type: "non_establishment")
         expect(response.body).to include("KV Alpha")
-        expect(response.body).not_to include("KV Beta")
+        expect(response.body).not_to include("— Chọn khu vực —")
       end
     end
 
@@ -295,17 +300,15 @@ RSpec.describe "ContactPoints", type: :request do
         get new_contact_point_path(type: "residential")
         expect(response.body).to include("KV Alpha")
         expect(response.body).to include("KV Beta")
+        expect(response.body).to include("— Chọn khu vực —")
       end
     end
 
     context "as unit admin who does NOT manage any zone" do
       before { sign_in admin_b }
 
-      it "residential form does not show zone radio or dropdown" do
-        zone_b.update!(manager_unit: nil)
+      it "residential form does not show zone mode radio" do
         get new_contact_point_path(type: "residential")
-        expect(response.body).not_to include("KV Alpha")
-        expect(response.body).not_to include("KV Beta")
         expect(response.body).not_to include("Khu vực (cấp khu vực")
       end
     end
