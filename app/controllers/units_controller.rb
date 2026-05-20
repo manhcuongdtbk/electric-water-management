@@ -1,6 +1,7 @@
 class UnitsController < ApplicationController
   include AuthorizeResource
   include StructureChangeGuard
+  include BusinessRoleRequired
 
   before_action :set_unit, only: [:show, :edit, :update, :destroy]
   before_action :require_latest_period_when_open,

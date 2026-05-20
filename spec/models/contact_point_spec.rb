@@ -278,6 +278,15 @@ RSpec.describe ContactPoint do
                  initial_personnel_counts: { rank.id => 1 })
       expect(cp).to be_valid
     end
+
+    it "không cho tạo khi request không kèm initial_personnel_counts (đầu mối 0 người)" do
+      unit = create(:unit)
+      cp = build(:contact_point, :residential, unit: unit, initial_personnel_counts: {})
+      expect(cp).not_to be_valid
+      expect(cp.errors[:base]).to include(
+        I18n.t("activerecord.errors.models.contact_point.attributes.base.residential_personnel_sum_too_low")
+      )
+    end
   end
 
   describe "validate :validate_residential_personnel_sum_on_update (T34)" do

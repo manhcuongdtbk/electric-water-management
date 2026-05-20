@@ -1,5 +1,6 @@
 class PricingController < ApplicationController
   include AuthorizeResource
+  include BusinessRoleRequired
 
   def show
     @current_period = Period.current
