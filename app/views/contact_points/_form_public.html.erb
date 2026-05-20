@@ -1,5 +1,4 @@
 <% available_units = Unit.kept.accessible_by(current_ability) %>
-<% available_zones = Zone.accessible_by(current_ability) %>
 <% mode_default = contact_point.zone_id.present? ? "zone" : "unit" %>
 
 <fieldset class="border border-gray-200 rounded p-3"

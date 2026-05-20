@@ -256,6 +256,61 @@ RSpec.describe "ContactPoints", type: :request do
     end
   end
 
+  describe "zone dropdown scoping on new/edit form" do
+    let!(:zone_a) { create(:zone, name: "KV Alpha", manager_unit: unit_a) }
+    let!(:zone_b) { create(:zone, name: "KV Beta", manager_unit: unit_b) }
+
+    context "as unit admin who manages zone A only" do
+      before { sign_in admin_a }
+
+      it "residential form shows only managed zone in dropdown" do
+        get new_contact_point_path(type: "residential")
+        expect(response.body).to include("KV Alpha")
+        expect(response.body).not_to include("KV Beta")
+      end
+
+      it "public form shows only managed zone in dropdown" do
+        get new_contact_point_path(type: "public")
+        expect(response.body).to include("KV Alpha")
+        expect(response.body).not_to include("KV Beta")
+      end
+
+      it "water_pump form shows only managed zone in dropdown" do
+        get new_contact_point_path(type: "water_pump")
+        expect(response.body).to include("KV Alpha")
+        expect(response.body).not_to include("KV Beta")
+      end
+
+      it "non_establishment form shows only managed zone in dropdown" do
+        get new_contact_point_path(type: "non_establishment")
+        expect(response.body).to include("KV Alpha")
+        expect(response.body).not_to include("KV Beta")
+      end
+    end
+
+    context "as system admin" do
+      before { sign_in system_admin }
+
+      it "zone dropdown shows all zones" do
+        get new_contact_point_path(type: "residential")
+        expect(response.body).to include("KV Alpha")
+        expect(response.body).to include("KV Beta")
+      end
+    end
+
+    context "as unit admin who does NOT manage any zone" do
+      before { sign_in admin_b }
+
+      it "residential form does not show zone radio or dropdown" do
+        zone_b.update!(manager_unit: nil)
+        get new_contact_point_path(type: "residential")
+        expect(response.body).not_to include("KV Alpha")
+        expect(response.body).not_to include("KV Beta")
+        expect(response.body).not_to include("Khu vực (cấp khu vực")
+      end
+    end
+  end
+
   describe "DELETE /contact_points/:id (T59)" do
     before { sign_in system_admin }
 

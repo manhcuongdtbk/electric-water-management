@@ -4,6 +4,7 @@ class ContactPointsController < ApplicationController
   include AuthorizeResource
 
   before_action :set_contact_point, only: [:show, :edit, :update, :destroy]
+  before_action :set_available_zones, only: [:new, :edit, :create, :update]
   before_action :require_open_period, only: [:create, :update, :destroy]
   before_action :require_latest_period_when_open,
     only: [:new, :create, :edit, :update, :destroy]
@@ -121,6 +122,14 @@ class ContactPointsController < ApplicationController
 
   def set_contact_point
     @contact_point = load_member(ContactPoint, action: action_auth_key)
+  end
+
+  def set_available_zones
+    @available_zones = if current_user.system_admin?
+      Zone.kept
+    else
+      Zone.kept.where(manager_unit_id: current_user.unit_id)
+    end
   end
 
   def action_auth_key
