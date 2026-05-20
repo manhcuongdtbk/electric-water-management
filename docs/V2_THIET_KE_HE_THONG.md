@@ -420,7 +420,7 @@ Thêm nhóm cấp bậc mới khi kỳ đang mở: hệ thống tạo rank mới
 | reading_start | decimal | Số đầu kỳ. ≥ 0 |
 | reading_end | decimal | Số cuối kỳ. ≥ 0 |
 | manual_usage | decimal | Nullable. Nhập thủ công khi cuối kỳ < đầu kỳ (thay công tơ) |
-| manual_usage_note | string | Nullable. Ghi chú kèm manual_usage |
+| manual_usage_note | text | Nullable. Ghi chú kèm manual_usage |
 | no_loss | boolean | Snapshot từ meters.no_loss khi mở kỳ |
 | lock_version | integer | Mặc định: 0. Optimistic locking |
 
@@ -1229,6 +1229,7 @@ Mọi thao tác trên hệ thống đều được ghi lại (PaperTrail). Syste
 
 - Engine tính toán: sửa quy tắc `.with_discarded` — bỏ "phải" (không tuyệt đối) và bổ sung ngoại lệ kỳ đang mở (PumpAllocationCalculator loại đối tượng đã xóa khi tính kỳ đang mở). Đồng bộ văn bản với hành vi code thực tế.
 - Sidebar: viết lại câu mở đầu mục "Sidebar per role" cho khỏi tự mâu thuẫn — tách rõ ẩn theo vai trò (theo bảng) và không ẩn theo trạng thái kỳ.
+- Schema meter_readings: sửa kiểu `manual_usage_note` từ `string` thành `text` cho khớp database.
 
 ### v2.7.0 (20/05/2026)
 
