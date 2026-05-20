@@ -8,15 +8,17 @@ import { Controller } from "@hotwired/stimulus"
 // để server nhận đúng giá trị (null cho fixed_percentage, 0 cho coefficient).
 export default class extends Controller {
   static targets = [
-    "targetMode",      // radio inputs cho unit/contact_point
-    "targetUnit",      // wrapper div + select unit_id
-    "targetContact",   // wrapper div + select contact_point_id
-    "allocMode",       // radio inputs cho fixed/coefficient
-    "allocFixed",      // wrapper div + input fixed_percentage
-    "allocCoefficient",// wrapper div + input coefficient
-    "zoneSelect",      // select zone_id
-    "unitSelect",      // select unit_id (cần filter theo zone)
-    "contactSelect"    // select contact_point_id (cần filter theo zone)
+    "targetMode",
+    "targetUnit",
+    "targetContact",
+    "targetFieldset",
+    "allocMode",
+    "allocFixed",
+    "allocCoefficient",
+    "allocFieldset",
+    "zoneSelect",
+    "unitSelect",
+    "contactSelect"
   ]
 
   connect() {
@@ -38,11 +40,14 @@ export default class extends Controller {
     }
   }
 
-  // Filter unit/contact_point dropdown theo zone đang chọn.
-  // Mỗi option có data-zone-id; option có zone-id khớp (hoặc rỗng = include_blank) thì hiển thị.
   refreshZoneScope() {
     if (!this.hasZoneSelectTarget) return
     const zoneId = this.zoneSelectTarget.value
+    const hasZone = zoneId !== ""
+
+    if (this.hasTargetFieldsetTarget) this.targetFieldsetTarget.disabled = !hasZone
+    if (this.hasAllocFieldsetTarget) this.allocFieldsetTarget.disabled = !hasZone
+
     if (this.hasUnitSelectTarget) this.filterOptionsByZone(this.unitSelectTarget, zoneId)
     if (this.hasContactSelectTarget) this.filterOptionsByZone(this.contactSelectTarget, zoneId)
   }
