@@ -168,6 +168,94 @@ RSpec.describe "ContactPoints", type: :request do
     end
   end
 
+  describe "view permission guards" do
+    let(:html) { Nokogiri::HTML(response.body) }
+    let!(:cp_a) {
+      create(:contact_point, :residential, unit: unit_a, name: "CP A",
+             initial_personnel_counts: { ranks.last.id => 1 })
+    }
+    let!(:cp_b) {
+      create(:contact_point, :residential, unit: unit_b, name: "CP B",
+             initial_personnel_counts: { ranks.last.id => 1 })
+    }
+    let(:commander_b) { create(:user, :commander, unit: unit_b) }
+
+    context "as commander (non zone-manager)" do
+      before { sign_in commander_b }
+
+      it "không hiển thị nút Thêm đầu mối" do
+        get contact_points_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include(new_contact_point_path)
+      end
+
+      it "không hiển thị link Sửa và nút Xóa cho từng đầu mối" do
+        get contact_points_path
+        expect(response.body).to include("CP B")
+        expect(response.body).not_to include(edit_contact_point_path(cp_b))
+        html.css("form[action='#{contact_point_path(cp_b)}']").each do |form|
+          expect(form.css("input[name='_method'][value='delete']")).to be_empty
+        end
+      end
+
+      it "chỉ hiển thị tab Sinh hoạt và Công cộng" do
+        get contact_points_path
+        expect(response.body).not_to include("type=water_pump")
+        expect(response.body).not_to include("type=non_establishment")
+      end
+    end
+
+    context "as commander (zone-manager)" do
+      before { sign_in commander_a }
+
+      it "hiển thị đủ 4 tab loại đầu mối" do
+        get contact_points_path
+        expect(response.body).to include("type=water_pump")
+        expect(response.body).to include("type=non_establishment")
+      end
+
+      it "vẫn không hiển thị nút Thêm đầu mối" do
+        get contact_points_path
+        expect(response.body).not_to include(new_contact_point_path)
+      end
+    end
+
+    context "as unit_admin (zone-manager)" do
+      before { sign_in admin_a }
+
+      it "hiển thị nút Thêm đầu mối" do
+        get contact_points_path
+        expect(response.body).to include(new_contact_point_path)
+      end
+
+      it "hiển thị link Sửa cho đầu mối của mình" do
+        get contact_points_path
+        expect(response.body).to include(edit_contact_point_path(cp_a))
+      end
+
+      it "hiển thị đủ 4 tab loại đầu mối" do
+        get contact_points_path
+        expect(response.body).to include("type=water_pump")
+        expect(response.body).to include("type=non_establishment")
+      end
+    end
+
+    context "as unit_admin (non zone-manager)" do
+      before { sign_in admin_b }
+
+      it "chỉ hiển thị tab Sinh hoạt và Công cộng" do
+        get contact_points_path
+        expect(response.body).not_to include("type=water_pump")
+        expect(response.body).not_to include("type=non_establishment")
+      end
+
+      it "hiển thị nút Thêm đầu mối" do
+        get contact_points_path
+        expect(response.body).to include(new_contact_point_path)
+      end
+    end
+  end
+
   describe "DELETE /contact_points/:id (T59)" do
     before { sign_in system_admin }
 

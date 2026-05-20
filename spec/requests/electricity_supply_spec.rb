@@ -27,6 +27,75 @@ RSpec.describe "ElectricitySupply", type: :request do
     end
   end
 
+  describe "view permission guards" do
+    let(:html) { Nokogiri::HTML(response.body) }
+
+    context "as commander (zone-manager)" do
+      let(:commander) { create(:user, :commander, unit: sample.unit_a) }
+      before do
+        sample
+        sign_in commander
+      end
+
+      it "hiển thị dữ liệu nhưng input usage disabled" do
+        get electricity_supply_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("CT-Tổng-KV1")
+        html.css("input[type='number']").each do |input|
+          next if input["type"] == "hidden"
+          expect(input["disabled"]).to be_present,
+            "Expected input '#{input['name']}' to be disabled for commander"
+        end
+      end
+
+      it "nút Lưu toàn bộ bị disabled hoặc ẩn" do
+        get electricity_supply_path
+        submit = html.css("input[name='commit']")
+        if submit.any?
+          expect(submit.first["disabled"]).to be_present,
+            "Expected submit button to be disabled for commander"
+        end
+      end
+    end
+
+    context "as unit_admin (zone-manager)" do
+      let(:admin) { create(:user, :unit_admin, unit: sample.unit_a) }
+      before do
+        sample
+        sign_in admin
+      end
+
+      it "input không bị disabled" do
+        get electricity_supply_path
+        html.css("input[type='number']").each do |input|
+          next if input["type"] == "hidden"
+          expect(input["disabled"]).to be_nil,
+            "Expected input '#{input['name']}' to NOT be disabled for unit_admin"
+        end
+      end
+
+      it "hiển thị nút Lưu toàn bộ không bị disabled" do
+        get electricity_supply_path
+        submit = html.css("input[name='commit']")
+        expect(submit).to be_present
+        expect(submit.first["disabled"]).to be_nil
+      end
+    end
+
+    context "as unit_admin (non zone-manager)" do
+      let(:admin_b) { create(:user, :unit_admin, unit: sample.unit_b) }
+      before do
+        sample
+        sign_in admin_b
+      end
+
+      it "redirect vì không có quyền xem công tơ tổng" do
+        get electricity_supply_path
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
   describe "T70: không có kỳ đang mở" do
     it "show vẫn render, banner cảnh báo" do
       sample.period.update!(closed: true)

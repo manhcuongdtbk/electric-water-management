@@ -52,6 +52,62 @@ RSpec.describe "MeterEntries", type: :request do
     end
   end
 
+  describe "view permission guards" do
+    let(:html) { Nokogiri::HTML(response.body) }
+
+    context "as commander" do
+      let(:commander) { create(:user, :commander, unit: sample.unit_a) }
+      before do
+        sample
+        sign_in commander
+      end
+
+      it "hiển thị dữ liệu nhưng tất cả input đều disabled" do
+        get meter_entries_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("CT-A1")
+        html.css("input[type='number'], input[type='text']").each do |input|
+          next if input["type"] == "hidden"
+          expect(input["disabled"]).to be_present,
+            "Expected input '#{input['name']}' to be disabled for commander"
+        end
+      end
+
+      it "nút Lưu toàn bộ bị disabled hoặc ẩn" do
+        get meter_entries_path
+        submit = html.css("input[name='commit']")
+        if submit.any?
+          expect(submit.first["disabled"]).to be_present,
+            "Expected submit button to be disabled for commander"
+        end
+      end
+    end
+
+    context "as unit_admin" do
+      let(:admin) { create(:user, :unit_admin, unit: sample.unit_a) }
+      before do
+        sample
+        sign_in admin
+      end
+
+      it "input không bị disabled" do
+        get meter_entries_path
+        html.css("input[type='number']").each do |input|
+          next if input["type"] == "hidden"
+          expect(input["disabled"]).to be_nil,
+            "Expected input '#{input['name']}' to NOT be disabled for unit_admin"
+        end
+      end
+
+      it "hiển thị nút Lưu toàn bộ không bị disabled" do
+        get meter_entries_path
+        submit = html.css("input[name='commit']")
+        expect(submit).to be_present
+        expect(submit.first["disabled"]).to be_nil
+      end
+    end
+  end
+
   describe "T74: optimistic locking" do
     it "raise StaleObjectError khi lock_version cũ → flash alert + redirect" do
       sample
