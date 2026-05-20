@@ -76,7 +76,7 @@ class Ability
       contact_point: { zone_id: managed_zone_ids, contact_point_type: "residential" }
     can [:read, :update], NonEstablishmentSnapshot,
       contact_point: { zone_id: managed_zone_ids }
-    can [:create, :read, :update, :destroy], OtherDeduction,
+    can [:read, :update], OtherDeduction,
       contact_point: { zone_id: managed_zone_ids, contact_point_type: "residential" }
     can :read, Calculation, contact_point: { zone_id: managed_zone_ids }
     can :recalculate, Calculation, contact_point: { zone_id: managed_zone_ids }
