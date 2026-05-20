@@ -1,5 +1,5 @@
 <% available_units = Unit.kept.accessible_by(current_ability) %>
-<% available_zones = Zone.accessible_by(current_ability) %>
+<% available_zones = @available_zones %>
 <% available_blocks = Block.kept.accessible_by(current_ability).order(:name) %>
 <% available_groups = Group.kept.accessible_by(current_ability).order(:name) %>
 <% mode_default = contact_point.zone_id.present? ? "zone" : "unit" %>
