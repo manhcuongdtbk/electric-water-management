@@ -2,7 +2,7 @@ class PumpAllocationsController < ApplicationController
   include PeriodGuard
   include AuthorizeResource
 
-  before_action :set_allocation, only: [:show, :edit, :update, :destroy]
+  before_action :set_allocation, only: [:edit, :update, :destroy]
   before_action :require_open_period, only: [:create, :update, :destroy]
   before_action :ensure_allocation_belongs_to_open_period, only: [:edit, :update, :destroy]
 
@@ -19,6 +19,8 @@ class PumpAllocationsController < ApplicationController
                           .includes(:zone, :unit, :contact_point)
                           .joins(:zone)
                           .left_joins(:unit, :contact_point)
+                          .where("units.discarded_at IS NULL OR units.id IS NULL")
+                          .where("contact_points.discarded_at IS NULL OR contact_points.id IS NULL")
     scope = scope.where(period: @period) if @period
     if (q = params[:q]).present?
       like = "%#{q.strip}%"
@@ -27,9 +29,6 @@ class PumpAllocationsController < ApplicationController
     scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:zone, :asc])
     @total_count = scope.count
     @pagy, @pump_allocations = pagy_with_per_page(scope)
-  end
-
-  def show
   end
 
   def new
@@ -87,7 +86,6 @@ class PumpAllocationsController < ApplicationController
 
   def action_auth_key
     case action_name
-    when "show" then :read
     when "edit", "update" then :update
     when "destroy" then :destroy
     end

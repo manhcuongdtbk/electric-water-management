@@ -32,7 +32,7 @@ Rails.application.routes.draw do
     member { patch :reassign_manager }
   end
   resources :units
-  resources :pump_allocations
+  resources :pump_allocations, except: [:show]
   resource :pricing, only: [:show, :update], controller: "pricing" do
     post :open_period
     post :close_period
