@@ -14,6 +14,9 @@ class ZonesController < ApplicationController
 
   def index
     scope = load_collection(Zone).includes(:units, :main_meters, :manager_unit)
+    if current_zone_manager?
+      scope = scope.where(manager_unit_id: current_user.unit_id)
+    end
     if params[:sort].to_s == "manager_unit"
       scope = scope.joins("LEFT JOIN units manager_units ON manager_units.id = zones.manager_unit_id")
     end
