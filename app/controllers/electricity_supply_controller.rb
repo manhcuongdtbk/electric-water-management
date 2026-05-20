@@ -1,6 +1,7 @@
 class ElectricitySupplyController < ApplicationController
   include PeriodGuard
   include AuthorizeResource
+  include BusinessRoleRequired
 
   before_action :require_open_period, only: [:update]
 

@@ -1,6 +1,7 @@
 class PumpAllocationsController < ApplicationController
   include PeriodGuard
   include AuthorizeResource
+  include BusinessRoleRequired
 
   before_action :set_allocation, only: [:edit, :update, :destroy]
   before_action :require_open_period, only: [:create, :update, :destroy]

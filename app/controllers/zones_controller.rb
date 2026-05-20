@@ -1,6 +1,7 @@
 class ZonesController < ApplicationController
   include AuthorizeResource
   include StructureChangeGuard
+  include BusinessRoleRequired
 
   before_action :set_zone, only: [:show, :edit, :update, :destroy, :reassign_manager]
   before_action :require_latest_period_when_open,

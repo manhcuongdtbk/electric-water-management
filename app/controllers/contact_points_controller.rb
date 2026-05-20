@@ -2,6 +2,7 @@ class ContactPointsController < ApplicationController
   include PeriodGuard
   include StructureChangeGuard
   include AuthorizeResource
+  include BusinessRoleRequired
 
   before_action :set_contact_point, only: [:show, :edit, :update, :destroy]
   before_action :set_available_zones, only: [:new, :edit, :create, :update]
