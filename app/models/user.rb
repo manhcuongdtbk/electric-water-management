@@ -23,6 +23,7 @@ class User < ApplicationRecord
   validates :password_confirmation, presence: true, if: :password_required?
   validate :password_complexity, if: :password_required?
 
+  before_validation :clear_unit_for_non_unit_scoped_roles
   before_destroy :prevent_default_account_destroy
 
   def self.find_for_database_authentication(warden_conditions)
@@ -46,6 +47,10 @@ class User < ApplicationRecord
   end
 
   private
+
+  def clear_unit_for_non_unit_scoped_roles
+    self.unit_id = nil if technician? || system_admin?
+  end
 
   def password_complexity
     return if password.blank?
