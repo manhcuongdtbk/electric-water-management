@@ -10,6 +10,7 @@ class UnitConfigController < ApplicationController
     @period = current_period
     @unit_config = @period && @unit ? UnitConfig.find_by(unit: @unit, period: @period) : nil
     @other_deductions = scope_other_deductions
+    @zone_other_deductions = scope_zone_other_deductions
   end
 
   def update
@@ -31,8 +32,9 @@ class UnitConfigController < ApplicationController
         end
       end
 
+      all_editable_ods = scope_other_deductions.or(scope_zone_other_deductions)
       (params[:other_deductions] || {}).each do |id, attrs|
-        od = scope_other_deductions.find_by(id: id)
+        od = all_editable_ods.find_by(id: id)
         next unless od
         authorize!(:update, od)
         permitted = attrs.permit(:other_type, :other_value, :lock_version)
@@ -48,6 +50,7 @@ class UnitConfigController < ApplicationController
       flash.now[:alert] = errors_collected.map { |e| "#{e[:name]}: #{e[:msgs].join(', ')}" }.join("\n")
       @unit_config = UnitConfig.find_by(unit: @unit, period: @period)
       @other_deductions = scope_other_deductions
+      @zone_other_deductions = scope_zone_other_deductions
       render :show, status: :unprocessable_entity
     else
       redirect_to unit_config_path(unit_id: @unit&.id), notice: t("unit_config.flash.saved")
@@ -73,5 +76,20 @@ class UnitConfigController < ApplicationController
                   .merge(ContactPoint.kept)
                   .accessible_by(current_ability)
                   .order("contact_points.name")
+  end
+
+  def scope_zone_other_deductions
+    return OtherDeduction.none unless @period
+    managed_zone_ids = Zone.kept.where(manager_unit_id: current_user.unit_id).pluck(:id)
+    return OtherDeduction.none if managed_zone_ids.empty? && !current_user.system_admin?
+    scope = OtherDeduction.joins(:contact_point).includes(:contact_point)
+                          .where(period: @period,
+                                 contact_points: { zone_id: managed_zone_ids,
+                                                   unit_id: nil,
+                                                   contact_point_type: "residential" })
+                          .merge(ContactPoint.kept)
+                          .accessible_by(current_ability)
+                          .order("contact_points.name")
+    scope
   end
 end
