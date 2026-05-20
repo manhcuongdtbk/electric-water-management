@@ -34,12 +34,37 @@ export default class extends Controller {
     }
   }
 
-  // Filter block/group dropdown theo đơn vị đang chọn.
   refreshUnitScope() {
     if (!this.hasUnitSelectTarget) return
     const unitId = this.unitSelectTarget.value
     if (this.hasBlockSelectTarget) this.filterOptionsByUnit(this.blockSelectTarget, unitId)
-    if (this.hasGroupSelectTarget) this.filterOptionsByUnit(this.groupSelectTarget, unitId)
+    this.refreshBlockScope()
+  }
+
+  refreshBlockScope() {
+    if (!this.hasGroupSelectTarget) return
+    const unitId = this.hasUnitSelectTarget ? this.unitSelectTarget.value : ""
+    const blockId = this.hasBlockSelectTarget ? this.blockSelectTarget.value : ""
+
+    let currentSelectionStillValid = false
+    Array.from(this.groupSelectTarget.options).forEach((option) => {
+      if (option.value === "") { option.hidden = false; return }
+      if (unitId !== "" && option.dataset.unitId !== unitId) {
+        option.hidden = true
+        return
+      }
+      if (blockId === "") {
+        option.hidden = false
+        if (option.selected) currentSelectionStillValid = true
+        return
+      }
+      const match = option.dataset.blockId === blockId
+      option.hidden = !match
+      if (option.selected && match) currentSelectionStillValid = true
+    })
+    if (!currentSelectionStillValid && (unitId !== "" || blockId !== "")) {
+      this.groupSelectTarget.value = ""
+    }
   }
 
   filterOptionsByUnit(select, unitId) {

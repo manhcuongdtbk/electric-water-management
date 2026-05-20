@@ -22,10 +22,9 @@
   <div>
     <%= f.label :unit_id, "Đơn vị", class: "block text-sm font-medium text-gray-700 mb-1" %>
     <% if current_user.unit_id.present? %>
-      <%= f.hidden_field :unit_id %>
+      <%= f.hidden_field :unit_id, data: { scoped_block_select_target: "unitSelect" } %>
       <input type="text" disabled value="<%= current_user.unit.name %>"
-             class="block w-full rounded border border-gray-300 px-3 py-2 text-sm bg-gray-50"
-             data-scoped-block-select-target="unitSelect">
+             class="block w-full rounded border border-gray-300 px-3 py-2 text-sm bg-gray-50">
     <% else %>
       <%= f.select :unit_id, available_units.order(:name).pluck(:name, :id),
           { include_blank: "— Chọn đơn vị —" },
