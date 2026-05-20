@@ -19,13 +19,16 @@
 
   <div>
     <%= f.label :zone_id, "Khu vực", class: "block text-sm font-medium text-gray-700 mb-1" %>
-    <% available_zones = can?(:manage, PumpAllocation) ?
-         Zone.kept.order(:name) :
-         Zone.kept.where(manager_unit_id: current_user.unit_id).order(:name) %>
-    <%= f.select :zone_id, available_zones.pluck(:name, :id),
-        { include_blank: "— Chọn khu vực —" },
-        class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
-        data: { pump_allocation_form_target: "zoneSelect", action: "change->pump-allocation-form#refreshZoneScope" } %>
+    <% if current_zone_manager? %>
+      <%= f.hidden_field :zone_id, data: { pump_allocation_form_target: "zoneSelect" } %>
+      <input type="text" disabled value="<%= pump_allocation.zone&.name %>"
+             class="block w-full rounded border border-gray-300 px-3 py-2 text-sm bg-gray-50">
+    <% else %>
+      <%= f.select :zone_id, Zone.kept.order(:name).pluck(:name, :id),
+          { include_blank: "— Chọn khu vực —" },
+          class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
+          data: { pump_allocation_form_target: "zoneSelect", action: "change->pump-allocation-form#refreshZoneScope" } %>
+    <% end %>
   </div>
 
   <%# ====== Đối tượng nhận: Đơn vị HOẶC Đầu mối ====== %>
