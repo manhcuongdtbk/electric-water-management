@@ -79,17 +79,16 @@ class UnitConfigController < ApplicationController
   end
 
   def scope_zone_other_deductions
-    return OtherDeduction.none unless @period
-    managed_zone_ids = Zone.kept.where(manager_unit_id: current_user.unit_id).pluck(:id)
-    return OtherDeduction.none if managed_zone_ids.empty? && !current_user.system_admin?
-    scope = OtherDeduction.joins(:contact_point).includes(:contact_point)
-                          .where(period: @period,
-                                 contact_points: { zone_id: managed_zone_ids,
-                                                   unit_id: nil,
-                                                   contact_point_type: "residential" })
-                          .merge(ContactPoint.kept)
-                          .accessible_by(current_ability)
-                          .order("contact_points.name")
-    scope
+    return OtherDeduction.none unless @period && @unit
+    managed_zone_ids = Zone.kept.where(manager_unit_id: @unit.id).pluck(:id)
+    return OtherDeduction.none if managed_zone_ids.empty?
+    OtherDeduction.joins(:contact_point).includes(:contact_point)
+                  .where(period: @period,
+                         contact_points: { zone_id: managed_zone_ids,
+                                           unit_id: nil,
+                                           contact_point_type: "residential" })
+                  .merge(ContactPoint.kept)
+                  .accessible_by(current_ability)
+                  .order("contact_points.name")
   end
 end

@@ -32,6 +32,7 @@
 <% end %>
 
 <% if @unit && current_period %>
+  <% can_edit = !no_open_period? && (@unit_config ? can?(:update, @unit_config) : can?(:update, UnitConfig.new(unit: @unit, period: current_period))) %>
   <%= form_with url: unit_config_path, method: :patch, local: true, class: "space-y-6" do |f| %>
     <%= hidden_field_tag :unit_id, @unit.id %>
 
@@ -42,7 +43,7 @@
         <%= hidden_field_tag "unit_config[lock_version]", @unit_config.lock_version %>
         <div class="flex items-center space-x-2">
           <%= number_field_tag "unit_config[unit_public_rate]", @unit_config.unit_public_rate,
-              step: "0.01", disabled: no_open_period?,
+              step: "0.01", disabled: !can_edit,
               class: "w-32 rounded border border-gray-300 px-3 py-2 text-sm text-right" %>
           <span class="text-sm text-gray-700">%</span>
         </div>
@@ -56,7 +57,7 @@
         <h3 class="text-base font-semibold text-gray-900">Cột "Khác" cho từng đầu mối sinh hoạt thuộc đơn vị</h3>
       </div>
       <% if @other_deductions.any? %>
-        <%= render "unit_config/other_deductions_table", other_deductions: @other_deductions %>
+        <%= render "unit_config/other_deductions_table", other_deductions: @other_deductions, can_edit: can_edit %>
       <% else %>
         <p class="px-4 py-3 text-sm text-gray-500">Chưa có đầu mối sinh hoạt nào trong đơn vị.</p>
       <% end %>
@@ -68,14 +69,15 @@
         <div class="p-4 border-b border-gray-200">
           <h3 class="text-base font-semibold text-gray-900">Cột "Khác" cho từng đầu mối sinh hoạt thuộc khu vực</h3>
         </div>
-        <%= render "unit_config/other_deductions_table", other_deductions: @zone_other_deductions %>
+        <%= render "unit_config/other_deductions_table", other_deductions: @zone_other_deductions, can_edit: can_edit %>
       </div>
     <% end %>
 
-    <div class="flex space-x-2">
-      <%= submit_tag "Lưu cấu hình",
-          disabled: no_open_period?,
-          class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 disabled:bg-gray-300 cursor-pointer" %>
-    </div>
+    <% if can_edit %>
+      <div class="flex space-x-2">
+        <%= submit_tag "Lưu cấu hình",
+            class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 cursor-pointer" %>
+      </div>
+    <% end %>
   <% end %>
 <% end %>
