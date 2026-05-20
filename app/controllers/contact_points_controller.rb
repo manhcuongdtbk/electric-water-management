@@ -42,7 +42,11 @@ class ContactPointsController < ApplicationController
   end
 
   def new
-    @contact_point = ContactPoint.new(contact_point_type: params[:type] || "residential")
+    requested_type = params[:type] || "residential"
+    if current_user.unit_id.present? && %w[water_pump non_establishment].include?(requested_type)
+      requested_type = "residential"
+    end
+    @contact_point = ContactPoint.new(contact_point_type: requested_type)
     @contact_point.unit_id = current_user.unit_id if current_user.unit_id.present?
     @contact_point.meters.build if needs_meter?(@contact_point)
     authorize!(:create, @contact_point)
