@@ -43,13 +43,13 @@
 
   <% case contact_point.contact_point_type %>
   <% when "residential" %>
-    <%= render "form_residential", f: f, contact_point: contact_point %>
+    <%= render "form_residential", f: f, contact_point: contact_point, available_zones: @available_zones %>
   <% when "public" %>
-    <%= render "form_public", f: f, contact_point: contact_point %>
+    <%= render "form_public", f: f, contact_point: contact_point, available_zones: @available_zones %>
   <% when "water_pump" %>
-    <%= render "form_water_pump", f: f, contact_point: contact_point %>
+    <%= render "form_water_pump", f: f, contact_point: contact_point, available_zones: @available_zones %>
   <% when "non_establishment" %>
-    <%= render "form_non_establishment", f: f, contact_point: contact_point %>
+    <%= render "form_non_establishment", f: f, contact_point: contact_point, available_zones: @available_zones %>
   <% end %>
 
   <div class="flex space-x-2 pt-4">
