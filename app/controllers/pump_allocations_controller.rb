@@ -34,7 +34,7 @@ class PumpAllocationsController < ApplicationController
 
   def new
     @pump_allocation = PumpAllocation.new(period: current_period, coefficient: 1)
-    authorize!(:create, @pump_allocation)
+    authorize!(:create, PumpAllocation)
   end
 
   def create
