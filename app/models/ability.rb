@@ -37,8 +37,7 @@ class Ability
     can :manage, Zone, discarded_at: nil
     can :recalculate, Calculation
 
-    can :read, User
-    can :manage, User, role: %w[system_admin unit_admin commander]
+    can :manage, User
     cannot [:create, :update, :destroy], User, role: "technician"
 
     can :read, PaperTrail::Version
