@@ -5,7 +5,8 @@
                      end %>
 <% available_units = Unit.kept.accessible_by(current_ability).order(:name) %>
 
-<%= form_with model: user, local: true, class: "space-y-4" do |f| %>
+<%= form_with model: user, local: true, class: "space-y-4",
+    data: { controller: "role-unit-toggle" } do |f| %>
   <% if user.errors.any? %>
     <div class="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-700">
       <ul class="list-disc list-inside">
@@ -41,15 +42,18 @@
     <%= f.select :role,
         available_roles.map { |r| [t("activerecord.attributes.user.roles.#{r}", default: r), r] },
         { include_blank: "— Chọn vai trò —" },
-        class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+        { class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
+          data: { role_unit_toggle_target: "role",
+                  action: "change->role-unit-toggle#toggle" } } %>
   </div>
 
-  <div>
+  <div data-role-unit-toggle-target="unitContainer">
     <%= f.label :unit_id, "Đơn vị (bắt buộc cho quản trị viên đơn vị / chỉ huy)", class: "block text-sm font-medium text-gray-700 mb-1" %>
     <%= f.select :unit_id,
         available_units.pluck(:name, :id),
         { include_blank: "— Không thuộc đơn vị nào —" },
-        class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
+        { class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
+          data: { role_unit_toggle_target: "unitSelect" } } %>
   </div>
 
   <div class="border-t border-gray-200 pt-4"
