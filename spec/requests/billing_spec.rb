@@ -66,6 +66,26 @@ RSpec.describe "Billing", type: :request do
       end
     end
 
+    context "nút Xuất Excel hiển thị cho mọi vai trò nghiệp vụ (C4)" do
+      it "system_admin" do
+        sign_in create(:user, :system_admin)
+        get billing_path
+        expect(response.body).to include("Xuất Excel")
+      end
+
+      it "unit_admin" do
+        sign_in create(:user, :unit_admin, unit: sample.unit_a)
+        get billing_path
+        expect(response.body).to include("Xuất Excel")
+      end
+
+      it "commander" do
+        sign_in create(:user, :commander, unit: sample.unit_a)
+        get billing_path
+        expect(response.body).to include("Xuất Excel")
+      end
+    end
+
     context "format :xlsx" do
       let(:user) { create(:user, :system_admin) }
       before { sign_in user }

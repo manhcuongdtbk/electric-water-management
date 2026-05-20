@@ -256,6 +256,27 @@ RSpec.describe "ContactPoints", type: :request do
     end
   end
 
+  describe "current_zone_manager? bỏ qua khu vực đã xóa (C2)" do
+    let!(:zone) { create(:zone, name: "KV C2") }
+    let!(:unit) { create(:unit, name: "Đơn vị C2", zone: zone) }
+    let!(:admin) { create(:user, :unit_admin, unit: unit) }
+
+    before { zone.update!(manager_unit: unit) }
+
+    it "khu vực còn → unit_admin quản lý khu vực thấy tab type=water_pump" do
+      sign_in admin
+      get contact_points_path
+      expect(response.body).to include("type=water_pump")
+    end
+
+    it "khu vực đã xóa → unit_admin không còn là zone-manager, không thấy type=water_pump" do
+      zone.update_column(:discarded_at, Time.current)
+      sign_in admin
+      get contact_points_path
+      expect(response.body).not_to include("type=water_pump")
+    end
+  end
+
   describe "zone field on new/edit form" do
     let!(:zone_managed) { create(:zone, name: "KV Alpha") }
     let!(:zone_other) { create(:zone, name: "KV Beta") }
