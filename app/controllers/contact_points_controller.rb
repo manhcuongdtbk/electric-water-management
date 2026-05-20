@@ -128,7 +128,7 @@ class ContactPointsController < ApplicationController
     @available_zones = if current_user.system_admin?
       Zone.kept
     else
-      Zone.kept.where(manager_unit_id: current_user.unit_id)
+      Zone.kept.where(id: current_user.unit&.zone_id)
     end
   end
 
