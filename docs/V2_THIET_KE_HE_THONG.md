@@ -1,9 +1,9 @@
 # Thiết kế hệ thống quản lý điện nội bộ Sư đoàn — Hệ thống v2
 
-> **Phiên bản tài liệu:** 2.6.0
+> **Phiên bản tài liệu:** 2.7.0
 > **Ngày:** 20/05/2026
 > **Tính chất:** Tài liệu thiết kế hệ thống v2, nguồn sự thật cho implementation.
-> **Nguồn nghiệp vụ:** V2_XAC_NHAN_NGHIEP_VU (phiên bản mới nhất tại thời điểm thiết kế: v2.8.0)
+> **Nguồn nghiệp vụ:** V2_XAC_NHAN_NGHIEP_VU (phiên bản mới nhất tại thời điểm thiết kế: v2.10.0)
 
 ### Nguyên tắc viết
 
@@ -370,7 +370,7 @@ Không có cột meter_type — loại công tơ luôn trùng loại đầu mố
 | zone_id | foreign key → zones | Bắt buộc |
 | discarded_at | datetime | Nullable. Soft delete (discard) |
 
-Bảng riêng phòng tương lai nhiều công tơ tổng per khu vực. Hiện tại mỗi khu vực có đúng 1.
+Bảng riêng phòng tương lai nhiều công tơ tổng per khu vực. Hiện tại mỗi khu vực có đúng 1: luồng tạo/sửa khu vực chỉ cho tạo đúng 1 công tơ tổng. Chưa đặt unique constraint trên main_meters.zone_id ở database vì bảng để mở cho tương lai nhiều công tơ tổng.
 
 > **Quyết định bảng riêng thay vì cột trên zones:** Nghiệp vụ v2.6.0 ghi "đúng 1" nhưng tương lai có thể nhiều hơn. Gộp vào zones (1 cột main_meter_name) thì khi cần nhiều phải migration lớn. Bảng riêng linh hoạt hơn.
 > **Tradeoff:** Thêm 1 bảng + 1 model cho quan hệ hiện tại 1-1. Chấp nhận được vì chi phí thấp.
@@ -490,7 +490,7 @@ Tổng quân số đầu mối sinh hoạt ≥ 1: validate ở tầng controller
 | unit_id | foreign key → units | Nullable |
 | contact_point_id | foreign key → contact_points | Nullable |
 | fixed_percentage | decimal | Nullable. Có = phần trăm cố định. Null = theo hệ số |
-| coefficient | decimal | Mặc định: 1. Hệ số nhân quân số |
+| coefficient | decimal | ≥ 0. Mặc định: 1. Hệ số nhân quân số |
 | lock_version | integer | Mặc định: 0. Optimistic locking |
 
 Validation: đúng 1 trong unit_id hoặc contact_point_id có giá trị.
@@ -689,7 +689,7 @@ Flow:
 
 Collect warnings từ cả 3 bước, trả về cho UI hiển thị.
 
-Tính toán lần đầu khi mở bảng tính tiền, cache trong bảng calculations. Bấm "Tính toán lại" → gọi orchestrator lại, ghi đè calculations.
+Tính toán lần đầu khi mở bảng tính tiền hoặc trang tổng quan, cache trong bảng calculations. Bấm "Tính toán lại" → gọi orchestrator lại, ghi đè calculations.
 
 Orchestrator luôn tính toàn zone (vì tổn hao và bơm nước tính trên toàn zone). Nếu 1 đơn vị trong zone chưa nhập liệu → engine vẫn chạy với data hiện có, nhưng trả cảnh báo "đơn vị X chưa nhập liệu" hiển thị trên bảng tính tiền và trang tổng quan. Kết quả tổn hao và bơm nước sẽ không chính xác cho đến khi tất cả đơn vị nhập xong — cảnh báo giúp system_admin biết vấn đề ở đâu.
 
@@ -701,7 +701,7 @@ Kỳ đã đóng: nút "Tính toán lại" vẫn hiển thị và hoạt động
 
 ## Phân quyền
 
-Dùng gem CanCanCan. 4 vai trò nghiệp vụ + 1 vai trò kỹ thuật. Đơn vị quản lý khu vực không phải vai trò riêng — là unit_admin được ủy quyền thêm qua zones.manager_unit_id.
+Dùng gem CanCanCan. 4 vai trò: 3 vai trò nghiệp vụ (system_admin, unit_admin, commander) + 1 vai trò kỹ thuật (technician). Đơn vị quản lý khu vực không phải vai trò riêng — là unit_admin được ủy quyền thêm qua zones.manager_unit_id.
 
 ### system_admin (quản trị viên hệ thống)
 
@@ -1223,6 +1223,14 @@ Mọi thao tác trên hệ thống đều được ghi lại (PaperTrail). Syste
 ---
 
 ## Lịch sử thay đổi
+
+### v2.7.0 (20/05/2026)
+
+- Cập nhật tham chiếu nguồn nghiệp vụ ở đầu tài liệu: từ v2.8.0 sang v2.10.0. Thiết kế đã phản ánh đầy đủ nghiệp vụ v2.9.0 từ bản v2.5.0; nghiệp vụ v2.10.0 gồm các điểm làm rõ vốn đã có sẵn trong thiết kế.
+- Engine tính toán: bổ sung trang tổng quan là điểm kích hoạt tính toán lần đầu, bên cạnh bảng tính tiền (theo nghiệp vụ mục 14).
+- Schema pump_allocations: bổ sung ràng buộc coefficient ≥ 0 (theo nghiệp vụ mục 24).
+- Schema main_meters: ghi rõ cách đảm bảo "mỗi khu vực đúng 1 công tơ tổng" hiện tại — qua luồng tạo/sửa khu vực, chưa đặt unique constraint ở database (theo nghiệp vụ mục 5 và 22).
+- Phân quyền: sửa cách diễn đạt số vai trò thành "4 vai trò: 3 nghiệp vụ + 1 kỹ thuật". Cách viết cũ "4 vai trò nghiệp vụ + 1 vai trò kỹ thuật" ngụ ý 5 vai trò, lệch với enum role và nghiệp vụ mục 11.
 
 ### v2.6.0 (20/05/2026)
 

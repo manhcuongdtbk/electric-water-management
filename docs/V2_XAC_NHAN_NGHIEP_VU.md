@@ -1,7 +1,7 @@
 # Xác nhận nghiệp vụ — Hệ thống quản lý điện nội bộ Sư đoàn (Hệ thống v2)
 
-> **Phiên bản:** 2.8.0
-> **Ngày:** 18/05/2026
+> **Phiên bản:** 2.10.0
+> **Ngày:** 20/05/2026
 > **Tính chất:** Tài liệu nội bộ giữa chủ dự án và đội phát triển. Là nguồn sự thật duy nhất cho thiết kế và triển khai.
 > **Ngôn ngữ hệ thống:** Toàn bộ hệ thống phải được Việt hóa 100% (giao diện, thông báo, cảnh báo, xuất file) vì hệ thống dùng trong Sư đoàn Quân đội nhân dân Việt Nam.
 
@@ -445,6 +445,7 @@ graph TD
 
 - Chỉ làm việc kỹ thuật, không xem được dữ liệu nghiệp vụ.
 - Quản lý mọi tài khoản trong hệ thống.
+- Ngoại lệ của quy tắc không xem dữ liệu nghiệp vụ: ở form tạo tài khoản, kỹ thuật viên hệ thống thấy danh sách đơn vị (chỉ đọc) để gán đơn vị cho tài khoản quản trị viên đơn vị hoặc chỉ huy đơn vị.
 - Xem nhật ký hệ thống.
 - Tạo backup toàn bộ data, restore hệ thống về bản backup đã tạo (tối đa 3 bản backup).
 
@@ -598,6 +599,7 @@ Trang tổng quan tách riêng với bảng tính tiền, là trang đầu tiên
 - Hover vào dòng nào thì highlight dòng đó.
 - Các dòng có thể được nhóm lại theo 1 ô (grouped rows, ô đầu tiên merge dọc).
 - Các trang có hiển thị danh sách số liệu phải có hàng tổng ở cuối để dễ dàng tra soát.
+- Hệ thống dùng trên máy tính bàn, không yêu cầu giao diện responsive cho điện thoại hay máy tính bảng.
 
 ---
 
@@ -754,7 +756,7 @@ Người dùng chỉ cần sửa chỗ có thay đổi. Mọi thao tác ở kỳ
 ### 27.3. Đầu mối và đơn vị
 
 - **Đầu mối sinh hoạt phải có ít nhất 1 người.** Không cho phép quân số = 0.
-- **Trùng tên:** không cho phép trùng tên đầu mối, công tơ, đơn vị, khu vực trong cùng phạm vi.
+- **Trùng tên:** không cho phép trùng tên đầu mối, công tơ, đơn vị, khu vực trong cùng phạm vi. Riêng đầu mối: hai đầu mối khác loại (ví dụ sinh hoạt và công cộng) trong cùng đơn vị hoặc khu vực được phép trùng tên — chỉ cấm trùng tên giữa các đầu mối cùng loại trong cùng phạm vi.
 - **Xóa đầu mối, công tơ đang có dữ liệu kỳ cũ:** cho phép xóa, dữ liệu kỳ cũ giữ nguyên.
 - **Không cho phép chuyển đơn vị sang khu vực khác.**
 
@@ -792,6 +794,7 @@ Người dùng chỉ cần sửa chỗ có thay đổi. Mọi thao tác ở kỳ
 - Hệ thống hoạt động offline trên mạng nội bộ Sư đoàn, không cần internet.
 - Quên mật khẩu: kỹ thuật viên hệ thống hoặc quản trị viên hệ thống reset cho. Không có tính năng quên mật khẩu qua email.
 - Người dùng tự đổi mật khẩu của mình được.
+- Mật khẩu tối thiểu 8 ký tự, phải có ít nhất 1 chữ hoa, 1 chữ thường, 1 số, 1 ký tự đặc biệt.
 - Khi 2 người nhập liệu cùng lúc cho cùng 1 đơn vị: người lưu trước thành công bình thường. Người lưu sau nhận cảnh báo "dữ liệu đã bị thay đổi bởi người khác", hệ thống hiển thị dữ liệu mới nhất để người đó xem lại rồi quyết định lưu lại hay không.
 - Tự thoát sau 2 giờ không hoạt động.
 - 1 tài khoản cho phép đăng nhập nhiều thiết bị cùng lúc.
@@ -802,6 +805,13 @@ Người dùng chỉ cần sửa chỗ có thay đổi. Mọi thao tác ở kỳ
 ---
 
 ## 29. Lịch sử thay đổi
+
+### v2.10.0 (20/05/2026)
+
+- Yêu cầu kỹ thuật (mục 28): thêm quy định độ phức tạp mật khẩu — tối thiểu 8 ký tự, phải có ít nhất 1 chữ hoa, 1 chữ thường, 1 số, 1 ký tự đặc biệt.
+- Kỹ thuật viên hệ thống (mục 11.1): ghi rõ ngoại lệ — ở form tạo tài khoản được thấy danh sách đơn vị (chỉ đọc) để gán cho tài khoản quản trị viên đơn vị / chỉ huy đơn vị.
+- Yêu cầu giao diện chung (mục 19): ghi rõ hệ thống dùng trên máy tính bàn, không yêu cầu giao diện responsive.
+- Trùng tên đầu mối (mục 27.3): làm rõ — hai đầu mối khác loại trong cùng đơn vị/khu vực được phép trùng tên, chỉ cấm trùng tên giữa các đầu mối cùng loại.
 
 ### v2.9.0 (20/05/2026)
 
