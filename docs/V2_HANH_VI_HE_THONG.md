@@ -105,7 +105,7 @@ Kỳ mở là kỳ có year/month lớn nhất.
 
 - **Cấu trúc:** Tạo/sửa/xóa zones, units, contact_points, meters, blocks, groups, ranks.
 - **Nhập liệu:** Tạo/sửa meter_readings, main_meter_readings, personnel_entries, unit_configs, other_deductions, pump_allocations.
-- **Tính toán:** Recalculate hoạt động.
+- **Tính toán:** Recalculate hoạt động. Engine luôn dùng `.with_discarded` (ZoneQuery) — kỳ mới nhất không ảnh hưởng vì entity đã xóa không có data (cleanup).
 - **Thoát:** Đóng kỳ.
 
 ### Trạng thái C: Kỳ cũ mở lại
@@ -116,7 +116,7 @@ Kỳ mở KHÔNG phải kỳ mới nhất (có kỳ đóng với year/month lớ
 
 - **Cấu trúc:** StructureChangeGuard chặn mọi thay đổi cấu trúc.
 - **Nhập liệu:** Chỉ sửa số liệu per kỳ (meter_readings, personnel_entries, unit_configs, other_deductions, pump_allocations, main_meter_readings).
-- **Tính toán:** Recalculate hoạt động (engine dùng `.with_discarded`).
+- **Tính toán:** Recalculate hoạt động. Engine luôn dùng `.with_discarded` — kỳ cũ có data entity đã xóa nên engine tính đúng.
 - **Thoát:** Đóng kỳ (cảnh báo nếu reading_end lệch kỳ kế tiếp, không tự sửa kỳ kế tiếp).
 
 ### Quy tắc xuyên suốt
@@ -181,6 +181,19 @@ Cấu hình tỷ lệ công cộng đơn vị + cột "Khác" (other_deductions)
 | CMD-ZM | Khu vực mình | Không (chỉ xem) | — |
 | UA | Không thấy | — | — |
 | CMD | Không thấy | — | — |
+| TECH | Redirect /users | — | — |
+
+### Nhập số điện lực (/electricity_supply)
+
+Main_meter_readings **không kế thừa** giữa các kỳ — nhập mới mỗi kỳ (1 số sử dụng, không có đầu kỳ/cuối kỳ). Lần đầu vào trang cho kỳ mới, main_meters hiện "Chưa nhập". Lưu tạo record mới.
+
+| Vai trò | Thấy | Sửa | Đặc biệt |
+|---|---|---|---|
+| SA | Tất cả main_meters | Có | — |
+| UA-ZM | Main_meters khu vực mình | Có | — |
+| CMD-ZM | Main_meters khu vực mình | Không (disabled) | Sidebar ẩn, truy cập trực tiếp xem được |
+| UA | Redirect (không có main_meters) | — | `authorize_or_redirect` chặn |
+| CMD | Redirect | — | — |
 | TECH | Redirect /users | — | — |
 
 ### Tổng quan (/dashboard)
@@ -268,8 +281,10 @@ Chỉ copy entity `.kept` (không copy entity đã xóa).
 
 | Entity | after_create callback |
 |---|---|
-| ContactPoint residential | meter_readings (start=0) + personnel_entries (count từ form) + other_deductions (fixed, 0) |
-| ContactPoint non_establishment | non_establishment_snapshots (personnel_count từ form) |
+| ContactPoint residential | meter_readings (start=0) qua meters + personnel_entries (count từ form) + other_deductions (fixed, 0) |
+| ContactPoint public | meter_readings (start=0) qua meters. Không có personnel_entries, other_deductions |
+| ContactPoint water_pump | meter_readings (start=0) qua meters. Không có personnel_entries, other_deductions |
+| ContactPoint non_establishment | non_establishment_snapshots (personnel_count từ form). Không có công tơ, không có meter_readings |
 | Meter | meter_reading (start=0, no_loss từ meter) |
 | Unit | unit_config (unit_public_rate = 0%) |
 | Rank | personnel_entries (count=0) cho mọi đầu mối sinh hoạt hiện có |
@@ -286,7 +301,7 @@ Khi đóng kỳ đã mở lại, hệ thống kiểm tra: `reading_end` kỳ nà
 |---|---|---|
 | **Query hiển thị data per kỳ** (billing, meter_entries, dashboard, ...) | Không dùng `.kept` — data per kỳ tự lọc | Kỳ cũ cần hiện entity đã xóa |
 | **SA dropdown filter** (zone, unit khi xem billing/history) | `.with_discarded` | SA cần chọn zone/unit đã xóa để xem kỳ cũ |
-| **zones_in_scope** (recalculate, warnings) | Kỳ mới nhất: `.kept`. Kỳ cũ mở lại: `.with_discarded` | Kỳ cũ phải tính zone đã xóa (data còn). Kỳ mới nhất dùng `.kept` tránh cảnh báo nhiễu cho zone đã xóa |
+| **zones_in_scope** (recalculate, warnings) | Kỳ mới nhất (`period.latest?`): `.kept`. Kỳ không phải mới nhất: `.with_discarded` | Kỳ không phải mới nhất có thể có data zone đã xóa (cần tính + cảnh báo). Kỳ mới nhất: zone đã xóa không có data (cleanup) → `.kept` tránh cảnh báo nhiễu |
 | **Engine** (ZoneQuery, calculators) | `.with_discarded` | Tính toán kỳ cũ phải bao gồm entity đã xóa |
 | **Model callbacks** (discard, create, validate) | `.kept` | Thao tác trên trạng thái hiện tại |
 | **PeriodService snapshot** | `.kept` | Chỉ copy entity còn tồn tại cho kỳ mới |
