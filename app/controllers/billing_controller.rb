@@ -64,8 +64,8 @@ class BillingController < ApplicationController
 
   def resolve_filter
     if current_user.role == "system_admin"
-      zone = params[:zone_id].present? ? Zone.kept.find_by(id: params[:zone_id]) : nil
-      unit = params[:unit_id].present? ? Unit.kept.find_by(id: params[:unit_id]) : nil
+      zone = params[:zone_id].present? ? Zone.with_discarded.find_by(id: params[:zone_id]) : nil
+      unit = params[:unit_id].present? ? Unit.with_discarded.find_by(id: params[:unit_id]) : nil
       [zone, unit]
     else
       unit = current_user.unit
@@ -119,14 +119,14 @@ class BillingController < ApplicationController
 
   def available_zones_for_filter
     if current_user.role == "system_admin"
-      Zone.kept.order(:name)
+      Zone.with_discarded.order(:name)
     else
-      [current_user.unit&.zone].compact.select(&:kept?)
+      [current_user.unit&.zone].compact
     end
   end
 
   def available_units_for_filter(zone)
-    base = Unit.kept.accessible_by(current_ability)
+    base = Unit.with_discarded.order(:name)
     base = base.where(zone_id: zone.id) if zone
     base.order(:name)
   end

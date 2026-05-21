@@ -57,4 +57,50 @@ RSpec.describe "Hiển thị data kỳ cũ cho entity đã xóa (request)", type
       expect(response.body).not_to include(meter_name)
     end
   end
+
+  describe "SA filter dropdown bao gồm zone đã xóa" do
+    before do
+      # Xóa toàn bộ zone (xóa hết CPs → units → zone)
+      sample.contact_points.each_value(&:discard)
+      sample.unit_a.users.destroy_all
+      sample.unit_b.users.destroy_all
+      sample.unit_a.discard
+      sample.unit_b.discard
+      sample.zone.discard
+    end
+
+    it "GET /history kỳ 5: dropdown zone chứa zone đã xóa" do
+      get history_path(mode: "single", period_id: period_5.id)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(sample.zone.name)
+    end
+
+    it "GET /history kỳ 5: filter theo zone đã xóa → thấy data" do
+      get history_path(mode: "single", period_id: period_5.id, zone_id: sample.zone.id)
+      expect(response).to have_http_status(:ok)
+      # Billing::Query trả calculations cho zone đã xóa ở kỳ 5
+      expect(response.body).to include("Ban Tác huấn")
+    end
+  end
+
+  describe "POST /billing/recalculate kỳ cũ có zone đã xóa" do
+    before do
+      sample.contact_points.each_value(&:discard)
+      sample.unit_a.users.destroy_all
+      sample.unit_b.users.destroy_all
+      sample.unit_a.discard
+      sample.unit_b.discard
+      sample.zone.discard
+      service.close_period(period_6)
+      service.reopen_period(period_5)
+    end
+
+    it "recalculate bao gồm zone đã xóa → calculations cập nhật" do
+      post recalculate_billing_path
+      expect(response).to redirect_to(billing_path)
+      # Zone đã xóa vẫn được tính toán vì zones_in_scope dùng with_discarded
+      calc = Calculation.find_by(period: period_5, contact_point: sample.contact_points[:ban_tac_huan])
+      expect(calc).to be_present
+    end
+  end
 end
