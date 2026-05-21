@@ -1,9 +1,9 @@
 # Thiết kế hệ thống quản lý điện nội bộ Sư đoàn — Hệ thống v2
 
-> **Phiên bản tài liệu:** 2.8.0
+> **Phiên bản tài liệu:** 2.9.0
 > **Ngày:** 21/05/2026
 > **Tính chất:** Tài liệu thiết kế hệ thống v2, nguồn sự thật cho implementation.
-> **Nguồn nghiệp vụ:** V2_XAC_NHAN_NGHIEP_VU (phiên bản mới nhất tại thời điểm thiết kế: v2.10.0)
+> **Nguồn nghiệp vụ:** V2_XAC_NHAN_NGHIEP_VU (phiên bản mới nhất tại thời điểm thiết kế: v2.11.0)
 
 ### Nguyên tắc viết
 
@@ -461,6 +461,7 @@ Tổng quân số đầu mối sinh hoạt ≥ 1: validate ở tầng controller
 | contact_point_id | foreign key → contact_points | Bắt buộc |
 | period_id | foreign key → periods | Bắt buộc, unique cùng contact_point_id |
 | personnel_count | integer | ≥ 1. Snapshot từ contact_points.personnel_count khi mở kỳ |
+| lock_version | integer | Mặc định: 0. Optimistic locking |
 
 #### unit_configs (cấu hình per đơn vị per kỳ)
 
@@ -590,8 +591,8 @@ Tổn hao đầu mối = tổng tổn hao các công tơ trong đầu mối đó
 Edge cases:
 
 - C < 0 → clamp C về 0, trả cảnh báo "tổng công tơ con lớn hơn công tơ tổng"
-- B = 0 (tất cả công tơ đều không tổn hao) → clamp về 0, trả cảnh báo "không có công tơ có tổn hao"
-- Khu vực chưa có đầu mối (B = 0 vì chưa có công tơ) → không tính, trả cảnh báo "khu vực chưa có đầu mối"
+- B = 0 (chưa có công tơ nào có sử dụng, hoặc tất cả công tơ đều không tổn hao) → đặt tổn hao = 0, trả cảnh báo. Không thể chia theo tỷ lệ.
+- Khu vực chưa có đầu mối → bỏ qua, không tính.
 
 Output: hash chứa tổn hao per công tơ, tổn hao per đầu mối, tổng tổn hao khu vực, warnings.
 
@@ -659,7 +660,7 @@ Tổng tiêu chuẩn = tiêu chuẩn điện sinh hoạt + tiêu chuẩn điện
   Công cộng dùng chung đơn vị = unit_configs.unit_public_rate × tổng tiêu chuẩn ÷ 100
   Khác:
     Nếu other_type = fixed → other_value
-    Nếu other_type = coefficient → other_value × tổng quân số
+    Nếu other_type = coefficient → other_value × quân số đầu mối
 Tổng trừ = cộng 5 khoản
 
 Tiêu chuẩn còn lại = tổng tiêu chuẩn − tổng trừ (có thể ra âm — nghiệp vụ cho phép)
@@ -856,7 +857,7 @@ Dạng hệ số cột Khác: kế thừa hệ số (other_type = coefficient, o
 
 System_admin đóng kỳ đang mở → closed = true. Kỳ đã đóng: không ai sửa được số liệu.
 
-Cách implement: tạo concern `PeriodGuard` (hoặc tương tự). Áp dụng cho tất cả controller nhập liệu: meter_entries, pump_entries, electricity_supply, unit_config, contact_points, meters, blocks, groups. before_action check: nếu không có kỳ đang mở (Period.where(closed: false).none?) → chặn mọi thao tác tạo/sửa/xóa, hiển thị thông báo "Không có kỳ đang mở. Vui lòng liên hệ quản trị viên hệ thống." Thao tác đọc (xem) vẫn được phép.
+Cách implement: tạo concern `PeriodGuard` (hoặc tương tự). Áp dụng cho tất cả controller dữ liệu nghiệp vụ: zones, units, contact_points, meters, blocks, groups, meter_entries, pump_entries, electricity_supply, unit_config, ranks, pump_allocations. before_action check: nếu không có kỳ đang mở (Period.where(closed: false).none?) → chặn mọi thao tác tạo/sửa/xóa, hiển thị thông báo "Không có kỳ đang mở. Vui lòng liên hệ quản trị viên hệ thống." Thao tác đọc (xem) vẫn được phép. Nguyên tắc: mọi thay đổi dữ liệu nghiệp vụ đều cần kỳ đang mở. Chỉ quản trị hệ thống (tài khoản, sao lưu, nhật ký) hoạt động độc lập kỳ.
 
 ### Mở lại kỳ cũ
 
@@ -1098,21 +1099,21 @@ Cách phân biệt "tồn tại trong kỳ nhưng chưa nhập" vs "không tồn
 
 1. **Kỹ thuật viên: Cài đặt hệ thống.** Hệ thống có sẵn 2 tài khoản mặc định (technician, system_admin). Có sẵn 7 nhóm cấp bậc với giá trị mặc định.
 
-2. **Quản trị viên hệ thống: Đăng nhập, thiết lập cơ bản.** Đổi mật khẩu mặc định. Nhập đơn giá điện.
+2. **Quản trị viên hệ thống: Đăng nhập, thiết lập cơ bản.** Đổi mật khẩu mặc định.
 
-3. **Quản trị viên hệ thống: Tạo khu vực.** Tên khu vực + công tơ tổng (tên).
+3. **Quản trị viên hệ thống: Mở kỳ đầu tiên.** Nhập đơn giá điện, năm, tháng. Từ bước này trở đi mọi thay đổi dữ liệu nghiệp vụ đều cần kỳ đang mở.
 
-4. **Quản trị viên hệ thống: Tạo đơn vị.** Gán vào khu vực.
+4. **Quản trị viên hệ thống: Tạo khu vực.** Tên khu vực + công tơ tổng (tên).
 
-5. **Quản trị viên hệ thống: Chỉ định đơn vị quản lý khu vực.**
+5. **Quản trị viên hệ thống: Tạo đơn vị.** Gán vào khu vực.
 
-6. **Quản trị viên hệ thống: Tạo tài khoản.** Quản trị viên đơn vị, chỉ huy đơn vị.
+6. **Quản trị viên hệ thống: Chỉ định đơn vị quản lý khu vực.**
 
-7. **Quản trị viên đơn vị: Khai báo đơn vị.** Đầu mối sinh hoạt + công tơ + quân số. Đầu mối công cộng + công tơ. Khối, nhóm (nếu cần). Cấu hình đơn vị (công cộng đơn vị, cột Khác).
+7. **Quản trị viên hệ thống: Tạo tài khoản.** Quản trị viên đơn vị, chỉ huy đơn vị. Gán vào đơn vị đã tạo.
 
-8. **Đơn vị quản lý khu vực (hoặc quản trị viên hệ thống): Khai báo phần khu vực.** Đầu mối bơm nước + công tơ. Đầu mối sinh hoạt thuộc khu vực. Đầu mối công cộng thuộc khu vực. Đầu mối ngoài biên chế. Phân bổ bơm nước.
+8. **Đơn vị quản lý khu vực: Khai báo phần khu vực.** Đầu mối bơm nước + công tơ. Đầu mối sinh hoạt thuộc khu vực. Đầu mối công cộng thuộc khu vực. Đầu mối ngoài biên chế. Phân bổ bơm nước.
 
-9. **Quản trị viên hệ thống: Mở kỳ đầu tiên.** Các quản trị viên nhập thủ công đầu kỳ + cuối kỳ công tơ.
+9. **Quản trị viên đơn vị: Khai báo đơn vị.** Đầu mối sinh hoạt + công tơ + quân số. Đầu mối công cộng + công tơ. Khối, nhóm (nếu cần). Cấu hình đơn vị (công cộng đơn vị, cột Khác). Nhập thủ công đầu kỳ + cuối kỳ công tơ.
 
 ---
 
@@ -1172,7 +1173,7 @@ Hiển thị "Kỳ tháng X đã mở, vui lòng nhập liệu" khi có kỳ đa
 
 Dùng optimistic locking (lock_version trên ActiveRecord). Flow: User A load form → User B load form → User A save (thành công, lock_version tăng) → User B save → ActiveRecord::StaleObjectError → hệ thống catch lỗi, hiển thị cảnh báo "Dữ liệu đã bị thay đổi bởi người khác", reload dữ liệu mới nhất → User B xem lại rồi quyết định lưu lại hay không.
 
-Bảng cần lock_version: meter_readings, main_meter_readings, personnel_entries, unit_configs, other_deductions, pump_allocations.
+Bảng cần lock_version: meter_readings, main_meter_readings, personnel_entries, non_establishment_snapshots, unit_configs, other_deductions, pump_allocations.
 
 ### Nhập thủ công số sử dụng công tơ
 
@@ -1224,6 +1225,16 @@ Mọi thao tác trên hệ thống đều được ghi lại (PaperTrail). Syste
 ---
 
 ## Lịch sử thay đổi
+
+### v2.9.0 (21/05/2026)
+
+- Schema: thêm `lock_version` vào `non_establishment_snapshots` — tất cả bảng nhập liệu per kỳ giờ đều có optimistic locking.
+- Cập nhật danh sách bảng cần lock_version (thêm non_establishment_snapshots).
+- PeriodGuard: thêm vào ZonesController và UnitsController — mọi thay đổi dữ liệu nghiệp vụ đều cần kỳ đang mở. Loại bỏ trạng thái gap, hệ thống giờ chỉ còn 3 trạng thái: không có kỳ mở (chỉ đọc), kỳ mới nhất đang mở (toàn quyền), kỳ cũ mở lại (chỉ sửa số liệu).
+- Luồng thiết lập ban đầu: sắp xếp lại thứ tự — mở kỳ trước, tạo cấu trúc sau, tạo tài khoản sau khi có đơn vị và đơn vị quản lý khu vực (theo nghiệp vụ v2.11.0).
+- Engine edge cases: sửa diễn đạt B = 0 cho khớp nghiệp vụ — liệt kê đủ cả 2 nguyên nhân (chưa có sử dụng, hoặc tất cả không tổn hao).
+- Engine SummaryCalculator: sửa "tổng quân số" → "quân số đầu mối" cho khớp nghiệp vụ mục 10.2.
+- Cập nhật tham chiếu nguồn nghiệp vụ: từ v2.10.0 sang v2.11.0.
 
 ### v2.8.0 (21/05/2026)
 

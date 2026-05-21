@@ -60,13 +60,14 @@ RSpec.describe "Dashboard", type: :request do
       let(:user) { create(:user, :system_admin) }
       before { sign_in user }
 
-      it "hiển thị tổng usage công cộng + bơm nước + units" do
+      it "hiển thị bảng khu vực (công cộng + bơm nước) + bảng đơn vị" do
         get dashboard_path
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Đơn vị A")
         expect(response.body).to include("Đơn vị B")
-        expect(response.body).to include("Sử dụng điện công cộng")
-        expect(response.body).to include("Sử dụng điện bơm nước")
+        expect(response.body).to include("Điện công cộng")
+        expect(response.body).to include("Điện bơm nước")
+        expect(response.body).to include(sample.zone.name)
       end
     end
 

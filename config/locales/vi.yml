@@ -202,6 +202,7 @@ vi:
               zone_mismatch: "phải thuộc cùng khu vực với phân bổ"
             contact_point_id:
               zone_mismatch: "phải thuộc cùng khu vực với phân bổ"
+              must_be_zone_level: "phải là đầu mối thuộc khu vực (không thuộc đơn vị). Đầu mối thuộc đơn vị nhận phân bổ gián tiếp qua đơn vị."
         group:
           attributes:
             block_id:

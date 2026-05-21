@@ -25,14 +25,12 @@ RSpec.describe DashboardSummary do
       expect(deficits).to eq(deficits.sort.reverse)
     end
 
-    it "public_total_usage = 400 (Nhà ăn 220 + Trạm gác 50 + Đèn đường 130)" do
+    it "zones chứa public_usage = 400, pump_usage = 300 per khu vực" do
       summary = described_class.new(user: user, ability: ability, period: sample.period).call
-      expect(summary.public_total_usage).to eq_display("400.00")
-    end
-
-    it "pump_total_usage = 300 (Trạm bơm 1)" do
-      summary = described_class.new(user: user, ability: ability, period: sample.period).call
-      expect(summary.pump_total_usage).to eq_display("300.00")
+      expect(summary.zones).to be_an(Array)
+      zone_data = summary.zones.find { |z| z[:zone].id == sample.zone.id }
+      expect(zone_data[:public_usage]).to eq_display("400.00")
+      expect(zone_data[:pump_usage]).to eq_display("300.00")
     end
   end
 

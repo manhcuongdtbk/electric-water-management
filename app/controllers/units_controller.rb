@@ -1,9 +1,12 @@
 class UnitsController < ApplicationController
+  include PeriodGuard
   include AuthorizeResource
   include StructureChangeGuard
   include BusinessRoleRequired
 
   before_action :set_unit, only: [:show, :edit, :update, :destroy]
+  before_action :require_open_period,
+    only: [:create, :update, :destroy]
   before_action :require_latest_period_when_open,
     only: [:new, :create, :edit, :update, :destroy]
 

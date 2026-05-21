@@ -2,6 +2,7 @@ require "rails_helper"
 
 RSpec.describe "Units", type: :request do
   let(:system_admin) { create(:user, :system_admin) }
+  let!(:open_period) { create(:period, closed: false) }
   let(:zone) { create(:zone) }
 
   before { sign_in system_admin }
@@ -35,10 +36,9 @@ RSpec.describe "Units", type: :request do
 
   describe "DELETE /units/:id (T39, T41)" do
     let(:unit) { create(:unit, zone: zone) }
-    let!(:period) { create(:period, closed: false) }
 
     it "T39: chặn xóa khi còn contact_point kept" do
-      rank = period.ranks.create!(name: "R", quota: 1, position: 1)
+      rank = open_period.ranks.create!(name: "R", quota: 1, position: 1)
       create(:contact_point, :residential, unit: unit, initial_personnel_counts: { rank.id => 1 })
       delete unit_path(unit)
       unit.reload

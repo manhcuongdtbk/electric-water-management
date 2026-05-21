@@ -16,10 +16,20 @@ class PumpAllocation < ApplicationRecord
   validates :contact_point_id, uniqueness: { scope: [:zone_id, :period_id], allow_nil: true }
 
   validate :validate_unit_or_contact_point_xor
+  validate :validate_contact_point_must_be_zone_level
   validate :validate_target_belongs_to_zone
   validate :validate_fixed_percentage_sum_within_limit
 
   private
+
+  # Nghiệp vụ 9.2: đầu mối nhận trực tiếp phải "thuộc khu vực" (zone-level, unit_id nil).
+  # Đầu mối thuộc đơn vị nhận gián tiếp qua đơn vị (mục 9.4).
+  def validate_contact_point_must_be_zone_level
+    return if contact_point.blank?
+    if contact_point.unit_id.present?
+      errors.add(:contact_point_id, :must_be_zone_level)
+    end
+  end
 
   def validate_target_belongs_to_zone
     return if zone_id.blank?

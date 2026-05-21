@@ -25,7 +25,7 @@ RSpec.describe "PumpAllocations", type: :request do
     end
 
     it "ẩn allocation khi contact_point đã bị discard" do
-      contact_point = create(:contact_point, :residential, unit: unit, zone: nil)
+      contact_point = create(:contact_point, :residential, unit: nil, zone: zone)
       alloc = create(:pump_allocation, zone: zone, period: period, unit: nil, contact_point: contact_point)
       get pump_allocations_path
       expect(response.body).to include(contact_point.name)

@@ -64,7 +64,6 @@ class Ability
 
     return if managed_zone_ids.empty?
 
-    can :update, Zone, id: managed_zone_ids
     can :read, MainMeter, zone_id: managed_zone_ids
     can [:create, :read, :update, :destroy], MainMeterReading, main_meter: { zone_id: managed_zone_ids }
     can [:create, :read, :update, :destroy], ContactPoint, zone_id: managed_zone_ids

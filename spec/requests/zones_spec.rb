@@ -2,6 +2,7 @@ require "rails_helper"
 
 RSpec.describe "Zones", type: :request do
   let(:system_admin) { create(:user, :system_admin) }
+  let!(:open_period) { create(:period, closed: false) }
 
   before { sign_in system_admin }
 
@@ -74,7 +75,29 @@ RSpec.describe "Zones", type: :request do
     end
   end
 
+  describe "PeriodGuard: chặn khi không có kỳ mở" do
+    before { open_period.update!(closed: true) }
+    let(:expected_message) {
+      I18n.t("services.period_service.errors.no_open_period")
+    }
+
+    it "POST /zones bị chặn khi không có kỳ mở" do
+      post zones_path, params: {
+        zone: { name: "KV-gap", main_meters_attributes: [{ name: "CT" }] }
+      }
+      expect(response).to be_redirect
+      expect(flash[:alert]).to eq(expected_message)
+      expect(Zone.find_by(name: "KV-gap")).to be_nil
+    end
+
+    it "GET /zones (index) vẫn được phép khi không có kỳ mở" do
+      get zones_path
+      expect(response).to have_http_status(:ok)
+    end
+  end
+
   describe "StructureChangeGuard: chặn khi đang mở kỳ cũ (v2.3.0)" do
+    before { open_period.update!(closed: true) }
     let!(:period_jan) { create(:period, year: 2026, month: 1, closed: false) }
     let!(:period_feb) { create(:period, year: 2026, month: 2, closed: true) }
     let(:expected_message) {
