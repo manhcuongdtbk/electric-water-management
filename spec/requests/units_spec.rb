@@ -52,5 +52,49 @@ RSpec.describe "Units", type: :request do
       delete unit_path(u)
       expect(zone.reload.manager_unit_id).to be_nil
     end
+
+    it "xóa unit → cascade discard blocks + groups" do
+      u = create(:unit, zone: zone)
+      block = create(:block, unit: u)
+      group = create(:group, unit: u)
+      delete unit_path(u)
+      expect(block.reload).to be_discarded
+      expect(group.reload).to be_discarded
+    end
+
+    it "xóa unit → cleanup unit_config kỳ đang mở" do
+      u = create(:unit, zone: zone)
+      config = UnitConfig.find_by(unit: u, period: open_period)
+      expect(config).to be_present
+      delete unit_path(u)
+      expect(UnitConfig.find_by(id: config.id)).to be_nil
+    end
+  end
+
+  describe "Unit#discard cleanup (model level)" do
+    it "cleanup pump_allocations kỳ đang mở, giữ kỳ cũ" do
+      u = create(:unit, zone: zone)
+      alloc_current = PumpAllocation.create!(zone: zone, period: open_period, unit: u, coefficient: 1)
+
+      old_period = create(:period, year: 2025, month: 1, closed: true)
+      alloc_old = PumpAllocation.create!(zone: zone, period: old_period, unit: u, coefficient: 1)
+
+      u.discard
+      expect(PumpAllocation.find_by(id: alloc_current.id)).to be_nil
+      expect(PumpAllocation.find_by(id: alloc_old.id)).to be_present
+    end
+
+    it "cleanup unit_config kỳ đang mở, giữ kỳ cũ" do
+      u = create(:unit, zone: zone)
+      old_period = create(:period, year: 2025, month: 1, closed: true)
+      UnitConfig.create!(unit: u, period: old_period, unit_public_rate: 5)
+
+      config_current = UnitConfig.find_by(unit: u, period: open_period)
+      config_old = UnitConfig.find_by(unit: u, period: old_period)
+
+      u.discard
+      expect(UnitConfig.find_by(id: config_current.id)).to be_nil
+      expect(UnitConfig.find_by(id: config_old.id)).to be_present
+    end
   end
 end
