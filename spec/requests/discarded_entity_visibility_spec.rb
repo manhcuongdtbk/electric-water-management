@@ -207,4 +207,48 @@ RSpec.describe "Hiển thị data kỳ cũ cho entity đã xóa (request)", type
       expect(calc).to be_present
     end
   end
+
+  describe "Cảnh báo dữ liệu KHÔNG hiện entity đã xóa" do
+    it "GET /billing kỳ 6: cảnh báo không nhắc đầu mối đã xóa ở kỳ 5" do
+      # Xóa đầu mối ở kỳ 6 (đang mở)
+      kho_vat_tu.discard
+      get billing_path
+      expect(response).to have_http_status(:ok)
+      # Cảnh báo không nhắc đến entity đã xóa
+      expect(response.body).not_to include("Kho vật tư")
+    end
+
+    it "GET /billing kỳ 5 (mở lại): cảnh báo không nhắc đầu mối đã xóa ở kỳ 6" do
+      kho_vat_tu.discard
+      service.close_period(period_6)
+      service.reopen_period(period_5)
+      get billing_path
+      expect(response).to have_http_status(:ok)
+      # Kỳ 5 có data đầy đủ cho Kho vật tư (chưa xóa lúc đó) → không cảnh báo "chưa nhập"
+      warnings_section = response.body[/Cảnh báo.*?<\/div>/m] || ""
+      expect(warnings_section).not_to include("Kho vật tư")
+    end
+
+    it "GET /billing kỳ 6: xóa toàn bộ zone → cảnh báo không nhắc zone đã xóa" do
+      sample.contact_points.each_value(&:discard)
+      sample.unit_a.users.destroy_all
+      sample.unit_b.users.destroy_all
+      sample.unit_a.discard
+      sample.unit_b.discard
+      sample.zone.discard
+
+      get billing_path
+      expect(response).to have_http_status(:ok)
+      # Zone đã xóa không có data kỳ 6 → ZoneWarningCollector skip
+      warnings_section = response.body[/Cảnh báo.*?<\/div>/m] || ""
+      expect(warnings_section).not_to include(sample.zone.name)
+    end
+
+    it "GET /dashboard kỳ 6: cảnh báo không nhắc entity đã xóa" do
+      kho_vat_tu.discard
+      get dashboard_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("Kho vật tư")
+    end
+  end
 end
