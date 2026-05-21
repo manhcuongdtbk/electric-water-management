@@ -6,25 +6,20 @@ RSpec.describe "History", type: :request do
   before { CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call }
 
   describe "GET /history" do
-    context "system_admin mặc định mode single (T83)" do
+    context "mặc định mode compare" do
       let(:user) { create(:user, :system_admin) }
       before { sign_in user }
 
-      it "render kỳ hiện tại với bảng tính tiền" do
+      it "render trang so sánh khi không truyền mode" do
         get history_path
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Tra cứu lịch sử")
-        expect(response.body).to include("Ban Tác huấn")
+        expect(response.body).to include("So sánh 2 kỳ")
       end
 
-      it "chọn period cũ thì hiển thị data kỳ đó" do
-        sample.period.update!(closed: true)
-        new_period = PeriodService.new
-                                  .open_new_period(year: 2026, month: 6,
-                                                   unit_price: BigDecimal("2336.4")).period
-        get history_path(mode: "single", period_id: sample.period.id)
-        expect(response).to have_http_status(:ok)
-        expect(response.body).to include("5/2026").or include("Tháng 5")
+      it "KHÔNG có tab Xem kỳ cũ" do
+        get history_path
+        expect(response.body).not_to include("Xem kỳ cũ")
       end
     end
 
@@ -75,27 +70,24 @@ RSpec.describe "History", type: :request do
       end
     end
 
-    context "T87 - permission" do
-      let(:unit_admin_a) { create(:user, :unit_admin, unit: sample.unit_a) }
-      let(:unit_admin_b) { create(:user, :unit_admin, unit: sample.unit_b) }
+    context "mode=single redirect sang billing" do
+      let(:user) { create(:user, :system_admin) }
+      before { sign_in user }
 
-      it "unit_admin B KHÔNG thấy đầu mối của unit A" do
-        sign_in unit_admin_b
-        get history_path(mode: "single", period_id: sample.period.id)
+      it "mode không hợp lệ → fallback về compare" do
+        get history_path(mode: "single")
         expect(response).to have_http_status(:ok)
-        expect(response.body).not_to include("Ban Tác huấn")
-        expect(response.body).not_to include("Chỉ huy khu vực")
-        expect(response.body).to include("Đại đội 1")
+        expect(response.body).to include("So sánh 2 kỳ")
       end
+    end
 
-      it "unit_admin xem period chưa có data → vẫn 200, bảng trống" do
-        sign_in unit_admin_a
-        sample.period.update!(closed: true)
-        new_period = PeriodService.new
-                                  .open_new_period(year: 2026, month: 6,
-                                                   unit_price: BigDecimal("2336.4")).period
-        get history_path(mode: "single", period_id: new_period.id)
-        expect(response).to have_http_status(:ok)
+    context "technician" do
+      let(:user) { create(:user, :technician) }
+      before { sign_in user }
+
+      it "redirect về users_path" do
+        get history_path
+        expect(response).to redirect_to(users_path)
       end
     end
   end

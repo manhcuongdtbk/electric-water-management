@@ -2,7 +2,7 @@
 
 <div class="mb-4 border-b border-gray-200">
   <nav class="flex gap-1" aria-label="Tabs">
-    <% tabs = [["single", "Xem kỳ cũ"], ["compare", "So sánh 2 kỳ"], ["range", "Theo khoảng thời gian"]] %>
+    <% tabs = [["compare", "So sánh 2 kỳ"], ["range", "Theo khoảng thời gian"]] %>
     <% tabs.each do |key, label| %>
       <%= link_to label,
             history_path(mode: key),

@@ -3,6 +3,7 @@ class BillingController < ApplicationController
   include BusinessRoleRequired
 
   def show
+    @available_periods = Period.order(year: :desc, month: :desc)
     @period = resolve_period
     return redirect_to root_path, alert: t("flash.no_open_period") unless @period
 
@@ -58,7 +59,7 @@ class BillingController < ApplicationController
     if params[:period_id].present?
       Period.find_by(id: params[:period_id])
     else
-      current_period
+      current_period || Period.order(year: :desc, month: :desc).first
     end
   end
 
@@ -68,13 +69,7 @@ class BillingController < ApplicationController
       unit = params[:unit_id].present? ? Unit.kept.find_by(id: params[:unit_id]) : nil
       [zone, unit]
     else
-      unit = current_user.unit
-      zone = unit&.zone
-      if zone && Zone.exists?(id: zone.id, manager_unit_id: unit.id)
-        [zone, nil]
-      else
-        [zone, unit]
-      end
+      [nil, current_user.unit]
     end
   end
 
@@ -116,15 +111,11 @@ class BillingController < ApplicationController
   end
 
   def available_zones_for_filter
-    if current_user.role == "system_admin"
-      Zone.kept.order(:name)
-    else
-      [current_user.unit&.zone].compact.select(&:kept?)
-    end
+    Zone.kept.order(:name)
   end
 
   def available_units_for_filter(zone)
-    base = Unit.kept.accessible_by(current_ability)
+    base = Unit.kept
     base = base.where(zone_id: zone.id) if zone
     base.order(:name)
   end

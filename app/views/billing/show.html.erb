@@ -6,16 +6,32 @@
   </div>
 <% else %>
   <div class="flex flex-wrap items-end justify-between gap-4 mb-4">
+    <div class="flex gap-2 items-end">
+      <%= form_with url: billing_path, method: :get, local: true,
+            class: "flex gap-2 items-end",
+            data: { controller: "auto-submit" } do %>
+        <div>
+          <label class="block text-xs text-gray-600 mb-1">Kỳ</label>
+          <%= select_tag :period_id,
+                options_from_collection_for_select(@available_periods, :id,
+                  ->(p) { "Tháng #{p.month}/#{p.year}" }, @period.id),
+                data: { action: "change->auto-submit#submit" },
+                class: "rounded border border-gray-300 text-sm" %>
+        </div>
+        <%= render "filter" %>
+      <% end %>
+    </div>
+
     <div>
-      <h1 class="text-xl font-semibold"><%= period_label(@period) %></h1>
-      <p class="text-sm text-gray-700 mt-1">
+      <p class="text-sm text-gray-700">
         Đơn giá điện: <strong><%= money_to_vi(@period.unit_price) %>/kW</strong>
-        <% unless @period.open? %>
+        <% if @period.open? %>
+          <span class="ml-2 px-2 py-0.5 rounded bg-green-100 text-green-800 text-xs">Đang mở</span>
+        <% else %>
           <span class="ml-2 px-2 py-0.5 rounded bg-gray-200 text-gray-700 text-xs">Đã đóng</span>
         <% end %>
       </p>
     </div>
-    <%= render "filter" %>
   </div>
 
   <%= render "warnings" %>
