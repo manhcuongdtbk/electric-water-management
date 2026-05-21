@@ -84,10 +84,11 @@ RSpec.describe "Billing", type: :request do
       let(:user) { create(:user, :unit_admin, unit: sample.unit_a) }
       before { sign_in user }
 
-      it "thấy đầu mối đơn vị mình" do
+      it "thấy đầu mối đơn vị mình + đầu mối sinh hoạt thuộc khu vực" do
         get billing_path
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Ban Tác huấn")
+        expect(response.body).to include("Chỉ huy khu vực")
       end
 
       it "KHÔNG thấy dropdown khu vực/đơn vị" do
@@ -96,9 +97,14 @@ RSpec.describe "Billing", type: :request do
         expect(response.body).not_to include("Tất cả đơn vị")
       end
 
-      it "hiển thị tên đơn vị dạng read-only" do
+      it "hiển thị tên khu vực dạng read-only" do
         get billing_path
-        expect(response.body).to include(sample.unit_a.name)
+        expect(response.body).to include(sample.zone.name)
+      end
+
+      it "KHÔNG thấy đầu mối của đơn vị B" do
+        get billing_path
+        expect(response.body).not_to include("Đại đội 1")
       end
     end
 
@@ -112,21 +118,32 @@ RSpec.describe "Billing", type: :request do
         expect(response.body).not_to include("Ban Tác huấn")
         expect(response.body).not_to include("Chỉ huy khu vực")
       end
+
+      it "hiển thị tên đơn vị dạng read-only" do
+        get billing_path
+        expect(response.body).to include(sample.unit_b.name)
+      end
     end
 
     context "commander" do
       let(:user) { create(:user, :commander, unit: sample.unit_a) }
       before { sign_in user }
 
-      it "chỉ thấy đầu mối đơn vị mình" do
+      it "chỉ thấy đầu mối đơn vị mình, KHÔNG thấy toàn khu vực" do
         get billing_path
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Ban Tác huấn")
+        expect(response.body).not_to include("Chỉ huy khu vực")
       end
 
       it "KHÔNG thấy dropdown khu vực/đơn vị" do
         get billing_path
         expect(response.body).not_to include("Tất cả khu vực")
+      end
+
+      it "hiển thị tên đơn vị dạng read-only" do
+        get billing_path
+        expect(response.body).to include(sample.unit_a.name)
       end
     end
 

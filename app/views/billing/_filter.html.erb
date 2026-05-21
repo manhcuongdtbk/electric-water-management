@@ -19,9 +19,17 @@
   </div>
 <% else %>
   <div class="flex gap-2 items-end text-sm text-gray-600">
-    <div>
-      <span class="block text-xs text-gray-500">Đơn vị</span>
-      <span class="font-medium text-gray-800"><%= @unit&.name %></span>
-    </div>
+    <% if @zone %>
+      <div>
+        <span class="block text-xs text-gray-500">Khu vực</span>
+        <span class="font-medium text-gray-800"><%= @zone.name %></span>
+      </div>
+    <% end %>
+    <% if @unit %>
+      <div>
+        <span class="block text-xs text-gray-500">Đơn vị</span>
+        <span class="font-medium text-gray-800"><%= @unit.name %></span>
+      </div>
+    <% end %>
   </div>
 <% end %>

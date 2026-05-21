@@ -68,8 +68,18 @@ class BillingController < ApplicationController
       zone = params[:zone_id].present? ? Zone.kept.find_by(id: params[:zone_id]) : nil
       unit = params[:unit_id].present? ? Unit.kept.find_by(id: params[:unit_id]) : nil
       [zone, unit]
+    elsif current_user.role == "unit_admin"
+      unit = current_user.unit
+      zone = unit&.zone
+      if zone && Zone.exists?(id: zone.id, manager_unit_id: unit.id)
+        [zone, nil]
+      else
+        [zone, unit]
+      end
     else
-      [nil, current_user.unit]
+      # commander: chỉ xem đơn vị mình
+      unit = current_user.unit
+      [unit&.zone, unit]
     end
   end
 
