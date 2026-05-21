@@ -5,6 +5,10 @@ class ZoneWarningCollector
   end
 
   def call
+    # Chỉ cảnh báo nếu zone có data cho kỳ này.
+    # Zone đã xóa + data cleanup → không có data → skip hoàn toàn.
+    return [] unless zone_has_data_for_period?
+
     warnings = []
     warnings.concat(missing_main_meter_warnings)
     warnings.concat(missing_meter_reading_warnings)
@@ -18,6 +22,11 @@ class ZoneWarningCollector
     @query ||= ZoneQuery.new(zone: @zone, period: @period)
   end
 
+  # Zone "tồn tại" trong kỳ nếu có ít nhất 1 meter_reading hoặc main_meter_reading.
+  def zone_has_data_for_period?
+    query.main_meter_readings.exists? || query.meter_readings.exists?
+  end
+
   def missing_main_meter_warnings
     readings = query.main_meter_readings
     if readings.empty? || readings.sum(:usage).zero?
@@ -28,6 +37,8 @@ class ZoneWarningCollector
   end
 
   def missing_meter_reading_warnings
+    # Chỉ cảnh báo meter_readings ĐÃ TỒN TẠI nhưng chưa nhập reading_end.
+    # Meter/CP đã xóa mà không có reading cho kỳ này → không xuất hiện.
     rows = query.meter_readings
                 .where(reading_end: nil, manual_usage: nil)
                 .joins(meter: :contact_point)
@@ -38,7 +49,7 @@ class ZoneWarningCollector
       if cp_type == "water_pump"
         "Khu vực #{@zone.name}: trạm bơm \"#{cp_name}\" chưa nhập số liệu."
       elsif uid
-        unit = Unit.find_by(id: uid)
+        unit = Unit.with_discarded.find_by(id: uid)
         "Đơn vị #{unit&.name}: đầu mối \"#{cp_name}\" chưa nhập chỉ số công tơ."
       else
         "Khu vực #{@zone.name}: đầu mối \"#{cp_name}\" chưa nhập chỉ số công tơ."

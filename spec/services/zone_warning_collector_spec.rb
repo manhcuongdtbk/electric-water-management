@@ -74,5 +74,59 @@ RSpec.describe ZoneWarningCollector do
         expect(warnings.join(" ")).not_to include("Ban Tác huấn")
       end
     end
+
+    context "zone đã xóa — không có data cho kỳ" do
+      it "không cảnh báo gì cho zone đã xóa không có data" do
+        # Tạo zone mới, nhập liệu, xóa, rồi kiểm tra cảnh báo kỳ sau
+        extra_zone = Zone.create!(name: "KV Tạm", main_meters_attributes: [{ name: "CT-Tạm" }])
+        extra_unit = Unit.create!(name: "ĐV Tạm", zone: extra_zone)
+        cp = create(:contact_point, :residential, name: "ĐM Tạm", unit: extra_unit,
+                    initial_personnel_counts: { sample.period.ranks.first.id => 1 })
+        # Xóa hết rồi xóa zone
+        cp.discard
+        extra_unit.discard
+        extra_zone.discard
+
+        # Mở kỳ mới
+        sample.period.update!(closed: true)
+        period_2 = PeriodService.new.open_new_period.period
+
+        # Zone đã xóa không có data kỳ 2 → không cảnh báo
+        warnings = described_class.new(zone: extra_zone, period: period_2).call
+        expect(warnings).to be_empty
+      end
+    end
+
+    context "zone đã xóa — có data kỳ cũ" do
+      it "cảnh báo đúng cho kỳ cũ có data, không cảnh báo cho kỳ mới" do
+        # Kỳ 1: zone có data đầy đủ → không cảnh báo
+        warnings_p1 = described_class.new(zone: sample.zone, period: sample.period).call
+        expect(warnings_p1).to be_empty
+
+        # Đóng kỳ 1, mở kỳ 2
+        sample.period.update!(closed: true)
+        period_2 = PeriodService.new.open_new_period.period
+
+        # Xóa 1 đầu mối ở kỳ 2
+        kho_vat_tu = sample.contact_points[:kho_vat_tu]
+        kho_vat_tu.discard
+
+        # Kỳ 1: vẫn không cảnh báo (data còn đầy đủ)
+        warnings_p1_after = described_class.new(zone: sample.zone, period: sample.period).call
+        expect(warnings_p1_after).to be_empty
+
+        # Kỳ 2: không cảnh báo cho đầu mối đã xóa (data cleanup)
+        # Nhập data kỳ 2 cho các entity còn lại
+        sample.meters.each_value do |m|
+          next if m.discarded?
+          reading = m.meter_readings.find_by(period: period_2)
+          reading&.update!(reading_end: reading.reading_start + 100)
+        end
+        sample.main_meter.main_meter_readings.create!(period: period_2, usage: BigDecimal("2000"))
+
+        warnings_p2 = described_class.new(zone: sample.zone, period: period_2).call
+        expect(warnings_p2.join(" ")).not_to include(kho_vat_tu.name)
+      end
+    end
   end
 end

@@ -99,8 +99,9 @@ class BillingController < ApplicationController
     end
   end
 
-  # Dùng cho recalculate + warnings. Phải bao gồm zone đã xóa nếu có data
-  # cho kỳ đang xem (nghiệp vụ 23.1: data kỳ cũ giữ nguyên).
+  # Dùng cho recalculate + warnings. Luôn dùng .with_discarded vì:
+  # - Engine cần zone đã xóa để tính kỳ cũ (data còn)
+  # - ZoneWarningCollector tự skip zone không có data cho kỳ đó
   def zones_in_scope(period)
     return Zone.with_discarded.where(id: @zone.id) if @zone
 
