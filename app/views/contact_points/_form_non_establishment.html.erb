@@ -15,7 +15,15 @@
 
 <div>
   <%= f.label :personnel_count, "Quân số (tổng)", class: "block text-sm font-medium text-gray-700 mb-1" %>
-  <%= f.number_field :personnel_count, step: 1,
-      class: "w-32 rounded border border-gray-300 px-3 py-2 text-sm" %>
-  <p class="text-xs text-gray-500 mt-1">Đầu mối ngoài biên chế không phân theo nhóm cấp bậc.</p>
+  <% if reopened_old_period? %>
+    <%# Kỳ cũ: hiện giá trị từ snapshot, sửa trực tiếp snapshot (không đụng master) %>
+    <% snapshot = contact_point.non_establishment_snapshots.find_by(period: current_period) %>
+    <%= number_field_tag "contact_point[personnel_count]", snapshot&.personnel_count, step: 1,
+        class: "w-32 rounded border border-gray-300 px-3 py-2 text-sm" %>
+    <p class="text-xs text-gray-500 mt-1">Sửa quân số cho kỳ này (không ảnh hưởng kỳ khác).</p>
+  <% else %>
+    <%= f.number_field :personnel_count, step: 1,
+        class: "w-32 rounded border border-gray-300 px-3 py-2 text-sm" %>
+    <p class="text-xs text-gray-500 mt-1">Đầu mối ngoài biên chế không phân theo nhóm cấp bậc.</p>
+  <% end %>
 </div>

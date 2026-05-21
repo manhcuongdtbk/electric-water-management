@@ -8,7 +8,7 @@ class ContactPointsController < ApplicationController
   before_action :set_available_zones, only: [:new, :edit, :create, :update]
   before_action :require_open_period, only: [:create, :update, :destroy]
   before_action :require_latest_period_when_open,
-    only: [:new, :create, :edit, :update, :destroy]
+    only: [:new, :create, :destroy]
 
   TYPES = %w[residential public water_pump non_establishment].freeze
 
@@ -95,6 +95,10 @@ class ContactPointsController < ApplicationController
         update_personnel_entries_for_open_period(personnel_counts_param, personnel_lock_versions_param)
       end
 
+      if @contact_point.type_non_establishment? && reopened_old_period?
+        update_non_establishment_snapshot_for_open_period
+      end
+
       validate_minimum_meters(meter_ids_to_discard)
 
       if @contact_point.errors.any? || !@contact_point.save
@@ -156,11 +160,26 @@ class ContactPointsController < ApplicationController
   def update_params
     # T48: loại đầu mối, nơi thuộc về (unit/zone) immutable sau khi tạo.
     # Không permit contact_point_type, unit_id, zone_id.
-    type = @contact_point.contact_point_type
-    permitted = base_permitted_attributes(type) - [:contact_point_type, :unit_id, :zone_id]
-    permitted += [meters_attributes: [:id, :name, :no_loss, :_destroy]]
-    params.require(:contact_point).permit(*permitted)
+    if reopened_old_period?
+      # Kỳ cũ mở lại: chỉ cho sửa data per kỳ, không cho sửa cấu trúc.
+      #
+      # Residential: quân số qua personnel_counts_param → update_personnel_entries_for_open_period
+      #              (không đi qua update_params). no_loss qua meters_attributes.
+      # Public/Water_pump: no_loss qua meters_attributes.
+      # Non_establishment: quân số qua update_non_establishment_snapshot_for_open_period
+      #   (sửa snapshot trực tiếp, không đụng master contact_point.personnel_count
+      #    vì sửa master khi kỳ cũ sẽ ghi đè giá trị hiện tại).
+      params.require(:contact_point).permit(
+        meters_attributes: [:id, :no_loss]
+      )
+    else
+      type = @contact_point.contact_point_type
+      permitted = base_permitted_attributes(type) - [:contact_point_type, :unit_id, :zone_id]
+      permitted += [meters_attributes: [:id, :name, :no_loss, :_destroy]]
+      params.require(:contact_point).permit(*permitted)
+    end
   end
+
 
   def base_permitted_attributes(type)
     case type
@@ -235,5 +254,17 @@ class ContactPointsController < ApplicationController
       attrs[:lock_version] = lock_versions[rank_id] if lock_versions.key?(rank_id)
       entry.update(attrs)
     end
+  end
+
+  # Kỳ cũ mở lại: sửa non_establishment_snapshots.personnel_count trực tiếp,
+  # không qua contact_point.personnel_count (master). Sửa master khi kỳ cũ sẽ ghi đè
+  # giá trị hiện tại → form kỳ mới nhất hiện sai → nguy cơ cascade sai data.
+  def update_non_establishment_snapshot_for_open_period
+    period = Period.current
+    return unless period
+    new_count = params.dig(:contact_point, :personnel_count)
+    return if new_count.blank?
+    snapshot = @contact_point.non_establishment_snapshots.find_by(period: period)
+    snapshot&.update!(personnel_count: new_count.to_i)
   end
 end
