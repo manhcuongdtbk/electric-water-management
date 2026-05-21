@@ -65,9 +65,12 @@ class ElectricitySupplyController < ApplicationController
 
   def load_readings
     return MainMeterReading.none unless @period
+    # Không dùng .kept cho load_readings: meter_readings per kỳ tự lọc —
+    # kỳ cũ có readings cho main_meter đã xóa (data giữ nguyên),
+    # kỳ đang mở không có (hard delete khi discard).
     MainMeterReading.includes(main_meter: :zone)
                     .where(period: @period)
-                    .where(main_meter_id: accessible_main_meters.select(:id))
+                    .accessible_by(current_ability)
                     .order("main_meters.name")
   end
 end
