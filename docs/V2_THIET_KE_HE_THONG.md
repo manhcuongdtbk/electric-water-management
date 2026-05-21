@@ -591,8 +591,8 @@ Tổn hao đầu mối = tổng tổn hao các công tơ trong đầu mối đó
 Edge cases:
 
 - C < 0 → clamp C về 0, trả cảnh báo "tổng công tơ con lớn hơn công tơ tổng"
-- B = 0 (tất cả công tơ đều không tổn hao) → clamp về 0, trả cảnh báo "không có công tơ có tổn hao"
-- Khu vực chưa có đầu mối (B = 0 vì chưa có công tơ) → không tính, trả cảnh báo "khu vực chưa có đầu mối"
+- B = 0 (chưa có công tơ nào có sử dụng, hoặc tất cả công tơ đều không tổn hao) → đặt tổn hao = 0, trả cảnh báo. Không thể chia theo tỷ lệ.
+- Khu vực chưa có đầu mối → bỏ qua, không tính.
 
 Output: hash chứa tổn hao per công tơ, tổn hao per đầu mối, tổng tổn hao khu vực, warnings.
 
@@ -660,7 +660,7 @@ Tổng tiêu chuẩn = tiêu chuẩn điện sinh hoạt + tiêu chuẩn điện
   Công cộng dùng chung đơn vị = unit_configs.unit_public_rate × tổng tiêu chuẩn ÷ 100
   Khác:
     Nếu other_type = fixed → other_value
-    Nếu other_type = coefficient → other_value × tổng quân số
+    Nếu other_type = coefficient → other_value × quân số đầu mối
 Tổng trừ = cộng 5 khoản
 
 Tiêu chuẩn còn lại = tổng tiêu chuẩn − tổng trừ (có thể ra âm — nghiệp vụ cho phép)
@@ -1232,6 +1232,8 @@ Mọi thao tác trên hệ thống đều được ghi lại (PaperTrail). Syste
 - Cập nhật danh sách bảng cần lock_version (thêm non_establishment_snapshots).
 - PeriodGuard: thêm vào ZonesController và UnitsController — mọi thay đổi dữ liệu nghiệp vụ đều cần kỳ đang mở. Loại bỏ trạng thái gap, hệ thống giờ chỉ còn 3 trạng thái: không có kỳ mở (chỉ đọc), kỳ mới nhất đang mở (toàn quyền), kỳ cũ mở lại (chỉ sửa số liệu).
 - Luồng thiết lập ban đầu: sắp xếp lại thứ tự — mở kỳ trước, tạo cấu trúc sau, tạo tài khoản sau khi có đơn vị và đơn vị quản lý khu vực (theo nghiệp vụ v2.11.0).
+- Engine edge cases: sửa diễn đạt B = 0 cho khớp nghiệp vụ — liệt kê đủ cả 2 nguyên nhân (chưa có sử dụng, hoặc tất cả không tổn hao).
+- Engine SummaryCalculator: sửa "tổng quân số" → "quân số đầu mối" cho khớp nghiệp vụ mục 10.2.
 - Cập nhật tham chiếu nguồn nghiệp vụ: từ v2.10.0 sang v2.11.0.
 
 ### v2.8.0 (21/05/2026)
