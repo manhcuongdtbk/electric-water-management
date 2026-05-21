@@ -125,25 +125,33 @@ RSpec.describe "Billing", type: :request do
       end
     end
 
-    context "commander" do
+    context "commander zone-manager (nghiệp vụ 6: tương tự UA-ZM)" do
       let(:user) { create(:user, :commander, unit: sample.unit_a) }
       before { sign_in user }
 
-      it "chỉ thấy đầu mối đơn vị mình, KHÔNG thấy toàn khu vực" do
+      it "thấy đầu mối đơn vị mình + đầu mối sinh hoạt thuộc khu vực" do
         get billing_path
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Ban Tác huấn")
-        expect(response.body).not_to include("Chỉ huy khu vực")
+        expect(response.body).to include("Chỉ huy khu vực")
       end
 
       it "KHÔNG thấy dropdown khu vực/đơn vị" do
         get billing_path
         expect(response.body).not_to include("Tất cả khu vực")
       end
+    end
 
-      it "hiển thị tên đơn vị dạng read-only" do
+    context "commander không phải zone-manager" do
+      let(:user) { create(:user, :commander, unit: sample.unit_b) }
+      before { sign_in user }
+
+      it "chỉ thấy đầu mối đơn vị mình" do
         get billing_path
-        expect(response.body).to include(sample.unit_a.name)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Đại đội 1")
+        expect(response.body).not_to include("Ban Tác huấn")
+        expect(response.body).not_to include("Chỉ huy khu vực")
       end
     end
 
