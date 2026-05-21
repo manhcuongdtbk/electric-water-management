@@ -176,8 +176,8 @@ Cấu hình tỷ lệ công cộng đơn vị + cột "Khác" (other_deductions)
 
 | Vai trò | Thấy | CUD | Đặc biệt |
 |---|---|---|---|
-| SA | Tất cả | Có | — |
-| UA-ZM | Khu vực mình | Có | Cho sửa khi kỳ cũ mở lại (không có StructureChangeGuard) |
+| SA | Tất cả | Có | Cho sửa khi kỳ cũ mở lại (không có StructureChangeGuard — pump_allocations là data per kỳ) |
+| UA-ZM | Khu vực mình | Có | Cho sửa khi kỳ cũ mở lại (tương tự SA) |
 | CMD-ZM | Khu vực mình | Không (chỉ xem) | — |
 | UA | Không thấy | — | — |
 | CMD | Không thấy | — | — |
