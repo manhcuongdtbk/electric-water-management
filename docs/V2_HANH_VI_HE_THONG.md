@@ -254,7 +254,7 @@ Kết quả: `Calculation.where(period: kỳ_N_1)` có record Zone A → hiện.
 | Zone | Hard delete main_meter_readings + discard main_meters | Giữ nguyên |
 | Unit | Hard delete pump_allocations + clear zone manager | Giữ nguyên (phải xóa hết CPs/users trước) |
 | ContactPoint | Hard delete meter_readings, calculations, personnel_entries, other_deductions, non_establishment_snapshots, pump_allocations + discard meters | Giữ nguyên |
-| Meter | Hard delete meter_readings | Giữ nguyên (phải không phải meter cuối) |
+| Meter | Hard delete meter_readings | Giữ nguyên (chặn xóa nếu là công tơ cuối cùng của đầu mối) |
 | Block/Group | Nullify block_id/group_id trên children | — (không có data per kỳ) |
 
 ---
