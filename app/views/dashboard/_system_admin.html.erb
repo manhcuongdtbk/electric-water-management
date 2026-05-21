@@ -1,12 +1,28 @@
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-  <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
-    <h3 class="text-xs font-semibold text-gray-500 uppercase mb-1">Sử dụng điện công cộng toàn khu vực</h3>
-    <p class="text-2xl font-semibold text-gray-900"><%= number_to_vi(@summary.public_total_usage) %> kW</p>
+<div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden mb-6">
+  <div class="px-4 py-3 border-b border-gray-200">
+    <h3 class="text-sm font-semibold text-gray-900">Sử dụng điện công cộng và bơm nước per khu vực</h3>
   </div>
-  <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
-    <h3 class="text-xs font-semibold text-gray-500 uppercase mb-1">Sử dụng điện bơm nước toàn khu vực</h3>
-    <p class="text-2xl font-semibold text-gray-900"><%= number_to_vi(@summary.pump_total_usage) %> kW</p>
-  </div>
+  <table class="w-full text-sm">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Khu vực</th>
+        <th class="px-4 py-2 text-right text-xs font-semibold text-gray-700">Điện công cộng (kW)</th>
+        <th class="px-4 py-2 text-right text-xs font-semibold text-gray-700">Điện bơm nước (kW)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @summary.zones.each do |data| %>
+        <tr class="border-t border-gray-100 hover:bg-yellow-50">
+          <td class="px-4 py-2"><%= data[:zone].name %></td>
+          <td class="px-4 py-2 text-right"><%= number_to_vi(data[:public_usage]) %></td>
+          <td class="px-4 py-2 text-right"><%= number_to_vi(data[:pump_usage]) %></td>
+        </tr>
+      <% end %>
+      <% if @summary.zones.empty? %>
+        <tr><td colspan="3" class="px-4 py-6 text-center text-gray-500">Chưa có khu vực nào.</td></tr>
+      <% end %>
+    </tbody>
+  </table>
 </div>
 
 <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">

@@ -23,17 +23,16 @@ class DashboardSummary
     unit_data = units.map { |u| build_unit_card(u) }
                      .sort_by { |d| -BigDecimal(d[:deficit_kw].to_s) }
 
-    public_total_usage = aggregate_usage("public")
-    pump_total_usage   = aggregate_usage("water_pump")
+    zones = Zone.kept.includes(:units).order(:name).to_a
+    zone_data = zones.map { |z| build_zone_card(z) }
 
-    warnings = Zone.kept.flat_map { |z| ZoneWarningCollector.new(zone: z, period: @period).call }
+    warnings = zones.flat_map { |z| ZoneWarningCollector.new(zone: z, period: @period).call }
 
     OpenStruct.new(
       role: :system_admin,
       period: @period,
       units: unit_data,
-      public_total_usage: public_total_usage,
-      pump_total_usage: pump_total_usage,
+      zones: zone_data,
       warnings: warnings
     )
   end
@@ -86,10 +85,19 @@ class DashboardSummary
     )
   end
 
-  def aggregate_usage(contact_point_type)
+  def build_zone_card(zone)
+    {
+      zone: zone,
+      public_usage: aggregate_usage_for_zone("public", zone),
+      pump_usage: aggregate_usage_for_zone("water_pump", zone)
+    }
+  end
+
+  def aggregate_usage_for_zone(contact_point_type, zone)
     MeterReading.joins(meter: :contact_point)
       .where(period_id: @period.id,
              contact_points: { contact_point_type: contact_point_type })
+      .merge(ContactPoint.in_zone(zone))
       .merge(ContactPoint.kept)
       .merge(Meter.kept)
       .sum("COALESCE(meter_readings.manual_usage, COALESCE(meter_readings.reading_end, 0) - COALESCE(meter_readings.reading_start, 0))")
