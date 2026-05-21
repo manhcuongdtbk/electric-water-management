@@ -66,6 +66,18 @@ class UnitConfigController < ApplicationController
     UnitConfig.find_or_create_by!(unit: @unit, period: @period)
   end
 
+  # SA dropdown: kỳ mới nhất = Unit.kept. Kỳ cũ = chỉ unit có UnitConfig cho kỳ đó
+  # (unit tạo nhầm rồi xóa trong kỳ cũ không có UnitConfig → không hiện).
+  def units_for_dropdown
+    if reopened_old_period?
+      unit_ids = UnitConfig.where(period: current_period).pluck(:unit_id)
+      Unit.with_discarded.where(id: unit_ids).order(:name)
+    else
+      Unit.kept.order(:name)
+    end
+  end
+  helper_method :units_for_dropdown
+
   def load_unit
     if current_user.system_admin? && params[:unit_id].present?
       scope = reopened_old_period? ? Unit.with_discarded : Unit.kept

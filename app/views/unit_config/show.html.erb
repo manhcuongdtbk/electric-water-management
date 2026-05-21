@@ -21,7 +21,7 @@
         <label class="block text-sm font-medium text-gray-700 mb-1">Chọn đơn vị</label>
         <%= select_tag :unit_id,
             options_from_collection_for_select(
-              (reopened_old_period? ? Unit.with_discarded : Unit.kept).order(:name),
+              units_for_dropdown,
               :id, :name, @unit&.id),
             include_blank: "— Chọn đơn vị —",
             class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
