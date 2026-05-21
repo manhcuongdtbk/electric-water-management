@@ -68,7 +68,8 @@ class UnitConfigController < ApplicationController
 
   def load_unit
     if current_user.system_admin? && params[:unit_id].present?
-      Unit.with_discarded.find(params[:unit_id])
+      scope = reopened_old_period? ? Unit.with_discarded : Unit.kept
+      scope.find(params[:unit_id])
     else
       current_user.unit
     end

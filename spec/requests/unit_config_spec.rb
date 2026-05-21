@@ -156,5 +156,50 @@ RSpec.describe "UnitConfig", type: :request do
         expect(response.body).to include("Zone-CP-SA")
       end
     end
+
+    context "SA dropdown: kỳ mới nhất không hiện unit đã xóa" do
+      let(:system_admin) { create(:user, :system_admin) }
+      let!(:unit_b) { create(:unit, zone: zone, name: "Đơn vị B") }
+
+      before do
+        # Xóa unit_b
+        unit_b.discard
+        sign_in system_admin
+      end
+
+      it "dropdown không chứa unit đã xóa khi kỳ mới nhất mở" do
+        get unit_config_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include(unit.name)
+        expect(response.body).not_to include("Đơn vị B")
+      end
+    end
+
+    context "SA dropdown: kỳ cũ mở lại hiện unit đã xóa" do
+      let(:system_admin) { create(:user, :system_admin) }
+      let!(:unit_b) { create(:unit, zone: zone, name: "Đơn vị B") }
+
+      before do
+        sign_in system_admin
+        # Đóng kỳ hiện tại, mở kỳ mới, đóng kỳ mới, xóa unit, mở lại kỳ cũ
+        period.update!(closed: true)
+        @period_2 = PeriodService.new.open_new_period.period
+        unit_b.discard
+        @period_2.update!(closed: true)
+        PeriodService.new.reopen_period(period)
+      end
+
+      it "dropdown chứa unit đã xóa khi kỳ cũ mở lại" do
+        get unit_config_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include(unit.name)
+        expect(response.body).to include("Đơn vị B")
+      end
+
+      it "SA chọn unit đã xóa → xem được config kỳ cũ" do
+        get unit_config_path(unit_id: unit_b.id)
+        expect(response).to have_http_status(:ok)
+      end
+    end
   end
 end
