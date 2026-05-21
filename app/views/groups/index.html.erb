@@ -1,5 +1,7 @@
 <% page_title t("sidebar.items.groups") %>
 
+<%= render "shared/period_indicator", period: @period %>
+
 <%
   add_link = can?(:create, Group) ?
     link_to(t("common.actions.add") + " " + t("resources.group"), new_group_path,

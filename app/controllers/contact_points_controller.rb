@@ -25,6 +25,7 @@ class ContactPointsController < ApplicationController
   }.freeze
 
   def index
+    @period = current_period
     @filter_type = params[:type] if TYPES.include?(params[:type])
     scope = load_collection(ContactPoint).includes(:unit, :zone, :block, :group, :meters)
     if (joins = JOIN_BY_SORT[params[:sort].to_s])

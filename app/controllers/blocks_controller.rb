@@ -15,6 +15,7 @@ class BlocksController < ApplicationController
   }.freeze
 
   def index
+    @period = current_period
     scope = load_collection(Block).includes(:unit)
     scope = scope.left_joins(:unit) if params[:sort].to_s == "unit"
     if (q = params[:q]).present?

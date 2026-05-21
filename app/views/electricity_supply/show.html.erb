@@ -2,13 +2,7 @@
 
 <% can_edit = @period.present? && can?(:update, MainMeterReading) %>
 
-<% if @period.nil? %>
-  <div class="bg-yellow-50 border border-yellow-200 rounded p-4 text-sm text-yellow-800 mb-4">
-    <%= t("flash.no_open_period") %>
-  </div>
-<% else %>
-  <p class="text-sm text-gray-600 mb-4">Nhập số sử dụng công tơ tổng cho <strong><%= period_label(@period) %></strong>.</p>
-<% end %>
+<%= render "shared/period_indicator", period: @period %>
 
 <%= form_with url: electricity_supply_path, method: :patch, local: true do %>
   <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden mb-4">

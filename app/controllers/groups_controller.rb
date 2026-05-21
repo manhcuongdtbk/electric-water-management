@@ -16,6 +16,7 @@ class GroupsController < ApplicationController
   }.freeze
 
   def index
+    @period = current_period
     scope = load_collection(Group).includes(:unit, :block)
     scope = scope.left_joins(:block) if params[:sort].to_s == "block"
     scope = scope.left_joins(:unit) if params[:sort].to_s == "unit"

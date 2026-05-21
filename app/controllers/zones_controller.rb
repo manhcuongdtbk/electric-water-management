@@ -17,6 +17,7 @@ class ZonesController < ApplicationController
   }.freeze
 
   def index
+    @period = current_period
     scope = load_collection(Zone).includes(:units, :main_meters, :manager_unit)
     if current_zone_manager?
       scope = scope.where(manager_unit_id: current_user.unit_id)
