@@ -8,7 +8,7 @@ class UnitConfigController < ApplicationController
   def show
     @unit = load_unit
     @period = current_period
-    @unit_config = @period && @unit ? UnitConfig.find_by(unit: @unit, period: @period) : nil
+    @unit_config = find_or_create_unit_config
     @other_deductions = scope_other_deductions
     @zone_other_deductions = scope_zone_other_deductions
   end
@@ -16,7 +16,7 @@ class UnitConfigController < ApplicationController
   def update
     @unit = load_unit
     @period = current_period
-    @unit_config = UnitConfig.find_by(unit: @unit, period: @period)
+    @unit_config = find_or_create_unit_config
     if @unit_config
       authorize!(:update, @unit_config)
     else
@@ -58,6 +58,13 @@ class UnitConfigController < ApplicationController
   end
 
   private
+
+  # Safety net cho data cũ: units tạo trước khi có after_create callback (PR #156)
+  # có thể thiếu UnitConfig. Lazy create với default 0% khi truy cập trang.
+  def find_or_create_unit_config
+    return nil unless @period && @unit
+    UnitConfig.find_or_create_by!(unit: @unit, period: @period)
+  end
 
   def load_unit
     if current_user.system_admin? && params[:unit_id].present?
