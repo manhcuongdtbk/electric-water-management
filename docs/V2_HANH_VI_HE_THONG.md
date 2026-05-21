@@ -301,7 +301,7 @@ Khi đóng kỳ đã mở lại, hệ thống kiểm tra: `reading_end` kỳ nà
 |---|---|---|
 | **Query hiển thị data per kỳ** (billing, meter_entries, dashboard, ...) | Không dùng `.kept` — data per kỳ tự lọc | Kỳ cũ cần hiện entity đã xóa |
 | **SA dropdown filter** (zone, unit khi xem billing/history) | `.with_discarded` | SA cần chọn zone/unit đã xóa để xem kỳ cũ |
-| **zones_in_scope** (recalculate, warnings) | Kỳ mới nhất (`period.latest?`): `.kept`. Kỳ không phải mới nhất: `.with_discarded` | Kỳ không phải mới nhất có thể có data zone đã xóa (cần tính + cảnh báo). Kỳ mới nhất: zone đã xóa không có data (cleanup) → `.kept` tránh cảnh báo nhiễu |
+| **zones_in_scope** (recalculate, warnings) | `.with_discarded` | Engine cần zone đã xóa để tính kỳ cũ. `ZoneWarningCollector` tự skip zone không có data (`zone_has_data_for_period?`) |
 | **Engine** (ZoneQuery, calculators) | `.with_discarded` | Tính toán kỳ cũ phải bao gồm entity đã xóa |
 | **Model callbacks** (discard, create, validate) | `.kept` | Thao tác trên trạng thái hiện tại |
 | **PeriodService snapshot** | `.kept` | Chỉ copy entity còn tồn tại cho kỳ mới |
