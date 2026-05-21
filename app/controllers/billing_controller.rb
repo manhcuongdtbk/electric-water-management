@@ -99,19 +99,18 @@ class BillingController < ApplicationController
     end
   end
 
-  # Dùng cho recalculate + warnings.
-  # Kỳ cũ mở lại: .with_discarded — zone đã xóa có data cần tính/cảnh báo.
-  # Kỳ mới nhất: .kept — zone đã xóa không có data (cleanup), tránh cảnh báo nhiễu.
+  # Dùng cho recalculate + warnings. Luôn dùng .with_discarded vì:
+  # - Engine cần zone đã xóa để tính kỳ cũ (data còn)
+  # - ZoneWarningCollector tự skip zone không có data cho kỳ đó
   def zones_in_scope(period)
-    zone_scope = period&.latest? ? Zone.kept : Zone.with_discarded
-    return zone_scope.where(id: @zone.id) if @zone
+    return Zone.with_discarded.where(id: @zone.id) if @zone
 
     if current_user.role == "system_admin"
-      zone_scope.order(:name)
+      Zone.with_discarded.order(:name)
     else
       zone_ids = [current_user.unit&.zone_id].compact
       zone_ids += Zone.where(manager_unit_id: current_user.unit_id).pluck(:id) if current_user.unit_id
-      zone_scope.where(id: zone_ids.uniq)
+      Zone.with_discarded.where(id: zone_ids.uniq)
     end
   end
 

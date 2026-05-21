@@ -102,18 +102,15 @@ class HistoryController < ApplicationController
     zones.flat_map { |z| ZoneWarningCollector.new(zone: z, period: @period).call }
   end
 
-  # History xem kỳ cũ (đã đóng) → .with_discarded.
-  # Nếu xem kỳ mới nhất đang mở → .kept (tránh cảnh báo nhiễu).
   def zones_in_scope_for_history
-    zone_scope = @period&.latest? ? Zone.kept : Zone.with_discarded
-    return zone_scope.where(id: @zone.id) if @zone
+    return Zone.with_discarded.where(id: @zone.id) if @zone
 
     if current_user.role == "system_admin"
-      zone_scope
+      Zone.with_discarded
     else
       zone_ids = [current_user.unit&.zone_id].compact
       zone_ids += Zone.where(manager_unit_id: current_user.unit_id).pluck(:id) if current_user.unit_id
-      zone_scope.where(id: zone_ids.uniq)
+      Zone.with_discarded.where(id: zone_ids.uniq)
     end
   end
 
