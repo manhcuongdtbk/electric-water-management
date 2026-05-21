@@ -1,6 +1,5 @@
 class HistoryController < ApplicationController
   include BusinessRoleRequired
-  include BillingShared
 
   MODES = %w[compare range].freeze
 

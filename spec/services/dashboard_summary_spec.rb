@@ -63,12 +63,11 @@ RSpec.describe DashboardSummary do
     let(:user) { create(:user, :system_admin) }
     let(:ability) { Ability.new(user) }
 
-    it "summary.warnings có subtotal_exceeds_main khi main meter quá nhỏ" do
+    it "summary.warnings có subtotal_exceeds_main khi main meter quá nhỏ, có tên khu vực" do
       sample.main_meter_reading.update!(usage: 1900)
       summary = described_class.new(user: user, ability: ability, period: sample.period).call
-      expect(summary.warnings).to include(
-        I18n.t("services.loss_calculator.warnings.subtotal_exceeds_main")
-      )
+      expect(summary.warnings.join(" ")).to include(sample.zone.name)
+        .and include(I18n.t("services.loss_calculator.warnings.subtotal_exceeds_main"))
     end
   end
 end
