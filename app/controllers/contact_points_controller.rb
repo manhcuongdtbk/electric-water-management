@@ -153,9 +153,10 @@ class ContactPointsController < ApplicationController
   end
 
   def update_params
-    # T48: loại đầu mối immutable → không permit contact_point_type
+    # T48: loại đầu mối, nơi thuộc về (unit/zone) immutable sau khi tạo.
+    # Không permit contact_point_type, unit_id, zone_id.
     type = @contact_point.contact_point_type
-    permitted = base_permitted_attributes(type) - [:contact_point_type]
+    permitted = base_permitted_attributes(type) - [:contact_point_type, :unit_id, :zone_id]
     permitted += [meters_attributes: [:id, :name, :no_loss, :_destroy]]
     params.require(:contact_point).permit(*permitted)
   end
