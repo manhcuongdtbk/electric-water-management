@@ -45,7 +45,7 @@ class ContactPoint < ApplicationRecord
   after_create :create_current_period_snapshots
   after_update :propagate_personnel_count_to_current_snapshot,
     if: -> { type_non_establishment? && saved_change_to_personnel_count? }
-  before_discard :discard_current_period_pump_allocations
+  before_discard :delete_current_period_pump_allocations
   before_discard :delete_current_period_records
 
   after_discard do
@@ -145,7 +145,7 @@ class ContactPoint < ApplicationRecord
     errors.add(:contact_point_type, :immutable) if contact_point_type_changed?
   end
 
-  def discard_current_period_pump_allocations
+  def delete_current_period_pump_allocations
     period = Period.current
     return unless period
     PumpAllocation.where(contact_point_id: id, period_id: period.id).destroy_all
