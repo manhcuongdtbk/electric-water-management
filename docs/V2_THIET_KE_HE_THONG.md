@@ -1,9 +1,9 @@
 # Thiết kế hệ thống quản lý điện nội bộ Sư đoàn — Hệ thống v2
 
-> **Phiên bản tài liệu:** 2.8.0
+> **Phiên bản tài liệu:** 2.9.0
 > **Ngày:** 21/05/2026
 > **Tính chất:** Tài liệu thiết kế hệ thống v2, nguồn sự thật cho implementation.
-> **Nguồn nghiệp vụ:** V2_XAC_NHAN_NGHIEP_VU (phiên bản mới nhất tại thời điểm thiết kế: v2.10.0)
+> **Nguồn nghiệp vụ:** V2_XAC_NHAN_NGHIEP_VU (phiên bản mới nhất tại thời điểm thiết kế: v2.11.0)
 
 ### Nguyên tắc viết
 
@@ -461,6 +461,7 @@ Tổng quân số đầu mối sinh hoạt ≥ 1: validate ở tầng controller
 | contact_point_id | foreign key → contact_points | Bắt buộc |
 | period_id | foreign key → periods | Bắt buộc, unique cùng contact_point_id |
 | personnel_count | integer | ≥ 1. Snapshot từ contact_points.personnel_count khi mở kỳ |
+| lock_version | integer | Mặc định: 0. Optimistic locking |
 
 #### unit_configs (cấu hình per đơn vị per kỳ)
 
@@ -1172,7 +1173,7 @@ Hiển thị "Kỳ tháng X đã mở, vui lòng nhập liệu" khi có kỳ đa
 
 Dùng optimistic locking (lock_version trên ActiveRecord). Flow: User A load form → User B load form → User A save (thành công, lock_version tăng) → User B save → ActiveRecord::StaleObjectError → hệ thống catch lỗi, hiển thị cảnh báo "Dữ liệu đã bị thay đổi bởi người khác", reload dữ liệu mới nhất → User B xem lại rồi quyết định lưu lại hay không.
 
-Bảng cần lock_version: meter_readings, main_meter_readings, personnel_entries, unit_configs, other_deductions, pump_allocations.
+Bảng cần lock_version: meter_readings, main_meter_readings, personnel_entries, non_establishment_snapshots, unit_configs, other_deductions, pump_allocations.
 
 ### Nhập thủ công số sử dụng công tơ
 
@@ -1224,6 +1225,14 @@ Mọi thao tác trên hệ thống đều được ghi lại (PaperTrail). Syste
 ---
 
 ## Lịch sử thay đổi
+
+### v2.9.0 (21/05/2026)
+
+- Schema: thêm `lock_version` vào `non_establishment_snapshots` — tất cả bảng nhập liệu per kỳ giờ đều có optimistic locking.
+- Cập nhật danh sách bảng cần lock_version (thêm non_establishment_snapshots).
+- PeriodGuard: thêm vào ZonesController và UnitsController — mọi thay đổi dữ liệu nghiệp vụ đều cần kỳ đang mở. Loại bỏ trạng thái gap, hệ thống giờ chỉ còn 3 trạng thái: không có kỳ mở (chỉ đọc), kỳ mới nhất đang mở (toàn quyền), kỳ cũ mở lại (chỉ sửa số liệu).
+- Luồng thiết lập ban đầu: sắp xếp lại thứ tự — mở kỳ trước, tạo cấu trúc sau, tạo tài khoản sau khi có đơn vị và đơn vị quản lý khu vực (theo nghiệp vụ v2.11.0).
+- Cập nhật tham chiếu nguồn nghiệp vụ: từ v2.10.0 sang v2.11.0.
 
 ### v2.8.0 (21/05/2026)
 
