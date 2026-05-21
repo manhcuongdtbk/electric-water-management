@@ -17,9 +17,9 @@ class Unit < ApplicationRecord
   after_create :assign_as_zone_manager
   after_create :create_current_period_unit_config
   before_discard :ensure_no_kept_dependents
-  before_discard :delete_current_period_unit_config
-  before_discard :delete_current_period_pump_allocations
+  before_discard :cleanup_current_period_data
   before_discard :clear_zone_manager_if_self
+  after_discard :discard_blocks_and_groups
 
   private
 
@@ -50,18 +50,21 @@ class Unit < ApplicationRecord
     end
   end
 
-  def delete_current_period_unit_config
+  # Hard delete data per kỳ đang mở. Data kỳ cũ giữ nguyên (nghiệp vụ 23.1).
+  def cleanup_current_period_data
     period = Period.current
     return unless period
     unit_configs.where(period: period).destroy_all
+    PumpAllocation.where(unit_id: id, period_id: period.id).destroy_all
   end
 
-  # Tương tự ContactPoint#delete_current_period_pump_allocations:
-  # xóa pump_allocations kỳ đang mở khi discard unit.
-  def delete_current_period_pump_allocations
-    period = Period.current
-    return unless period
-    PumpAllocation.where(unit_id: id, period_id: period.id).destroy_all
+  # Blocks/groups chỉ phục vụ hiển thị, không có data per kỳ.
+  # Discard để không hiện orphan trên /blocks, /groups.
+  # CPs đã bắt buộc xóa hết trước unit (ensure_no_kept_dependents),
+  # nên blocks/groups đã trống — discard an toàn.
+  def discard_blocks_and_groups
+    blocks.kept.find_each(&:discard)
+    groups.kept.find_each(&:discard)
   end
 
   def clear_zone_manager_if_self
