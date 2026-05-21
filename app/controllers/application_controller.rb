@@ -32,6 +32,16 @@ class ApplicationController < ActionController::Base
     Zone.kept.exists?(manager_unit_id: current_user.unit_id)
   end
 
+  # Kỳ đang mở không phải kỳ mới nhất = mở lại kỳ cũ.
+  # Dùng để restrict thao tác: chỉ cho sửa data per kỳ, không cho sửa cấu trúc.
+  def reopened_old_period?
+    period = current_period
+    return false unless period
+    latest = Period.order(year: :desc, month: :desc).first
+    latest && period.id != latest.id
+  end
+  helper_method :reopened_old_period?
+
   private
 
   def set_paper_trail_whodunnit

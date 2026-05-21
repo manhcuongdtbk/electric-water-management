@@ -51,6 +51,7 @@
         <%= f.select :block_id,
             available_blocks.map { |b| [b.name, b.id, { "data-unit-id": b.unit_id }] },
             { include_blank: "— Không thuộc khối —" },
+            disabled: reopened_old_period?,
             class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
             data: { contact_point_assignment_target: "blockSelect",
                     action: "change->contact-point-assignment#refreshBlockScope" } %>
@@ -60,6 +61,7 @@
         <%= f.select :group_id,
             available_groups.map { |g| [g.name, g.id, { "data-unit-id": g.unit_id, "data-block-id": g.block_id || "" }] },
             { include_blank: "— Không thuộc nhóm —" },
+            disabled: reopened_old_period?,
             class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
             data: { contact_point_assignment_target: "groupSelect" } %>
       </div>

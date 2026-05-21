@@ -1,12 +1,16 @@
 <div class="border-t border-gray-200 pt-4 mt-4" data-controller="nested-meters">
   <div class="flex items-center justify-between mb-2">
     <h3 class="text-sm font-semibold text-gray-700">Công tơ</h3>
-    <button type="button" data-action="nested-meters#add"
-            class="text-sm text-blue-600 hover:text-blue-800 font-medium">
-      + Thêm công tơ
-    </button>
+    <% unless reopened_old_period? %>
+      <button type="button" data-action="nested-meters#add"
+              class="text-sm text-blue-600 hover:text-blue-800 font-medium">
+        + Thêm công tơ
+      </button>
+    <% end %>
   </div>
-  <p class="text-xs text-gray-500 mb-2">Đầu mối phải có ít nhất 1 công tơ.</p>
+  <% unless reopened_old_period? %>
+    <p class="text-xs text-gray-500 mb-2">Đầu mối phải có ít nhất 1 công tơ.</p>
+  <% end %>
 
   <div data-nested-meters-target="container">
     <%= f.fields_for :meters, contact_point.meters.select(&:kept?) do |mf| %>
@@ -17,13 +21,38 @@
         <% if meter.persisted? %>
           <input type="hidden" name="<%= prefix %>[id]" value="<%= meter.id %>">
         <% end %>
-        <input type="hidden" name="<%= prefix %>[_destroy]" value="0">
+        <% unless reopened_old_period? %>
+          <input type="hidden" name="<%= prefix %>[_destroy]" value="0">
+        <% end %>
         <input type="text" name="<%= prefix %>[name]" value="<%= meter.name %>"
                placeholder="Tên công tơ (VD: CT-A1)"
-               class="flex-1 rounded border px-3 py-2 text-sm <%= has_name_error ? 'border-red-500' : 'border-gray-300' %>">
+               <% if reopened_old_period? %>disabled<% end %>
+               class="flex-1 rounded border px-3 py-2 text-sm <%= has_name_error ? 'border-red-500' : 'border-gray-300' %> <%= "bg-gray-50" if reopened_old_period? %>">
         <label class="text-sm text-gray-700 flex items-center space-x-1">
           <input type="hidden" name="<%= prefix %>[no_loss]" value="0">
           <input type="checkbox" name="<%= prefix %>[no_loss]" value="1" <%= "checked" if meter.no_loss? %>>
+          <span>Không tổn hao</span>
+        </label>
+        <% unless reopened_old_period? %>
+          <button type="button" data-action="nested-meters#remove"
+                  class="text-red-500 hover:text-red-700 text-sm">
+            Xóa
+          </button>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <% unless reopened_old_period? %>
+    <template data-nested-meters-target="template">
+      <div class="flex items-center space-x-2 mb-2" data-nested-meters-target="entry">
+        <input type="hidden" name="contact_point[meters_attributes][NEW_INDEX][_destroy]" value="0">
+        <input type="text" name="contact_point[meters_attributes][NEW_INDEX][name]"
+               placeholder="Tên công tơ (VD: CT-A1)"
+               class="flex-1 rounded border border-gray-300 px-3 py-2 text-sm">
+        <label class="text-sm text-gray-700 flex items-center space-x-1">
+          <input type="hidden" name="contact_point[meters_attributes][NEW_INDEX][no_loss]" value="0">
+          <input type="checkbox" name="contact_point[meters_attributes][NEW_INDEX][no_loss]" value="1">
           <span>Không tổn hao</span>
         </label>
         <button type="button" data-action="nested-meters#remove"
@@ -31,24 +60,6 @@
           Xóa
         </button>
       </div>
-    <% end %>
-  </div>
-
-  <template data-nested-meters-target="template">
-    <div class="flex items-center space-x-2 mb-2" data-nested-meters-target="entry">
-      <input type="hidden" name="contact_point[meters_attributes][NEW_INDEX][_destroy]" value="0">
-      <input type="text" name="contact_point[meters_attributes][NEW_INDEX][name]"
-             placeholder="Tên công tơ (VD: CT-A1)"
-             class="flex-1 rounded border border-gray-300 px-3 py-2 text-sm">
-      <label class="text-sm text-gray-700 flex items-center space-x-1">
-        <input type="hidden" name="contact_point[meters_attributes][NEW_INDEX][no_loss]" value="0">
-        <input type="checkbox" name="contact_point[meters_attributes][NEW_INDEX][no_loss]" value="1">
-        <span>Không tổn hao</span>
-      </label>
-      <button type="button" data-action="nested-meters#remove"
-              class="text-red-500 hover:text-red-700 text-sm">
-        Xóa
-      </button>
-    </div>
-  </template>
+    </template>
+  <% end %>
 </div>
