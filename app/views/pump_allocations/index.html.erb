@@ -10,7 +10,6 @@
   add_link = (@period && can?(:create, PumpAllocation)) ?
     link_to(t("common.actions.add") + " " + t("resources.pump_allocation"), new_pump_allocation_path,
       class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700") : nil
-  total_percentage = @pump_allocations.sum { |a| a.fixed_percentage || BigDecimal("0") }
 %>
 
 <div class="mb-2 text-sm text-gray-600">
@@ -81,17 +80,6 @@
         </tr>
       <% end %>
     </tbody>
-    <% if @pump_allocations.any? %>
-      <tfoot>
-        <tr class="bg-gray-100 font-semibold">
-          <td class="px-4 py-2 text-gray-700" colspan="2"><%= t("common.list.total_short") %></td>
-          <td class="px-4 py-2 text-right text-gray-900 <%= "text-red-700" if total_percentage > 100 %>">
-            <%= total_percentage %>%
-          </td>
-          <td colspan="2"></td>
-        </tr>
-      </tfoot>
-    <% end %>
   </table>
 </div>
 
