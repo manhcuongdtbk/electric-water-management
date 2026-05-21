@@ -20,8 +20,6 @@ class PumpAllocationsController < ApplicationController
                           .includes(:zone, :unit, :contact_point)
                           .joins(:zone)
                           .left_joins(:unit, :contact_point)
-                          .where("units.discarded_at IS NULL OR units.id IS NULL")
-                          .where("contact_points.discarded_at IS NULL OR contact_points.id IS NULL")
     scope = scope.where(period: @period) if @period
     if (q = params[:q]).present?
       like = "%#{q.strip}%"

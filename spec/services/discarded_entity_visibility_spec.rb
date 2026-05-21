@@ -85,4 +85,41 @@ RSpec.describe "Hiển thị data kỳ cũ cho entity đã xóa" do
     end
   end
 
+  context "xóa đơn vị có pump_allocation ở kỳ 6" do
+    # Unit model giờ có before_discard :delete_current_period_pump_allocations
+    # tương tự ContactPoint — cleanup allocation kỳ đang mở.
+    let(:unit_b) { sample.unit_b }
+
+    before do
+      # Tạo allocation cho unit_b (find_or_create vì PeriodService có thể đã copy)
+      @alloc_p5 = PumpAllocation.find_or_create_by!(zone: sample.zone, period: period_5, unit: unit_b) do |a|
+        a.coefficient = 1
+      end
+      @alloc_p6 = PumpAllocation.find_or_create_by!(zone: sample.zone, period: period_6, unit: unit_b) do |a|
+        a.coefficient = 1
+      end
+      # Xóa hết CPs + users để unit discard được
+      unit_b.contact_points.kept.each(&:discard)
+      unit_b.users.destroy_all
+      unit_b.discard
+    end
+
+    it "PumpAllocation kỳ 5: vẫn tồn tại (data kỳ cũ giữ nguyên)" do
+      expect(PumpAllocation.find_by(id: @alloc_p5.id)).to be_present
+    end
+
+    it "PumpAllocation kỳ 6: bị xóa (cleanup khi discard)" do
+      expect(PumpAllocation.find_by(id: @alloc_p6.id)).to be_nil
+    end
+
+    it "pump_allocations index không filter .kept — hiện allocation kỳ cũ nếu xem kỳ đó" do
+      # Allocation kỳ 5 vẫn tồn tại trong DB với unit_id trỏ tới unit đã discard.
+      # Index query không dùng .kept filter nên sẽ hiện nếu scope đúng kỳ.
+      scope = PumpAllocation.where(period: period_5)
+                            .joins(:zone)
+                            .left_joins(:unit, :contact_point)
+      expect(scope.where(unit_id: unit_b.id).count).to eq(1)
+    end
+  end
+
 end

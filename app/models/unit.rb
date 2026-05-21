@@ -17,6 +17,7 @@ class Unit < ApplicationRecord
   after_create :assign_as_zone_manager
   after_create :create_current_period_unit_config
   before_discard :ensure_no_kept_dependents
+  before_discard :delete_current_period_pump_allocations
   before_discard :clear_zone_manager_if_self
 
   private
@@ -46,6 +47,14 @@ class Unit < ApplicationRecord
       errors.add(:base, :has_users)
       throw(:abort)
     end
+  end
+
+  # Tương tự ContactPoint#discard_current_period_pump_allocations:
+  # xóa pump_allocations kỳ đang mở khi discard unit.
+  def delete_current_period_pump_allocations
+    period = Period.current
+    return unless period
+    PumpAllocation.where(unit_id: id, period_id: period.id).destroy_all
   end
 
   def clear_zone_manager_if_self
