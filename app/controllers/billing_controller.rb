@@ -99,15 +99,17 @@ class BillingController < ApplicationController
     end
   end
 
+  # Dùng cho recalculate + warnings. Phải bao gồm zone đã xóa nếu có data
+  # cho kỳ đang xem (nghiệp vụ 23.1: data kỳ cũ giữ nguyên).
   def zones_in_scope(period)
-    return Zone.kept.where(id: @zone.id) if @zone
+    return Zone.with_discarded.where(id: @zone.id) if @zone
 
     if current_user.role == "system_admin"
-      Zone.kept.order(:name)
+      Zone.with_discarded.order(:name)
     else
       zone_ids = [current_user.unit&.zone_id].compact
-      zone_ids += Zone.kept.where(manager_unit_id: current_user.unit_id).pluck(:id) if current_user.unit_id
-      Zone.kept.where(id: zone_ids.uniq)
+      zone_ids += Zone.where(manager_unit_id: current_user.unit_id).pluck(:id) if current_user.unit_id
+      Zone.with_discarded.where(id: zone_ids.uniq)
     end
   end
 
