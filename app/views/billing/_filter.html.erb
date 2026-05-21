@@ -1,19 +1,21 @@
 <% if current_user.role == "system_admin" %>
-  <div>
-    <label class="block text-xs text-gray-600 mb-1">Khu vực</label>
-    <%= select_tag :zone_id,
-          options_from_collection_for_select(@available_zones, :id, :name, @zone&.id),
-          include_blank: "Tất cả khu vực",
-          data: { action: "change->auto-submit#submit" },
-          class: "rounded border border-gray-300 text-sm" %>
-  </div>
-  <div>
-    <label class="block text-xs text-gray-600 mb-1">Đơn vị</label>
-    <%= select_tag :unit_id,
-          options_from_collection_for_select(@available_units, :id, :name, @unit&.id),
-          include_blank: "Tất cả đơn vị",
-          data: { action: "change->auto-submit#submit" },
-          class: "rounded border border-gray-300 text-sm" %>
+  <div data-controller="reset-child-select">
+    <div>
+      <label class="block text-xs text-gray-600 mb-1">Khu vực</label>
+      <%= select_tag :zone_id,
+            options_from_collection_for_select(@available_zones, :id, :name, @zone&.id),
+            include_blank: "Tất cả khu vực",
+            data: { action: "change->reset-child-select#reset change->auto-submit#submit" },
+            class: "rounded border border-gray-300 text-sm" %>
+    </div>
+    <div>
+      <label class="block text-xs text-gray-600 mb-1">Đơn vị</label>
+      <%= select_tag :unit_id,
+            options_from_collection_for_select(@available_units, :id, :name, @unit&.id),
+            include_blank: "Tất cả đơn vị",
+            data: { action: "change->auto-submit#submit", reset_child_select_target: "child" },
+            class: "rounded border border-gray-300 text-sm" %>
+    </div>
   </div>
 <% else %>
   <div class="flex gap-2 items-end text-sm text-gray-600">
