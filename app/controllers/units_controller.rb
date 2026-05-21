@@ -17,6 +17,7 @@ class UnitsController < ApplicationController
   }.freeze
 
   def index
+    @period = current_period
     scope = load_collection(Unit).includes(:zone, :managed_zones)
     scope = scope.left_joins(:zone) if params[:sort].to_s == "zone"
     if (q = params[:q]).present?
