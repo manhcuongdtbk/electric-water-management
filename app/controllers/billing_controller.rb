@@ -121,12 +121,15 @@ class BillingController < ApplicationController
   end
 
   def available_zones_for_filter
-    Zone.kept.order(:name)
+    scope = Billing::Query.base_scope(@period, current_ability)
+    zone_ids = scope.pluck(Arel.sql("DISTINCT COALESCE(units.zone_id, contact_points.zone_id)")).compact
+    Zone.where(id: zone_ids).order(:name)
   end
 
   def available_units_for_filter(zone)
-    base = Unit.kept
-    base = base.where(zone_id: zone.id) if zone
-    base.order(:name)
+    scope = Billing::Query.base_scope(@period, current_ability)
+    scope = scope.where("units.zone_id = ?", zone.id) if zone
+    unit_ids = scope.pluck(Arel.sql("DISTINCT contact_points.unit_id")).compact
+    Unit.where(id: unit_ids).order(:name)
   end
 end
