@@ -10,7 +10,8 @@ Thứ tự ưu tiên:
 
 1. `docs/V2_XAC_NHAN_NGHIEP_VU.md` — nghiệp vụ, nguồn sự thật duy nhất
 2. `docs/V2_THIET_KE_HE_THONG.md` — thiết kế hệ thống, nguồn sự thật cho implementation
-3. `docs/V2_KICH_BAN_TEST.md` — kịch bản test, số liệu cụ thể để verify (sẽ có sau)
+3. `docs/V2_HANH_VI_HE_THONG.md` — hành vi runtime: 5 vai trò, 3 trạng thái kỳ, dữ liệu xuyên kỳ, nguyên tắc `.kept`/`.with_discarded`
+4. `docs/V2_KICH_BAN_TEST.md` — kịch bản test, số liệu cụ thể để verify (sẽ có sau)
 
 Khi code mâu thuẫn với thiết kế → sửa code. Khi thiết kế mâu thuẫn với nghiệp vụ → báo lỗi, không tự sửa.
 
