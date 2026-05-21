@@ -3,6 +3,7 @@ require "rails_helper"
 RSpec.describe "AuditLogs", type: :request do
   let(:technician) { create(:user, role: :technician) }
   let(:system_admin) { create(:user, :system_admin) }
+  let!(:open_period) { create(:period, closed: false) }
   let(:zone) { create(:zone) }
   let(:unit) { create(:unit, zone: zone) }
   let(:unit_admin) { create(:user, :unit_admin, unit: unit) }

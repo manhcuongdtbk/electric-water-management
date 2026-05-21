@@ -492,14 +492,14 @@ graph TD
 ```mermaid
 flowchart TD
     S1["Bước 1 (Kỹ thuật viên): Cài đặt hệ thống\n- Hệ thống có sẵn 2 tài khoản mặc định\n- Có sẵn 7 nhóm cấp bậc và giá trị mặc định"]
-    S2["Bước 2 (Quản trị viên hệ thống): Đăng nhập, thiết lập cơ bản\n- Đổi mật khẩu mặc định\n- Nhập đơn giá điện"]
-    S3["Bước 3 (Quản trị viên hệ thống): Tạo khu vực\n- Tên khu vực + công tơ tổng"]
-    S4["Bước 4 (Quản trị viên hệ thống): Tạo đơn vị\n- Gán vào khu vực"]
-    S5["Bước 5 (Quản trị viên hệ thống): Chỉ định đơn vị quản lý khu vực"]
-    S6["Bước 6 (Quản trị viên hệ thống): Tạo tài khoản\n- Quản trị viên đơn vị\n- Chỉ huy đơn vị"]
-    S7["Bước 7 (Quản trị viên đơn vị): Khai báo đơn vị\n- Đầu mối sinh hoạt + công tơ + quân số\n- Đầu mối công cộng + công tơ\n- Khối, nhóm (nếu cần)\n- Cấu hình đơn vị (% công cộng đơn vị, cột Khác)"]
-    S8["Bước 8 (Đơn vị quản lý khu vực hoặc quản trị viên hệ thống): Khai báo phần khu vực\n- Đầu mối bơm nước + công tơ\n- Đầu mối sinh hoạt thuộc khu vực\n- Đầu mối công cộng thuộc khu vực\n- Đầu mối ngoài biên chế\n- Phân bổ bơm nước"]
-    S9["Bước 9 (Quản trị viên hệ thống): Mở kỳ đầu tiên\n- Các quản trị viên nhập thủ công đầu kỳ + cuối kỳ công tơ"]
+    S2["Bước 2 (Quản trị viên hệ thống): Đăng nhập, thiết lập cơ bản\n- Đổi mật khẩu mặc định"]
+    S3["Bước 3 (Quản trị viên hệ thống): Mở kỳ đầu tiên\n- Nhập đơn giá điện, năm, tháng\n- Từ bước này mọi thay đổi dữ liệu nghiệp vụ cần kỳ đang mở"]
+    S4["Bước 4 (Quản trị viên hệ thống): Tạo khu vực\n- Tên khu vực + công tơ tổng"]
+    S5["Bước 5 (Quản trị viên hệ thống): Tạo đơn vị\n- Gán vào khu vực"]
+    S6["Bước 6 (Quản trị viên hệ thống): Chỉ định đơn vị quản lý khu vực"]
+    S7["Bước 7 (Quản trị viên hệ thống): Tạo tài khoản\n- Quản trị viên đơn vị, chỉ huy đơn vị\n- Gán vào đơn vị đã tạo"]
+    S8["Bước 8 (Đơn vị quản lý khu vực): Khai báo phần khu vực\n- Đầu mối bơm nước + công tơ\n- Đầu mối sinh hoạt thuộc khu vực\n- Đầu mối công cộng thuộc khu vực\n- Đầu mối ngoài biên chế\n- Phân bổ bơm nước"]
+    S9["Bước 9 (Quản trị viên đơn vị): Khai báo đơn vị\n- Đầu mối sinh hoạt + công tơ + quân số\n- Đầu mối công cộng + công tơ\n- Khối, nhóm (nếu cần)\n- Cấu hình đơn vị (% công cộng đơn vị, cột Khác)\n- Nhập thủ công đầu kỳ + cuối kỳ công tơ"]
 
     S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7 --> S8 --> S9
 ```

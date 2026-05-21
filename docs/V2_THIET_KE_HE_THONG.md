@@ -856,7 +856,7 @@ Dạng hệ số cột Khác: kế thừa hệ số (other_type = coefficient, o
 
 System_admin đóng kỳ đang mở → closed = true. Kỳ đã đóng: không ai sửa được số liệu.
 
-Cách implement: tạo concern `PeriodGuard` (hoặc tương tự). Áp dụng cho tất cả controller nhập liệu: meter_entries, pump_entries, electricity_supply, unit_config, contact_points, meters, blocks, groups. before_action check: nếu không có kỳ đang mở (Period.where(closed: false).none?) → chặn mọi thao tác tạo/sửa/xóa, hiển thị thông báo "Không có kỳ đang mở. Vui lòng liên hệ quản trị viên hệ thống." Thao tác đọc (xem) vẫn được phép.
+Cách implement: tạo concern `PeriodGuard` (hoặc tương tự). Áp dụng cho tất cả controller dữ liệu nghiệp vụ: zones, units, contact_points, meters, blocks, groups, meter_entries, pump_entries, electricity_supply, unit_config, ranks, pump_allocations. before_action check: nếu không có kỳ đang mở (Period.where(closed: false).none?) → chặn mọi thao tác tạo/sửa/xóa, hiển thị thông báo "Không có kỳ đang mở. Vui lòng liên hệ quản trị viên hệ thống." Thao tác đọc (xem) vẫn được phép. Nguyên tắc: mọi thay đổi dữ liệu nghiệp vụ đều cần kỳ đang mở. Chỉ quản trị hệ thống (tài khoản, sao lưu, nhật ký) hoạt động độc lập kỳ.
 
 ### Mở lại kỳ cũ
 
@@ -1098,21 +1098,21 @@ Cách phân biệt "tồn tại trong kỳ nhưng chưa nhập" vs "không tồn
 
 1. **Kỹ thuật viên: Cài đặt hệ thống.** Hệ thống có sẵn 2 tài khoản mặc định (technician, system_admin). Có sẵn 7 nhóm cấp bậc với giá trị mặc định.
 
-2. **Quản trị viên hệ thống: Đăng nhập, thiết lập cơ bản.** Đổi mật khẩu mặc định. Nhập đơn giá điện.
+2. **Quản trị viên hệ thống: Đăng nhập, thiết lập cơ bản.** Đổi mật khẩu mặc định.
 
-3. **Quản trị viên hệ thống: Tạo khu vực.** Tên khu vực + công tơ tổng (tên).
+3. **Quản trị viên hệ thống: Mở kỳ đầu tiên.** Nhập đơn giá điện, năm, tháng. Từ bước này trở đi mọi thay đổi dữ liệu nghiệp vụ đều cần kỳ đang mở.
 
-4. **Quản trị viên hệ thống: Tạo đơn vị.** Gán vào khu vực.
+4. **Quản trị viên hệ thống: Tạo khu vực.** Tên khu vực + công tơ tổng (tên).
 
-5. **Quản trị viên hệ thống: Chỉ định đơn vị quản lý khu vực.**
+5. **Quản trị viên hệ thống: Tạo đơn vị.** Gán vào khu vực.
 
-6. **Quản trị viên hệ thống: Tạo tài khoản.** Quản trị viên đơn vị, chỉ huy đơn vị.
+6. **Quản trị viên hệ thống: Chỉ định đơn vị quản lý khu vực.**
 
-7. **Quản trị viên đơn vị: Khai báo đơn vị.** Đầu mối sinh hoạt + công tơ + quân số. Đầu mối công cộng + công tơ. Khối, nhóm (nếu cần). Cấu hình đơn vị (công cộng đơn vị, cột Khác).
+7. **Quản trị viên hệ thống: Tạo tài khoản.** Quản trị viên đơn vị, chỉ huy đơn vị. Gán vào đơn vị đã tạo.
 
-8. **Đơn vị quản lý khu vực (hoặc quản trị viên hệ thống): Khai báo phần khu vực.** Đầu mối bơm nước + công tơ. Đầu mối sinh hoạt thuộc khu vực. Đầu mối công cộng thuộc khu vực. Đầu mối ngoài biên chế. Phân bổ bơm nước.
+8. **Đơn vị quản lý khu vực: Khai báo phần khu vực.** Đầu mối bơm nước + công tơ. Đầu mối sinh hoạt thuộc khu vực. Đầu mối công cộng thuộc khu vực. Đầu mối ngoài biên chế. Phân bổ bơm nước.
 
-9. **Quản trị viên hệ thống: Mở kỳ đầu tiên.** Các quản trị viên nhập thủ công đầu kỳ + cuối kỳ công tơ.
+9. **Quản trị viên đơn vị: Khai báo đơn vị.** Đầu mối sinh hoạt + công tơ + quân số. Đầu mối công cộng + công tơ. Khối, nhóm (nếu cần). Cấu hình đơn vị (công cộng đơn vị, cột Khác). Nhập thủ công đầu kỳ + cuối kỳ công tơ.
 
 ---
 
