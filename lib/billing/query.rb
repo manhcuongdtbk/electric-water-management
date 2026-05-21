@@ -24,7 +24,6 @@ module Billing
         .joins("LEFT JOIN zones unit_zones ON unit_zones.id = units.zone_id")
         .joins("LEFT JOIN zones cp_zones ON cp_zones.id = contact_points.zone_id")
         .where(contact_points: { contact_point_type: "residential" })
-        .merge(ContactPoint.kept)
         .accessible_by(ability)
         .includes(contact_point: [:block, :group, :zone, { unit: :zone }])
     end
