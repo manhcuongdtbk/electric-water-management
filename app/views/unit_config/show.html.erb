@@ -10,10 +10,8 @@
       Bạn chưa được gán đơn vị nào. Vui lòng liên hệ quản trị viên hệ thống.
     </div>
   <% end %>
-<% elsif current_period.nil? %>
-  <div class="bg-yellow-50 border border-yellow-200 rounded p-3 text-sm text-yellow-800 mb-4">
-    Không có kỳ đang mở. Mọi ô nhập đã bị khóa.
-  </div>
+<% else %>
+  <%= render "shared/period_indicator", period: @period %>
 <% end %>
 
 <% if current_user.system_admin? %>

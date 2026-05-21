@@ -1,15 +1,6 @@
 <% page_title t("sidebar.items.ranks") %>
 
-<% if @period.nil? %>
-  <div class="bg-yellow-50 border border-yellow-200 rounded p-3 text-sm text-yellow-800 mb-4">
-    Chưa có kỳ nào trong hệ thống. Tạo kỳ mới ở trang Đơn giá điện trước.
-  </div>
-<% else %>
-  <p class="text-sm text-gray-600 mb-2">
-    Nhóm cấp bậc cho <strong><%= period_label(@period) %></strong>
-    (<%= @period.open? ? t("common.badges.open") : t("common.badges.closed") %>).
-  </p>
-<% end %>
+<%= render "shared/period_indicator", period: @period %>
 
 <%
   add_link = (@period&.open? && can?(:create, Rank)) ?

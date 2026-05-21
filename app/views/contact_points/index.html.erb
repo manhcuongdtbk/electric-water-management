@@ -1,5 +1,7 @@
 <% page_title t("sidebar.items.contact_points") %>
 
+<%= render "shared/period_indicator", period: @period %>
+
 <div class="flex justify-between items-center mb-3">
   <div class="flex space-x-2">
     <%= link_to t("common.filter.all"), contact_points_path,

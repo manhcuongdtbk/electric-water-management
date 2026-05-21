@@ -2,13 +2,7 @@
 
 <% can_edit = @period.present? && can?(:update, MeterReading) %>
 
-<% if @period.nil? %>
-  <div class="bg-yellow-50 border border-yellow-200 rounded p-4 text-sm text-yellow-800 mb-4">
-    <%= t("flash.no_open_period") %>
-  </div>
-<% else %>
-  <p class="text-sm text-gray-600 mb-4">Nhập chỉ số cuối kỳ cho <strong><%= period_label(@period) %></strong>. Khi cuối kỳ < đầu kỳ (thay công tơ), điền cột "Nhập thủ công".</p>
-<% end %>
+<%= render "shared/period_indicator", period: @period %>
 
 <%= form_with url: meter_entries_path, method: :patch, local: true do %>
   <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden mb-4">

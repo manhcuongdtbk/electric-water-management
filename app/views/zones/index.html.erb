@@ -1,5 +1,7 @@
 <% page_title t("sidebar.items.zones") %>
 
+<%= render "shared/period_indicator", period: @period %>
+
 <%
   add_link = can?(:create, Zone) ?
     link_to(t("common.actions.add") + " " + t("resources.zone"), new_zone_path,
