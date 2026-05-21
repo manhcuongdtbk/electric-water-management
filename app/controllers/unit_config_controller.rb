@@ -61,7 +61,7 @@ class UnitConfigController < ApplicationController
 
   def load_unit
     if current_user.system_admin? && params[:unit_id].present?
-      Unit.kept.accessible_by(current_ability).find(params[:unit_id])
+      Unit.with_discarded.find(params[:unit_id])
     else
       current_user.unit
     end
