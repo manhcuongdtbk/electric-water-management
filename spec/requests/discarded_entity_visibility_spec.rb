@@ -83,6 +83,110 @@ RSpec.describe "Hiển thị data kỳ cũ cho entity đã xóa (request)", type
     end
   end
 
+  describe "GET /pump_entries kỳ cũ có water_pump đã xóa" do
+    let(:pump_cp) { sample.contact_points[:tram_bom_1] }
+    let(:pump_meter) { pump_cp.meters.first }
+
+    before { pump_cp.discard }
+
+    it "kỳ 5 (mở lại): thấy readings bơm nước đã xóa" do
+      service.close_period(period_6)
+      service.reopen_period(period_5)
+      get pump_entries_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(pump_meter.name)
+    end
+
+    it "kỳ 6 (đang mở): KHÔNG thấy readings bơm nước đã xóa" do
+      get pump_entries_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include(pump_meter.name)
+    end
+  end
+
+  describe "GET /electricity_supply kỳ cũ có zone đã xóa" do
+    before do
+      sample.contact_points.each_value(&:discard)
+      sample.unit_a.users.destroy_all
+      sample.unit_b.users.destroy_all
+      sample.unit_a.discard
+      sample.unit_b.discard
+      sample.zone.discard
+      service.close_period(period_6)
+      service.reopen_period(period_5)
+    end
+
+    it "thấy main_meter_reading kỳ 5 cho zone đã xóa" do
+      get electricity_supply_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(sample.main_meter.name)
+    end
+  end
+
+  describe "GET /unit_config kỳ cũ có đầu mối đã xóa" do
+    before do
+      kho_vat_tu.discard
+      service.close_period(period_6)
+      service.reopen_period(period_5)
+    end
+
+    it "thấy other_deductions kỳ 5 cho đầu mối đã xóa" do
+      get unit_config_path(unit_id: sample.unit_a.id)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(kho_vat_tu.name)
+    end
+  end
+
+  describe "GET /dashboard kỳ cũ có unit đã xóa" do
+    before do
+      sample.contact_points.values.select { |cp| cp.unit_id == sample.unit_b.id }.each(&:discard)
+      sample.unit_b.users.destroy_all
+      sample.unit_b.discard
+      service.close_period(period_6)
+      service.reopen_period(period_5)
+    end
+
+    it "tổng quan bao gồm unit đã xóa" do
+      get dashboard_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(sample.unit_b.name)
+    end
+  end
+
+  describe "UA-ZM xem kỳ cũ có zone-level CP đã xóa" do
+    let(:ua_zm) { create(:user, :unit_admin, unit: sample.unit_a) }
+    let(:chi_huy_kv) { sample.contact_points[:chi_huy_khu_vuc] }
+
+    before do
+      chi_huy_kv.discard
+      sign_out system_admin
+      sign_in ua_zm
+    end
+
+    it "GET /billing kỳ 5: UA-ZM thấy đầu mối sinh hoạt khu vực đã xóa" do
+      service.close_period(period_6)
+      service.reopen_period(period_5)
+      get billing_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(chi_huy_kv.name)
+    end
+
+    it "GET /billing kỳ 6: KHÔNG thấy đầu mối khu vực đã xóa" do
+      get billing_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include(chi_huy_kv.name)
+    end
+
+    it "GET /meter_entries kỳ 5: thấy readings đầu mối khu vực đã xóa" do
+      service.close_period(period_6)
+      service.reopen_period(period_5)
+      get meter_entries_path
+      expect(response).to have_http_status(:ok)
+      meter_name = chi_huy_kv.meters.with_discarded.first.name
+      expect(response.body).to include(meter_name)
+    end
+  end
+
   describe "POST /billing/recalculate kỳ cũ có zone đã xóa" do
     before do
       sample.contact_points.each_value(&:discard)
