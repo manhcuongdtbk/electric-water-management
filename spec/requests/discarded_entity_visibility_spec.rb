@@ -69,16 +69,15 @@ RSpec.describe "Hiển thị data kỳ cũ cho entity đã xóa (request)", type
       sample.zone.discard
     end
 
-    it "GET /history kỳ 5: dropdown zone chứa zone đã xóa" do
-      get history_path(mode: "single", period_id: period_5.id)
+    it "GET /billing kỳ 5: dropdown zone chứa zone đã xóa" do
+      get billing_path(period_id: period_5.id)
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(sample.zone.name)
     end
 
-    it "GET /history kỳ 5: filter theo zone đã xóa → thấy data" do
-      get history_path(mode: "single", period_id: period_5.id, zone_id: sample.zone.id)
+    it "GET /billing kỳ 5: filter theo zone đã xóa → thấy data" do
+      get billing_path(period_id: period_5.id, zone_id: sample.zone.id)
       expect(response).to have_http_status(:ok)
-      # Billing::Query trả calculations cho zone đã xóa ở kỳ 5
       expect(response.body).to include("Ban Tác huấn")
     end
   end

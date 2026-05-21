@@ -2,43 +2,19 @@ class HistoryController < ApplicationController
   include BusinessRoleRequired
   include BillingShared
 
-  MODES = %w[single compare range].freeze
+  MODES = %w[compare range].freeze
 
   def show
-    @mode = MODES.include?(params[:mode]) ? params[:mode] : "single"
+    @mode = MODES.include?(params[:mode]) ? params[:mode] : "compare"
     @available_periods = Period.order(year: :desc, month: :desc)
 
     case @mode
-    when "single"  then load_single
     when "compare" then load_compare
     when "range"   then load_range
     end
   end
 
   private
-
-  def load_single
-    @period = @available_periods.find_by(id: params[:period_id]) || @available_periods.first
-    return unless @period
-
-    @zone, @unit = resolve_filter
-    @show_zone_column = @zone.nil?
-    @show_unit_column = @unit.nil?
-    @ranks = @period.ranks.order(:position).to_a
-
-    scope = build_calculations_scope
-    @total_count = scope.count
-    @summary = Billing::Query.summary(scope, period: @period)
-    @warnings = collect_warnings_for_zones(zones_in_scope(@period))
-    @pagy, @calculations = pagy(scope, items: (params[:per_page] || 50).to_i)
-    preload_personnel(@calculations)
-
-    @dashboard_summary = DashboardSummary.new(user: current_user,
-                                              ability: current_ability,
-                                              period: @period).call
-    @available_zones = available_zones_for_filter
-    @available_units = available_units_for_filter(@zone)
-  end
 
   def load_compare
     @period_a = @available_periods.find_by(id: params[:period_a])

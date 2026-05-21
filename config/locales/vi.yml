@@ -259,6 +259,7 @@ vi:
       backups: "Sao lưu dữ liệu"
   flash:
     no_open_period: "Không có kỳ đang mở. Mọi ô nhập đã bị khóa. Vui lòng liên hệ quản trị viên hệ thống."
+    no_periods_yet: "Chưa có kỳ nào trong hệ thống. Vui lòng mở kỳ đầu tiên."
     password_changed: "Đã đổi mật khẩu thành công."
     period_now_open: "Kỳ tháng %{month}/%{year} đã mở. Vui lòng nhập liệu."
     record_created: "Đã tạo %{resource} \"%{name}\"."
@@ -449,6 +450,7 @@ vi:
   billing:
     flash:
       recalculated: "Đã tính toán lại bảng tính tiền."
+      period_closed: "Kỳ đã đóng, không thể tính toán lại."
       no_data: "Chưa có dữ liệu tính toán. Bấm \"Tính toán lại\" để tính toán kỳ này."
     buttons:
       recalculate: "Tính toán lại"

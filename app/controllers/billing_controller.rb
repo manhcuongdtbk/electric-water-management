@@ -4,8 +4,9 @@ class BillingController < ApplicationController
   include BillingShared
 
   def show
+    @available_periods = Period.order(year: :desc, month: :desc)
     @period = resolve_period
-    return redirect_to root_path, alert: t("flash.no_open_period") unless @period
+    return redirect_to pricing_path, alert: t("flash.no_periods_yet") unless @period
 
     @zone, @unit = resolve_filter
     @show_zone_column = @zone.nil?
@@ -35,8 +36,8 @@ class BillingController < ApplicationController
 
   def recalculate
     @period = resolve_period
-    return redirect_to root_path, alert: t("flash.no_open_period") unless @period
-    raise CanCan::AccessDenied if @period.closed?
+    return redirect_to pricing_path, alert: t("flash.no_periods_yet") unless @period
+    return redirect_to billing_path(period_id: @period.id), alert: t("billing.flash.period_closed") unless @period.open?
     authorize!(:recalculate, Calculation)
 
     @zone, @unit = resolve_filter
@@ -59,7 +60,7 @@ class BillingController < ApplicationController
     if params[:period_id].present?
       Period.find_by(id: params[:period_id])
     else
-      current_period
+      current_period || Period.order(year: :desc, month: :desc).first
     end
   end
 
