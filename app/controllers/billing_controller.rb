@@ -5,7 +5,7 @@ class BillingController < ApplicationController
   def show
     @available_periods = Period.order(year: :desc, month: :desc)
     @period = resolve_period
-    return redirect_to root_path, alert: t("flash.no_open_period") unless @period
+    return redirect_to pricing_path, alert: t("flash.no_periods_yet") unless @period
 
     @zone, @unit = resolve_filter
     @show_zone_column = @zone.nil?
@@ -35,8 +35,8 @@ class BillingController < ApplicationController
 
   def recalculate
     @period = resolve_period
-    return redirect_to root_path, alert: t("flash.no_open_period") unless @period
-    raise CanCan::AccessDenied if @period.closed?
+    return redirect_to pricing_path, alert: t("flash.no_periods_yet") unless @period
+    return redirect_to billing_path(period_id: @period.id), alert: t("billing.flash.period_closed") unless @period.open?
     authorize!(:recalculate, Calculation)
 
     @zone, @unit = resolve_filter
@@ -119,15 +119,12 @@ class BillingController < ApplicationController
   end
 
   def available_zones_for_filter
-    scope = Billing::Query.base_scope(@period, current_ability)
-    zone_ids = scope.pluck(Arel.sql("DISTINCT COALESCE(units.zone_id, contact_points.zone_id)")).compact
-    Zone.where(id: zone_ids).order(:name)
+    Zone.kept.order(:name)
   end
 
   def available_units_for_filter(zone)
-    scope = Billing::Query.base_scope(@period, current_ability)
-    scope = scope.where("units.zone_id = ?", zone.id) if zone
-    unit_ids = scope.pluck(Arel.sql("DISTINCT contact_points.unit_id")).compact
-    Unit.where(id: unit_ids).order(:name)
+    base = Unit.kept.order(:name)
+    base = base.where(zone_id: zone.id) if zone
+    base
   end
 end

@@ -97,9 +97,15 @@ RSpec.describe "Billing", type: :request do
         expect(response.body).not_to include("Tất cả đơn vị")
       end
 
-      it "hiển thị tên khu vực dạng read-only" do
+      it "hiển thị tên khu vực + tên đơn vị dạng cố định" do
         get billing_path
         expect(response.body).to include(sample.zone.name)
+        expect(response.body).to include(sample.unit_a.name)
+      end
+
+      it "hiện cột Đơn vị trong bảng (29 cột — phân biệt đơn vị vs khu vực)" do
+        get billing_path
+        expect(response.body).to include("Đơn vị")
       end
 
       it "KHÔNG thấy đầu mối của đơn vị B" do
@@ -119,8 +125,9 @@ RSpec.describe "Billing", type: :request do
         expect(response.body).not_to include("Chỉ huy khu vực")
       end
 
-      it "hiển thị tên đơn vị dạng read-only" do
+      it "hiển thị tên khu vực + tên đơn vị dạng cố định" do
         get billing_path
+        expect(response.body).to include(sample.zone.name)
         expect(response.body).to include(sample.unit_b.name)
       end
     end
@@ -134,6 +141,12 @@ RSpec.describe "Billing", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Ban Tác huấn")
         expect(response.body).to include("Chỉ huy khu vực")
+      end
+
+      it "hiển thị tên khu vực + tên đơn vị dạng cố định" do
+        get billing_path
+        expect(response.body).to include(sample.zone.name)
+        expect(response.body).to include(sample.unit_a.name)
       end
 
       it "KHÔNG thấy dropdown khu vực/đơn vị" do
@@ -152,6 +165,12 @@ RSpec.describe "Billing", type: :request do
         expect(response.body).to include("Đại đội 1")
         expect(response.body).not_to include("Ban Tác huấn")
         expect(response.body).not_to include("Chỉ huy khu vực")
+      end
+
+      it "hiển thị tên khu vực + tên đơn vị dạng cố định" do
+        get billing_path
+        expect(response.body).to include(sample.zone.name)
+        expect(response.body).to include(sample.unit_b.name)
       end
     end
 
@@ -217,7 +236,8 @@ RSpec.describe "Billing", type: :request do
                                         unit_price: BigDecimal("2336.4"))
       sign_in admin
       post recalculate_billing_path(period_id: sample.period.id)
-      expect(response).to redirect_to(new_user_session_path).or redirect_to(root_path)
+      expect(response).to redirect_to(billing_path(period_id: sample.period.id))
+      expect(flash[:alert]).to include("đã đóng")
     end
   end
 end
