@@ -32,4 +32,8 @@ class Period < ApplicationRecord
   def open?
     !closed
   end
+
+  def latest?
+    self.class.order(year: :desc, month: :desc).first&.id == id
+  end
 end
