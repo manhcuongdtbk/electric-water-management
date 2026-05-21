@@ -201,5 +201,28 @@ RSpec.describe "UnitConfig", type: :request do
         expect(response).to have_http_status(:ok)
       end
     end
+
+    context "SA dropdown: kỳ cũ không hiện unit tạo nhầm rồi xóa (không có data)" do
+      let(:system_admin) { create(:user, :system_admin) }
+
+      before do
+        sign_in system_admin
+        # Tạo unit_c rồi xóa ngay trong cùng kỳ → UnitConfig bị cleanup
+        unit_c = create(:unit, zone: zone, name: "Đơn vị tạm")
+        unit_c.discard
+        # Đóng kỳ, mở kỳ mới, đóng, mở lại kỳ cũ
+        period.update!(closed: true)
+        period_2 = PeriodService.new.open_new_period.period
+        period_2.update!(closed: true)
+        PeriodService.new.reopen_period(period)
+      end
+
+      it "dropdown không chứa unit tạo nhầm rồi xóa" do
+        get unit_config_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include(unit.name)
+        expect(response.body).not_to include("Đơn vị tạm")
+      end
+    end
   end
 end
