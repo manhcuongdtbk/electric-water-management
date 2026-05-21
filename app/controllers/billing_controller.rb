@@ -99,18 +99,26 @@ class BillingController < ApplicationController
     end
   end
 
-  # Dùng cho recalculate + warnings. Phải bao gồm zone đã xóa nếu có data
-  # cho kỳ đang xem (nghiệp vụ 23.1: data kỳ cũ giữ nguyên).
+  # Dùng cho recalculate + warnings.
+  # Kỳ cũ mở lại: .with_discarded — zone đã xóa có data cần tính/cảnh báo.
+  # Kỳ mới nhất: .kept — zone đã xóa không có data (cleanup), tránh cảnh báo nhiễu.
   def zones_in_scope(period)
-    return Zone.with_discarded.where(id: @zone.id) if @zone
+    zone_scope = reopened_old_period?(period) ? Zone.with_discarded : Zone.kept
+    return zone_scope.where(id: @zone.id) if @zone
 
     if current_user.role == "system_admin"
-      Zone.with_discarded.order(:name)
+      zone_scope.order(:name)
     else
       zone_ids = [current_user.unit&.zone_id].compact
       zone_ids += Zone.where(manager_unit_id: current_user.unit_id).pluck(:id) if current_user.unit_id
-      Zone.with_discarded.where(id: zone_ids.uniq)
+      zone_scope.where(id: zone_ids.uniq)
     end
+  end
+
+  def reopened_old_period?(period)
+    return false unless period&.open?
+    latest = Period.order(year: :desc, month: :desc).first
+    latest && period.id != latest.id
   end
 
   def redirect_filter_params

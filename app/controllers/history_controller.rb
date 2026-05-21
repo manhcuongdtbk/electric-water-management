@@ -102,16 +102,26 @@ class HistoryController < ApplicationController
     zones.flat_map { |z| ZoneWarningCollector.new(zone: z, period: @period).call }
   end
 
+  # History xem kỳ cũ (đã đóng) → .with_discarded.
+  # Nếu xem kỳ mới nhất đang mở → .kept (tránh cảnh báo nhiễu).
   def zones_in_scope_for_history
-    return Zone.with_discarded.where(id: @zone.id) if @zone
+    zone_scope = reopened_old_period_for_history?(@period) ? Zone.with_discarded : Zone.kept
+    return zone_scope.where(id: @zone.id) if @zone
 
     if current_user.role == "system_admin"
-      Zone.with_discarded
+      zone_scope
     else
       zone_ids = [current_user.unit&.zone_id].compact
       zone_ids += Zone.where(manager_unit_id: current_user.unit_id).pluck(:id) if current_user.unit_id
-      Zone.with_discarded.where(id: zone_ids.uniq)
+      zone_scope.where(id: zone_ids.uniq)
     end
+  end
+
+  # Kỳ đang xem là kỳ cũ (đã đóng, hoặc mở lại nhưng không phải mới nhất)?
+  def reopened_old_period_for_history?(period)
+    return false unless period
+    latest = Period.order(year: :desc, month: :desc).first
+    latest && period.id != latest.id
   end
 
   def available_zones_for_filter
