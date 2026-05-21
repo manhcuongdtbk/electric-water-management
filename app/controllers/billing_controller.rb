@@ -70,10 +70,8 @@ class BillingController < ApplicationController
       [zone, unit]
     elsif current_user.role == "unit_admin"
       unit = current_user.unit
-      return [nil, nil] unless unit&.kept?
-      zone = unit.zone
-      return [nil, unit] unless zone&.kept?
-      if Zone.kept.exists?(id: zone.id, manager_unit_id: unit.id)
+      zone = unit&.zone
+      if zone && Zone.exists?(id: zone.id, manager_unit_id: unit.id)
         [zone, nil]
       else
         [zone, unit]
@@ -81,9 +79,7 @@ class BillingController < ApplicationController
     else
       # commander: chỉ xem đơn vị mình
       unit = current_user.unit
-      return [nil, nil] unless unit&.kept?
-      zone = unit.zone
-      [zone&.kept? ? zone : nil, unit]
+      [unit&.zone, unit]
     end
   end
 
