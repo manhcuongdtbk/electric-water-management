@@ -60,7 +60,7 @@ class ZoneWarningCollector
   def loss_and_pump_warnings
     loss = LossCalculator.new(zone: @zone, period: @period).call
     pump = PumpAllocationCalculator.new(zone: @zone, period: @period, loss_results: loss).call
-    loss.warnings + pump.warnings
+    (loss.warnings + pump.warnings).map { |w| "Khu vực #{@zone.name}: #{w}" }
   rescue StandardError => e
     Rails.logger.warn(
       "ZoneWarningCollector#loss_and_pump_warnings zone=#{@zone&.id} period=#{@period&.id}: #{e.class}: #{e.message}"

@@ -39,17 +39,16 @@ RSpec.describe ZoneWarningCollector do
     end
 
     context "T104 — tổn hao âm (main_meter nhỏ)" do
-      it "warning subtotal_exceeds_main từ LossCalculator" do
+      it "warning subtotal_exceeds_main từ LossCalculator, có tên khu vực" do
         sample.main_meter_reading.update!(usage: 1900)
         warnings = described_class.new(zone: sample.zone, period: sample.period).call
-        expect(warnings).to include(
-          I18n.t("services.loss_calculator.warnings.subtotal_exceeds_main")
-        )
+        expect(warnings.join(" ")).to include(sample.zone.name)
+          .and include(I18n.t("services.loss_calculator.warnings.subtotal_exceeds_main"))
       end
     end
 
     context "T105 — tất cả công tơ no_loss" do
-      it "warning no_loss_bearing_meters" do
+      it "warning no_loss_bearing_meters, có tên khu vực" do
         sample.meters.each do |key, meter|
           next if key == :ct_bn1   # giữ bơm nước
           meter.meter_readings.find_by(period: sample.period).update!(no_loss: true)
@@ -57,9 +56,8 @@ RSpec.describe ZoneWarningCollector do
         # CT-BN1 cũng phải no_loss để B = 0
         sample.meters[:ct_bn1].meter_readings.find_by(period: sample.period).update!(no_loss: true)
         warnings = described_class.new(zone: sample.zone, period: sample.period).call
-        expect(warnings).to include(
-          I18n.t("services.loss_calculator.warnings.no_loss_bearing_meters")
-        )
+        expect(warnings.join(" ")).to include(sample.zone.name)
+          .and include(I18n.t("services.loss_calculator.warnings.no_loss_bearing_meters"))
       end
     end
 
