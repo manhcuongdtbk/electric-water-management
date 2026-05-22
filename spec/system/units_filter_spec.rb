@@ -18,4 +18,31 @@ RSpec.describe "Units filter", type: :system do
 
   it_behaves_like "zone filter behavior"
   it_behaves_like "per_page auto-submit behavior"
+
+  # --- Page-specific ---
+
+  it "tìm kiếm theo tên đơn vị" do
+    visit units_path
+    fill_in "q", with: "Đơn vị A1"
+    click_on I18n.t("common.actions.search")
+    expect(page).to have_content("Đơn vị A1")
+    expect(page).not_to have_content("Đơn vị B1")
+  end
+
+  it "xóa unit quản lý khu vực → confirm có cảnh báo" do
+    visit units_path
+    accept_confirm(/quản lý khu vực/) do
+      within("tr", text: unit1.name) { click_on I18n.t("common.actions.destroy") }
+    end
+    expect(page).to have_current_path(units_path)
+  end
+
+  it "xóa unit không quản lý khu vực → confirm không có cảnh báo quản lý" do
+    non_manager = create(:unit, zone: zone1, name: "Đơn vị không quản lý")
+    visit units_path
+    msg = accept_confirm do
+      within("tr", text: non_manager.name) { click_on I18n.t("common.actions.destroy") }
+    end
+    expect(msg).not_to include("quản lý khu vực")
+  end
 end
