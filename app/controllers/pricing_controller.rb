@@ -4,14 +4,7 @@ class PricingController < ApplicationController
   include ListSortable
 
   def show
-    @current_period = Period.current
-    all_periods = Period.order(year: :desc, month: :desc)
-    @latest_period = all_periods.first
-    @next_year, @next_month = compute_next_year_month(@latest_period)
-    @available_years = Period.distinct.order(year: :desc).pluck(:year)
-    @selected_year = params[:year].presence&.to_i
-    filtered_periods = @selected_year ? all_periods.where(year: @selected_year) : all_periods
-    @pagy, @all_periods = pagy_with_per_page(filtered_periods, default: 10)
+    load_show_data
     authorize!(:read, Period)
   end
 
@@ -23,13 +16,7 @@ class PricingController < ApplicationController
       redirect_to pricing_path, notice: t("pricing.flash.updated")
     else
       @current_period = @period
-      all_periods = Period.order(year: :desc, month: :desc)
-      @latest_period = all_periods.first
-      @next_year, @next_month = compute_next_year_month(@latest_period)
-      @available_years = Period.distinct.order(year: :desc).pluck(:year)
-      @selected_year = params[:year].presence&.to_i
-      filtered_periods = @selected_year ? all_periods.where(year: @selected_year) : all_periods
-      @pagy, @all_periods = pagy_with_per_page(filtered_periods, default: 10)
+      load_show_data
       render :show, status: :unprocessable_entity
     end
   end
@@ -69,6 +56,17 @@ class PricingController < ApplicationController
   end
 
   private
+
+  def load_show_data
+    @current_period ||= Period.current
+    all_periods = Period.order(year: :desc, month: :desc)
+    @latest_period = all_periods.first
+    @next_year, @next_month = compute_next_year_month(@latest_period)
+    @available_years = Period.distinct.order(year: :desc).pluck(:year)
+    @selected_year = params[:year].presence&.to_i
+    filtered_periods = @selected_year ? all_periods.where(year: @selected_year) : all_periods
+    @pagy, @all_periods = pagy_with_per_page(filtered_periods, default: 10)
+  end
 
   def period_params
     params.require(:period).permit(:unit_price, :savings_rate, :division_public_rate, :water_pump_standard)
