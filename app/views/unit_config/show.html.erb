@@ -1,18 +1,12 @@
-<% page_title "Cấu hình đơn vị#{@unit ? ": #{@unit.name}" : ''}" %>
+<% page_title "Cấu hình đơn vị" %>
 
-<% if @unit.nil? %>
-  <% if current_user.system_admin? %>
-    <div class="bg-blue-50 border border-blue-200 rounded p-3 text-sm text-blue-800 mb-4">
-      Vui lòng chọn đơn vị bên dưới để xem cấu hình.
-    </div>
-  <% else %>
-    <div class="bg-yellow-50 border border-yellow-200 rounded p-3 text-sm text-yellow-800">
-      Bạn chưa được gán đơn vị nào. Vui lòng liên hệ quản trị viên hệ thống.
-    </div>
-  <% end %>
-<% else %>
-  <%= render "shared/period_indicator", period: @period %>
+<% if @unit.nil? && !current_user.system_admin? %>
+  <div class="bg-yellow-50 border border-yellow-200 rounded p-3 text-sm text-yellow-800">
+    Bạn chưa được gán đơn vị nào. Vui lòng liên hệ quản trị viên hệ thống.
+  </div>
 <% end %>
+
+<%= render "shared/period_indicator", period: @period if @unit %>
 
 <% if current_user.system_admin? %>
   <%= render "shared/list_toolbar",
@@ -24,9 +18,10 @@
         filters: [
           { label: "Khu vực:", param: :zone_id,
             options: @available_zones.pluck(:name, :id), selected: @zone&.id,
-            children: [:unit_id] },
+            children: [:unit_id], blank_text: "— Chọn khu vực —" },
           { label: "Đơn vị:", param: :unit_id,
-            options: @available_units.pluck(:name, :id), selected: @unit&.id }
+            options: @available_units.pluck(:name, :id), selected: @unit&.id,
+            blank_text: "— Chọn đơn vị —" }
         ] %>
 <% end %>
 
