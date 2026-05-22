@@ -1,14 +1,24 @@
 <%
-  # Locals:
-  #   url:                  URL string for search form (Rails path).
-  #   search_placeholder:   String hiển thị trong text input.
-  #   extra_hidden:         Hash các hidden fields giữ lại filter (vd {type: @filter_type}).
-  #   total_count:          Integer — tổng số bản ghi.
-  #   add_link:             Optional link_to HTML (nil nếu user không có quyền create).
-  #   filters:              Array of Hashes cho dropdown filters. Mỗi item:
-  #                           { label:, param:, options:, selected: }
-  #                           options: Array [[text, value], ...] (không cần "Tất cả", tự thêm).
-  #   per_page_storage_key: String — localStorage key lưu per_page (mặc định "list_per_page").
+  # Toolbar dùng chung cho các trang danh sách (index).
+  #
+  # Bao gồm: ô tìm kiếm, dropdown filters (nếu có), chọn số dòng/trang, tổng bản ghi, nút thêm mới.
+  # Mọi form trong toolbar giữ lại params của nhau qua hidden fields để không mất filter khi thao tác.
+  #
+  # Locals (bắt buộc):
+  #   url:                  String — URL cho form (vd: units_path).
+  #   total_count:          Integer — tổng số bản ghi (sau khi lọc).
+  #
+  # Locals (tùy chọn):
+  #   search_placeholder:   String — placeholder ô tìm kiếm (mặc định: "Tìm kiếm...").
+  #   extra_hidden:         Hash — hidden fields tĩnh giữ lại khi submit (vd: {type: @filter_type}).
+  #   add_link:             HTML — link_to nút thêm mới (nil nếu không có quyền).
+  #   filters:              Array of Hash — dropdown filters. Mỗi item:
+  #                           { label: "Khu vực:", param: :zone_id,
+  #                             options: [["Khu vực 1", 1], ...], selected: @selected_zone_id }
+  #                           "Tất cả" tự thêm ở đầu, không cần truyền.
+  #                           Khi không truyền (mặc định []), không render dropdown nào.
+  #   per_page_storage_key: String — localStorage key cho per_page (mặc định "list_per_page").
+  #                           Mỗi trang nên truyền key riêng để per_page không ảnh hưởng trang khác.
   extra_hidden ||= {}
   search_placeholder ||= t("common.list.search_placeholder")
   add_link ||= nil
@@ -21,6 +31,7 @@
 
 <div class="bg-white border border-gray-200 rounded-lg p-3 mb-3 flex items-center justify-between gap-3 flex-wrap">
   <div class="flex items-center gap-3 flex-wrap">
+    <%# Form tìm kiếm: giữ lại per_page, filter params, extra_hidden %>
     <%= form_with url: url, method: :get, local: true, class: "flex items-center gap-2" do %>
       <% extra_hidden.each do |k, v| %>
         <%= hidden_field_tag k, v %>
@@ -40,6 +51,7 @@
       <% end %>
     <% end %>
 
+    <%# Dropdown filters: mỗi filter là 1 form riêng, giữ lại q, per_page, các filter khác %>
     <% filters.each do |filter| %>
       <%= form_with url: url, method: :get, local: true, class: "flex items-center gap-2" do %>
         <%= hidden_field_tag :q, params[:q] if params[:q].present? %>
@@ -58,6 +70,7 @@
       <% end %>
     <% end %>
 
+    <%# Chọn số dòng/trang: giữ lại q, sort, dir, extra_hidden, filter params %>
     <%= form_with url: url, method: :get, local: true, class: "flex items-center gap-2" do %>
       <% extra_hidden.each do |k, v| %>
         <%= hidden_field_tag k, v %>
