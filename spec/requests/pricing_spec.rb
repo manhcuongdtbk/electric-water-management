@@ -105,6 +105,48 @@ RSpec.describe "Pricing", type: :request do
     end
   end
 
+  describe "GET /pricing — cảnh báo đóng kỳ" do
+    let!(:period) { create(:period, year: 2026, month: 6, closed: false, unit_price: 2336) }
+    let(:html) { Nokogiri::HTML(response.body) }
+
+    it "hiển thị cảnh báo trước khi đóng kỳ cho system_admin" do
+      get pricing_path
+      expect(response.body).to include("Lưu ý khi đóng kỳ:")
+      expect(response.body).to include("hoàn tất cả nhập liệu lẫn cấu trúc")
+      expect(response.body).to include("toàn bộ số liệu của kỳ này sẽ bị khóa")
+    end
+
+    it "cảnh báo nhập liệu được phép sửa khi mở lại kỳ cũ" do
+      get pricing_path
+      %w[điện\ lực công\ tơ tổn\ hao bơm\ nước nhóm\ cấp\ bậc ngoài\ biên\ chế
+         khấu\ trừ\ khác công\ cộng\ đơn\ vị phân\ bổ\ bơm\ nước].each do |term|
+        expect(response.body).to include(term)
+      end
+    end
+
+    it "cảnh báo cấu trúc không thể thay đổi khi mở lại kỳ cũ" do
+      get pricing_path
+      expect(response.body).to include("Không thể thay đổi cấu trúc")
+      %w[khu\ vực đơn\ vị đầu\ mối công\ tơ\ tổng nhóm\ cấp\ bậc].each do |term|
+        expect(response.body).to include(term)
+      end
+    end
+
+    it "cảnh báo phải đóng hết kỳ đang mở trước khi mở lại kỳ cũ" do
+      get pricing_path
+      expect(response.body).to include("phải đóng hết các kỳ đang mở trước")
+    end
+
+    it "không hiển thị cảnh báo đóng kỳ cho vai trò không có quyền" do
+      zone = create(:zone)
+      unit = create(:unit, zone: zone)
+      unit_admin = create(:user, :unit_admin, unit: unit)
+      sign_in unit_admin
+      get pricing_path
+      expect(response.body).not_to include("Lưu ý khi đóng kỳ:")
+    end
+  end
+
   describe "view permission guards" do
     let!(:zone) { create(:zone) }
     let!(:unit) { create(:unit, zone: zone) }
