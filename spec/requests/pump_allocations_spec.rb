@@ -36,6 +36,60 @@ RSpec.describe "PumpAllocations", type: :request do
     end
   end
 
+  describe "GET /pump_allocations — lọc theo khu vực và tìm kiếm" do
+    let!(:zone2) { create(:zone, name: "Khu vực 2") }
+    let!(:unit2) { create(:unit, zone: zone2, name: "Đơn vị 2") }
+    let!(:alloc1) { create(:pump_allocation, zone: zone, period: period, unit: unit, contact_point: nil) }
+    let!(:alloc2) { create(:pump_allocation, zone: zone2, period: period, unit: unit2, contact_point: nil) }
+    let(:html) { Nokogiri::HTML(response.body) }
+
+    it "lọc theo khu vực chỉ hiển thị phân bổ của khu vực đó" do
+      get pump_allocations_path, params: { zone_id: zone2.id }
+      rows = html.css("table tbody tr")
+      expect(rows.size).to eq(1)
+      expect(rows.first.text).to include(zone2.name)
+      expect(rows.first.text).not_to include(zone.name)
+    end
+
+    it "dropdown khu vực chỉ chứa các khu vực có phân bổ" do
+      get pump_allocations_path
+      options = html.css("select#zone_id option").map(&:text)
+      expect(options).to include("Tất cả", zone.name, zone2.name)
+    end
+
+    it "dropdown khu vực không chứa khu vực không có phân bổ" do
+      zone_empty = create(:zone, name: "Khu vực trống")
+      get pump_allocations_path
+      options = html.css("select#zone_id option").map(&:text)
+      expect(options).not_to include("Khu vực trống")
+    end
+
+    it "tìm kiếm theo tên đơn vị, không tìm theo tên khu vực" do
+      get pump_allocations_path, params: { q: unit2.name }
+      rows = html.css("table tbody tr")
+      expect(rows.size).to eq(1)
+      expect(response.body).to include(unit2.name)
+    end
+
+    it "kết hợp lọc khu vực và tìm kiếm" do
+      get pump_allocations_path, params: { zone_id: zone.id, q: "không tồn tại" }
+      rows = html.css("table tbody tr")
+      expect(rows.first.text).to include("Không có bản ghi")
+    end
+
+    it "hiển thị link xóa bộ lọc khi có filter" do
+      get pump_allocations_path, params: { zone_id: zone.id }
+      expect(response.body).to include(I18n.t("common.list.clear_filter"))
+    end
+
+    it "zone filter và per_page giữ lại giá trị của nhau" do
+      get pump_allocations_path, params: { zone_id: zone2.id, per_page: 10 }
+      expect(response).to have_http_status(:ok)
+      selected_zone = html.css("select#zone_id option[selected]")
+      expect(selected_zone.first&.attr("value")).to eq(zone2.id.to_s)
+    end
+  end
+
   describe "POST /pump_allocations" do
     it "tạo phân bổ cho unit" do
       post pump_allocations_path, params: {
