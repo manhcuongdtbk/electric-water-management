@@ -21,13 +21,13 @@
       <tr>
         <%= sortable_header :position, "#",
               current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: { per_page: params[:per_page] } %>
+              extra_params: { q: params[:q], per_page: params[:per_page] } %>
         <%= sortable_header :name, "Nhóm cấp bậc",
               current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: { per_page: params[:per_page] } %>
+              extra_params: { q: params[:q], per_page: params[:per_page] } %>
         <%= sortable_header :quota, "Định mức (kWh/người)",
               current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: { per_page: params[:per_page] }, align: :right %>
+              extra_params: { q: params[:q], per_page: params[:per_page] }, align: :right %>
         <%= list_header t("common.list.actions"), align: :right %>
       </tr>
     </thead>
@@ -38,7 +38,7 @@
       <% @ranks.each do |rank| %>
         <tr class="hover:bg-gray-50 transition-colors">
           <td class="px-4 py-2 text-sm text-gray-900"><%= rank.position %></td>
-          <td class="px-4 py-2 text-sm text-gray-900"><%= rank.name %></td>
+          <td class="px-4 py-2 text-sm font-medium text-gray-900"><%= rank.name %></td>
           <td class="px-4 py-2 text-sm text-right text-gray-600"><%= number_to_vi(rank.quota) %></td>
           <td class="px-4 py-2 text-sm text-right space-x-2">
             <% if @period&.open? && (can?(:update, rank) || can?(:destroy, rank)) %>

@@ -6,12 +6,20 @@
       class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700") : nil
 %>
 
+<%
+  role_options = UsersController::ROLES.map { |r| [I18n.t("activerecord.attributes.user.roles.#{r}"), r] }
+%>
+
 <%= render "shared/list_toolbar",
       url: users_path,
-      search_placeholder: "Tìm theo tên đăng nhập...",
+      search_placeholder: "Tìm theo tên đăng nhập hoặc tên hiển thị...",
       total_count: @total_count,
       add_link: add_link,
-      per_page_storage_key: "users_per_page" %>
+      per_page_storage_key: "users_per_page",
+      filters: [
+        { label: "Vai trò:", param: :role,
+          options: role_options, selected: @filter_role }
+      ] %>
 
 <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
   <table class="min-w-full divide-y divide-gray-200">
@@ -19,16 +27,16 @@
       <tr>
         <%= sortable_header :username, t("activerecord.attributes.user.username"),
               current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: { q: params[:q], per_page: params[:per_page] } %>
+              extra_params: { q: params[:q], per_page: params[:per_page], role: params[:role] } %>
         <%= sortable_header :display_name, t("activerecord.attributes.user.display_name"),
               current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: { q: params[:q], per_page: params[:per_page] } %>
+              extra_params: { q: params[:q], per_page: params[:per_page], role: params[:role] } %>
         <%= sortable_header :role, t("activerecord.attributes.user.role"),
               current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: { q: params[:q], per_page: params[:per_page] } %>
+              extra_params: { q: params[:q], per_page: params[:per_page], role: params[:role] } %>
         <%= sortable_header :unit, t("activerecord.attributes.user.unit"),
               current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: { q: params[:q], per_page: params[:per_page] } %>
+              extra_params: { q: params[:q], per_page: params[:per_page], role: params[:role] } %>
         <%= list_header t("common.list.actions"), align: :right %>
       </tr>
     </thead>
