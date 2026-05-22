@@ -26,12 +26,13 @@ class GroupsController < ApplicationController
 
     if current_user.role == "system_admin"
       @zone, @unit = resolve_zone_unit_filter
+      # Tính available zones/units TRƯỚC khi filter để dropdown không bị giới hạn
+      all_unit_ids = scope.unscope(:order).distinct.pluck(:unit_id)
+      all_zone_ids = Unit.where(id: all_unit_ids).distinct.pluck(:zone_id)
+      @available_zones = available_zones_for_filter(zone_ids: all_zone_ids)
+      @available_units = available_units_for_filter(@zone, unit_ids: all_unit_ids)
       scope = scope.where(units: { zone_id: @zone.id }) if @zone
       scope = scope.where(unit_id: @unit.id) if @unit
-      unit_ids_in_scope = scope.unscope(:order).distinct.pluck(:unit_id)
-      zone_ids_in_scope = Unit.where(id: unit_ids_in_scope).distinct.pluck(:zone_id)
-      @available_zones = available_zones_for_filter(zone_ids: zone_ids_in_scope)
-      @available_units = available_units_for_filter(@zone, unit_ids: unit_ids_in_scope)
     end
 
     if (q = params[:q]).present?

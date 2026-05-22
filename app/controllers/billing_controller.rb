@@ -122,6 +122,9 @@ class BillingController < ApplicationController
   end
 
   def redirect_filter_params
-    params.permit(:period_id, :zone_id, :unit_id, :q).to_h.compact_blank
+    result = params.permit(:period_id, :zone_id, :unit_id, :q).to_h.compact_blank
+    # Khi auto-select zone từ unit, zone_id không có trong params gốc → thêm vào
+    result[:zone_id] ||= @zone&.id&.to_s if @zone
+    result.compact_blank
   end
 end
