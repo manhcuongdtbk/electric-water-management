@@ -52,6 +52,22 @@ module ZoneUnitFilterable
     scope
   end
 
+  # SA-only: resolve zone, compute available zones, filter scope.
+  # Non-SA: trả scope không đổi.
+  #
+  # Dùng cho scope có cột zone_id trực tiếp (units, pump_allocations).
+  # Không có unit filter — chỉ zone dropdown đơn.
+  def apply_sa_zone_filter(scope, zone_id_column: :zone_id)
+    return scope unless current_user.system_admin?
+
+    @zone = params[:zone_id].present? ? Zone.kept.find_by(id: params[:zone_id]) : nil
+    @available_zones = available_zones_for_filter(
+      zone_ids: scope.unscope(:order).distinct.pluck(zone_id_column).compact
+    )
+    scope = scope.where(zone_id_column => @zone.id) if @zone
+    scope
+  end
+
   # Danh sách khu vực cho dropdown filter.
   # Có thể giới hạn bằng zone_ids (chỉ khu vực có data trong scope).
   def available_zones_for_filter(zone_scope: Zone.kept, zone_ids: nil)

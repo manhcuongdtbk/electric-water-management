@@ -10,10 +10,10 @@
 
 <%
   toolbar_filters = []
-  if current_user.role == "system_admin"
+  if current_user.system_admin?
     toolbar_filters = [
       { label: "Khu vực:", param: :zone_id,
-        options: @zones.pluck(:name, :id), selected: @selected_zone_id }
+        options: @available_zones.pluck(:name, :id), selected: @zone&.id }
     ]
   end
 %>

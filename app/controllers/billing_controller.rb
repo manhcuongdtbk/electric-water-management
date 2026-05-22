@@ -65,7 +65,7 @@ class BillingController < ApplicationController
   end
 
   def resolve_filter
-    if current_user.role == "system_admin"
+    if current_user.system_admin?
       resolve_zone_unit_filter(zone_scope: Zone.with_discarded, unit_scope: Unit.with_discarded)
     else
       unit = current_user.unit
@@ -103,7 +103,7 @@ class BillingController < ApplicationController
   def zones_in_scope(period)
     return Zone.with_discarded.where(id: @zone.id) if @zone
 
-    if current_user.role == "system_admin"
+    if current_user.system_admin?
       Zone.with_discarded.order(:name)
     else
       zone_ids = [current_user.unit&.zone_id].compact
@@ -114,7 +114,7 @@ class BillingController < ApplicationController
 
   # Billing-specific: non-admin chỉ thấy zone của mình.
   def available_zones_for_billing_filter
-    if current_user.role == "system_admin"
+    if current_user.system_admin?
       available_zones_for_filter(zone_scope: Zone.with_discarded)
     else
       [current_user.unit&.zone].compact

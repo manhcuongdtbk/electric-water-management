@@ -33,7 +33,7 @@ class ContactPointsController < ApplicationController
     @filter_type = params[:type] if TYPES.include?(params[:type])
     scope = scope.where(contact_point_type: @filter_type) if @filter_type
 
-    if current_user.role == "system_admin"
+    if current_user.system_admin?
       @zone, @unit = resolve_zone_unit_filter
       # Tính available zones/units TRƯỚC khi filter để dropdown không bị giới hạn
       all_zone_ids = scope.unscope(:order).distinct.pluck(:zone_id).compact +
