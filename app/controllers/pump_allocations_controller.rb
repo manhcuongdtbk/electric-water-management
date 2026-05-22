@@ -2,6 +2,7 @@ class PumpAllocationsController < ApplicationController
   include PeriodGuard
   include AuthorizeResource
   include BusinessRoleRequired
+  include ZoneUnitFilterable
 
   before_action :set_allocation, only: [:edit, :update, :destroy]
   before_action :require_open_period, only: [:create, :update, :destroy]
@@ -23,11 +24,7 @@ class PumpAllocationsController < ApplicationController
                           .joins(:zone)
                           .left_joins(:unit, :contact_point)
     scope = scope.where(period: @period) if @period
-    if current_user.role == "system_admin"
-      @zones = Zone.where(id: scope.select(:zone_id)).order(:name)
-      @selected_zone_id = params[:zone_id].presence&.to_i
-      scope = scope.where(zone_id: @selected_zone_id) if @selected_zone_id
-    end
+    scope = apply_sa_zone_filter(scope)
     if (q = params[:q]).present?
       like = "%#{q.strip}%"
       scope = scope.where("units.name ILIKE :q OR contact_points.name ILIKE :q", q: like)

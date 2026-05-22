@@ -3,6 +3,7 @@ class UnitsController < ApplicationController
   include AuthorizeResource
   include StructureChangeGuard
   include BusinessRoleRequired
+  include ZoneUnitFilterable
 
   before_action :set_unit, only: [:show, :edit, :update, :destroy]
   before_action :require_open_period,
@@ -20,11 +21,7 @@ class UnitsController < ApplicationController
   def index
     @period = current_period
     scope = load_collection(Unit).includes(:zone, :managed_zones).left_joins(:zone)
-    if current_user.role == "system_admin"
-      @selected_zone_id = params[:zone_id].presence&.to_i
-      @zones = Zone.where(id: scope.select(:zone_id)).order(:name)
-      scope = scope.where(zone_id: @selected_zone_id) if @selected_zone_id
-    end
+    scope = apply_sa_zone_filter(scope)
     if (q = params[:q]).present?
       scope = scope.where("units.name ILIKE ?", "%#{q.strip}%")
     end
