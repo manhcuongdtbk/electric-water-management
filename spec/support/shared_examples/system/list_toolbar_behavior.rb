@@ -1,36 +1,40 @@
 # Shared system spec examples cho _list_toolbar behavior.
 # Dùng Capybara API (visit, fill_in, select, click_on) — chỉ dùng trong type: :system.
 #
+# Params chung (caller khai báo 1 lần, dùng cho nhiều shared examples):
+#   path:                → URL trang index
+#   filter_param:        → HTML id/name của dropdown filter (vd: "zone_id", "type")
+#   filter_option_text:  → Text option để chọn (vd: zone1.name, "Công cộng")
+#   filter_option_value: → Value option đó (vd: zone1.id, "residential")
+#   content_included:    → Text phải có khi lọc / tìm kiếm
+#   content_excluded:    → Text không được có khi lọc / tìm kiếm
+#   search_text:         → Text tìm kiếm
+#   sort_column:         → Sort column name (vd: "name")
+#   deletable_name:      → Tên entity để test xóa
+#   path_with_params(**params) → URL với query params
+#   create_extra_data    → method tạo thêm data để test per_page
+#
 # ============================================================
 
-# Shared examples cho toolbar có 1 dropdown filter (auto-submit).
-#
-# Yêu cầu let/method trong caller:
-#   path:                   → URL trang index
-#   filter_param:           → HTML id/name của select (vd: "zone_id", "type")
-#   filter_option_text:     → Text của option để chọn (vd: zone1.name, "Công cộng")
-#   filter_option_value:    → Value của option đó (vd: zone1.id, "residential")
-#   content_when_filtered:  → Text phải có sau khi lọc
-#   content_when_excluded:  → Text không được có sau khi lọc
-#   path_with_params(**params) → URL với query params
+# Dropdown filter auto-submit + clear + xóa bộ lọc.
 RSpec.shared_examples "single filter behavior" do
   it "chọn filter → bảng chỉ hiện data đúng" do
     visit path
-    expect(page).to have_content(content_when_filtered)
-    expect(page).to have_content(content_when_excluded)
+    expect(page).to have_content(content_included)
+    expect(page).to have_content(content_excluded)
 
     select filter_option_text, from: filter_param
-    expect(page).to have_content(content_when_filtered)
-    expect(page).not_to have_content(content_when_excluded)
+    expect(page).to have_content(content_included)
+    expect(page).not_to have_content(content_excluded)
   end
 
   it "chọn filter rồi chọn Tất cả → hiện lại toàn bộ" do
     visit send(:path_with_params, filter_param.to_sym => filter_option_value)
-    expect(page).not_to have_content(content_when_excluded)
+    expect(page).not_to have_content(content_excluded)
 
     select "Tất cả", from: filter_param
-    expect(page).to have_content(content_when_filtered)
-    expect(page).to have_content(content_when_excluded)
+    expect(page).to have_content(content_included)
+    expect(page).to have_content(content_excluded)
   end
 
   it "Xóa bộ lọc reset filter về mặc định" do
@@ -38,25 +42,16 @@ RSpec.shared_examples "single filter behavior" do
     expect(page).to have_content("Xóa bộ lọc")
 
     click_on "Xóa bộ lọc"
-    expect(page).to have_content(content_when_filtered)
-    expect(page).to have_content(content_when_excluded)
+    expect(page).to have_content(content_included)
+    expect(page).to have_content(content_excluded)
     expect(find("select##{filter_param}").value).to eq("")
   end
 end
 
-# Shared examples cho toolbar có cascade khu vực → đơn vị.
-#
-# Yêu cầu let/method trong caller:
-#   path:           → URL trang index
-#   zone1:          → Zone thứ nhất
-#   zone2:          → Zone thứ hai
-#   unit1:          → Unit thuộc zone1
-#   unit2:          → Unit thuộc zone2
-#   path_with_params(**params) → URL với query params
+# Cascade khu vực → đơn vị.
 RSpec.shared_examples "zone-unit cascade filter behavior" do
   let(:zone_select_id) { "zone_id" }
   let(:unit_select_id) { "unit_id" }
-  let(:zone_blank_text) { "Tất cả" }
   let(:unit_blank_text) { "Tất cả" }
 
   it "chọn khu vực → dropdown đơn vị chỉ hiện đơn vị thuộc khu vực" do
@@ -100,11 +95,7 @@ RSpec.shared_examples "zone-unit cascade filter behavior" do
   end
 end
 
-# Shared examples cho per_page auto-submit trong _list_toolbar.
-#
-# Yêu cầu trong caller:
-#   path:             → URL trang index
-#   create_extra_data → method tạo thêm data để có > 10 bản ghi
+# Per_page auto-submit.
 RSpec.shared_examples "per_page auto-submit behavior" do
   it "per_page auto-submit khi đổi" do
     create_extra_data
@@ -116,20 +107,14 @@ RSpec.shared_examples "per_page auto-submit behavior" do
   end
 end
 
-# Shared examples cho tìm kiếm trong _list_toolbar.
-#
-# Yêu cầu trong caller:
-#   path:             → URL trang index
-#   search_text:      → Text tìm kiếm (vd: tên đơn vị, tên khu vực)
-#   content_match:    → Text phải có trong kết quả
-#   content_no_match: → Text không được có trong kết quả
+# Tìm kiếm submit + xóa bộ lọc.
 RSpec.shared_examples "search behavior" do
   it "tìm kiếm submit đúng kết quả" do
     visit path
     fill_in "q", with: search_text
     click_on I18n.t("common.actions.search")
-    expect(page).to have_content(content_match)
-    expect(page).not_to have_content(content_no_match)
+    expect(page).to have_content(content_included)
+    expect(page).not_to have_content(content_excluded)
   end
 
   it "tìm kiếm → hiện Xóa bộ lọc" do
@@ -140,12 +125,7 @@ RSpec.shared_examples "search behavior" do
   end
 end
 
-# Shared examples cho sort preserved qua toolbar interactions.
-# Verify hidden fields sort/dir giữ khi search hoặc đổi filter.
-#
-# Yêu cầu trong caller:
-#   path_with_params(**params) → URL với query params
-#   sort_column:               → Sort column name dùng để test (vd: "name")
+# Sort preserved qua toolbar interactions.
 RSpec.shared_examples "sort preserved behavior" do
   it "sort giữ khi search" do
     visit send(:path_with_params, sort: sort_column, dir: "asc")
@@ -157,11 +137,7 @@ RSpec.shared_examples "sort preserved behavior" do
   end
 end
 
-# Shared examples cho search + filter kết hợp.
-# Verify single-form giữ params của nhau khi thao tác.
-#
-# Yêu cầu trong caller:
-#   search_text, filter_param, filter_option_text
+# Search + filter giữ params của nhau.
 RSpec.shared_examples "search and filter combination behavior" do
   it "search text giữ khi đổi filter" do
     visit send(:path_with_params, q: search_text)

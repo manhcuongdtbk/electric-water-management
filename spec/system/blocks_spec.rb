@@ -16,11 +16,9 @@ RSpec.describe "Blocks", type: :system do
   let(:filter_param) { "zone_id" }
   let(:filter_option_text) { zone1.name }
   let(:filter_option_value) { zone1.id }
-  let(:content_when_filtered) { "Phòng Alpha" }
-  let(:content_when_excluded) { "Phòng Beta" }
+  let(:content_included) { "Phòng Alpha" }
+  let(:content_excluded) { "Phòng Beta" }
   let(:search_text) { "Alpha" }
-  let(:content_match) { "Phòng Alpha" }
-  let(:content_no_match) { "Phòng Beta" }
   let(:sort_column) { "name" }
   let(:deletable_name) { block1.name }
   def path_with_params(**params) = blocks_path(**params)

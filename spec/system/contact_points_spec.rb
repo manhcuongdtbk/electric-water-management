@@ -17,11 +17,9 @@ RSpec.describe "Contact points", type: :system do
   let(:filter_param) { "zone_id" }
   let(:filter_option_text) { zone1.name }
   let(:filter_option_value) { zone1.id }
-  let(:content_when_filtered) { "CP Alpha" }
-  let(:content_when_excluded) { "CP Beta" }
+  let(:content_included) { "CP Alpha" }
+  let(:content_excluded) { "CP Beta" }
   let(:search_text) { "Alpha" }
-  let(:content_match) { "CP Alpha" }
-  let(:content_no_match) { "CP Beta" }
   let(:sort_column) { "name" }
   let(:deletable_name) { cp1.name }
   def path_with_params(**params) = contact_points_path(**params)
