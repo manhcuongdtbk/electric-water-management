@@ -3,8 +3,8 @@ require "rails_helper"
 RSpec.describe "PumpAllocations", type: :request do
   let(:system_admin) { create(:user, :system_admin) }
   let!(:period) { create(:period, closed: false) }
-  let!(:zone) { create(:zone) }
-  let!(:unit) { create(:unit, zone: zone) }
+  let!(:zone) { create(:zone, name: "Khu vực Bắc") }
+  let!(:unit) { create(:unit, zone: zone, name: "Tiểu đoàn 14") }
 
   before { sign_in system_admin }
 
@@ -37,8 +37,8 @@ RSpec.describe "PumpAllocations", type: :request do
   end
 
   describe "GET /pump_allocations — lọc theo khu vực và tìm kiếm" do
-    let!(:zone2) { create(:zone, name: "Khu vực 2") }
-    let!(:unit2) { create(:unit, zone: zone2, name: "Đơn vị 2") }
+    let!(:zone2) { create(:zone, name: "Khu vực Nam") }
+    let!(:unit2) { create(:unit, zone: zone2, name: "Phòng Hậu cần") }
     let!(:alloc1) { create(:pump_allocation, zone: zone, period: period, unit: unit, contact_point: nil) }
     let!(:alloc2) { create(:pump_allocation, zone: zone2, period: period, unit: unit2, contact_point: nil) }
     let(:html) { Nokogiri::HTML(response.body) }
