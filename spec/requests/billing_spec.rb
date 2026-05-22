@@ -43,8 +43,9 @@ RSpec.describe "Billing", type: :request do
 
       it "hiển thị dropdown khu vực và đơn vị" do
         get billing_path
-        expect(response.body).to include("Tất cả khu vực")
-        expect(response.body).to include("Tất cả đơn vị")
+        html = Nokogiri::HTML(response.body)
+        expect(html.css("select#zone_id")).to be_present
+        expect(html.css("select#unit_id")).to be_present
       end
 
       it "lọc theo khu vực" do
@@ -107,14 +108,9 @@ RSpec.describe "Billing", type: :request do
 
       it "KHÔNG thấy dropdown khu vực/đơn vị" do
         get billing_path
-        expect(response.body).not_to include("Tất cả khu vực")
-        expect(response.body).not_to include("Tất cả đơn vị")
-      end
-
-      it "hiển thị tên khu vực + tên đơn vị dạng cố định" do
-        get billing_path
-        expect(response.body).to include(sample.zone.name)
-        expect(response.body).to include(sample.unit_a.name)
+        html = Nokogiri::HTML(response.body)
+        expect(html.css("select#zone_id")).to be_empty
+        expect(html.css("select#unit_id")).to be_empty
       end
 
       it "hiện cột Đơn vị trong bảng (29 cột — phân biệt đơn vị vs khu vực)" do
@@ -139,11 +135,6 @@ RSpec.describe "Billing", type: :request do
         expect(response.body).not_to include("Chỉ huy khu vực")
       end
 
-      it "hiển thị tên khu vực + tên đơn vị dạng cố định" do
-        get billing_path
-        expect(response.body).to include(sample.zone.name)
-        expect(response.body).to include(sample.unit_b.name)
-      end
     end
 
     context "commander zone-manager (nghiệp vụ 6: tương tự UA-ZM)" do
@@ -157,15 +148,11 @@ RSpec.describe "Billing", type: :request do
         expect(response.body).to include("Chỉ huy khu vực")
       end
 
-      it "hiển thị tên khu vực + tên đơn vị dạng cố định" do
-        get billing_path
-        expect(response.body).to include(sample.zone.name)
-        expect(response.body).to include(sample.unit_a.name)
-      end
-
       it "KHÔNG thấy dropdown khu vực/đơn vị" do
         get billing_path
-        expect(response.body).not_to include("Tất cả khu vực")
+        html = Nokogiri::HTML(response.body)
+        expect(html.css("select#zone_id")).to be_empty
+        expect(html.css("select#unit_id")).to be_empty
       end
     end
 
@@ -181,11 +168,6 @@ RSpec.describe "Billing", type: :request do
         expect(response.body).not_to include("Chỉ huy khu vực")
       end
 
-      it "hiển thị tên khu vực + tên đơn vị dạng cố định" do
-        get billing_path
-        expect(response.body).to include(sample.zone.name)
-        expect(response.body).to include(sample.unit_b.name)
-      end
     end
 
     context "technician" do

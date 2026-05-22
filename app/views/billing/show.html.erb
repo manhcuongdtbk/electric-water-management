@@ -5,62 +5,58 @@
     <%= t("flash.no_open_period") %>
   </div>
 <% else %>
-  <div class="flex flex-wrap items-end justify-between gap-4 mb-4">
-    <div class="flex gap-2 items-end">
-      <%= form_with url: billing_path, method: :get, local: true,
-            class: "flex gap-2 items-end",
-            data: { controller: "auto-submit" } do %>
-        <div>
-          <label class="block text-xs text-gray-600 mb-1">Kỳ</label>
-          <%= select_tag :period_id,
-                options_from_collection_for_select(@available_periods, :id,
-                  ->(p) { "Tháng #{p.month}/#{p.year}" }, @period.id),
-                data: { action: "change->auto-submit#submit" },
-                class: "rounded border border-gray-300 text-sm" %>
-        </div>
-        <%= render "filter" %>
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+    <p class="text-sm text-gray-700">
+      Đơn giá điện: <strong><%= money_to_vi(@period.unit_price) %>/kW</strong>
+      <% if @period.open? %>
+        <span class="ml-2 px-2 py-0.5 rounded bg-green-100 text-green-800 text-xs">Đang mở</span>
+      <% else %>
+        <span class="ml-2 px-2 py-0.5 rounded bg-gray-200 text-gray-700 text-xs">Đã đóng</span>
       <% end %>
-    </div>
-
-    <div>
-      <p class="text-sm text-gray-700">
-        Đơn giá điện: <strong><%= money_to_vi(@period.unit_price) %>/kW</strong>
-        <% if @period.open? %>
-          <span class="ml-2 px-2 py-0.5 rounded bg-green-100 text-green-800 text-xs">Đang mở</span>
-        <% else %>
-          <span class="ml-2 px-2 py-0.5 rounded bg-gray-200 text-gray-700 text-xs">Đã đóng</span>
-        <% end %>
-      </p>
-    </div>
+    </p>
   </div>
+
+  <%
+    billing_filters = [
+      { label: "Kỳ:", param: :period_id,
+        options: @available_periods.map { |p| ["Tháng #{p.month}/#{p.year}", p.id] },
+        selected: @period.id }
+    ]
+    if current_user.role == "system_admin"
+      billing_filters += [
+        { label: "Khu vực:", param: :zone_id,
+          options: @available_zones.map { |z| [z.name, z.id] }, selected: @zone&.id,
+          children: [:unit_id] },
+        { label: "Đơn vị:", param: :unit_id,
+          options: @available_units.map { |u| [u.name, u.id] }, selected: @unit&.id }
+      ]
+    end
+
+    billing_action_links = capture do
+      if @period.open? && can?(:recalculate, Calculation)
+        concat(button_to("Tính toán lại", recalculate_billing_path(billing_filter_params),
+          method: :post,
+          form: { data: { turbo_confirm: "Xác nhận tính toán lại bảng tính tiền?" } },
+          class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700"))
+      end
+      if can?(:read, Calculation)
+        concat(link_to("Xuất Excel",
+          billing_path(billing_filter_params.merge(format: :xlsx)),
+          class: "bg-green-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-700"))
+      end
+    end
+  %>
+
+  <%= render "shared/list_toolbar",
+        url: billing_path,
+        search_placeholder: "Tìm đầu mối...",
+        total_count: @total_count,
+        filters: billing_filters,
+        show_per_page: false,
+        show_total: false,
+        action_links: billing_action_links %>
 
   <%= render "warnings" %>
-
-  <div class="flex flex-wrap justify-between items-center gap-3 mb-3">
-    <%= form_with url: billing_path, method: :get, local: true, class: "flex gap-2" do %>
-      <%= hidden_field_tag :period_id, @period.id %>
-      <%= hidden_field_tag :zone_id, @zone&.id %>
-      <%= hidden_field_tag :unit_id, @unit&.id %>
-      <%= text_field_tag :q, params[:q], placeholder: "Tìm đầu mối...",
-            class: "rounded border border-gray-300 px-3 py-2 text-sm" %>
-      <%= submit_tag "Tìm kiếm",
-            class: "bg-gray-100 text-gray-700 px-4 py-2 rounded text-sm font-medium hover:bg-gray-200" %>
-    <% end %>
-
-    <div class="flex gap-2">
-      <% if @period.open? && can?(:recalculate, Calculation) %>
-        <%= button_to "Tính toán lại", recalculate_billing_path(billing_filter_params),
-              method: :post,
-              form: { data: { turbo_confirm: "Xác nhận tính toán lại bảng tính tiền?" } },
-              class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700" %>
-      <% end %>
-      <% if can?(:read, Calculation) %>
-        <%= link_to "Xuất Excel",
-              billing_path(billing_filter_params.merge(format: :xlsx)),
-              class: "bg-green-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-700" %>
-      <% end %>
-    </div>
-  </div>
 
   <div class="text-sm text-gray-600 mb-2">Tổng số đầu mối: <strong><%= @total_count %></strong></div>
 
