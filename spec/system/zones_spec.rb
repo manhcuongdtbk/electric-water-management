@@ -18,8 +18,8 @@ RSpec.describe "Zones", type: :system do
 
   let(:sort_column) { "name" }
 
-  let(:deletable_record) { Zone.create!(name: "Khu vực trống", main_meters_attributes: [{ name: "CT-X" }]) }
-  let(:deletable_name) { deletable_record.name }
+  let!(:zone_deletable) { Zone.create!(name: "Khu vực trống", main_meters_attributes: [{ name: "CT-X" }]) }
+  let(:deletable_name) { zone_deletable.name }
 
   it_behaves_like "search behavior"
   it_behaves_like "sort preserved behavior"

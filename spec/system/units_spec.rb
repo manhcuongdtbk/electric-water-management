@@ -22,8 +22,9 @@ RSpec.describe "Units filter", type: :system do
 
   let(:sort_column) { "name" }
 
-  let(:deletable_record) { create(:unit, zone: zone1, name: "Đơn vị xóa được") }
-  let(:deletable_name) { deletable_record.name }
+  # unit1 là manager → confirm có cảnh báo quản lý khu vực
+  let(:deletable_name) { unit1.name }
+  let(:confirm_message_pattern) { /quản lý khu vực/ }
 
   it_behaves_like "search behavior"
   it_behaves_like "zone filter behavior"
@@ -31,14 +32,4 @@ RSpec.describe "Units filter", type: :system do
   it_behaves_like "sort preserved behavior"
   it_behaves_like "per_page auto-submit behavior"
   it_behaves_like "confirm delete behavior"
-
-  # --- Page-specific: confirm message khác tùy unit có quản lý khu vực ---
-
-  it "xóa unit quản lý khu vực → confirm có cảnh báo quản lý" do
-    visit units_path
-    msg = accept_confirm do
-      within("tr", text: unit1.name) { click_on I18n.t("common.actions.destroy") }
-    end
-    expect(msg).to include("quản lý khu vực")
-  end
 end

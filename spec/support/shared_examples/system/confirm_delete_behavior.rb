@@ -2,15 +2,20 @@
 # Dùng Capybara API — chỉ dùng trong type: :system.
 #
 # Yêu cầu trong caller:
-#   path:               → URL trang index
-#   deletable_record:   → Record có thể xóa (không vi phạm constraint)
-#   deletable_name:     → Tên hiển thị trong bảng và confirm dialog
+#   path:                      → URL trang index
+#   deletable_name:            → Tên hiển thị trong bảng để tìm row và click xóa
+#
+# Tùy chọn:
+#   confirm_message_pattern:   → Regex verify nội dung confirm dialog (vd: /quản lý khu vực/)
 RSpec.shared_examples "confirm delete behavior" do
-  it "confirm xóa hiện tên entity và xóa thành công" do
-    deletable_record # force creation
+  it "confirm xóa và xóa thành công" do
     visit path
-    accept_confirm(/#{Regexp.escape(deletable_name)}/) do
+    msg = accept_confirm do
       within("tr", text: deletable_name) { click_on I18n.t("common.actions.destroy") }
+    end
+    expect(msg).to include(deletable_name)
+    if respond_to?(:confirm_message_pattern)
+      expect(msg).to match(confirm_message_pattern)
     end
     expect(page).to have_current_path(path)
     expect(page).not_to have_css("table tbody tr", text: deletable_name)
