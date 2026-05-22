@@ -8,6 +8,21 @@
 
 <%
   role_options = UsersController::ROLES.map { |r| [I18n.t("activerecord.attributes.user.roles.#{r}"), r] }
+  show_zone_unit = current_user.role == "system_admin"
+
+  toolbar_filters = [
+    { label: "Vai trò:", param: :role,
+      options: role_options, selected: @filter_role }
+  ]
+  if show_zone_unit
+    toolbar_filters += [
+      { label: "Khu vực:", param: :zone_id,
+        options: @available_zones.pluck(:name, :id), selected: @zone&.id,
+        children: [:unit_id] },
+      { label: "Đơn vị:", param: :unit_id,
+        options: @available_units.pluck(:name, :id), selected: @unit&.id }
+    ]
+  end
 %>
 
 <%= render "shared/list_toolbar",
@@ -16,15 +31,7 @@
       total_count: @total_count,
       add_link: add_link,
       per_page_storage_key: "users_per_page",
-      filters: [
-        { label: "Vai trò:", param: :role,
-          options: role_options, selected: @filter_role },
-        { label: "Khu vực:", param: :zone_id,
-          options: @available_zones.pluck(:name, :id), selected: @zone&.id,
-          children: [:unit_id] },
-        { label: "Đơn vị:", param: :unit_id,
-          options: @available_units.pluck(:name, :id), selected: @unit&.id }
-      ] %>
+      filters: toolbar_filters %>
 
 <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
   <table class="min-w-full divide-y divide-gray-200">
@@ -36,12 +43,14 @@
         <%= sortable_header :display_name, t("activerecord.attributes.user.display_name"),
               current_sort: params[:sort], current_dir: params[:dir],
               extra_params: { q: params[:q], per_page: params[:per_page], role: params[:role], zone_id: params[:zone_id], unit_id: params[:unit_id] } %>
-        <%= sortable_header :zone, "Khu vực",
-              current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: { q: params[:q], per_page: params[:per_page], role: params[:role], zone_id: params[:zone_id], unit_id: params[:unit_id] } %>
-        <%= sortable_header :unit, t("activerecord.attributes.user.unit"),
-              current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: { q: params[:q], per_page: params[:per_page], role: params[:role], zone_id: params[:zone_id], unit_id: params[:unit_id] } %>
+        <% if show_zone_unit %>
+          <%= sortable_header :zone, "Khu vực",
+                current_sort: params[:sort], current_dir: params[:dir],
+                extra_params: { q: params[:q], per_page: params[:per_page], role: params[:role], zone_id: params[:zone_id], unit_id: params[:unit_id] } %>
+          <%= sortable_header :unit, t("activerecord.attributes.user.unit"),
+                current_sort: params[:sort], current_dir: params[:dir],
+                extra_params: { q: params[:q], per_page: params[:per_page], role: params[:role], zone_id: params[:zone_id], unit_id: params[:unit_id] } %>
+        <% end %>
         <%= sortable_header :role, t("activerecord.attributes.user.role"),
               current_sort: params[:sort], current_dir: params[:dir],
               extra_params: { q: params[:q], per_page: params[:per_page], role: params[:role], zone_id: params[:zone_id], unit_id: params[:unit_id] } %>
@@ -50,7 +59,7 @@
     </thead>
     <tbody class="divide-y divide-gray-200">
       <% if @users.empty? %>
-        <tr><td colspan="6" class="px-4 py-6 text-center text-gray-500"><%= t("common.list.no_records") %></td></tr>
+        <tr><td colspan="<%= show_zone_unit ? 6 : 4 %>" class="px-4 py-6 text-center text-gray-500"><%= t("common.list.no_records") %></td></tr>
       <% end %>
       <% @users.each do |u| %>
         <tr class="hover:bg-gray-50 transition-colors">
@@ -61,8 +70,10 @@
             <% end %>
           </td>
           <td class="px-4 py-2 text-sm text-gray-600"><%= u.display_name %></td>
-          <td class="px-4 py-2 text-sm text-gray-600"><%= u.unit&.zone&.name || "—" %></td>
-          <td class="px-4 py-2 text-sm text-gray-600"><%= u.unit&.name || "—" %></td>
+          <% if show_zone_unit %>
+            <td class="px-4 py-2 text-sm text-gray-600"><%= u.unit&.zone&.name || "—" %></td>
+            <td class="px-4 py-2 text-sm text-gray-600"><%= u.unit&.name || "—" %></td>
+          <% end %>
           <td class="px-4 py-2 text-sm text-gray-600">
             <%= t("activerecord.attributes.user.roles.#{u.role}", default: u.role) %>
           </td>

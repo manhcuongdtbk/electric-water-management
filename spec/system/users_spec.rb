@@ -20,6 +20,7 @@ RSpec.describe "Users", type: :system do
   let(:search_text) { "ua_alpha" }
   let(:sort_column) { "username" }
   let(:deletable_name) { ua2.username }
+  let(:filter_select_ids) { %w[zone_id unit_id] }
   def path_with_params(**params) = users_path(**params)
   def create_extra_data = 12.times { |i| create(:user, :unit_admin, username: "user_extra_#{i}", unit: unit1) }
 
@@ -30,6 +31,8 @@ RSpec.describe "Users", type: :system do
   it_behaves_like "sort preserved behavior"
   it_behaves_like "per_page auto-submit behavior"
   it_behaves_like "confirm delete behavior"
+  it_behaves_like "role-based filter visibility"
+  it_behaves_like "zone-unit column visibility"
 
   it "role filter lọc theo vai trò" do
     visit users_path
