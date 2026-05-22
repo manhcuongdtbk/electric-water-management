@@ -14,6 +14,8 @@ RSpec.describe "Units filter", type: :system do
   let(:content_zone1) { "Đơn vị A1" }
   let(:content_zone2) { "Đơn vị B1" }
   def path_with_params(**params) = units_path(**params)
+  def create_extra_data = 12.times { |i| create(:unit, zone: zone1, name: "Đơn vị Extra #{i}") }
 
   it_behaves_like "zone filter behavior"
+  it_behaves_like "per_page auto-submit behavior"
 end

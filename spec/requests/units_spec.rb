@@ -40,12 +40,8 @@ RSpec.describe "Units", type: :request do
       expect(body).to include("—")
     end
 
-    it "lọc theo khu vực" do
-      get units_path, params: { zone_id: zone2.id }
-      rows = html.css("table tbody tr")
-      expect(rows.size).to eq(1)
-      expect(rows.first.text).to include("Đơn vị B")
-    end
+    # Filter behavior (lọc khu vực, xóa bộ lọc) đã cover bởi system specs
+    # (spec/system/units_filter_spec.rb).
 
     it "dropdown khu vực chỉ chứa khu vực có đơn vị" do
       zone_empty = create(:zone, name: "Khu vực trống")

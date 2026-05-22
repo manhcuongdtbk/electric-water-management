@@ -22,11 +22,21 @@
   #                           Khi không truyền filters (mặc định []), không render dropdown nào.
   #   per_page_storage_key: String — localStorage key cho per_page (mặc định "list_per_page").
   #                           Mỗi trang nên truyền key riêng để per_page không ảnh hưởng trang khác.
+  #   show_search:          Boolean — hiển thị ô tìm kiếm (mặc định true).
+  #   show_per_page:        Boolean — hiển thị dropdown số dòng/trang (mặc định true).
+  #   show_total:           Boolean — hiển thị tổng bản ghi (mặc định true).
+  #   total_label:          String — label tùy chỉnh cho tổng (mặc định: "Tổng: X bản ghi").
+  #   action_links:         HTML — các nút hành động bổ sung bên phải (vd: Xuất Excel, Tính toán lại).
   extra_hidden ||= {}
   search_placeholder ||= t("common.list.search_placeholder")
   add_link ||= nil
+  action_links ||= nil
   filters ||= []
   per_page_storage_key ||= "list_per_page"
+  show_search = true unless local_assigns.key?(:show_search)
+  show_per_page = true unless local_assigns.key?(:show_per_page)
+  show_total = true unless local_assigns.key?(:show_total)
+  total_label = local_assigns[:total_label]
   current_per_page = (params[:per_page].presence || 25).to_i
   has_filter = params[:q].present? || extra_hidden.values.any?(&:present?) || filters.any? { |f| params[f[:param]].present? }
   has_cascade = filters.any? { |f| f[:children].present? }
@@ -45,13 +55,15 @@
       <%= hidden_field_tag :dir, params[:dir] %>
     <% end %>
 
-    <div class="flex items-center gap-2">
-      <%= text_field_tag :q, params[:q],
-            placeholder: search_placeholder,
-            class: "rounded border border-gray-300 text-sm px-3 py-1.5 w-64" %>
-      <%= submit_tag t("common.actions.search"),
-            class: "px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded cursor-pointer" %>
-    </div>
+    <% if show_search %>
+      <div class="flex items-center gap-2">
+        <%= text_field_tag :q, params[:q],
+              placeholder: search_placeholder,
+              class: "rounded border border-gray-300 text-sm px-3 py-1.5 w-64" %>
+        <%= submit_tag t("common.actions.search"),
+              class: "px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded cursor-pointer" %>
+      </div>
+    <% end %>
 
     <% filters.each do |filter| %>
       <%
@@ -78,14 +90,16 @@
       </div>
     <% end %>
 
-    <div class="flex items-center gap-2">
-      <label class="text-xs text-gray-600 whitespace-nowrap"><%= t("common.list.per_page") %></label>
-      <%= select_tag :per_page,
-            options_for_select([10, 25, 50, 100].map { |n| [n, n] }, current_per_page),
-            data: { controller: "per-page", action: "change->per-page#submit",
-                    per_page_storage_key_value: per_page_storage_key },
-            class: "rounded border border-gray-300 text-sm px-2 py-1" %>
-    </div>
+    <% if show_per_page %>
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-gray-600 whitespace-nowrap"><%= t("common.list.per_page") %></label>
+        <%= select_tag :per_page,
+              options_for_select([10, 25, 50, 100].map { |n| [n, n] }, current_per_page),
+              data: { controller: "per-page", action: "change->per-page#submit",
+                      per_page_storage_key_value: per_page_storage_key },
+              class: "rounded border border-gray-300 text-sm px-2 py-1" %>
+      </div>
+    <% end %>
   <% end %>
 
   <%# Vùng trạng thái: xóa bộ lọc, tổng bản ghi, nút thêm %>
@@ -95,9 +109,14 @@
         <span>✕</span> <%= t("common.list.clear_filter") %>
       <% end %>
     <% end %>
-    <span class="text-sm text-gray-600"><%= list_total(total_count) %></span>
+    <% if show_total %>
+      <span class="text-sm text-gray-600"><%= total_label || list_total(total_count) %></span>
+    <% end %>
     <% if add_link %>
       <%= add_link %>
+    <% end %>
+    <% if action_links %>
+      <%= action_links %>
     <% end %>
   </div>
 </div>

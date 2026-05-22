@@ -1,11 +1,12 @@
 # Shared examples cho toolbar có dropdown lọc khu vực (không cascade).
 #
-# Yêu cầu let trong caller:
+# Yêu cầu let/method trong caller:
 #   path:           → URL trang index (vd: units_path)
 #   zone1:          → Zone thứ nhất (đã có data)
 #   zone2:          → Zone thứ hai (đã có data)
 #   content_zone1:  → Text xuất hiện khi lọc zone1 (vd: tên đơn vị thuộc zone1)
 #   content_zone2:  → Text xuất hiện khi lọc zone2
+#   path_with_params(**params) → URL với query params
 RSpec.shared_examples "zone filter behavior" do
   it "chọn khu vực → bảng chỉ hiện data thuộc khu vực đó" do
     visit path
@@ -39,17 +40,13 @@ end
 
 # Shared examples cho toolbar có cascade khu vực → đơn vị.
 #
-# Yêu cầu let trong caller:
-#   path:           → URL trang index
-#   zone1:          → Zone thứ nhất
-#   zone2:          → Zone thứ hai
+# Yêu cầu let/method trong caller (ngoài những yêu cầu của zone filter behavior):
 #   unit1:          → Unit thuộc zone1
 #   unit2:          → Unit thuộc zone2
 #   zone_select_id: → HTML id của zone select (mặc định "zone_id")
 #   unit_select_id: → HTML id của unit select (mặc định "unit_id")
-#
-# Billing dùng include_blank text khác ("Tất cả khu vực"/"Tất cả đơn vị")
-# nên truyền zone_blank_text / unit_blank_text nếu cần.
+#   zone_blank_text → Text option "Tất cả" cho zone (mặc định "Tất cả")
+#   unit_blank_text → Text option "Tất cả" cho unit (mặc định "Tất cả")
 RSpec.shared_examples "zone-unit cascade filter behavior" do
   let(:zone_select_id) { "zone_id" }
   let(:unit_select_id) { "unit_id" }
@@ -84,5 +81,29 @@ RSpec.shared_examples "zone-unit cascade filter behavior" do
 
     select unit_blank_text, from: unit_select_id
     expect(find("select##{zone_select_id}").value).to eq(zone1.id.to_s)
+  end
+
+  it "Xóa bộ lọc reset cả zone và unit" do
+    visit send(:path_with_params, zone_id: zone1.id, unit_id: unit1.id)
+
+    click_on "Xóa bộ lọc"
+    expect(find("select##{zone_select_id}").value).to eq("")
+    expect(find("select##{unit_select_id}").value).to eq("")
+  end
+end
+
+# Shared examples cho per_page auto-submit trong _list_toolbar.
+#
+# Yêu cầu trong caller:
+#   path:             → URL trang index
+#   create_extra_data → method tạo thêm data để có > 10 bản ghi
+RSpec.shared_examples "per_page auto-submit behavior" do
+  it "per_page auto-submit khi đổi" do
+    create_extra_data
+    visit path
+    expect(page).to have_css("table tbody tr", minimum: 11)
+
+    select "10", from: "per_page"
+    expect(page).to have_css("table tbody tr", count: 10)
   end
 end

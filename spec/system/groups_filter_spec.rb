@@ -16,26 +16,11 @@ RSpec.describe "Groups filter cascade", type: :system do
   let(:content_zone1) { "Nhóm Alpha-1" }
   let(:content_zone2) { "Nhóm Beta-1" }
   def path_with_params(**params) = groups_path(**params)
+  def create_extra_data = 12.times { |i| create(:group, unit: unit1, name: "Nhóm Extra #{i}") }
 
   it_behaves_like "zone filter behavior"
   it_behaves_like "zone-unit cascade filter behavior"
-
-  it "Xóa bộ lọc reset cả zone và unit" do
-    visit groups_path(zone_id: zone1.id, unit_id: unit1.id)
-    click_on "Xóa bộ lọc"
-
-    expect(find("select#zone_id").value).to eq("")
-    expect(find("select#unit_id").value).to eq("")
-  end
-
-  it "per_page auto-submit khi đổi" do
-    12.times { |i| create(:group, unit: unit1, name: "Nhóm Extra #{i}") }
-    visit groups_path
-    expect(page).to have_css("table tbody tr", count: 14)
-
-    select "10", from: "per_page"
-    expect(page).to have_css("table tbody tr", count: 10)
-  end
+  it_behaves_like "per_page auto-submit behavior"
 
   context "as unit_admin" do
     let(:unit_admin) { create(:user, :unit_admin, unit: unit1) }

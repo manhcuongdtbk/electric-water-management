@@ -43,13 +43,8 @@ RSpec.describe "PumpAllocations", type: :request do
     let!(:alloc2) { create(:pump_allocation, zone: zone2, period: period, unit: unit2, contact_point: nil) }
     let(:html) { Nokogiri::HTML(response.body) }
 
-    it "lọc theo khu vực chỉ hiển thị phân bổ của khu vực đó" do
-      get pump_allocations_path, params: { zone_id: zone2.id }
-      rows = html.css("table tbody tr")
-      expect(rows.size).to eq(1)
-      expect(rows.first.text).to include(zone2.name)
-      expect(rows.first.text).not_to include(zone.name)
-    end
+    # Filter behavior (lọc khu vực, xóa bộ lọc) đã cover bởi system specs
+    # (spec/system/pump_allocations_filter_spec.rb).
 
     it "dropdown khu vực chỉ chứa các khu vực có phân bổ" do
       get pump_allocations_path
