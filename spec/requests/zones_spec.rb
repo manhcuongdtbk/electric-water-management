@@ -6,6 +6,61 @@ RSpec.describe "Zones", type: :request do
 
   before { sign_in system_admin }
 
+  describe "GET /zones — hiển thị, sắp xếp" do
+    let!(:zone1) { Zone.create!(name: "Khu vực A", main_meters_attributes: [{ name: "CT-A" }]) }
+    let!(:zone2) { Zone.create!(name: "Khu vực B", main_meters_attributes: [{ name: "CT-B" }]) }
+    let!(:unit1) { create(:unit, zone: zone1) }
+    let(:html) { Nokogiri::HTML(response.body) }
+
+    it "cột header là Khu vực, không phải Tên khu vực" do
+      get zones_path
+      headers = html.css("table thead th").map(&:text).map(&:strip)
+      expect(headers[0]).to include("Khu vực")
+      expect(headers[0]).not_to include("Tên")
+    end
+
+    it "placeholder tìm kiếm ghi rõ tìm theo tên khu vực" do
+      get zones_path
+      input = html.css("input#q").first
+      expect(input["placeholder"]).to include("khu vực")
+    end
+
+    it "sắp xếp mặc định: tạo sau đứng trước" do
+      get zones_path
+      rows = html.css("table tbody tr")
+      expect(rows.first.text).to include("Khu vực B")
+      expect(rows.last.text).to include("Khu vực A")
+    end
+
+    it "cột số đơn vị hiển thị số, không có cảnh báo" do
+      get zones_path
+      expect(response.body).not_to include("Chưa có đơn vị")
+    end
+
+    it "cột công tơ tổng hiển thị — khi không có" do
+      zone_no_meter = Zone.create!(name: "Khu vực C", main_meters_attributes: [{ name: "CT-C" }])
+      zone_no_meter.main_meters.each(&:discard)
+      get zones_path
+      rows = html.css("table tbody tr")
+      meter_cell = rows.detect { |r| r.text.include?("Khu vực C") }&.css("td")[3]
+      expect(meter_cell.text.strip).to eq("—")
+    end
+
+    it "cột công tơ tổng hiển thị tên khi có" do
+      get zones_path
+      rows = html.css("table tbody tr")
+      meter_cell = rows.detect { |r| r.text.include?("Khu vực A") }&.css("td")[3]
+      expect(meter_cell.text.strip).to include("CT-A")
+    end
+
+    it "tìm kiếm theo tên khu vực" do
+      get zones_path, params: { q: "Khu vực B" }
+      rows = html.css("table tbody tr")
+      expect(rows.size).to eq(1)
+      expect(rows.first.text).to include("Khu vực B")
+    end
+  end
+
   describe "POST /zones (T27, T28)" do
     it "T27: tạo zone kèm main_meter" do
       post zones_path, params: {
