@@ -42,3 +42,4 @@
 /.claude/worktrees/
 # macOS Finder metadata (apply globally — covers root, docs/, and any subdir)
 .DS_Store
+/chromedriver/
