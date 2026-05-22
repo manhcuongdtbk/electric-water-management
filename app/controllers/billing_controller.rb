@@ -13,7 +13,9 @@ class BillingController < ApplicationController
     @show_unit_column = @unit.nil?
 
     @ranks = @period.ranks.order(:position).to_a
-    scope = build_calculations_scope
+    @base_scope = Billing::Query.base_scope(@period, current_ability)
+    scope = Billing::Query.apply_filters(@base_scope, zone: @zone, unit: @unit, q: params[:q])
+                          .order(Arel.sql(Billing::Query::SORT_ORDER))
     @total_count = scope.count
     @summary = Billing::Query.summary(scope, period: @period)
     @warnings = collect_warnings_for_zones(zones_in_scope(@period))
@@ -22,8 +24,10 @@ class BillingController < ApplicationController
       format.html do
         @pagy, @calculations = pagy(scope, items: (params[:per_page] || 50).to_i)
         preload_personnel(@calculations)
-        @available_zones = available_zones_for_billing_filter
-        @available_units = available_units_for_filter(@zone, unit_scope: Unit.with_discarded)
+        set_sa_available_filters_from(@base_scope,
+          zone_id_sql: "COALESCE(units.zone_id, contact_points.zone_id)",
+          unit_id_sql: "contact_points.unit_id")
+        @available_zones ||= [current_user.unit&.zone].compact
       end
       format.xlsx do
         @calculations = scope.to_a
@@ -78,12 +82,6 @@ class BillingController < ApplicationController
     end
   end
 
-  def build_calculations_scope
-    scope = Billing::Query.base_scope(@period, current_ability)
-    scope = Billing::Query.apply_filters(scope, zone: @zone, unit: @unit, q: params[:q])
-    scope.order(Arel.sql(Billing::Query::SORT_ORDER))
-  end
-
   def preload_personnel(calculations)
     cp_ids = calculations.map(&:contact_point_id)
     entries = PersonnelEntry
@@ -109,15 +107,6 @@ class BillingController < ApplicationController
       zone_ids = [current_user.unit&.zone_id].compact
       zone_ids += Zone.where(manager_unit_id: current_user.unit_id).pluck(:id) if current_user.unit_id
       Zone.with_discarded.where(id: zone_ids.uniq)
-    end
-  end
-
-  # Billing-specific: non-admin chỉ thấy zone của mình.
-  def available_zones_for_billing_filter
-    if current_user.system_admin?
-      available_zones_for_filter(zone_scope: Zone.with_discarded)
-    else
-      [current_user.unit&.zone].compact
     end
   end
 
