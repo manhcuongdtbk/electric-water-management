@@ -52,7 +52,7 @@ end
 RSpec.shared_examples "zone-unit cascade filter behavior" do
   let(:zone_select_id) { "zone_id" }
   let(:unit_select_id) { "unit_id" }
-  let(:unit_blank_text) { "Tất cả" }
+  let(:unit_blank_text) { defined?(super) ? super() : "Tất cả" }
 
   it "chọn khu vực → dropdown đơn vị chỉ hiện đơn vị thuộc khu vực" do
     visit path
