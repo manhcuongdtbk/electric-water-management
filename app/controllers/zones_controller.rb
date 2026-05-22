@@ -13,7 +13,8 @@ class ZonesController < ApplicationController
   SORT_COLUMNS = {
     name:         "zones.name",
     manager_unit: "manager_units.name",
-    units_count:  "(SELECT COUNT(*) FROM units WHERE units.zone_id = zones.id AND units.discarded_at IS NULL)"
+    units_count:  "(SELECT COUNT(*) FROM units WHERE units.zone_id = zones.id AND units.discarded_at IS NULL)",
+    created_at:   "zones.created_at"
   }.freeze
 
   def index
@@ -28,7 +29,7 @@ class ZonesController < ApplicationController
     if (q = params[:q]).present?
       scope = scope.where("zones.name ILIKE ?", "%#{q.strip}%")
     end
-    scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:name, :asc])
+    scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:created_at, :desc])
     @total_count = scope.count
     @pagy, @zones = pagy_with_per_page(scope)
   end
