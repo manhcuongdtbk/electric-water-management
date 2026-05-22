@@ -16,7 +16,10 @@ RSpec.describe "Zones", type: :system do
   let(:content_match) { "Khu vực Alpha" }
   let(:content_no_match) { "Khu vực Beta" }
 
+  let(:sort_column) { "name" }
+
   it_behaves_like "search behavior"
+  it_behaves_like "sort preserved behavior"
   it_behaves_like "per_page auto-submit behavior"
 
   it "confirm xóa zone" do

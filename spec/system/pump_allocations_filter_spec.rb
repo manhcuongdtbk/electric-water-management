@@ -22,8 +22,11 @@ RSpec.describe "Pump allocations filter", type: :system do
   let(:content_match) { "Đơn vị A1" }
   let(:content_no_match) { "Đơn vị B1" }
 
+  let(:sort_column) { "target" }
+
   it_behaves_like "search behavior"
   it_behaves_like "zone filter behavior"
   it_behaves_like "search and filter combination behavior"
+  it_behaves_like "sort preserved behavior"
   it_behaves_like "per_page auto-submit behavior"
 end

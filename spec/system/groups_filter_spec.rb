@@ -22,9 +22,12 @@ RSpec.describe "Groups filter cascade", type: :system do
   let(:content_match) { "Nhóm Alpha-1" }
   let(:content_no_match) { "Nhóm Beta-1" }
 
+  let(:sort_column) { "name" }
+
   it_behaves_like "search behavior"
   it_behaves_like "zone filter behavior"
   it_behaves_like "search and filter combination behavior"
+  it_behaves_like "sort preserved behavior"
   it_behaves_like "zone-unit cascade filter behavior"
   it_behaves_like "per_page auto-submit behavior"
 

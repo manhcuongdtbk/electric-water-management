@@ -144,6 +144,23 @@ end
 #
 # Yêu cầu trong caller (ngoài search behavior + zone filter behavior):
 #   search_text, content_match, content_no_match, zone1, zone2, content_zone1, content_zone2
+# Shared examples cho sort preserved qua toolbar interactions.
+# Verify hidden fields sort/dir giữ khi search hoặc đổi filter.
+#
+# Yêu cầu trong caller:
+#   path_with_params(**params) → URL với query params
+#   sort_column:               → Sort column name dùng để test (vd: "name")
+RSpec.shared_examples "sort preserved behavior" do
+  it "sort giữ khi search" do
+    visit send(:path_with_params, sort: sort_column, dir: "asc")
+
+    fill_in "q", with: "test"
+    click_on I18n.t("common.actions.search")
+    expect(page).to have_current_path(/sort=#{sort_column}/)
+    expect(page).to have_current_path(/dir=asc/)
+  end
+end
+
 RSpec.shared_examples "search and filter combination behavior" do
   it "search text giữ khi đổi zone filter" do
     visit send(:path_with_params, q: search_text)

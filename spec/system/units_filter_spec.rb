@@ -20,9 +20,12 @@ RSpec.describe "Units filter", type: :system do
   let(:content_match) { "Đơn vị A1" }
   let(:content_no_match) { "Đơn vị B1" }
 
+  let(:sort_column) { "name" }
+
   it_behaves_like "search behavior"
   it_behaves_like "zone filter behavior"
   it_behaves_like "search and filter combination behavior"
+  it_behaves_like "sort preserved behavior"
   it_behaves_like "per_page auto-submit behavior"
 
   # --- Page-specific ---
