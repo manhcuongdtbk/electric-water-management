@@ -10,6 +10,7 @@ class PumpAllocationsController < ApplicationController
   SORT_COLUMNS = {
     zone:        "zones.name",
     target:      "COALESCE(units.name, contact_points.name)",
+    target_type: "CASE WHEN pump_allocations.unit_id IS NOT NULL THEN 0 ELSE 1 END",
     percentage:  "pump_allocations.fixed_percentage",
     coefficient: "pump_allocations.coefficient",
     created_at:  "pump_allocations.created_at"
