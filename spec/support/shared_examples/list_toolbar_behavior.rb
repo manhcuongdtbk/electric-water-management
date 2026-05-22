@@ -1,3 +1,8 @@
+# Shared system spec examples cho _list_toolbar behavior.
+# Dùng Capybara API (visit, fill_in, select, click_on) — chỉ dùng trong type: :system.
+#
+# ============================================================
+
 # Shared examples cho toolbar có dropdown lọc khu vực (không cascade).
 #
 # Yêu cầu let/method trong caller:
