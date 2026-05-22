@@ -49,16 +49,13 @@
 
   <%= render "shared/list_toolbar",
         url: billing_path,
-        search_placeholder: "Tìm đầu mối...",
         total_count: @total_count,
         filters: billing_filters,
+        show_search: false,
         show_per_page: false,
-        show_total: false,
         action_links: billing_action_links %>
 
   <%= render "warnings" %>
-
-  <div class="text-sm text-gray-600 mb-2">Tổng số đầu mối: <strong><%= @total_count %></strong></div>
 
   <div class="-mx-6">
     <div class="overflow-x-auto px-6 max-h-[70vh] overflow-y-auto"

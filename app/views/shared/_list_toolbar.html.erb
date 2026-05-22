@@ -22,6 +22,7 @@
   #                           Khi không truyền filters (mặc định []), không render dropdown nào.
   #   per_page_storage_key: String — localStorage key cho per_page (mặc định "list_per_page").
   #                           Mỗi trang nên truyền key riêng để per_page không ảnh hưởng trang khác.
+  #   show_search:          Boolean — hiển thị ô tìm kiếm (mặc định true).
   #   show_per_page:        Boolean — hiển thị dropdown số dòng/trang (mặc định true).
   #   show_total:           Boolean — hiển thị tổng bản ghi (mặc định true).
   #   action_links:         HTML — các nút hành động bổ sung bên phải (vd: Xuất Excel, Tính toán lại).
@@ -31,6 +32,7 @@
   action_links ||= nil
   filters ||= []
   per_page_storage_key ||= "list_per_page"
+  show_search = true unless local_assigns.key?(:show_search)
   show_per_page = true unless local_assigns.key?(:show_per_page)
   show_total = true unless local_assigns.key?(:show_total)
   current_per_page = (params[:per_page].presence || 25).to_i
@@ -51,13 +53,15 @@
       <%= hidden_field_tag :dir, params[:dir] %>
     <% end %>
 
-    <div class="flex items-center gap-2">
-      <%= text_field_tag :q, params[:q],
-            placeholder: search_placeholder,
-            class: "rounded border border-gray-300 text-sm px-3 py-1.5 w-64" %>
-      <%= submit_tag t("common.actions.search"),
-            class: "px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded cursor-pointer" %>
-    </div>
+    <% if show_search %>
+      <div class="flex items-center gap-2">
+        <%= text_field_tag :q, params[:q],
+              placeholder: search_placeholder,
+              class: "rounded border border-gray-300 text-sm px-3 py-1.5 w-64" %>
+        <%= submit_tag t("common.actions.search"),
+              class: "px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded cursor-pointer" %>
+      </div>
+    <% end %>
 
     <% filters.each do |filter| %>
       <%
