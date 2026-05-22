@@ -22,6 +22,7 @@ RSpec.describe "Contact points", type: :system do
   let(:search_text) { "Alpha" }
   let(:sort_column) { "name" }
   let(:deletable_name) { cp1.name }
+  let(:filter_select_ids) { %w[zone_id unit_id] }
   def path_with_params(**params) = contact_points_path(**params)
   def create_extra_data = 12.times { |i| create(:contact_point, :public_type, unit: unit1, name: "CP Extra #{i}") }
 

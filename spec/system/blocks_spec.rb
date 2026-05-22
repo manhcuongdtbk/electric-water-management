@@ -21,6 +21,7 @@ RSpec.describe "Blocks", type: :system do
   let(:search_text) { "Alpha" }
   let(:sort_column) { "name" }
   let(:deletable_name) { block1.name }
+  let(:filter_select_ids) { %w[zone_id unit_id] }
   def path_with_params(**params) = blocks_path(**params)
   def create_extra_data = 12.times { |i| create(:block, unit: unit1, name: "Phòng Extra #{i}") }
 
