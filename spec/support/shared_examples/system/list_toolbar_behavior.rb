@@ -122,24 +122,6 @@ end
 #   search_text:      → Text tìm kiếm (vd: tên đơn vị, tên khu vực)
 #   content_match:    → Text phải có trong kết quả
 #   content_no_match: → Text không được có trong kết quả
-# Shared examples cho confirm xóa (turbo_confirm) trên trang danh sách.
-#
-# Yêu cầu trong caller:
-#   path:               → URL trang index
-#   deletable_record:   → Record có thể xóa (không vi phạm constraint)
-#   deletable_name:     → Tên hiển thị trong bảng và confirm dialog
-RSpec.shared_examples "confirm delete behavior" do
-  it "confirm xóa hiện tên entity và xóa thành công" do
-    deletable_record # force creation
-    visit path
-    accept_confirm(/#{Regexp.escape(deletable_name)}/) do
-      within("tr", text: deletable_name) { click_on I18n.t("common.actions.destroy") }
-    end
-    expect(page).to have_current_path(path)
-    expect(page).not_to have_css("table tbody tr", text: deletable_name)
-  end
-end
-
 RSpec.shared_examples "search behavior" do
   it "tìm kiếm submit đúng kết quả" do
     visit path
@@ -157,11 +139,6 @@ RSpec.shared_examples "search behavior" do
   end
 end
 
-# Shared examples cho search + filter kết hợp.
-# Verify single-form giữ params của nhau khi thao tác.
-#
-# Yêu cầu trong caller (ngoài search behavior + zone filter behavior):
-#   search_text, content_match, content_no_match, zone1, zone2, content_zone1, content_zone2
 # Shared examples cho sort preserved qua toolbar interactions.
 # Verify hidden fields sort/dir giữ khi search hoặc đổi filter.
 #
@@ -179,6 +156,11 @@ RSpec.shared_examples "sort preserved behavior" do
   end
 end
 
+# Shared examples cho search + filter kết hợp.
+# Verify single-form giữ params của nhau khi thao tác.
+#
+# Yêu cầu trong caller (ngoài search behavior + zone filter behavior):
+#   search_text, zone1
 RSpec.shared_examples "search and filter combination behavior" do
   it "search text giữ khi đổi zone filter" do
     visit send(:path_with_params, q: search_text)
