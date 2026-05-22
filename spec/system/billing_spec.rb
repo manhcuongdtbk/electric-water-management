@@ -24,12 +24,13 @@ RSpec.describe "Billing", type: :system do
   # --- Page-specific: cần full sample ---
   context "page-specific" do
     let!(:sample) { setup_zone_one_full_sample }
+    let(:path) { billing_path }
     let(:zone1) { sample.zone }
     let(:unit1) { sample.unit_a }
 
     before { sign_in system_admin }
 
-    it_behaves_like "non-system-admin filter visibility"
+    it_behaves_like "role-based filter visibility"
 
     it "đổi kỳ → auto-submit, trang reload đúng kỳ" do
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
