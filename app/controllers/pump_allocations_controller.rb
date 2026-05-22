@@ -21,9 +21,12 @@ class PumpAllocationsController < ApplicationController
                           .joins(:zone)
                           .left_joins(:unit, :contact_point)
     scope = scope.where(period: @period) if @period
+    @zones = Zone.where(id: scope.select(:zone_id)).order(:name)
+    @selected_zone_id = params[:zone_id].presence&.to_i
+    scope = scope.where(zone_id: @selected_zone_id) if @selected_zone_id
     if (q = params[:q]).present?
       like = "%#{q.strip}%"
-      scope = scope.where("zones.name ILIKE :q OR units.name ILIKE :q OR contact_points.name ILIKE :q", q: like)
+      scope = scope.where("units.name ILIKE :q OR contact_points.name ILIKE :q", q: like)
     end
     scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:zone, :asc])
     @total_count = scope.count
