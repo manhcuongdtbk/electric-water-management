@@ -10,9 +10,13 @@ class UsersController < ApplicationController
     unit:         "units.name"
   }.freeze
 
+  ROLES = %w[system_admin unit_admin commander technician].freeze
+
   def index
     scope = User.accessible_by(current_ability).includes(:unit)
     scope = scope.left_joins(:unit) if params[:sort].to_s == "unit"
+    @filter_role = params[:role] if ROLES.include?(params[:role])
+    scope = scope.where(role: @filter_role) if @filter_role
     if (q = params[:q]).present?
       scope = scope.where("users.username ILIKE ? OR users.display_name ILIKE ?",
                           "%#{q.strip}%", "%#{q.strip}%")
