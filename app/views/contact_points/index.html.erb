@@ -10,11 +10,12 @@
 
   type_options = @visible_types.map { |t| [I18n.t("activerecord.attributes.contact_point.types.#{t}"), t] }
 
+  show_zone_unit = current_user.system_admin?
+
   toolbar_filters = [
     { label: "Loại:", param: :type, options: type_options, selected: @filter_type }
   ]
-
-  if current_user.role == "system_admin"
+  if show_zone_unit
     toolbar_filters += [
       { label: "Khu vực:", param: :zone_id,
         options: @available_zones.pluck(:name, :id), selected: @zone&.id,
@@ -23,8 +24,6 @@
         options: @available_units.pluck(:name, :id), selected: @unit&.id }
     ]
   end
-
-  show_zone_unit = current_user.role == "system_admin"
   extra_sort_params = { q: params[:q], per_page: params[:per_page],
                         type: params[:type], zone_id: params[:zone_id], unit_id: params[:unit_id] }
 %>

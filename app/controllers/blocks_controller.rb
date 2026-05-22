@@ -23,15 +23,7 @@ class BlocksController < ApplicationController
                                   .joins(:unit)
     scope = scope.joins("INNER JOIN zones ON zones.id = units.zone_id")
 
-    if current_user.role == "system_admin"
-      @zone, @unit = resolve_zone_unit_filter
-      all_unit_ids = scope.unscope(:order).distinct.pluck(:unit_id)
-      all_zone_ids = Unit.where(id: all_unit_ids).distinct.pluck(:zone_id)
-      @available_zones = available_zones_for_filter(zone_ids: all_zone_ids)
-      @available_units = available_units_for_filter(@zone, unit_ids: all_unit_ids)
-      scope = scope.where(units: { zone_id: @zone.id }) if @zone
-      scope = scope.where(unit_id: @unit.id) if @unit
-    end
+    scope = apply_sa_zone_unit_filter(scope)
 
     if (q = params[:q]).present?
       scope = scope.where("blocks.name ILIKE ?", "%#{q.strip}%")

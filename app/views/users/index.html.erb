@@ -8,7 +8,7 @@
 
 <%
   role_options = UsersController::ROLES.map { |r| [I18n.t("activerecord.attributes.user.roles.#{r}"), r] }
-  show_zone_unit = current_user.role == "system_admin"
+  show_zone_unit = current_user.system_admin?
 
   toolbar_filters = [
     { label: "Vai trò:", param: :role,

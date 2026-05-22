@@ -154,10 +154,12 @@ RSpec.describe "Period indicator partial", type: :request do
   end
 
   describe "unit_config shows unit-specific messages when user has no unit" do
-    it "system_admin sees unit selection prompt instead of period indicator" do
+    it "system_admin sees zone/unit dropdowns instead of period indicator" do
       get unit_config_path
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Vui lòng chọn đơn vị bên dưới")
+      html = Nokogiri::HTML(response.body)
+      expect(html.css("select#zone_id")).to be_present
+      expect(html.css("select#unit_id")).to be_present
     end
 
     it "unit_admin without unit sees assignment warning instead of period indicator" do
