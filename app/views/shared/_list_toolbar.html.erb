@@ -25,6 +25,7 @@
   #   show_search:          Boolean — hiển thị ô tìm kiếm (mặc định true).
   #   show_per_page:        Boolean — hiển thị dropdown số dòng/trang (mặc định true).
   #   show_total:           Boolean — hiển thị tổng bản ghi (mặc định true).
+  #   total_label:          String — label tùy chỉnh cho tổng (mặc định: "Tổng: X bản ghi").
   #   action_links:         HTML — các nút hành động bổ sung bên phải (vd: Xuất Excel, Tính toán lại).
   extra_hidden ||= {}
   search_placeholder ||= t("common.list.search_placeholder")
@@ -35,6 +36,7 @@
   show_search = true unless local_assigns.key?(:show_search)
   show_per_page = true unless local_assigns.key?(:show_per_page)
   show_total = true unless local_assigns.key?(:show_total)
+  total_label = local_assigns[:total_label]
   current_per_page = (params[:per_page].presence || 25).to_i
   has_filter = params[:q].present? || extra_hidden.values.any?(&:present?) || filters.any? { |f| params[f[:param]].present? }
   has_cascade = filters.any? { |f| f[:children].present? }
@@ -108,7 +110,7 @@
       <% end %>
     <% end %>
     <% if show_total %>
-      <span class="text-sm text-gray-600"><%= list_total(total_count) %></span>
+      <span class="text-sm text-gray-600"><%= total_label || list_total(total_count) %></span>
     <% end %>
     <% if add_link %>
       <%= add_link %>
