@@ -27,6 +27,14 @@ module ListSortable
     end
   end
 
+  def apply_search(scope, columns:)
+    return scope unless params[:q].present?
+    sanitized = ActiveRecord::Base.sanitize_sql_like(params[:q].strip)
+    like = "%#{sanitized}%"
+    conditions = Array(columns).map { |col| "#{col} ILIKE :q" }.join(" OR ")
+    scope.where(conditions, q: like)
+  end
+
   def pagy_with_per_page(scope, default: 25)
     pp = params[:per_page].to_i
     limit = PER_PAGE_OPTIONS.include?(pp) ? pp : default

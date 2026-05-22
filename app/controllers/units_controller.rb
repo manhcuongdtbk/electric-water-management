@@ -22,10 +22,7 @@ class UnitsController < ApplicationController
     @period = current_period
     scope = load_collection(Unit).includes(:zone, :managed_zones).left_joins(:zone)
     scope = apply_sa_zone_filter(scope)
-    if (q = params[:q]).present?
-      sanitized = ActiveRecord::Base.sanitize_sql_like(q.strip)
-      scope = scope.where("units.name ILIKE ?", "%#{sanitized}%")
-    end
+    scope = apply_search(scope, columns: "units.name")
     scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:created_at, :desc])
     @total_count = scope.count
     @pagy, @units = pagy_with_per_page(scope)

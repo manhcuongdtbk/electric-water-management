@@ -20,10 +20,7 @@ class RanksController < ApplicationController
     @period = current_period || Period.order(year: :desc, month: :desc).first
     scope = @period ? @period.ranks : Rank.none
     authorize!(:read, Rank)
-    if @period && (q = params[:q]).present?
-      sanitized = ActiveRecord::Base.sanitize_sql_like(q.strip)
-      scope = scope.where("ranks.name ILIKE ?", "%#{sanitized}%")
-    end
+    scope = apply_search(scope, columns: "ranks.name") if @period
     scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:position, :asc]) if @period
     @total_count = scope.count
     @pagy, @ranks = pagy_with_per_page(scope)

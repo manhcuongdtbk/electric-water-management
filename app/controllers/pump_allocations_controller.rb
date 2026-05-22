@@ -25,10 +25,7 @@ class PumpAllocationsController < ApplicationController
                           .left_joins(:unit, :contact_point)
     scope = scope.where(period: @period) if @period
     scope = apply_sa_zone_filter(scope)
-    if (q = params[:q]).present?
-      sanitized = "%#{ActiveRecord::Base.sanitize_sql_like(q.strip)}%"
-      scope = scope.where("units.name ILIKE :q OR contact_points.name ILIKE :q", q: sanitized)
-    end
+    scope = apply_search(scope, columns: %w[units.name contact_points.name])
     scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:created_at, :desc])
     @total_count = scope.count
     @pagy, @pump_allocations = pagy_with_per_page(scope)

@@ -26,10 +26,7 @@ class GroupsController < ApplicationController
 
     scope = apply_sa_zone_unit_filter(scope)
 
-    if (q = params[:q]).present?
-      sanitized = ActiveRecord::Base.sanitize_sql_like(q.strip)
-      scope = scope.where("groups.name ILIKE ?", "%#{sanitized}%")
-    end
+    scope = apply_search(scope, columns: "groups.name")
     scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:created_at, :desc])
     @total_count = scope.count
     @pagy, @groups = pagy_with_per_page(scope)

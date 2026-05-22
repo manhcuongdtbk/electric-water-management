@@ -38,10 +38,7 @@ class ContactPointsController < ApplicationController
     @visible_types = %w[residential public]
     @visible_types += %w[water_pump non_establishment] if current_user.system_admin? || current_zone_manager?
 
-    if (q = params[:q]).present?
-      sanitized = ActiveRecord::Base.sanitize_sql_like(q.strip)
-      scope = scope.where("contact_points.name ILIKE ?", "%#{sanitized}%")
-    end
+    scope = apply_search(scope, columns: "contact_points.name")
     scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:created_at, :desc])
     @total_count = scope.count
     @pagy, @contact_points = pagy_with_per_page(scope)
