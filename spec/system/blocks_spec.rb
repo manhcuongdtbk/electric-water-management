@@ -30,5 +30,5 @@ RSpec.describe "Blocks", type: :system do
   it_behaves_like "zone-unit cascade filter behavior"
   it_behaves_like "per_page auto-submit behavior"
   it_behaves_like "confirm delete behavior"
-  it_behaves_like "non-admin filter visibility"
+  it_behaves_like "non-system-admin filter visibility"
 end

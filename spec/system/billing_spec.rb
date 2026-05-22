@@ -29,7 +29,7 @@ RSpec.describe "Billing", type: :system do
 
     before { sign_in system_admin }
 
-    it_behaves_like "non-admin filter visibility"
+    it_behaves_like "non-system-admin filter visibility"
 
     it "đổi kỳ → auto-submit, trang reload đúng kỳ" do
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call

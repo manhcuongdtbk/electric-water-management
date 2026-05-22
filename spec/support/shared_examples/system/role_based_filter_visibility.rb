@@ -1,13 +1,13 @@
 # Shared system spec examples cho role-based filter visibility.
 # Dùng Capybara API — chỉ dùng trong type: :system.
 #
-# Verify rằng non-SA roles không thấy dropdown zone/unit trên các trang có filter.
+# Verify rằng các role ngoài system_admin không thấy dropdown zone/unit.
 #
 # Yêu cầu trong caller:
 #   path:   → URL trang index
 #   zone1:  → Zone có unit là zone manager
 #   unit1:  → Unit thuộc zone1 và là zone manager
-RSpec.shared_examples "non-admin filter visibility" do
+RSpec.shared_examples "non-system-admin filter visibility" do
   %w[unit_admin commander].each do |role|
     context "as #{role} zone-manager" do
       before do
