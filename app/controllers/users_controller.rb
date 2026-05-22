@@ -1,5 +1,6 @@
 class UsersController < ApplicationController
   include AuthorizeResource
+  include ZoneUnitFilterable
 
   before_action :set_user, only: [:show, :edit, :update, :destroy]
 
@@ -7,16 +8,29 @@ class UsersController < ApplicationController
     username:     "users.username",
     display_name: "users.display_name",
     role:         "users.role",
+    zone:         "zones.name",
     unit:         "units.name"
   }.freeze
 
   ROLES = %w[system_admin unit_admin commander technician].freeze
 
   def index
-    scope = User.accessible_by(current_ability).includes(:unit)
-    scope = scope.left_joins(:unit) if params[:sort].to_s == "unit"
+    scope = User.accessible_by(current_ability).includes(unit: :zone).left_joins(:unit)
+    scope = scope.joins("LEFT JOIN zones ON zones.id = units.zone_id")
+
     @filter_role = params[:role] if ROLES.include?(params[:role])
     scope = scope.where(role: @filter_role) if @filter_role
+
+    @zone, @unit = resolve_zone_unit_filter
+    all_unit_ids = scope.where.not(unit_id: nil).distinct.pluck(:unit_id)
+    all_zone_ids = Unit.where(id: all_unit_ids).distinct.pluck(:zone_id)
+    @available_zones = available_zones_for_filter(zone_ids: all_zone_ids)
+    @available_units = available_units_for_filter(@zone, unit_ids: all_unit_ids)
+    if @zone
+      scope = scope.where("units.zone_id = ?", @zone.id)
+    end
+    scope = scope.where(unit_id: @unit.id) if @unit
+
     if (q = params[:q]).present?
       scope = scope.where("users.username ILIKE ? OR users.display_name ILIKE ?",
                           "%#{q.strip}%", "%#{q.strip}%")
