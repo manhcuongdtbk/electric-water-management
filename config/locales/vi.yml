@@ -324,7 +324,7 @@ vi:
     filters:
       event_label: "Loại thao tác"
       item_type_label: "Đối tượng"
-      whodunnit_label: "Người thao tác"
+      whodunnit_label: "Người thực hiện"
       from_label: "Từ ngày"
       to_label: "Đến ngày"
       per_page_label: "Hiển thị / trang"
