@@ -42,10 +42,10 @@
               current_sort: params[:sort], current_dir: params[:dir],
               extra_params: extra_sort_params %>
         <% if show_zone_unit %>
-          <%= sortable_header :zone, "Khu vực",
+          <%= sortable_header :unit, "Đơn vị",
                 current_sort: params[:sort], current_dir: params[:dir],
                 extra_params: extra_sort_params %>
-          <%= sortable_header :unit, "Đơn vị",
+          <%= sortable_header :zone, "Khu vực",
                 current_sort: params[:sort], current_dir: params[:dir],
                 extra_params: extra_sort_params %>
         <% end %>
@@ -61,8 +61,8 @@
           <td class="px-4 py-2 text-sm font-medium text-gray-900"><%= g.name %></td>
           <td class="px-4 py-2 text-sm text-gray-600"><%= g.block&.name || "—" %></td>
           <% if show_zone_unit %>
-            <td class="px-4 py-2 text-sm text-gray-600"><%= g.unit&.zone&.name %></td>
             <td class="px-4 py-2 text-sm text-gray-600"><%= g.unit&.name %></td>
+            <td class="px-4 py-2 text-sm text-gray-600"><%= g.unit&.zone&.name %></td>
           <% end %>
           <td class="px-4 py-2 text-sm text-right space-x-2">
             <% if can?(:update, g) || can?(:destroy, g) %>
