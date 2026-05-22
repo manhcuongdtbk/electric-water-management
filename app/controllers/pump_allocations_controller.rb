@@ -11,7 +11,8 @@ class PumpAllocationsController < ApplicationController
     zone:        "zones.name",
     target:      "COALESCE(units.name, contact_points.name)",
     percentage:  "pump_allocations.fixed_percentage",
-    coefficient: "pump_allocations.coefficient"
+    coefficient: "pump_allocations.coefficient",
+    created_at:  "pump_allocations.created_at"
   }.freeze
 
   def index
@@ -28,7 +29,7 @@ class PumpAllocationsController < ApplicationController
       like = "%#{q.strip}%"
       scope = scope.where("units.name ILIKE :q OR contact_points.name ILIKE :q", q: like)
     end
-    scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:zone, :asc])
+    scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:created_at, :desc])
     @total_count = scope.count
     @pagy, @pump_allocations = pagy_with_per_page(scope)
   end

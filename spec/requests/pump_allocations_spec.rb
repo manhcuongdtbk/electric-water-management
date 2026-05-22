@@ -88,6 +88,36 @@ RSpec.describe "PumpAllocations", type: :request do
       selected_zone = html.css("select#zone_id option[selected]")
       expect(selected_zone.first&.attr("value")).to eq(zone2.id.to_s)
     end
+
+    it "cột Đối tượng đứng trước cột Khu vực trong bảng" do
+      get pump_allocations_path
+      headers = html.css("table thead th").map(&:text).map(&:strip)
+      target_index = headers.index { |h| h.include?("Đối tượng") }
+      zone_index = headers.index { |h| h.include?("Khu vực") }
+      expect(target_index).to be < zone_index
+    end
+
+    it "cột khu vực có tiêu đề là Khu vực" do
+      get pump_allocations_path
+      headers = html.css("table thead th").map(&:text).map(&:strip)
+      expect(headers).to include(a_string_including("Khu vực"))
+      expect(headers).not_to include(a_string_including("Tên khu vực"))
+    end
+
+    it "sắp xếp mặc định: đối tượng tạo sau đứng trước" do
+      get pump_allocations_path
+      rows = html.css("table tbody tr")
+      first_row_text = rows.first.text
+      last_row_text = rows.last.text
+      expect(first_row_text).to include(unit2.name)
+      expect(last_row_text).to include(unit.name)
+    end
+
+    it "placeholder tìm kiếm ghi rõ tìm theo tên đối tượng" do
+      get pump_allocations_path
+      input = html.css("input#q").first
+      expect(input["placeholder"]).to include("đối tượng")
+    end
   end
 
   describe "POST /pump_allocations" do

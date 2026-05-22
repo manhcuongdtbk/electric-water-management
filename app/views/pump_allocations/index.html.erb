@@ -14,7 +14,7 @@
       <%= hidden_field_tag :per_page, params[:per_page] if params[:per_page].present? %>
       <%= hidden_field_tag :zone_id, @selected_zone_id if @selected_zone_id.present? %>
       <%= text_field_tag :q, params[:q],
-            placeholder: t("common.list.search_by_name"),
+            placeholder: "Tìm theo tên đối tượng...",
             class: "rounded border border-gray-300 text-sm px-3 py-1.5 w-64" %>
       <%= submit_tag t("common.actions.search"),
             class: "px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded cursor-pointer" %>
@@ -61,10 +61,10 @@
   <table class="min-w-full divide-y divide-gray-200">
     <thead class="bg-gray-50">
       <tr>
-        <%= sortable_header :zone, t("activerecord.attributes.zone.name"),
+        <%= sortable_header :target, "Đối tượng",
               current_sort: params[:sort], current_dir: params[:dir],
               extra_params: { q: params[:q], per_page: params[:per_page], zone_id: params[:zone_id] } %>
-        <%= sortable_header :target, "Đối tượng",
+        <%= sortable_header :zone, "Khu vực",
               current_sort: params[:sort], current_dir: params[:dir],
               extra_params: { q: params[:q], per_page: params[:per_page], zone_id: params[:zone_id] } %>
         <%= sortable_header :percentage, "% cố định",
@@ -82,13 +82,13 @@
       <% end %>
       <% @pump_allocations.each do |alloc| %>
         <tr class="hover:bg-gray-50 transition-colors">
-          <td class="px-4 py-2 text-sm text-gray-900"><%= alloc.zone.name %></td>
-          <td class="px-4 py-2 text-sm text-gray-600">
+          <td class="px-4 py-2 text-sm text-gray-900">
             <%= alloc.unit&.name || alloc.contact_point&.name %>
             <span class="text-xs text-gray-400 ml-1">
               (<%= alloc.unit ? t("resources.unit").capitalize : t("resources.contact_point").capitalize %>)
             </span>
           </td>
+          <td class="px-4 py-2 text-sm text-gray-600"><%= alloc.zone.name %></td>
           <td class="px-4 py-2 text-sm text-right text-gray-600">
             <%= alloc.fixed_percentage.present? ? "#{number_to_vi(alloc.fixed_percentage)}%" : "—" %>
           </td>
