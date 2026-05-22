@@ -20,8 +20,8 @@ RSpec.describe "Billing filter cascade", type: :system do
   let(:unit2) { unit_c }
   let(:content_zone1) { sample.unit_a.name }
   let(:content_zone2) { unit_c.name }
-  let(:zone_blank_text) { "Tất cả khu vực" }
-  let(:unit_blank_text) { "Tất cả đơn vị" }
+  let(:zone_blank_text) { "Tất cả" }
+  let(:unit_blank_text) { "Tất cả" }
   def path_with_params(**params) = billing_path(**params)
 
   it_behaves_like "zone-unit cascade filter behavior"
