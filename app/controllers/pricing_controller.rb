@@ -1,12 +1,14 @@
 class PricingController < ApplicationController
   include AuthorizeResource
   include BusinessRoleRequired
+  include ListSortable
 
   def show
     @current_period = Period.current
-    @all_periods = Period.order(year: :desc, month: :desc)
-    @latest_period = @all_periods.first
+    all_periods = Period.order(year: :desc, month: :desc)
+    @latest_period = all_periods.first
     @next_year, @next_month = compute_next_year_month(@latest_period)
+    @pagy, @all_periods = pagy_with_per_page(all_periods, default: 10)
     authorize!(:read, Period)
   end
 
@@ -18,7 +20,8 @@ class PricingController < ApplicationController
       redirect_to pricing_path, notice: t("pricing.flash.updated")
     else
       @current_period = @period
-      @all_periods = Period.order(year: :desc, month: :desc)
+      all_periods = Period.order(year: :desc, month: :desc)
+      @pagy, @all_periods = pagy_with_per_page(all_periods, default: 10)
       render :show, status: :unprocessable_entity
     end
   end
