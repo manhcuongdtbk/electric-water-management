@@ -30,11 +30,13 @@
   current_per_page = (params[:per_page].presence || 25).to_i
   has_filter = params[:q].present? || extra_hidden.values.any?(&:present?) || filters.any? { |f| params[f[:param]].present? }
   has_cascade = filters.any? { |f| f[:children].present? }
+  form_controllers = ["auto-submit"]
+  form_controllers.unshift("reset-child-select") if has_cascade
 %>
 
 <div class="bg-white border border-gray-200 rounded-lg p-3 mb-3 flex items-center justify-between gap-3 flex-wrap">
   <%= form_with url: url, method: :get, local: true, class: "flex items-center gap-3 flex-wrap",
-        data: has_cascade ? { controller: "reset-child-select" } : {} do %>
+        data: filters.any? ? { controller: form_controllers.join(" ") } : {} do %>
     <% extra_hidden.each do |k, v| %>
       <%= hidden_field_tag k, v %>
     <% end %>
