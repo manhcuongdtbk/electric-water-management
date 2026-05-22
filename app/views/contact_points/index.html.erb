@@ -2,62 +2,68 @@
 
 <%= render "shared/period_indicator", period: @period %>
 
-<div class="flex justify-between items-center mb-3">
-  <div class="flex space-x-2">
-    <%= link_to t("common.filter.all"), contact_points_path,
-        class: "px-3 py-1 rounded text-sm #{params[:type].blank? ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}" %>
-    <%
-      visible_types = %w[residential public]
-      visible_types += %w[water_pump non_establishment] if current_user.system_admin? || current_zone_manager?
-    %>
-    <% visible_types.each do |type| %>
-      <%= link_to t("activerecord.attributes.contact_point.types.#{type}"),
-            contact_points_path(type: type),
-            class: "px-3 py-1 rounded text-sm #{params[:type] == type ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}" %>
-    <% end %>
-  </div>
-</div>
-
 <%
   add_link = can?(:create, ContactPoint) ?
     link_to(t("common.actions.add") + " " + t("resources.contact_point"),
       new_contact_point_path(type: @filter_type),
       class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700") : nil
+
+  type_options = @visible_types.map { |t| [I18n.t("activerecord.attributes.contact_point.types.#{t}"), t] }
+
+  toolbar_filters = [
+    { label: "Loại:", param: :type, options: type_options, selected: @filter_type }
+  ]
+
+  if current_user.role == "system_admin"
+    toolbar_filters += [
+      { label: "Khu vực:", param: :zone_id,
+        options: @available_zones.pluck(:name, :id), selected: @zone&.id,
+        children: [:unit_id] },
+      { label: "Đơn vị:", param: :unit_id,
+        options: @available_units.pluck(:name, :id), selected: @unit&.id }
+    ]
+  end
+
+  extra_sort_params = { q: params[:q], per_page: params[:per_page],
+                        type: params[:type], zone_id: params[:zone_id], unit_id: params[:unit_id] }
 %>
 
 <%= render "shared/list_toolbar",
       url: contact_points_path,
-      search_placeholder: t("common.list.search_by_name"),
-      extra_hidden: { type: @filter_type },
+      search_placeholder: "Tìm theo tên đầu mối...",
       total_count: @total_count,
       add_link: add_link,
-      per_page_storage_key: "contact_points_per_page" %>
+      per_page_storage_key: "contact_points_per_page",
+      filters: toolbar_filters %>
 
 <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
   <table class="min-w-full divide-y divide-gray-200">
     <thead class="bg-gray-50">
       <tr>
-        <%= sortable_header :name, t("activerecord.attributes.contact_point.name"),
+        <%= sortable_header :name, "Đầu mối",
               current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: { q: params[:q], type: @filter_type, per_page: params[:per_page] } %>
-        <%= sortable_header :contact_point_type, t("activerecord.attributes.contact_point.contact_point_type"),
+              extra_params: extra_sort_params %>
+        <%= sortable_header :contact_point_type, "Loại",
               current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: { q: params[:q], type: @filter_type, per_page: params[:per_page] } %>
-        <%= sortable_header :unit_or_zone,
-              t("activerecord.attributes.contact_point.unit") + " / " + t("activerecord.attributes.contact_point.zone"),
+              extra_params: extra_sort_params %>
+        <%= sortable_header :zone, "Khu vực",
               current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: { q: params[:q], type: @filter_type, per_page: params[:per_page] } %>
-        <%= sortable_header :block_or_group,
-              t("activerecord.attributes.contact_point.block") + " / " + t("activerecord.attributes.contact_point.group"),
+              extra_params: extra_sort_params %>
+        <%= sortable_header :unit, "Đơn vị",
               current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: { q: params[:q], type: @filter_type, per_page: params[:per_page] } %>
-        <%= list_header t("resources.meter").humanize %>
+              extra_params: extra_sort_params %>
+        <%= sortable_header :block, "Khối",
+              current_sort: params[:sort], current_dir: params[:dir],
+              extra_params: extra_sort_params %>
+        <%= sortable_header :group, "Nhóm",
+              current_sort: params[:sort], current_dir: params[:dir],
+              extra_params: extra_sort_params %>
         <%= list_header t("common.list.actions"), align: :right %>
       </tr>
     </thead>
     <tbody class="divide-y divide-gray-200">
       <% if @contact_points.empty? %>
-        <tr><td colspan="6" class="px-4 py-6 text-center text-gray-500"><%= t("common.list.no_records") %></td></tr>
+        <tr><td colspan="7" class="px-4 py-6 text-center text-gray-500"><%= t("common.list.no_records") %></td></tr>
       <% end %>
       <% @contact_points.each do |cp| %>
         <tr class="hover:bg-gray-50 transition-colors">
@@ -65,15 +71,10 @@
           <td class="px-4 py-2 text-sm text-gray-600">
             <%= t("activerecord.attributes.contact_point.types.#{cp.contact_point_type}", default: cp.contact_point_type) %>
           </td>
-          <td class="px-4 py-2 text-sm text-gray-600">
-            <%= cp.unit&.name || cp.zone&.name %>
-          </td>
-          <td class="px-4 py-2 text-sm text-gray-600">
-            <%= [cp.block&.name, cp.group&.name].compact.join(" / ") %>
-          </td>
-          <td class="px-4 py-2 text-sm text-gray-600">
-            <%= cp.meters.reject(&:discarded?).map(&:name).join(", ") %>
-          </td>
+          <td class="px-4 py-2 text-sm text-gray-600"><%= cp.zone&.name || cp.unit&.zone&.name || "—" %></td>
+          <td class="px-4 py-2 text-sm text-gray-600"><%= cp.unit&.name || "—" %></td>
+          <td class="px-4 py-2 text-sm text-gray-600"><%= cp.block&.name || "—" %></td>
+          <td class="px-4 py-2 text-sm text-gray-600"><%= cp.group&.name || "—" %></td>
           <td class="px-4 py-2 text-sm text-right space-x-2">
             <% if can?(:update, cp) || can?(:destroy, cp) %>
               <% if can?(:update, cp) %>
