@@ -125,7 +125,7 @@
                   [["Tất cả", ""]] + @available_years.map { |y| [y, y] },
                   @selected_year
                 ),
-                data: { action: "change->per-page#submit" },
+                onchange: "this.form.requestSubmit()",
                 class: "rounded border border-gray-300 text-sm px-2 py-1" %>
           <%= hidden_field_tag :per_page, params[:per_page] if params[:per_page].present? %>
         <% end %>
