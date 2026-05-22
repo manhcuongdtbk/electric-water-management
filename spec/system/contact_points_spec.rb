@@ -14,8 +14,11 @@ RSpec.describe "Contact points", type: :system do
   before { sign_in system_admin }
 
   let(:path) { contact_points_path }
-  let(:content_zone1) { "CP Alpha" }
-  let(:content_zone2) { "CP Beta" }
+  let(:filter_param) { "zone_id" }
+  let(:filter_option_text) { zone1.name }
+  let(:filter_option_value) { zone1.id }
+  let(:content_when_filtered) { "CP Alpha" }
+  let(:content_when_excluded) { "CP Beta" }
   let(:search_text) { "Alpha" }
   let(:content_match) { "CP Alpha" }
   let(:content_no_match) { "CP Beta" }
@@ -25,7 +28,7 @@ RSpec.describe "Contact points", type: :system do
   def create_extra_data = 12.times { |i| create(:contact_point, :public_type, unit: unit1, name: "CP Extra #{i}") }
 
   it_behaves_like "search behavior"
-  it_behaves_like "zone filter behavior"
+  it_behaves_like "single filter behavior"
   it_behaves_like "search and filter combination behavior"
   it_behaves_like "sort preserved behavior"
   it_behaves_like "zone-unit cascade filter behavior"

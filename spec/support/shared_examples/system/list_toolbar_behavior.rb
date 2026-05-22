@@ -3,55 +3,56 @@
 #
 # ============================================================
 
-# Shared examples cho toolbar có dropdown lọc khu vực (không cascade).
+# Shared examples cho toolbar có 1 dropdown filter (auto-submit).
 #
 # Yêu cầu let/method trong caller:
-#   path:           → URL trang index (vd: units_path)
-#   zone1:          → Zone thứ nhất (đã có data)
-#   zone2:          → Zone thứ hai (đã có data)
-#   content_zone1:  → Text xuất hiện khi lọc zone1 (vd: tên đơn vị thuộc zone1)
-#   content_zone2:  → Text xuất hiện khi lọc zone2
+#   path:                   → URL trang index
+#   filter_param:           → HTML id/name của select (vd: "zone_id", "type")
+#   filter_option_text:     → Text của option để chọn (vd: zone1.name, "Công cộng")
+#   filter_option_value:    → Value của option đó (vd: zone1.id, "residential")
+#   content_when_filtered:  → Text phải có sau khi lọc
+#   content_when_excluded:  → Text không được có sau khi lọc
 #   path_with_params(**params) → URL với query params
-RSpec.shared_examples "zone filter behavior" do
-  it "chọn khu vực → bảng chỉ hiện data thuộc khu vực đó" do
+RSpec.shared_examples "single filter behavior" do
+  it "chọn filter → bảng chỉ hiện data đúng" do
     visit path
-    expect(page).to have_content(content_zone1)
-    expect(page).to have_content(content_zone2)
+    expect(page).to have_content(content_when_filtered)
+    expect(page).to have_content(content_when_excluded)
 
-    select zone1.name, from: "zone_id"
-    expect(page).to have_content(content_zone1)
-    expect(page).not_to have_content(content_zone2)
+    select filter_option_text, from: filter_param
+    expect(page).to have_content(content_when_filtered)
+    expect(page).not_to have_content(content_when_excluded)
   end
 
-  it "chọn khu vực rồi chọn Tất cả → hiện lại toàn bộ" do
-    visit send(:path_with_params, zone_id: zone1.id)
-    expect(page).not_to have_content(content_zone2)
+  it "chọn filter rồi chọn Tất cả → hiện lại toàn bộ" do
+    visit send(:path_with_params, filter_param.to_sym => filter_option_value)
+    expect(page).not_to have_content(content_when_excluded)
 
-    select "Tất cả", from: "zone_id"
-    expect(page).to have_content(content_zone1)
-    expect(page).to have_content(content_zone2)
+    select "Tất cả", from: filter_param
+    expect(page).to have_content(content_when_filtered)
+    expect(page).to have_content(content_when_excluded)
   end
 
-  it "Xóa bộ lọc reset tất cả về mặc định" do
-    visit send(:path_with_params, zone_id: zone1.id)
+  it "Xóa bộ lọc reset filter về mặc định" do
+    visit send(:path_with_params, filter_param.to_sym => filter_option_value)
     expect(page).to have_content("Xóa bộ lọc")
 
     click_on "Xóa bộ lọc"
-    expect(page).to have_content(content_zone1)
-    expect(page).to have_content(content_zone2)
-    expect(find("select#zone_id").value).to eq("")
+    expect(page).to have_content(content_when_filtered)
+    expect(page).to have_content(content_when_excluded)
+    expect(find("select##{filter_param}").value).to eq("")
   end
 end
 
 # Shared examples cho toolbar có cascade khu vực → đơn vị.
 #
-# Yêu cầu let/method trong caller (ngoài những yêu cầu của zone filter behavior):
+# Yêu cầu let/method trong caller:
+#   path:           → URL trang index
+#   zone1:          → Zone thứ nhất
+#   zone2:          → Zone thứ hai
 #   unit1:          → Unit thuộc zone1
 #   unit2:          → Unit thuộc zone2
-#   zone_select_id: → HTML id của zone select (mặc định "zone_id")
-#   unit_select_id: → HTML id của unit select (mặc định "unit_id")
-#   zone_blank_text → Text option "Tất cả" cho zone (mặc định "Tất cả")
-#   unit_blank_text → Text option "Tất cả" cho unit (mặc định "Tất cả")
+#   path_with_params(**params) → URL với query params
 RSpec.shared_examples "zone-unit cascade filter behavior" do
   let(:zone_select_id) { "zone_id" }
   let(:unit_select_id) { "unit_id" }
@@ -159,24 +160,24 @@ end
 # Shared examples cho search + filter kết hợp.
 # Verify single-form giữ params của nhau khi thao tác.
 #
-# Yêu cầu trong caller (ngoài search behavior + zone filter behavior):
-#   search_text, zone1
+# Yêu cầu trong caller:
+#   search_text, filter_param, filter_option_text
 RSpec.shared_examples "search and filter combination behavior" do
-  it "search text giữ khi đổi zone filter" do
+  it "search text giữ khi đổi filter" do
     visit send(:path_with_params, q: search_text)
     expect(page).to have_field("q", with: search_text)
 
-    select zone1.name, from: "zone_id"
+    select filter_option_text, from: filter_param
     expect(page).to have_field("q", with: search_text)
-    expect(page).to have_select("zone_id", selected: zone1.name)
+    expect(page).to have_select(filter_param, selected: filter_option_text)
   end
 
-  it "zone filter giữ khi search" do
-    visit send(:path_with_params, zone_id: zone1.id)
-    expect(page).to have_select("zone_id", selected: zone1.name)
+  it "filter giữ khi search" do
+    visit send(:path_with_params, filter_param.to_sym => filter_option_value)
+    expect(page).to have_select(filter_param, selected: filter_option_text)
 
     fill_in "q", with: search_text
     click_on I18n.t("common.actions.search")
-    expect(page).to have_select("zone_id", selected: zone1.name)
+    expect(page).to have_select(filter_param, selected: filter_option_text)
   end
 end

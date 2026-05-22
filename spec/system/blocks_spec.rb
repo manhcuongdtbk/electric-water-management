@@ -13,8 +13,11 @@ RSpec.describe "Blocks", type: :system do
   before { sign_in system_admin }
 
   let(:path) { blocks_path }
-  let(:content_zone1) { "Phòng Alpha" }
-  let(:content_zone2) { "Phòng Beta" }
+  let(:filter_param) { "zone_id" }
+  let(:filter_option_text) { zone1.name }
+  let(:filter_option_value) { zone1.id }
+  let(:content_when_filtered) { "Phòng Alpha" }
+  let(:content_when_excluded) { "Phòng Beta" }
   let(:search_text) { "Alpha" }
   let(:content_match) { "Phòng Alpha" }
   let(:content_no_match) { "Phòng Beta" }
@@ -24,7 +27,7 @@ RSpec.describe "Blocks", type: :system do
   def create_extra_data = 12.times { |i| create(:block, unit: unit1, name: "Phòng Extra #{i}") }
 
   it_behaves_like "search behavior"
-  it_behaves_like "zone filter behavior"
+  it_behaves_like "single filter behavior"
   it_behaves_like "search and filter combination behavior"
   it_behaves_like "sort preserved behavior"
   it_behaves_like "zone-unit cascade filter behavior"

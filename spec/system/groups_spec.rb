@@ -13,8 +13,11 @@ RSpec.describe "Groups filter cascade", type: :system do
   before { sign_in system_admin }
 
   let(:path) { groups_path }
-  let(:content_zone1) { "Nhóm Alpha-1" }
-  let(:content_zone2) { "Nhóm Beta-1" }
+  let(:filter_param) { "zone_id" }
+  let(:filter_option_text) { zone1.name }
+  let(:filter_option_value) { zone1.id }
+  let(:content_when_filtered) { "Nhóm Alpha-1" }
+  let(:content_when_excluded) { "Nhóm Beta-1" }
   def path_with_params(**params) = groups_path(**params)
   def create_extra_data = 12.times { |i| create(:group, unit: unit1, name: "Nhóm Extra #{i}") }
 
@@ -25,7 +28,7 @@ RSpec.describe "Groups filter cascade", type: :system do
   let(:sort_column) { "name" }
 
   it_behaves_like "search behavior"
-  it_behaves_like "zone filter behavior"
+  it_behaves_like "single filter behavior"
   it_behaves_like "search and filter combination behavior"
   it_behaves_like "sort preserved behavior"
   it_behaves_like "zone-unit cascade filter behavior"

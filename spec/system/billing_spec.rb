@@ -19,18 +19,15 @@ RSpec.describe "Billing", type: :system do
     def path_with_params(**params) = billing_path(**params)
 
     it_behaves_like "zone-unit cascade filter behavior"
+    it_behaves_like "role-based filter visibility"
   end
 
   # --- Page-specific: cần full sample ---
   context "page-specific" do
     let!(:sample) { setup_zone_one_full_sample }
     let(:path) { billing_path }
-    let(:zone1) { sample.zone }
-    let(:unit1) { sample.unit_a }
 
     before { sign_in system_admin }
-
-    it_behaves_like "role-based filter visibility"
 
     it "đổi kỳ → auto-submit, trang reload đúng kỳ" do
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
