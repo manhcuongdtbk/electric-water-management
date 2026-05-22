@@ -6,6 +6,12 @@ module ListHelper
   }.freeze
 
   # Render <th> chứa link sort 3 trạng thái: ⇅ (chưa sort) → ↑ (ASC) → ↓ (DESC) → ⇅ (về default).
+  # column:        Symbol — key trong SORT_COLUMNS hash của controller.
+  # label:         String — đã dịch bởi caller (t("...")).
+  # current_sort:  params[:sort]
+  # current_dir:   params[:dir]
+  # extra_params:  Hash giữ filter/search hiện tại khi navigate (vd: {q:, type:}).
+  # align:         :left (mặc định) / :right (cột số) / :center.
   def sortable_header(column, label, current_sort:, current_dir:, extra_params: {}, align: :left)
     current = current_sort.to_s == column.to_s
     if current && current_dir.to_s.downcase == "desc"
