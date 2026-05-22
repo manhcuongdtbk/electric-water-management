@@ -14,15 +14,18 @@ module ListHelper
   # align:         :left (mặc định) / :right (cột số) / :center.
   def sortable_header(column, label, current_sort:, current_dir:, extra_params: {}, align: :left)
     current = current_sort.to_s == column.to_s
-    next_dir = current && current_dir.to_s.downcase == "asc" ? "desc" : "asc"
-    arrow = if current
-              current_dir.to_s.downcase == "desc" ? "▼" : "▲"
-            else
-              "⇅"
-            end
+    if current && current_dir.to_s.downcase == "desc"
+      url_params = extra_params.compact.except(:sort, :dir)
+      arrow = "▼"
+    elsif current
+      url_params = extra_params.compact.merge(sort: column, dir: "desc")
+      arrow = "▲"
+    else
+      url_params = extra_params.compact.merge(sort: column, dir: "asc")
+      arrow = "⇅"
+    end
     arrow_class = current ? "text-blue-600" : "text-gray-300"
 
-    url_params = extra_params.compact.merge(sort: column, dir: next_dir)
     link = link_to url_params,
                    class: "inline-flex items-center gap-1 hover:text-blue-700",
                    data: { turbo_action: "replace" } do
