@@ -24,6 +24,7 @@ RSpec.describe "Groups filter cascade", type: :system do
 
   it_behaves_like "search behavior"
   it_behaves_like "zone filter behavior"
+  it_behaves_like "search and filter combination behavior"
   it_behaves_like "zone-unit cascade filter behavior"
   it_behaves_like "per_page auto-submit behavior"
 

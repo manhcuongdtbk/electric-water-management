@@ -130,4 +130,36 @@ RSpec.shared_examples "search behavior" do
     expect(page).to have_content(content_match)
     expect(page).not_to have_content(content_no_match)
   end
+
+  it "tìm kiếm → hiện Xóa bộ lọc" do
+    visit path
+    fill_in "q", with: search_text
+    click_on I18n.t("common.actions.search")
+    expect(page).to have_content("Xóa bộ lọc")
+  end
+end
+
+# Shared examples cho search + filter kết hợp.
+# Verify single-form giữ params của nhau khi thao tác.
+#
+# Yêu cầu trong caller (ngoài search behavior + zone filter behavior):
+#   search_text, content_match, content_no_match, zone1, zone2, content_zone1, content_zone2
+RSpec.shared_examples "search and filter combination behavior" do
+  it "search text giữ khi đổi zone filter" do
+    visit send(:path_with_params, q: search_text)
+    expect(page).to have_field("q", with: search_text)
+
+    select zone1.name, from: "zone_id"
+    expect(page).to have_field("q", with: search_text)
+    expect(page).to have_select("zone_id", selected: zone1.name)
+  end
+
+  it "zone filter giữ khi search" do
+    visit send(:path_with_params, zone_id: zone1.id)
+    expect(page).to have_select("zone_id", selected: zone1.name)
+
+    fill_in "q", with: search_text
+    click_on I18n.t("common.actions.search")
+    expect(page).to have_select("zone_id", selected: zone1.name)
+  end
 end
