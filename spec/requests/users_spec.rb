@@ -10,9 +10,37 @@ RSpec.describe "Users", type: :request do
     before { sign_in system_admin }
 
     describe "GET /users" do
+      let(:html) { Nokogiri::HTML(response.body) }
+
       it "trả về 200" do
         get users_path
         expect(response).to have_http_status(:ok)
+      end
+
+      it "cột Khu vực và Đơn vị đứng trước cột Vai trò" do
+        get users_path
+        headers = html.css("table thead th").map(&:text).map(&:strip)
+        zone_index = headers.index { |h| h.include?("Khu vực") }
+        unit_index = headers.index { |h| h.include?("Đơn vị") }
+        role_index = headers.index { |h| h.include?("Vai trò") }
+        expect(zone_index).to be < role_index
+        expect(unit_index).to be < role_index
+        expect(zone_index).to be < unit_index
+      end
+
+      it "hiển thị khu vực của user" do
+        ua = create(:user, :unit_admin, unit: unit)
+        get users_path
+        expect(response.body).to include(zone.name)
+      end
+
+      it "dropdown khu vực chỉ chứa khu vực có user" do
+        create(:user, :unit_admin, unit: unit)
+        zone_empty = create(:zone, name: "Khu vực trống")
+        get users_path
+        options = html.css("select#zone_id option").map(&:text)
+        expect(options).to include(zone.name)
+        expect(options).not_to include("Khu vực trống")
       end
 
       it "thấy được technician trong list (đọc OK)" do
