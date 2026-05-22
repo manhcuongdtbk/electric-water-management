@@ -47,20 +47,20 @@
         <%= sortable_header :contact_point_type, "Loại",
               current_sort: params[:sort], current_dir: params[:dir],
               extra_params: extra_sort_params %>
-        <% if show_zone_unit %>
-          <%= sortable_header :zone, "Khu vực",
-                current_sort: params[:sort], current_dir: params[:dir],
-                extra_params: extra_sort_params %>
-          <%= sortable_header :unit, "Đơn vị",
-                current_sort: params[:sort], current_dir: params[:dir],
-                extra_params: extra_sort_params %>
-        <% end %>
-        <%= sortable_header :block, "Khối",
-              current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: extra_sort_params %>
         <%= sortable_header :group, "Nhóm",
               current_sort: params[:sort], current_dir: params[:dir],
               extra_params: extra_sort_params %>
+        <%= sortable_header :block, "Khối",
+              current_sort: params[:sort], current_dir: params[:dir],
+              extra_params: extra_sort_params %>
+        <% if show_zone_unit %>
+          <%= sortable_header :unit, "Đơn vị",
+                current_sort: params[:sort], current_dir: params[:dir],
+                extra_params: extra_sort_params %>
+          <%= sortable_header :zone, "Khu vực",
+                current_sort: params[:sort], current_dir: params[:dir],
+                extra_params: extra_sort_params %>
+        <% end %>
         <%= list_header t("common.list.actions"), align: :right %>
       </tr>
     </thead>
@@ -74,12 +74,12 @@
           <td class="px-4 py-2 text-sm text-gray-600">
             <%= t("activerecord.attributes.contact_point.types.#{cp.contact_point_type}", default: cp.contact_point_type) %>
           </td>
-          <% if show_zone_unit %>
-            <td class="px-4 py-2 text-sm text-gray-600"><%= cp.zone&.name || cp.unit&.zone&.name || "—" %></td>
-            <td class="px-4 py-2 text-sm text-gray-600"><%= cp.unit&.name || "—" %></td>
-          <% end %>
-          <td class="px-4 py-2 text-sm text-gray-600"><%= cp.block&.name || "—" %></td>
           <td class="px-4 py-2 text-sm text-gray-600"><%= cp.group&.name || "—" %></td>
+          <td class="px-4 py-2 text-sm text-gray-600"><%= cp.block&.name || "—" %></td>
+          <% if show_zone_unit %>
+            <td class="px-4 py-2 text-sm text-gray-600"><%= cp.unit&.name || "—" %></td>
+            <td class="px-4 py-2 text-sm text-gray-600"><%= cp.zone&.name || cp.unit&.zone&.name || "—" %></td>
+          <% end %>
           <td class="px-4 py-2 text-sm text-right space-x-2">
             <% if can?(:update, cp) || can?(:destroy, cp) %>
               <% if can?(:update, cp) %>
