@@ -198,20 +198,24 @@ RSpec.describe "ContactPoints", type: :request do
         end
       end
 
-      it "chỉ hiển thị tab Sinh hoạt và Công cộng" do
+      it "dropdown loại chỉ hiển thị Sinh hoạt và Công cộng" do
         get contact_points_path
-        expect(response.body).not_to include("type=water_pump")
-        expect(response.body).not_to include("type=non_establishment")
+        html = Nokogiri::HTML(response.body)
+        type_options = html.css("select#type option").map { |o| o["value"] }.compact
+        expect(type_options).not_to include("water_pump")
+        expect(type_options).not_to include("non_establishment")
       end
     end
 
     context "as commander (zone-manager)" do
       before { sign_in commander_a }
 
-      it "hiển thị đủ 4 tab loại đầu mối" do
+      it "dropdown loại hiển thị đủ 4 loại đầu mối" do
         get contact_points_path
-        expect(response.body).to include("type=water_pump")
-        expect(response.body).to include("type=non_establishment")
+        html = Nokogiri::HTML(response.body)
+        type_options = html.css("select#type option").map { |o| o["value"] }.compact
+        expect(type_options).to include("water_pump")
+        expect(type_options).to include("non_establishment")
       end
 
       it "vẫn không hiển thị nút Thêm đầu mối" do
@@ -233,20 +237,24 @@ RSpec.describe "ContactPoints", type: :request do
         expect(response.body).to include(edit_contact_point_path(cp_a))
       end
 
-      it "hiển thị đủ 4 tab loại đầu mối" do
+      it "dropdown loại hiển thị đủ 4 loại đầu mối" do
         get contact_points_path
-        expect(response.body).to include("type=water_pump")
-        expect(response.body).to include("type=non_establishment")
+        html = Nokogiri::HTML(response.body)
+        type_options = html.css("select#type option").map { |o| o["value"] }.compact
+        expect(type_options).to include("water_pump")
+        expect(type_options).to include("non_establishment")
       end
     end
 
     context "as unit_admin (non zone-manager)" do
       before { sign_in admin_b }
 
-      it "chỉ hiển thị tab Sinh hoạt và Công cộng" do
+      it "dropdown loại chỉ hiển thị Sinh hoạt và Công cộng" do
         get contact_points_path
-        expect(response.body).not_to include("type=water_pump")
-        expect(response.body).not_to include("type=non_establishment")
+        html = Nokogiri::HTML(response.body)
+        type_options = html.css("select#type option").map { |o| o["value"] }.compact
+        expect(type_options).not_to include("water_pump")
+        expect(type_options).not_to include("non_establishment")
       end
 
       it "hiển thị nút Thêm đầu mối" do
@@ -263,17 +271,21 @@ RSpec.describe "ContactPoints", type: :request do
 
     before { zone.update!(manager_unit: unit) }
 
-    it "khu vực còn → unit_admin quản lý khu vực thấy tab type=water_pump" do
+    it "khu vực còn → unit_admin quản lý khu vực thấy loại water_pump trong dropdown" do
       sign_in admin
       get contact_points_path
-      expect(response.body).to include("type=water_pump")
+      html = Nokogiri::HTML(response.body)
+      type_options = html.css("select#type option").map { |o| o["value"] }.compact
+      expect(type_options).to include("water_pump")
     end
 
-    it "khu vực đã xóa → unit_admin không còn là zone-manager, không thấy type=water_pump" do
+    it "khu vực đã xóa → unit_admin không còn là zone-manager, không thấy loại water_pump" do
       zone.update_column(:discarded_at, Time.current)
       sign_in admin
       get contact_points_path
-      expect(response.body).not_to include("type=water_pump")
+      html = Nokogiri::HTML(response.body)
+      type_options = html.css("select#type option").map { |o| o["value"] }.compact
+      expect(type_options).not_to include("water_pump")
     end
   end
 

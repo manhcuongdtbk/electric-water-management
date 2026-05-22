@@ -13,19 +13,18 @@ RSpec.describe "Pump allocations filter", type: :system do
   before { sign_in system_admin }
 
   let(:path) { pump_allocations_path }
-  let(:content_zone1) { "Đơn vị A1" }
-  let(:content_zone2) { "Đơn vị B1" }
+  let(:filter_param) { "zone_id" }
+  let(:filter_option_text) { zone1.name }
+  let(:filter_option_value) { zone1.id }
+  let(:content_included) { "Đơn vị A1" }
+  let(:content_excluded) { "Đơn vị B1" }
+  let(:search_text) { "Đơn vị A1" }
+  let(:sort_column) { "target" }
   def path_with_params(**params) = pump_allocations_path(**params)
   def create_extra_data = 12.times { |i| create(:pump_allocation, zone: zone1, period: period, unit: create(:unit, zone: zone1, name: "Unit Extra #{i}"), contact_point: nil) }
 
-  let(:search_text) { "Đơn vị A1" }
-  let(:content_match) { "Đơn vị A1" }
-  let(:content_no_match) { "Đơn vị B1" }
-
-  let(:sort_column) { "target" }
-
   it_behaves_like "search behavior"
-  it_behaves_like "zone filter behavior"
+  it_behaves_like "single filter behavior"
   it_behaves_like "search and filter combination behavior"
   it_behaves_like "sort preserved behavior"
   it_behaves_like "per_page auto-submit behavior"

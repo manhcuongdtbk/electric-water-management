@@ -17,7 +17,7 @@ RSpec.shared_examples "confirm delete behavior" do
     if respond_to?(:confirm_message_pattern)
       expect(msg).to match(confirm_message_pattern)
     end
-    expect(page).to have_current_path(path)
+    expect(page).to have_current_path(path, ignore_query: true)
     expect(page).not_to have_css("table tbody tr", text: deletable_name)
   end
 end

@@ -13,8 +13,8 @@ RSpec.describe "Zones", type: :system do
   def create_extra_data = 12.times { |i| Zone.create!(name: "Khu vực Extra #{i}", main_meters_attributes: [{ name: "CT-#{i}" }]) }
 
   let(:search_text) { "Alpha" }
-  let(:content_match) { "Khu vực Alpha" }
-  let(:content_no_match) { "Khu vực Beta" }
+  let(:content_included) { "Khu vực Alpha" }
+  let(:content_excluded) { "Khu vực Beta" }
 
   let(:sort_column) { "name" }
 

@@ -3,6 +3,7 @@ class ContactPointsController < ApplicationController
   include StructureChangeGuard
   include AuthorizeResource
   include BusinessRoleRequired
+  include ZoneUnitFilterable
 
   before_action :set_contact_point, only: [:show, :edit, :update, :destroy]
   before_action :set_available_zones, only: [:new, :edit, :create, :update]
@@ -15,28 +16,47 @@ class ContactPointsController < ApplicationController
   SORT_COLUMNS = {
     name:               "contact_points.name",
     contact_point_type: "contact_points.contact_point_type",
-    unit_or_zone:       "COALESCE(units.name, zones.name)",
-    block_or_group:     "COALESCE(blocks.name, groups.name)"
-  }.freeze
-
-  JOIN_BY_SORT = {
-    "unit_or_zone"   => [:unit, :zone],
-    "block_or_group" => [:block, :group]
+    zone:               "COALESCE(zones.name, unit_zones.name)",
+    unit:               "units.name",
+    block:              "blocks.name",
+    group:              "groups.name",
+    created_at:         "contact_points.created_at"
   }.freeze
 
   def index
     @period = current_period
+    scope = load_collection(ContactPoint)
+              .includes(:zone, :block, :group, unit: :zone)
+              .left_joins(:unit, :zone, :block, :group)
+              .joins("LEFT JOIN zones unit_zones ON unit_zones.id = units.zone_id")
+
     @filter_type = params[:type] if TYPES.include?(params[:type])
-    scope = load_collection(ContactPoint).includes(:unit, :zone, :block, :group, :meters)
-    if (joins = JOIN_BY_SORT[params[:sort].to_s])
-      scope = scope.left_joins(*joins)
-    end
     scope = scope.where(contact_point_type: @filter_type) if @filter_type
+
+    if current_user.role == "system_admin"
+      @zone, @unit = resolve_zone_unit_filter
+      # Tính available zones/units TRƯỚC khi filter để dropdown không bị giới hạn
+      all_zone_ids = scope.unscope(:order).distinct.pluck(:zone_id).compact +
+                     Unit.where(id: scope.unscope(:order).where.not(unit_id: nil).distinct.pluck(:unit_id)).pluck(:zone_id)
+      all_unit_ids = scope.unscope(:order).where.not(unit_id: nil).distinct.pluck(:unit_id)
+      @available_zones = available_zones_for_filter(zone_ids: all_zone_ids.uniq)
+      @available_units = available_units_for_filter(@zone, unit_ids: all_unit_ids)
+      if @zone
+        scope = scope.where(
+          "contact_points.zone_id = :zone_id OR units.zone_id = :zone_id",
+          zone_id: @zone.id
+        )
+      end
+      scope = scope.where(unit_id: @unit.id) if @unit
+    end
+
+    @visible_types = %w[residential public]
+    @visible_types += %w[water_pump non_establishment] if current_user.system_admin? || current_zone_manager?
+
     if (q = params[:q]).present?
       scope = scope.where("contact_points.name ILIKE ?", "%#{q.strip}%")
     end
-    scope = apply_sort(scope, allowed: SORT_COLUMNS,
-                              default: [:contact_point_type, :asc])
+    scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:created_at, :desc])
     @total_count = scope.count
     @pagy, @contact_points = pagy_with_per_page(scope)
   end
