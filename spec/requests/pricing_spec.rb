@@ -20,6 +20,76 @@ RSpec.describe "Pricing", type: :request do
     end
   end
 
+  describe "GET /pricing — phân trang và bộ lọc" do
+    let!(:periods_2025) do
+      (1..12).map { |m| create(:period, year: 2025, month: m, closed: true, unit_price: 2000) }
+    end
+    let!(:periods_2026) do
+      (1..6).map { |m| create(:period, year: 2026, month: m, closed: m < 6, unit_price: 2336) }
+    end
+    let(:html) { Nokogiri::HTML(response.body) }
+
+    it "hiển thị phân trang khi có hơn 10 kỳ" do
+      get pricing_path
+      expect(response).to have_http_status(:ok)
+      rows = html.css("table tbody tr")
+      expect(rows.size).to eq(10)
+      expect(html.css("nav.pagy").size).to be >= 1
+    end
+
+    it "lọc theo năm chỉ hiển thị các kỳ trong năm đó" do
+      get pricing_path, params: { year: 2025 }
+      expect(response).to have_http_status(:ok)
+      rows = html.css("table tbody tr")
+      rows.each do |row|
+        expect(row.text).to include("2025")
+      end
+      expect(response.body).not_to include("Tháng 6/2026")
+    end
+
+    it "chọn Tất cả hiển thị mọi kỳ (phân trang)" do
+      get pricing_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Tổng: 18 bản ghi")
+    end
+
+    it "thay đổi per_page hiển thị đúng số dòng" do
+      get pricing_path, params: { per_page: 25 }
+      expect(response).to have_http_status(:ok)
+      rows = html.css("table tbody tr")
+      expect(rows.size).to eq(18)
+    end
+
+    it "year filter và per_page giữ lại giá trị của nhau" do
+      get pricing_path, params: { year: 2025, per_page: 25 }
+      expect(response).to have_http_status(:ok)
+      rows = html.css("table tbody tr")
+      expect(rows.size).to eq(12)
+      rows.each do |row|
+        expect(row.text).to include("2025")
+      end
+    end
+
+    it "tổng số bản ghi cập nhật đúng khi lọc theo năm" do
+      get pricing_path, params: { year: 2025 }
+      expect(response.body).to include("Tổng: 12 bản ghi")
+
+      get pricing_path, params: { year: 2026 }
+      expect(response.body).to include("Tổng: 6 bản ghi")
+    end
+
+    it "dropdown năm chứa các năm có dữ liệu" do
+      get pricing_path
+      expect(html.css("select#year option").map(&:text)).to include("Tất cả", "2026", "2025")
+    end
+
+    it "dropdown per_page hiển thị giá trị đã chọn" do
+      get pricing_path, params: { per_page: 50 }
+      selected = html.css("select#per_page option[selected]")
+      expect(selected.first&.text).to eq("50")
+    end
+  end
+
   describe "POST /pricing/open_period" do
     it "mở kỳ đầu tiên với year/month/unit_price" do
       post open_period_pricing_path, params: { year: "2026", month: "5", unit_price: "2336.4" }
