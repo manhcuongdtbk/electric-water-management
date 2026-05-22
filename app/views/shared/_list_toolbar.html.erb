@@ -16,7 +16,8 @@
   #                           { label: "Khu vực:", param: :zone_id,
   #                             options: [["Khu vực 1", 1], ...], selected: @selected_zone_id,
   #                             children: [:unit_id] }
-  #                           "Tất cả" tự thêm ở đầu, không cần truyền.
+  #                           blank_text: (tùy chọn) text option đầu tiên (mặc định "Tất cả").
+  #                             Dùng cho trang chọn entity thay vì filter (vd: "— Chọn đơn vị —").
   #                           children: (tùy chọn) Array of param names — khi đổi filter này,
   #                             reset các filter con về "Tất cả" trước khi submit (cascade).
   #                           Khi không truyền filters (mặc định []), không render dropdown nào.
@@ -82,7 +83,7 @@
         <label class="text-xs text-gray-600 whitespace-nowrap"><%= filter[:label] %></label>
         <%= select_tag filter[:param],
               options_for_select(
-                [["Tất cả", ""]] + filter[:options],
+                [[filter[:blank_text] || "Tất cả", ""]] + filter[:options],
                 filter[:selected]
               ),
               data: select_data,

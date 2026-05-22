@@ -2,19 +2,37 @@ class UnitConfigController < ApplicationController
   include PeriodGuard
   include AuthorizeResource
   include BusinessRoleRequired
+  include ZoneUnitFilterable
 
   before_action :require_open_period, only: [:update]
 
   def show
-    @unit = load_unit
     @period = current_period
+    if current_user.system_admin?
+      @zone, @unit = resolve_zone_unit_filter(
+        zone_scope: reopened_old_period? ? Zone.with_discarded : Zone.kept,
+        unit_scope: reopened_old_period? ? Unit.with_discarded : Unit.kept
+      )
+      @unit ||= @zone ? nil : load_unit_fallback
+      @available_zones = available_zones_for_filter(
+        zone_scope: reopened_old_period? ? Zone.with_discarded : Zone.kept
+      )
+      unit_scope = reopened_old_period? ? Unit.with_discarded : Unit.kept
+      if reopened_old_period?
+        unit_ids_with_config = UnitConfig.where(period: @period).pluck(:unit_id)
+        unit_scope = unit_scope.where(id: unit_ids_with_config)
+      end
+      @available_units = available_units_for_filter(@zone, unit_scope: unit_scope)
+    else
+      @unit = current_user.unit
+    end
     @unit_config = find_or_create_unit_config
     @other_deductions = scope_other_deductions
     @zone_other_deductions = scope_zone_other_deductions
   end
 
   def update
-    @unit = load_unit
+    @unit = resolve_unit_for_update
     @period = current_period
     @unit_config = find_or_create_unit_config
     if @unit_config
@@ -66,19 +84,11 @@ class UnitConfigController < ApplicationController
     UnitConfig.find_or_create_by!(unit: @unit, period: @period)
   end
 
-  # SA dropdown: kỳ mới nhất = Unit.kept. Kỳ cũ = chỉ unit có UnitConfig cho kỳ đó
-  # (unit tạo nhầm rồi xóa trong kỳ cũ không có UnitConfig → không hiện).
-  def units_for_dropdown
-    if reopened_old_period?
-      unit_ids = UnitConfig.where(period: current_period).pluck(:unit_id)
-      Unit.with_discarded.where(id: unit_ids).order(:name)
-    else
-      Unit.kept.order(:name)
-    end
+  def load_unit_fallback
+    current_user.unit
   end
-  helper_method :units_for_dropdown
 
-  def load_unit
+  def resolve_unit_for_update
     if current_user.system_admin? && params[:unit_id].present?
       scope = reopened_old_period? ? Unit.with_discarded : Unit.kept
       scope.find(params[:unit_id])
