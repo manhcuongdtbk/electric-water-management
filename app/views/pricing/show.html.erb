@@ -128,36 +128,17 @@
   <% end %>
 
   <!-- 3. Danh sách các kỳ -->
+  <%= render "shared/list_toolbar",
+        url: pricing_path,
+        total_count: @total_count,
+        show_search: false,
+        per_page_storage_key: "pricing_per_page",
+        filters: [
+          { label: "Năm:", param: :year,
+            options: @available_years.map { |y| [y, y] }, selected: @selected_year }
+        ] %>
+
   <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
-    <div class="p-4 border-b border-gray-200 flex items-center justify-between flex-wrap gap-3">
-      <h2 class="text-base font-semibold">Danh sách các kỳ</h2>
-
-      <div class="flex items-center gap-3 flex-wrap">
-        <%= form_with url: pricing_path, method: :get, local: true, class: "flex items-center gap-2" do %>
-          <label class="text-xs text-gray-600 whitespace-nowrap">Năm:</label>
-          <%= select_tag :year,
-                options_for_select(
-                  [["Tất cả", ""]] + @available_years.map { |y| [y, y] },
-                  @selected_year
-                ),
-                onchange: "this.form.requestSubmit()",
-                class: "rounded border border-gray-300 text-sm px-2 py-1" %>
-          <%= hidden_field_tag :per_page, params[:per_page] if params[:per_page].present? %>
-        <% end %>
-
-        <%= form_with url: pricing_path, method: :get, local: true, class: "flex items-center gap-2" do %>
-          <%= hidden_field_tag :year, @selected_year if @selected_year.present? %>
-          <label class="text-xs text-gray-600 whitespace-nowrap"><%= t("common.list.per_page") %></label>
-          <%= select_tag :per_page,
-                options_for_select([10, 25, 50, 100].map { |n| [n, n] }, (params[:per_page].presence || 10).to_i),
-                data: { controller: "per-page", action: "change->per-page#submit",
-                        per_page_storage_key_value: "pricing_per_page" },
-                class: "rounded border border-gray-300 text-sm px-2 py-1" %>
-        <% end %>
-
-        <span class="text-sm text-gray-600"><%= list_total(@pagy.count) %></span>
-      </div>
-    </div>
     <table class="min-w-full divide-y divide-gray-200">
       <thead class="bg-gray-50">
         <tr>

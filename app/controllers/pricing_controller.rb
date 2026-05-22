@@ -65,7 +65,8 @@ class PricingController < ApplicationController
     @available_years = Period.distinct.order(year: :desc).pluck(:year)
     @selected_year = params[:year].presence&.to_i
     filtered_periods = @selected_year ? all_periods.where(year: @selected_year) : all_periods
-    @pagy, @all_periods = pagy_with_per_page(filtered_periods, default: 10)
+    @total_count = filtered_periods.count
+    @pagy, @all_periods = pagy_with_per_page(filtered_periods)
   end
 
   def period_params
