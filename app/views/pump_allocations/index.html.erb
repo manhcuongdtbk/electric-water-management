@@ -33,10 +33,10 @@
         <%= sortable_header :target, "Đối tượng",
               current_sort: params[:sort], current_dir: params[:dir],
               extra_params: { q: params[:q], per_page: params[:per_page], zone_id: params[:zone_id] } %>
-        <%= sortable_header :zone, "Khu vực",
+        <%= sortable_header :target_type, "Loại",
               current_sort: params[:sort], current_dir: params[:dir],
               extra_params: { q: params[:q], per_page: params[:per_page], zone_id: params[:zone_id] } %>
-        <%= sortable_header :target_type, "Loại",
+        <%= sortable_header :zone, "Khu vực",
               current_sort: params[:sort], current_dir: params[:dir],
               extra_params: { q: params[:q], per_page: params[:per_page], zone_id: params[:zone_id] } %>
         <%= sortable_header :percentage, "% cố định",
@@ -57,10 +57,10 @@
           <td class="px-4 py-2 text-sm font-medium text-gray-900">
             <%= alloc.unit&.name || alloc.contact_point&.name %>
           </td>
-          <td class="px-4 py-2 text-sm text-gray-600"><%= alloc.zone.name %></td>
           <td class="px-4 py-2 text-sm text-gray-600">
             <%= alloc.unit ? t("resources.unit").capitalize : t("resources.contact_point").capitalize %>
           </td>
+          <td class="px-4 py-2 text-sm text-gray-600"><%= alloc.zone.name %></td>
           <td class="px-4 py-2 text-sm text-right text-gray-600">
             <%= alloc.fixed_percentage.present? ? "#{number_to_vi(alloc.fixed_percentage)}%" : "—" %>
           </td>
