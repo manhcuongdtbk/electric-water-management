@@ -66,6 +66,7 @@ RSpec.shared_examples "zone-unit cascade filter behavior" do
     expect(find("select##{unit_select_id}").value).to eq(unit1.id.to_s)
 
     select zone2.name, from: zone_select_id
+    expect(page).to have_select(zone_select_id, selected: zone2.name)
     expect(find("select##{unit_select_id}").value).to eq("")
   end
 
@@ -80,13 +81,14 @@ RSpec.shared_examples "zone-unit cascade filter behavior" do
     visit send(:path_with_params, zone_id: zone1.id, unit_id: unit1.id)
 
     select unit_blank_text, from: unit_select_id
-    expect(find("select##{zone_select_id}").value).to eq(zone1.id.to_s)
+    expect(page).to have_select(zone_select_id, selected: zone1.name)
   end
 
   it "Xóa bộ lọc reset cả zone và unit" do
     visit send(:path_with_params, zone_id: zone1.id, unit_id: unit1.id)
 
     click_on "Xóa bộ lọc"
+    expect(page).not_to have_content("Xóa bộ lọc")
     expect(find("select##{zone_select_id}").value).to eq("")
     expect(find("select##{unit_select_id}").value).to eq("")
   end
