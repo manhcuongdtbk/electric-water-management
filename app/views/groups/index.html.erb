@@ -38,6 +38,9 @@
         <%= sortable_header :name, "Nhóm",
               current_sort: params[:sort], current_dir: params[:dir],
               extra_params: extra_sort_params %>
+        <%= sortable_header :block, "Khối",
+              current_sort: params[:sort], current_dir: params[:dir],
+              extra_params: extra_sort_params %>
         <% if show_zone_unit %>
           <%= sortable_header :zone, "Khu vực",
                 current_sort: params[:sort], current_dir: params[:dir],
@@ -46,9 +49,6 @@
                 current_sort: params[:sort], current_dir: params[:dir],
                 extra_params: extra_sort_params %>
         <% end %>
-        <%= sortable_header :block, "Khối",
-              current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: extra_sort_params %>
         <%= list_header t("common.list.actions"), align: :right %>
       </tr>
     </thead>
@@ -59,11 +59,11 @@
       <% @groups.each do |g| %>
         <tr class="hover:bg-gray-50 transition-colors">
           <td class="px-4 py-2 text-sm font-medium text-gray-900"><%= g.name %></td>
+          <td class="px-4 py-2 text-sm text-gray-600"><%= g.block&.name || "—" %></td>
           <% if show_zone_unit %>
             <td class="px-4 py-2 text-sm text-gray-600"><%= g.unit&.zone&.name %></td>
             <td class="px-4 py-2 text-sm text-gray-600"><%= g.unit&.name %></td>
           <% end %>
-          <td class="px-4 py-2 text-sm text-gray-600"><%= g.block&.name || "—" %></td>
           <td class="px-4 py-2 text-sm text-right space-x-2">
             <% if can?(:update, g) || can?(:destroy, g) %>
               <% if can?(:update, g) %>
