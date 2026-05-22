@@ -76,6 +76,12 @@ RSpec.describe "Groups", type: :request do
       expect(unit_options).not_to include(unit2.name)
     end
 
+    it "lọc khu vực → dropdown khu vực vẫn chứa tất cả khu vực có nhóm" do
+      get groups_path, params: { zone_id: zone.id }
+      zone_options = html.css("select#zone_id option").map(&:text)
+      expect(zone_options).to include(zone.name, zone2.name)
+    end
+
     it "dropdown khu vực chỉ chứa khu vực có nhóm" do
       zone_empty = create(:zone, name: "Khu vực trống")
       get groups_path

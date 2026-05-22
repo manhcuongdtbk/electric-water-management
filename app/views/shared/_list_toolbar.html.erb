@@ -56,7 +56,6 @@
     <% filters.each do |filter| %>
       <%
         is_parent = filter[:children].present?
-        child_params = filter[:children] || []
         is_child = filters.any? { |f| (f[:children] || []).include?(filter[:param]) }
 
         select_data = {}
