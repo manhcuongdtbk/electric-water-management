@@ -26,11 +26,10 @@ RSpec.describe "Units", type: :request do
       expect(headers[0]).not_to include("Tên")
     end
 
-    it "cột header là Đơn vị quản lý khu vực, không phải Là đơn vị quản lý khu vực" do
+    it "cột header là Quản lý khu vực" do
       get units_path
       headers = html.css("table thead th").map(&:text).map(&:strip)
-      manager_header = headers.find { |h| h.include?("quản lý khu vực") }
-      expect(manager_header).not_to include("Là")
+      expect(headers).to include(a_string_including("Quản lý khu vực"))
     end
 
     it "cột quản lý khu vực hiển thị ✓ / —" do
