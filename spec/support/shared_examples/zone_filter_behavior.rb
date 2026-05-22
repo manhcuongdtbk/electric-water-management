@@ -60,10 +60,8 @@ RSpec.shared_examples "zone-unit cascade filter behavior" do
     visit path
     select zone1.name, from: zone_select_id
     expect(page).to have_select(zone_select_id, selected: zone1.name)
-
-    unit_options = all("select##{unit_select_id} option").map(&:text)
-    expect(unit_options).to include(unit1.name)
-    expect(unit_options).not_to include(unit2.name)
+    expect(page).to have_select(unit_select_id, with_options: [unit1.name])
+    expect(page).not_to have_select(unit_select_id, with_options: [unit2.name])
   end
 
   it "đổi khu vực → reset đơn vị về Tất cả" do
