@@ -46,12 +46,27 @@
           </div>
         <% end %>
 
-        <div class="mt-4 pt-4 border-t border-gray-200 flex justify-end">
-          <%= button_to "Đóng kỳ hiện tại", close_period_pricing_path,
-              method: :post,
-              params: { period_id: @current_period.id },
-              form: { data: { turbo_confirm: "Xác nhận đóng kỳ tháng #{@current_period.month}/#{@current_period.year}?" } },
-              class: "bg-red-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-red-700 cursor-pointer" %>
+        <div class="mt-4 pt-4 border-t border-gray-200">
+          <div class="bg-amber-50 border border-amber-200 rounded p-3 mb-3 text-sm text-amber-800">
+            <strong>Lưu ý khi đóng kỳ:</strong>
+            <ul class="list-disc list-inside mt-1 space-y-1">
+              <li>Hãy đảm bảo đã hoàn tất cả nhập liệu lẫn cấu trúc trước khi đóng kỳ.</li>
+              <li>Sau khi đóng, toàn bộ số liệu của kỳ này sẽ bị khóa — không ai có thể chỉnh sửa.</li>
+              <li>Nếu sau này cần mở lại kỳ đã đóng (phải đóng hết các kỳ đang mở trước):
+                <ul class="list-disc list-inside ml-4 mt-1 space-y-1">
+                  <li>Được phép sửa nhập liệu: số điện lực, chỉ số công tơ, tổn hao công tơ, chỉ số bơm nước, quân số đầu mối theo nhóm cấp bậc, quân số đầu mối ngoài biên chế, khấu trừ khác, tỷ lệ công cộng đơn vị, phân bổ bơm nước.</li>
+                  <li>Không thể thay đổi cấu trúc: khu vực, đơn vị, đầu mối, công tơ, công tơ tổng, khối, nhóm, nhóm cấp bậc.</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+          <div class="flex justify-end">
+            <%= button_to "Đóng kỳ hiện tại", close_period_pricing_path,
+                method: :post,
+                params: { period_id: @current_period.id },
+                form: { data: { turbo_confirm: "Đóng kỳ tháng #{@current_period.month}/#{@current_period.year}?\n\nToàn bộ số liệu sẽ bị khóa. Vui lòng đọc kỹ lưu ý trước khi xác nhận." } },
+                class: "bg-red-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-red-700 cursor-pointer" %>
+          </div>
         </div>
       <% else %>
         <div class="grid grid-cols-2 gap-4 text-sm">
