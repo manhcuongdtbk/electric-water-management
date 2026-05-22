@@ -101,7 +101,7 @@ class UnitConfigController < ApplicationController
 
   def scope_zone_other_deductions
     return OtherDeduction.none unless @period && @unit
-    managed_zone_ids = Zone.where(manager_unit_id: @unit.id).pluck(:id)
+    managed_zone_ids = Zone.kept.where(manager_unit_id: @unit.id).pluck(:id)
     return OtherDeduction.none if managed_zone_ids.empty?
     OtherDeduction.joins(:contact_point).includes(:contact_point)
                   .where(period: @period,

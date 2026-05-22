@@ -66,6 +66,14 @@ RSpec.describe "ContactPoints", type: :request do
         expect(response.body).to include("CP Đơn vị A", "CP Đơn vị Z2", "CP Khu vực trực tiếp")
       end
     end
+
+    it "tìm kiếm sanitize ký tự ILIKE wildcard" do
+      create(:contact_point, :public_type, unit: unit_a, name: "Kho 50%")
+      create(:contact_point, :public_type, unit: unit_a, name: "Kho 500 tấn")
+      get contact_points_path, params: { q: "50%" }
+      expect(response.body).to include("Kho 50%")
+      expect(response.body).not_to include("500 tấn")
+    end
   end
 
   describe "POST /contact_points (T33)" do

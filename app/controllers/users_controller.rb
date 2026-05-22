@@ -24,8 +24,9 @@ class UsersController < ApplicationController
     scope = apply_sa_zone_unit_filter(scope)
 
     if (q = params[:q]).present?
+      sanitized = ActiveRecord::Base.sanitize_sql_like(q.strip)
       scope = scope.where("users.username ILIKE ? OR users.display_name ILIKE ?",
-                          "%#{q.strip}%", "%#{q.strip}%")
+                          "%#{sanitized}%", "%#{sanitized}%")
     end
     scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:username, :asc])
     @total_count = scope.count

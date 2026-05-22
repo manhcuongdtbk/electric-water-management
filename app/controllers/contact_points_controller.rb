@@ -39,7 +39,8 @@ class ContactPointsController < ApplicationController
     @visible_types += %w[water_pump non_establishment] if current_user.system_admin? || current_zone_manager?
 
     if (q = params[:q]).present?
-      scope = scope.where("contact_points.name ILIKE ?", "%#{q.strip}%")
+      sanitized = ActiveRecord::Base.sanitize_sql_like(q.strip)
+      scope = scope.where("contact_points.name ILIKE ?", "%#{sanitized}%")
     end
     scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:created_at, :desc])
     @total_count = scope.count

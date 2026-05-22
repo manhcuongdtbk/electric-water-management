@@ -21,7 +21,8 @@ class RanksController < ApplicationController
     scope = @period ? @period.ranks : Rank.none
     authorize!(:read, Rank)
     if @period && (q = params[:q]).present?
-      scope = scope.where("ranks.name ILIKE ?", "%#{q.strip}%")
+      sanitized = ActiveRecord::Base.sanitize_sql_like(q.strip)
+      scope = scope.where("ranks.name ILIKE ?", "%#{sanitized}%")
     end
     scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:position, :asc]) if @period
     @total_count = scope.count
