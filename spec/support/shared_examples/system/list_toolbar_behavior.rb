@@ -107,7 +107,7 @@ RSpec.shared_examples "per_page auto-submit behavior" do
   end
 end
 
-# Tìm kiếm submit.
+# Tìm kiếm submit + xóa bộ lọc khi chỉ search.
 RSpec.shared_examples "search behavior" do
   it "tìm kiếm submit đúng kết quả" do
     visit path
@@ -115,6 +115,17 @@ RSpec.shared_examples "search behavior" do
     click_on I18n.t("common.actions.search")
     expect(page).to have_content(content_included)
     expect(page).not_to have_content(content_excluded)
+  end
+
+  it "Xóa bộ lọc khi chỉ search → clear search text" do
+    visit path
+    fill_in "q", with: search_text
+    click_on I18n.t("common.actions.search")
+
+    click_on "Xóa bộ lọc"
+    expect(page).to have_content(content_included)
+    expect(page).to have_content(content_excluded)
+    expect(page).to have_field("q", with: "")
   end
 end
 
@@ -130,7 +141,7 @@ RSpec.shared_examples "sort preserved behavior" do
   end
 end
 
-# Search + filter giữ params của nhau.
+# Search + filter giữ params của nhau + xóa bộ lọc clear cả hai.
 RSpec.shared_examples "search and filter combination behavior" do
   it "search text giữ khi đổi filter" do
     visit send(:path_with_params, q: search_text)
@@ -148,5 +159,15 @@ RSpec.shared_examples "search and filter combination behavior" do
     fill_in "q", with: search_text
     click_on I18n.t("common.actions.search")
     expect(page).to have_select(filter_param, selected: filter_option_text)
+  end
+
+  it "Xóa bộ lọc khi search + filter → clear cả hai" do
+    visit send(:path_with_params, q: search_text, filter_param.to_sym => filter_option_value)
+
+    click_on "Xóa bộ lọc"
+    expect(page).to have_content(content_included)
+    expect(page).to have_content(content_excluded)
+    expect(page).to have_field("q", with: "")
+    expect(find("select##{filter_param}").value).to eq("")
   end
 end
