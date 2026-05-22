@@ -7,6 +7,82 @@ RSpec.describe "Units", type: :request do
 
   before { sign_in system_admin }
 
+  describe "GET /units — hiển thị, lọc, sắp xếp" do
+    let!(:zone2) { create(:zone, name: "Khu vực B") }
+    let!(:unit1) { create(:unit, zone: zone, name: "Đơn vị A") }
+    let!(:unit2) { create(:unit, zone: zone2, name: "Đơn vị B") }
+    let(:html) { Nokogiri::HTML(response.body) }
+
+    it "cột Đơn vị đứng trước cột Khu vực" do
+      get units_path
+      headers = html.css("table thead th").map(&:text).map(&:strip)
+      expect(headers[0]).to include("Đơn vị")
+      expect(headers[1]).to include("Khu vực")
+    end
+
+    it "cột header là Đơn vị, không phải Tên đơn vị" do
+      get units_path
+      headers = html.css("table thead th").map(&:text).map(&:strip)
+      expect(headers[0]).not_to include("Tên")
+    end
+
+    it "cột header là Quản lý khu vực" do
+      get units_path
+      headers = html.css("table thead th").map(&:text).map(&:strip)
+      expect(headers).to include(a_string_including("Quản lý khu vực"))
+    end
+
+    it "cột quản lý khu vực hiển thị ✓ / —" do
+      create(:unit, zone: zone, name: "Đơn vị không quản lý")
+      get units_path
+      body = response.body
+      expect(body).to include("✓")
+      expect(body).to include("—")
+    end
+
+    it "lọc theo khu vực" do
+      get units_path, params: { zone_id: zone2.id }
+      rows = html.css("table tbody tr")
+      expect(rows.size).to eq(1)
+      expect(rows.first.text).to include("Đơn vị B")
+    end
+
+    it "dropdown khu vực chỉ chứa khu vực có đơn vị" do
+      zone_empty = create(:zone, name: "Khu vực trống")
+      get units_path
+      options = html.css("select#zone_id option").map(&:text)
+      expect(options).to include("Tất cả", zone.name, zone2.name)
+      expect(options).not_to include("Khu vực trống")
+    end
+
+    it "tìm kiếm theo tên đơn vị" do
+      get units_path, params: { q: "Đơn vị B" }
+      rows = html.css("table tbody tr")
+      expect(rows.size).to eq(1)
+      expect(rows.first.text).to include("Đơn vị B")
+    end
+
+    it "sắp xếp mặc định: tạo sau đứng trước" do
+      get units_path
+      rows = html.css("table tbody tr")
+      expect(rows.first.text).to include("Đơn vị B")
+      expect(rows.last.text).to include("Đơn vị A")
+    end
+
+    it "placeholder tìm kiếm ghi rõ tìm theo tên đơn vị" do
+      get units_path
+      input = html.css("input#q").first
+      expect(input["placeholder"]).to include("đơn vị")
+    end
+
+    it "zone filter và per_page giữ lại giá trị của nhau" do
+      get units_path, params: { zone_id: zone2.id, per_page: 10 }
+      expect(response).to have_http_status(:ok)
+      selected = html.css("select#zone_id option[selected]")
+      expect(selected.first&.attr("value")).to eq(zone2.id.to_s)
+    end
+  end
+
   describe "POST /units (T29, T32)" do
     it "T29: tạo unit" do
       post units_path, params: { unit: { name: "Đơn vị A", zone_id: zone.id } }

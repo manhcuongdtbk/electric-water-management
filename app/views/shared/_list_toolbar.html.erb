@@ -1,56 +1,80 @@
 <%
-  # Locals:
-  #   url:                URL string for search form (Rails path).
-  #   search_placeholder: String hiển thị trong text input.
-  #   extra_hidden:       Hash các hidden fields giữ lại filter (vd {type: @filter_type}).
-  #   total_count:        Integer — tổng số bản ghi.
-  #   add_link:           Optional link_to HTML (nil nếu user không có quyền create).
+  # Toolbar dùng chung cho các trang danh sách (index).
+  #
+  # Bao gồm: ô tìm kiếm, dropdown filters (nếu có), chọn số dòng/trang, tổng bản ghi, nút thêm mới.
+  # Tất cả controls nằm trong 1 form duy nhất — submit bất kỳ control nào đều gửi toàn bộ giá trị hiện tại.
+  #
+  # Locals (bắt buộc):
+  #   url:                  String — URL cho form (vd: units_path).
+  #   total_count:          Integer — tổng số bản ghi (sau khi lọc).
+  #
+  # Locals (tùy chọn):
+  #   search_placeholder:   String — placeholder ô tìm kiếm (mặc định: "Tìm kiếm...").
+  #   extra_hidden:         Hash — hidden fields tĩnh giữ lại khi submit (vd: {type: @filter_type}).
+  #   add_link:             HTML — link_to nút thêm mới (nil nếu không có quyền).
+  #   filters:              Array of Hash — dropdown filters. Mỗi item:
+  #                           { label: "Khu vực:", param: :zone_id,
+  #                             options: [["Khu vực 1", 1], ...], selected: @selected_zone_id }
+  #                           "Tất cả" tự thêm ở đầu, không cần truyền.
+  #                           Khi không truyền (mặc định []), không render dropdown nào.
+  #   per_page_storage_key: String — localStorage key cho per_page (mặc định "list_per_page").
+  #                           Mỗi trang nên truyền key riêng để per_page không ảnh hưởng trang khác.
   extra_hidden ||= {}
   search_placeholder ||= t("common.list.search_placeholder")
   add_link ||= nil
+  filters ||= []
+  per_page_storage_key ||= "list_per_page"
   current_per_page = (params[:per_page].presence || 25).to_i
-  has_filter = params[:q].present? || extra_hidden.values.any?(&:present?)
+  has_filter = params[:q].present? || extra_hidden.values.any?(&:present?) || filters.any? { |f| params[f[:param]].present? }
 %>
 
 <div class="bg-white border border-gray-200 rounded-lg p-3 mb-3 flex items-center justify-between gap-3 flex-wrap">
-  <div class="flex items-center gap-3 flex-wrap">
-    <%= form_with url: url, method: :get, local: true, class: "flex items-center gap-2" do %>
-      <% extra_hidden.each do |k, v| %>
-        <%= hidden_field_tag k, v %>
-      <% end %>
-      <%= hidden_field_tag :per_page, current_per_page %>
+  <%= form_with url: url, method: :get, local: true, class: "flex items-center gap-3 flex-wrap" do %>
+    <% extra_hidden.each do |k, v| %>
+      <%= hidden_field_tag k, v %>
+    <% end %>
+    <% if params[:sort].present? %>
+      <%= hidden_field_tag :sort, params[:sort] %>
+      <%= hidden_field_tag :dir, params[:dir] %>
+    <% end %>
+
+    <div class="flex items-center gap-2">
       <%= text_field_tag :q, params[:q],
             placeholder: search_placeholder,
             class: "rounded border border-gray-300 text-sm px-3 py-1.5 w-64" %>
       <%= submit_tag t("common.actions.search"),
             class: "px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded cursor-pointer" %>
-      <% if has_filter %>
-        <%= link_to t("common.list.clear_filter"), url,
-              class: "text-sm text-gray-600 hover:text-gray-800 underline" %>
-      <% end %>
+    </div>
+
+    <% filters.each do |filter| %>
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-gray-600 whitespace-nowrap"><%= filter[:label] %></label>
+        <%= select_tag filter[:param],
+              options_for_select(
+                [["Tất cả", ""]] + filter[:options],
+                filter[:selected]
+              ),
+              onchange: "this.form.requestSubmit()",
+              class: "rounded border border-gray-300 text-sm px-2 py-1" %>
+      </div>
     <% end %>
 
-    <%= form_with url: url, method: :get, local: true, class: "flex items-center gap-2" do %>
-      <% extra_hidden.each do |k, v| %>
-        <%= hidden_field_tag k, v %>
-      <% end %>
-      <% if params[:q].present? %>
-        <%= hidden_field_tag :q, params[:q] %>
-      <% end %>
-      <% if params[:sort].present? %>
-        <%= hidden_field_tag :sort, params[:sort] %>
-        <%= hidden_field_tag :dir, params[:dir] %>
-      <% end %>
+    <div class="flex items-center gap-2">
       <label class="text-xs text-gray-600 whitespace-nowrap"><%= t("common.list.per_page") %></label>
       <%= select_tag :per_page,
             options_for_select([10, 25, 50, 100].map { |n| [n, n] }, current_per_page),
             data: { controller: "per-page", action: "change->per-page#submit",
-                    per_page_storage_key_value: "list_per_page" },
+                    per_page_storage_key_value: per_page_storage_key },
             class: "rounded border border-gray-300 text-sm px-2 py-1" %>
-    <% end %>
-  </div>
+    </div>
+  <% end %>
 
   <div class="flex items-center gap-3">
+    <% if has_filter %>
+      <%= link_to url, class: "inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-800 border border-red-300 bg-red-50 rounded-full px-2.5 py-1 hover:bg-red-100" do %>
+        <span>✕</span> <%= t("common.list.clear_filter") %>
+      <% end %>
+    <% end %>
     <span class="text-sm text-gray-600"><%= list_total(total_count) %></span>
     <% if add_link %>
       <%= add_link %>

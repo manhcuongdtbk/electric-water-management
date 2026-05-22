@@ -13,17 +13,20 @@ class UnitsController < ApplicationController
   SORT_COLUMNS = {
     name:       "units.name",
     zone:       "zones.name",
-    is_manager: "(SELECT COUNT(*) FROM zones WHERE zones.manager_unit_id = units.id)"
+    is_manager: "(SELECT COUNT(*) FROM zones WHERE zones.manager_unit_id = units.id)",
+    created_at: "units.created_at"
   }.freeze
 
   def index
     @period = current_period
-    scope = load_collection(Unit).includes(:zone, :managed_zones)
-    scope = scope.left_joins(:zone) if params[:sort].to_s == "zone"
+    scope = load_collection(Unit).includes(:zone, :managed_zones).left_joins(:zone)
+    @zones = Zone.where(id: scope.select(:zone_id)).order(:name)
+    @selected_zone_id = params[:zone_id].presence&.to_i
+    scope = scope.where(zone_id: @selected_zone_id) if @selected_zone_id
     if (q = params[:q]).present?
       scope = scope.where("units.name ILIKE ?", "%#{q.strip}%")
     end
-    scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:name, :asc])
+    scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:created_at, :desc])
     @total_count = scope.count
     @pagy, @units = pagy_with_per_page(scope)
   end
