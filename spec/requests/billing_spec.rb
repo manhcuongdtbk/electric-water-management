@@ -36,13 +36,8 @@ RSpec.describe "Billing", type: :request do
         expect(response.body).to include("Chỉ huy khu vực")
       end
 
-      it "hiển thị dropdown chọn kỳ" do
-        get billing_path
-        expect(response.body).to include("Tháng #{sample.period.month}/#{sample.period.year}")
-      end
-
-      # Filter/cascade behavior (dropdown hiển thị, lọc khu vực/đơn vị, auto-select zone)
-      # đã cover bởi system specs (spec/system/billing_filter_spec.rb).
+      # Dropdown chọn kỳ, filter/cascade, đổi kỳ auto-submit, nút Tính toán lại/Xuất Excel,
+      # non-SA dropdown visibility: cover bởi system specs (spec/system/billing_filter_spec.rb).
 
       it "xem kỳ cũ qua period_id" do
         sample.period.update!(closed: true)
@@ -54,14 +49,6 @@ RSpec.describe "Billing", type: :request do
         expect(response.body).to include("Đã đóng")
       end
 
-      it "kỳ đã đóng → KHÔNG hiển thị nút tính toán lại" do
-        sample.period.update!(closed: true)
-        new_period = PeriodService.new
-                                  .open_new_period(year: 2026, month: 6,
-                                                   unit_price: BigDecimal("2336.4")).period
-        get billing_path(period_id: sample.period.id)
-        expect(response.body).not_to include("Tính toán lại")
-      end
     end
 
     context "unit_admin zone-manager (T76)" do
@@ -75,12 +62,7 @@ RSpec.describe "Billing", type: :request do
         expect(response.body).to include("Chỉ huy khu vực")
       end
 
-      it "KHÔNG thấy dropdown khu vực/đơn vị" do
-        get billing_path
-        html = Nokogiri::HTML(response.body)
-        expect(html.css("select#zone_id")).to be_empty
-        expect(html.css("select#unit_id")).to be_empty
-      end
+      # Dropdown visibility: cover bởi system spec.
 
       it "hiện cột Đơn vị trong bảng (29 cột — phân biệt đơn vị vs khu vực)" do
         get billing_path
@@ -117,12 +99,7 @@ RSpec.describe "Billing", type: :request do
         expect(response.body).to include("Chỉ huy khu vực")
       end
 
-      it "KHÔNG thấy dropdown khu vực/đơn vị" do
-        get billing_path
-        html = Nokogiri::HTML(response.body)
-        expect(html.css("select#zone_id")).to be_empty
-        expect(html.css("select#unit_id")).to be_empty
-      end
+      # Dropdown visibility: cover bởi system spec.
     end
 
     context "commander không phải zone-manager" do

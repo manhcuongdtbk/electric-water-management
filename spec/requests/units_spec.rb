@@ -40,7 +40,7 @@ RSpec.describe "Units", type: :request do
       expect(body).to include("—")
     end
 
-    # Filter behavior (lọc khu vực, xóa bộ lọc) đã cover bởi system specs
+    # Filter behavior, tìm kiếm, per_page đã cover bởi system specs
     # (spec/system/units_filter_spec.rb).
 
     it "dropdown khu vực chỉ chứa khu vực có đơn vị" do
@@ -49,13 +49,6 @@ RSpec.describe "Units", type: :request do
       options = html.css("select#zone_id option").map(&:text)
       expect(options).to include("Tất cả", zone.name, zone2.name)
       expect(options).not_to include("Khu vực trống")
-    end
-
-    it "tìm kiếm theo tên đơn vị" do
-      get units_path, params: { q: "Đơn vị B" }
-      rows = html.css("table tbody tr")
-      expect(rows.size).to eq(1)
-      expect(rows.first.text).to include("Đơn vị B")
     end
 
     it "sắp xếp mặc định: tạo sau đứng trước" do
@@ -71,12 +64,6 @@ RSpec.describe "Units", type: :request do
       expect(input["placeholder"]).to include("đơn vị")
     end
 
-    it "zone filter và per_page giữ lại giá trị của nhau" do
-      get units_path, params: { zone_id: zone2.id, per_page: 10 }
-      expect(response).to have_http_status(:ok)
-      selected = html.css("select#zone_id option[selected]")
-      expect(selected.first&.attr("value")).to eq(zone2.id.to_s)
-    end
   end
 
   describe "POST /units (T29, T32)" do

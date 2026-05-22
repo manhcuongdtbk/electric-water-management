@@ -67,14 +67,7 @@ RSpec.describe "Groups", type: :request do
       expect(options).not_to include("Khu vực trống")
     end
 
-    it "tìm kiếm theo tên nhóm" do
-      get groups_path, params: { q: "Nhóm B" }
-      rows = html.css("table tbody tr")
-      expect(rows.size).to eq(1)
-      expect(rows.first.text).to include("Nhóm B")
-    end
-
-    # Non-admin dropdown visibility: cover bởi system spec.
+    # Tìm kiếm, non-admin dropdown visibility: cover bởi system spec.
   end
 
   describe "POST /groups" do

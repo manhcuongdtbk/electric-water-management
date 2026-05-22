@@ -1,3 +1,8 @@
+# Shared system spec examples cho _list_toolbar behavior.
+# Dùng Capybara API (visit, fill_in, select, click_on) — chỉ dùng trong type: :system.
+#
+# ============================================================
+
 # Shared examples cho toolbar có dropdown lọc khu vực (không cascade).
 #
 # Yêu cầu let/method trong caller:
@@ -66,6 +71,7 @@ RSpec.shared_examples "zone-unit cascade filter behavior" do
     expect(find("select##{unit_select_id}").value).to eq(unit1.id.to_s)
 
     select zone2.name, from: zone_select_id
+    expect(page).to have_select(zone_select_id, selected: zone2.name)
     expect(find("select##{unit_select_id}").value).to eq("")
   end
 
@@ -80,13 +86,14 @@ RSpec.shared_examples "zone-unit cascade filter behavior" do
     visit send(:path_with_params, zone_id: zone1.id, unit_id: unit1.id)
 
     select unit_blank_text, from: unit_select_id
-    expect(find("select##{zone_select_id}").value).to eq(zone1.id.to_s)
+    expect(page).to have_select(zone_select_id, selected: zone1.name)
   end
 
   it "Xóa bộ lọc reset cả zone và unit" do
     visit send(:path_with_params, zone_id: zone1.id, unit_id: unit1.id)
 
     click_on "Xóa bộ lọc"
+    expect(page).not_to have_content("Xóa bộ lọc")
     expect(find("select##{zone_select_id}").value).to eq("")
     expect(find("select##{unit_select_id}").value).to eq("")
   end
@@ -105,5 +112,71 @@ RSpec.shared_examples "per_page auto-submit behavior" do
 
     select "10", from: "per_page"
     expect(page).to have_css("table tbody tr", count: 10)
+  end
+end
+
+# Shared examples cho tìm kiếm trong _list_toolbar.
+#
+# Yêu cầu trong caller:
+#   path:             → URL trang index
+#   search_text:      → Text tìm kiếm (vd: tên đơn vị, tên khu vực)
+#   content_match:    → Text phải có trong kết quả
+#   content_no_match: → Text không được có trong kết quả
+RSpec.shared_examples "search behavior" do
+  it "tìm kiếm submit đúng kết quả" do
+    visit path
+    fill_in "q", with: search_text
+    click_on I18n.t("common.actions.search")
+    expect(page).to have_content(content_match)
+    expect(page).not_to have_content(content_no_match)
+  end
+
+  it "tìm kiếm → hiện Xóa bộ lọc" do
+    visit path
+    fill_in "q", with: search_text
+    click_on I18n.t("common.actions.search")
+    expect(page).to have_content("Xóa bộ lọc")
+  end
+end
+
+# Shared examples cho sort preserved qua toolbar interactions.
+# Verify hidden fields sort/dir giữ khi search hoặc đổi filter.
+#
+# Yêu cầu trong caller:
+#   path_with_params(**params) → URL với query params
+#   sort_column:               → Sort column name dùng để test (vd: "name")
+RSpec.shared_examples "sort preserved behavior" do
+  it "sort giữ khi search" do
+    visit send(:path_with_params, sort: sort_column, dir: "asc")
+
+    fill_in "q", with: "test"
+    click_on I18n.t("common.actions.search")
+    expect(page).to have_current_path(/sort=#{sort_column}/)
+    expect(page).to have_current_path(/dir=asc/)
+  end
+end
+
+# Shared examples cho search + filter kết hợp.
+# Verify single-form giữ params của nhau khi thao tác.
+#
+# Yêu cầu trong caller (ngoài search behavior + zone filter behavior):
+#   search_text, zone1
+RSpec.shared_examples "search and filter combination behavior" do
+  it "search text giữ khi đổi zone filter" do
+    visit send(:path_with_params, q: search_text)
+    expect(page).to have_field("q", with: search_text)
+
+    select zone1.name, from: "zone_id"
+    expect(page).to have_field("q", with: search_text)
+    expect(page).to have_select("zone_id", selected: zone1.name)
+  end
+
+  it "zone filter giữ khi search" do
+    visit send(:path_with_params, zone_id: zone1.id)
+    expect(page).to have_select("zone_id", selected: zone1.name)
+
+    fill_in "q", with: search_text
+    click_on I18n.t("common.actions.search")
+    expect(page).to have_select("zone_id", selected: zone1.name)
   end
 end

@@ -53,12 +53,8 @@ RSpec.describe "Zones", type: :request do
       expect(meter_cell.text.strip).to include("CT-A")
     end
 
-    it "tìm kiếm theo tên khu vực" do
-      get zones_path, params: { q: "Khu vực B" }
-      rows = html.css("table tbody tr")
-      expect(rows.size).to eq(1)
-      expect(rows.first.text).to include("Khu vực B")
-    end
+    # Tìm kiếm, per_page auto-submit, confirm xóa: cover bởi system specs
+    # (spec/system/zones_spec.rb).
   end
 
   describe "POST /zones (T27, T28)" do
