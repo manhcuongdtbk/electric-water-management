@@ -3,6 +3,7 @@ class BlocksController < ApplicationController
   include StructureChangeGuard
   include AuthorizeResource
   include BusinessRoleRequired
+  include ZoneUnitFilterable
 
   before_action :set_block, only: [:show, :edit, :update, :destroy]
   before_action :require_open_period, only: [:create, :update, :destroy]
@@ -10,18 +11,32 @@ class BlocksController < ApplicationController
     only: [:new, :create, :edit, :update, :destroy]
 
   SORT_COLUMNS = {
-    name: "blocks.name",
-    unit: "units.name"
+    name:       "blocks.name",
+    zone:       "zones.name",
+    unit:       "units.name",
+    created_at: "blocks.created_at"
   }.freeze
 
   def index
     @period = current_period
-    scope = load_collection(Block).includes(:unit)
-    scope = scope.left_joins(:unit) if params[:sort].to_s == "unit"
+    scope = load_collection(Block).includes(unit: :zone)
+                                  .joins(:unit)
+    scope = scope.joins("INNER JOIN zones ON zones.id = units.zone_id")
+
+    if current_user.role == "system_admin"
+      @zone, @unit = resolve_zone_unit_filter
+      all_unit_ids = scope.unscope(:order).distinct.pluck(:unit_id)
+      all_zone_ids = Unit.where(id: all_unit_ids).distinct.pluck(:zone_id)
+      @available_zones = available_zones_for_filter(zone_ids: all_zone_ids)
+      @available_units = available_units_for_filter(@zone, unit_ids: all_unit_ids)
+      scope = scope.where(units: { zone_id: @zone.id }) if @zone
+      scope = scope.where(unit_id: @unit.id) if @unit
+    end
+
     if (q = params[:q]).present?
       scope = scope.where("blocks.name ILIKE ?", "%#{q.strip}%")
     end
-    scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:name, :asc])
+    scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:created_at, :desc])
     @total_count = scope.count
     @pagy, @blocks = pagy_with_per_page(scope)
   end

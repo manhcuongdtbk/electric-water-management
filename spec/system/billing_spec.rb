@@ -24,8 +24,13 @@ RSpec.describe "Billing", type: :system do
   # --- Page-specific: cần full sample ---
   context "page-specific" do
     let!(:sample) { setup_zone_one_full_sample }
+    let(:path) { billing_path }
+    let(:zone1) { sample.zone }
+    let(:unit1) { sample.unit_a }
 
     before { sign_in system_admin }
+
+    it_behaves_like "role-based filter visibility"
 
     it "đổi kỳ → auto-submit, trang reload đúng kỳ" do
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
@@ -40,14 +45,6 @@ RSpec.describe "Billing", type: :system do
 
       select "Tháng #{sample.period.month}/#{sample.period.year}", from: "period_id"
       expect(page).to have_content("Đã đóng")
-    end
-
-    it "KHÔNG thấy dropdown khu vực/đơn vị khi non-SA" do
-      unit_admin = create(:user, :unit_admin, unit: sample.unit_a)
-      sign_in unit_admin
-      visit billing_path
-      expect(page).not_to have_select("zone_id")
-      expect(page).not_to have_select("unit_id")
     end
 
     it "kỳ đang mở → hiển thị nút Tính toán lại" do
