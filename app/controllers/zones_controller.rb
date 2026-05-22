@@ -27,7 +27,8 @@ class ZonesController < ApplicationController
       scope = scope.joins("LEFT JOIN units manager_units ON manager_units.id = zones.manager_unit_id")
     end
     if (q = params[:q]).present?
-      scope = scope.where("zones.name ILIKE ?", "%#{q.strip}%")
+      sanitized = ActiveRecord::Base.sanitize_sql_like(q.strip)
+      scope = scope.where("zones.name ILIKE ?", "%#{sanitized}%")
     end
     scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:created_at, :desc])
     @total_count = scope.count

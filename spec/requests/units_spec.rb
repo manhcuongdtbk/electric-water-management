@@ -64,6 +64,15 @@ RSpec.describe "Units", type: :request do
       expect(input["placeholder"]).to include("đơn vị")
     end
 
+    it "tìm kiếm sanitize ký tự ILIKE wildcard (%, _)" do
+      create(:unit, zone: zone, name: "Đơn vị 100%")
+      create(:unit, zone: zone, name: "Đơn vị 1000 người")
+      get units_path, params: { q: "100%" }
+      rows = html.css("table tbody tr")
+      expect(rows.size).to eq(1)
+      expect(response.body).to include("Đơn vị 100%")
+      expect(response.body).not_to include("1000 người")
+    end
   end
 
   describe "POST /units (T29, T32)" do

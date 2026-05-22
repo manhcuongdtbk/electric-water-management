@@ -26,8 +26,8 @@ class PumpAllocationsController < ApplicationController
     scope = scope.where(period: @period) if @period
     scope = apply_sa_zone_filter(scope)
     if (q = params[:q]).present?
-      like = "%#{q.strip}%"
-      scope = scope.where("units.name ILIKE :q OR contact_points.name ILIKE :q", q: like)
+      sanitized = "%#{ActiveRecord::Base.sanitize_sql_like(q.strip)}%"
+      scope = scope.where("units.name ILIKE :q OR contact_points.name ILIKE :q", q: sanitized)
     end
     scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:created_at, :desc])
     @total_count = scope.count

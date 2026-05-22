@@ -61,6 +61,11 @@ RSpec.describe Billing::Query do
       scoped = described_class.apply_search(base, q: nil)
       expect(scoped.count).to eq(5)
     end
+
+    it "sanitize ký tự ILIKE wildcard — % không match như wildcard" do
+      scoped = described_class.apply_search(base, q: "100%")
+      expect(scoped.count).to eq(0)
+    end
   end
 
   describe ".apply_filters (backward compatible)" do
