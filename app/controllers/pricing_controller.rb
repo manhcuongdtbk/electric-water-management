@@ -8,7 +8,10 @@ class PricingController < ApplicationController
     all_periods = Period.order(year: :desc, month: :desc)
     @latest_period = all_periods.first
     @next_year, @next_month = compute_next_year_month(@latest_period)
-    @pagy, @all_periods = pagy_with_per_page(all_periods, default: 10)
+    @available_years = Period.distinct.order(year: :desc).pluck(:year)
+    @selected_year = params[:year].presence&.to_i
+    filtered_periods = @selected_year ? all_periods.where(year: @selected_year) : all_periods
+    @pagy, @all_periods = pagy_with_per_page(filtered_periods, default: 10)
     authorize!(:read, Period)
   end
 
@@ -21,7 +24,12 @@ class PricingController < ApplicationController
     else
       @current_period = @period
       all_periods = Period.order(year: :desc, month: :desc)
-      @pagy, @all_periods = pagy_with_per_page(all_periods, default: 10)
+      @latest_period = all_periods.first
+      @next_year, @next_month = compute_next_year_month(@latest_period)
+      @available_years = Period.distinct.order(year: :desc).pluck(:year)
+      @selected_year = params[:year].presence&.to_i
+      filtered_periods = @selected_year ? all_periods.where(year: @selected_year) : all_periods
+      @pagy, @all_periods = pagy_with_per_page(filtered_periods, default: 10)
       render :show, status: :unprocessable_entity
     end
   end
