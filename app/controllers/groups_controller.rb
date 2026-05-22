@@ -20,7 +20,7 @@ class GroupsController < ApplicationController
 
   def index
     @period = current_period
-    scope = load_collection(Group).includes(:unit, :block)
+    scope = load_collection(Group).includes(unit: :zone).includes(:block)
                                   .joins(:unit).left_joins(:block)
     scope = scope.joins("INNER JOIN zones ON zones.id = units.zone_id")
 
