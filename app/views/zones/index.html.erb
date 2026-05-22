@@ -10,7 +10,7 @@
 
 <%= render "shared/list_toolbar",
       url: zones_path,
-      search_placeholder: t("common.list.search_by_name"),
+      search_placeholder: "Tìm theo tên khu vực...",
       total_count: @total_count,
       add_link: add_link,
       per_page_storage_key: "zones_per_page" %>
@@ -19,7 +19,7 @@
   <table class="min-w-full divide-y divide-gray-200">
     <thead class="bg-gray-50">
       <tr>
-        <%= sortable_header :name, t("activerecord.attributes.zone.name"),
+        <%= sortable_header :name, "Khu vực",
               current_sort: params[:sort], current_dir: params[:dir],
               extra_params: { q: params[:q], per_page: params[:per_page] } %>
         <%= sortable_header :units_count, "Số đơn vị",
@@ -43,15 +43,10 @@
             kept_units = zone.units.reject(&:discarded?)
             kept_main_meters = zone.main_meters.reject(&:discarded?)
           %>
-          <td class="px-4 py-2 text-sm text-gray-600">
-            <%= kept_units.size %>
-            <% if kept_units.empty? %>
-              <span class="ml-2 text-yellow-700 text-xs">(Chưa có đơn vị)</span>
-            <% end %>
-          </td>
+          <td class="px-4 py-2 text-sm text-gray-600"><%= kept_units.size %></td>
           <td class="px-4 py-2 text-sm text-gray-600"><%= zone.manager_unit&.name || "—" %></td>
           <td class="px-4 py-2 text-sm text-gray-600">
-            <%= kept_main_meters.map(&:name).join(", ") %>
+            <%= kept_main_meters.any? ? kept_main_meters.map(&:name).join(", ") : "—" %>
           </td>
           <td class="px-4 py-2 text-sm text-right space-x-2">
             <% if can?(:update, zone) || can?(:destroy, zone) %>
