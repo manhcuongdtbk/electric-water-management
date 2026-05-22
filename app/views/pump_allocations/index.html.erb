@@ -29,6 +29,9 @@
         <%= sortable_header :zone, "Khu vực",
               current_sort: params[:sort], current_dir: params[:dir],
               extra_params: { q: params[:q], per_page: params[:per_page], zone_id: params[:zone_id] } %>
+        <%= sortable_header :target_type, "Loại",
+              current_sort: params[:sort], current_dir: params[:dir],
+              extra_params: { q: params[:q], per_page: params[:per_page], zone_id: params[:zone_id] } %>
         <%= sortable_header :percentage, "% cố định",
               current_sort: params[:sort], current_dir: params[:dir],
               extra_params: { q: params[:q], per_page: params[:per_page], zone_id: params[:zone_id] }, align: :right %>
@@ -40,17 +43,17 @@
     </thead>
     <tbody class="divide-y divide-gray-200">
       <% if @pump_allocations.empty? %>
-        <tr><td colspan="5" class="px-4 py-6 text-center text-gray-500"><%= t("common.list.no_records") %></td></tr>
+        <tr><td colspan="6" class="px-4 py-6 text-center text-gray-500"><%= t("common.list.no_records") %></td></tr>
       <% end %>
       <% @pump_allocations.each do |alloc| %>
         <tr class="hover:bg-gray-50 transition-colors">
-          <td class="px-4 py-2 text-sm text-gray-900">
+          <td class="px-4 py-2 text-sm font-medium text-gray-900">
             <%= alloc.unit&.name || alloc.contact_point&.name %>
-            <span class="text-xs text-gray-400 ml-1">
-              (<%= alloc.unit ? t("resources.unit").capitalize : t("resources.contact_point").capitalize %>)
-            </span>
           </td>
           <td class="px-4 py-2 text-sm text-gray-600"><%= alloc.zone.name %></td>
+          <td class="px-4 py-2 text-sm text-gray-600">
+            <%= alloc.unit ? t("resources.unit").capitalize : t("resources.contact_point").capitalize %>
+          </td>
           <td class="px-4 py-2 text-sm text-right text-gray-600">
             <%= alloc.fixed_percentage.present? ? "#{number_to_vi(alloc.fixed_percentage)}%" : "—" %>
           </td>
