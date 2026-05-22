@@ -49,32 +49,9 @@ RSpec.describe "Groups", type: :request do
       expect(rows.last.text).to include("Nhóm A")
     end
 
-    it "lọc theo khu vực" do
-      get groups_path, params: { zone_id: zone2.id }
-      rows = html.css("table tbody tr")
-      expect(rows.size).to eq(1)
-      expect(rows.first.text).to include("Nhóm B")
-    end
-
-    it "lọc theo đơn vị" do
-      get groups_path, params: { unit_id: unit.id }
-      rows = html.css("table tbody tr")
-      expect(rows.size).to eq(1)
-      expect(rows.first.text).to include("Nhóm A")
-    end
-
-    it "chọn đơn vị mà chưa chọn khu vực → khu vực tự chọn theo" do
-      get groups_path, params: { unit_id: unit2.id }
-      selected_zone = html.css("select#zone_id option[selected]")
-      expect(selected_zone.first&.attr("value")).to eq(zone2.id.to_s)
-    end
-
-    it "lọc khu vực → dropdown đơn vị chỉ hiện đơn vị thuộc khu vực" do
-      get groups_path, params: { zone_id: zone.id }
-      unit_options = html.css("select#unit_id option").map(&:text)
-      expect(unit_options).to include(unit.name)
-      expect(unit_options).not_to include(unit2.name)
-    end
+    # Filter/cascade behavior (lọc khu vực, đơn vị, auto-select, reset)
+    # đã cover bởi system specs (spec/system/groups_filter_spec.rb).
+    # Request specs giữ lại: dropdown scoping (server-side logic).
 
     it "lọc khu vực → dropdown khu vực vẫn chứa tất cả khu vực có nhóm" do
       get groups_path, params: { zone_id: zone.id }
@@ -97,16 +74,7 @@ RSpec.describe "Groups", type: :request do
       expect(rows.first.text).to include("Nhóm B")
     end
 
-    context "as unit_admin" do
-      let(:unit_admin) { create(:user, :unit_admin, unit: unit) }
-      before { sign_in unit_admin }
-
-      it "không hiển thị dropdown khu vực và đơn vị" do
-        get groups_path
-        expect(html.css("select#zone_id")).to be_empty
-        expect(html.css("select#unit_id")).to be_empty
-      end
-    end
+    # Non-admin dropdown visibility: cover bởi system spec.
   end
 
   describe "POST /groups" do
