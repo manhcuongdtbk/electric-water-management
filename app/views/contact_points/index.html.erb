@@ -24,6 +24,7 @@
     ]
   end
 
+  show_zone_unit = current_user.role == "system_admin"
   extra_sort_params = { q: params[:q], per_page: params[:per_page],
                         type: params[:type], zone_id: params[:zone_id], unit_id: params[:unit_id] }
 %>
@@ -46,12 +47,14 @@
         <%= sortable_header :contact_point_type, "Loại",
               current_sort: params[:sort], current_dir: params[:dir],
               extra_params: extra_sort_params %>
-        <%= sortable_header :zone, "Khu vực",
-              current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: extra_sort_params %>
-        <%= sortable_header :unit, "Đơn vị",
-              current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: extra_sort_params %>
+        <% if show_zone_unit %>
+          <%= sortable_header :zone, "Khu vực",
+                current_sort: params[:sort], current_dir: params[:dir],
+                extra_params: extra_sort_params %>
+          <%= sortable_header :unit, "Đơn vị",
+                current_sort: params[:sort], current_dir: params[:dir],
+                extra_params: extra_sort_params %>
+        <% end %>
         <%= sortable_header :block, "Khối",
               current_sort: params[:sort], current_dir: params[:dir],
               extra_params: extra_sort_params %>
@@ -63,7 +66,7 @@
     </thead>
     <tbody class="divide-y divide-gray-200">
       <% if @contact_points.empty? %>
-        <tr><td colspan="7" class="px-4 py-6 text-center text-gray-500"><%= t("common.list.no_records") %></td></tr>
+        <tr><td colspan="<%= show_zone_unit ? 7 : 5 %>" class="px-4 py-6 text-center text-gray-500"><%= t("common.list.no_records") %></td></tr>
       <% end %>
       <% @contact_points.each do |cp| %>
         <tr class="hover:bg-gray-50 transition-colors">
@@ -71,8 +74,10 @@
           <td class="px-4 py-2 text-sm text-gray-600">
             <%= t("activerecord.attributes.contact_point.types.#{cp.contact_point_type}", default: cp.contact_point_type) %>
           </td>
-          <td class="px-4 py-2 text-sm text-gray-600"><%= cp.zone&.name || cp.unit&.zone&.name || "—" %></td>
-          <td class="px-4 py-2 text-sm text-gray-600"><%= cp.unit&.name || "—" %></td>
+          <% if show_zone_unit %>
+            <td class="px-4 py-2 text-sm text-gray-600"><%= cp.zone&.name || cp.unit&.zone&.name || "—" %></td>
+            <td class="px-4 py-2 text-sm text-gray-600"><%= cp.unit&.name || "—" %></td>
+          <% end %>
           <td class="px-4 py-2 text-sm text-gray-600"><%= cp.block&.name || "—" %></td>
           <td class="px-4 py-2 text-sm text-gray-600"><%= cp.group&.name || "—" %></td>
           <td class="px-4 py-2 text-sm text-right space-x-2">

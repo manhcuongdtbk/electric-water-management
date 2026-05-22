@@ -18,6 +18,7 @@
     ]
   end
 
+  show_zone_unit = current_user.role == "system_admin"
   extra_sort_params = { q: params[:q], per_page: params[:per_page],
                         zone_id: params[:zone_id], unit_id: params[:unit_id] }
 %>
@@ -37,24 +38,28 @@
         <%= sortable_header :name, "Khối",
               current_sort: params[:sort], current_dir: params[:dir],
               extra_params: extra_sort_params %>
-        <%= sortable_header :zone, "Khu vực",
-              current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: extra_sort_params %>
-        <%= sortable_header :unit, "Đơn vị",
-              current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: extra_sort_params %>
+        <% if show_zone_unit %>
+          <%= sortable_header :zone, "Khu vực",
+                current_sort: params[:sort], current_dir: params[:dir],
+                extra_params: extra_sort_params %>
+          <%= sortable_header :unit, "Đơn vị",
+                current_sort: params[:sort], current_dir: params[:dir],
+                extra_params: extra_sort_params %>
+        <% end %>
         <%= list_header t("common.list.actions"), align: :right %>
       </tr>
     </thead>
     <tbody class="divide-y divide-gray-200">
       <% if @blocks.empty? %>
-        <tr><td colspan="4" class="px-4 py-6 text-center text-gray-500"><%= t("common.list.no_records") %></td></tr>
+        <tr><td colspan="<%= show_zone_unit ? 4 : 2 %>" class="px-4 py-6 text-center text-gray-500"><%= t("common.list.no_records") %></td></tr>
       <% end %>
       <% @blocks.each do |b| %>
         <tr class="hover:bg-gray-50 transition-colors">
           <td class="px-4 py-2 text-sm font-medium text-gray-900"><%= b.name %></td>
-          <td class="px-4 py-2 text-sm text-gray-600"><%= b.unit&.zone&.name %></td>
-          <td class="px-4 py-2 text-sm text-gray-600"><%= b.unit&.name %></td>
+          <% if show_zone_unit %>
+            <td class="px-4 py-2 text-sm text-gray-600"><%= b.unit&.zone&.name %></td>
+            <td class="px-4 py-2 text-sm text-gray-600"><%= b.unit&.name %></td>
+          <% end %>
           <td class="px-4 py-2 text-sm text-right space-x-2">
             <% if can?(:update, b) || can?(:destroy, b) %>
               <% if can?(:update, b) %>
