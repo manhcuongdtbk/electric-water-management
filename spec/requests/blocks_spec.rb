@@ -22,12 +22,14 @@ RSpec.describe "Blocks", type: :request do
       expect(headers[0]).not_to include("Tên")
     end
 
-    it "cột Khu vực đứng trước cột Đơn vị" do
+    it "cột theo hierarchy: Khối → Đơn vị → Khu vực" do
       get blocks_path
       headers = html.css("table thead th").map(&:text).map(&:strip)
-      zone_index = headers.index { |h| h.include?("Khu vực") }
+      name_index = headers.index { |h| h.include?("Khối") }
       unit_index = headers.index { |h| h.include?("Đơn vị") }
-      expect(zone_index).to be < unit_index
+      zone_index = headers.index { |h| h.include?("Khu vực") }
+      expect(name_index).to be < unit_index
+      expect(unit_index).to be < zone_index
     end
 
     it "hiển thị khu vực trong bảng" do

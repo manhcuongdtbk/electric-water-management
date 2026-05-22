@@ -22,12 +22,16 @@ RSpec.describe "Groups", type: :request do
       expect(headers[0]).not_to include("Tên")
     end
 
-    it "cột Khu vực đứng trước cột Đơn vị" do
+    it "cột theo hierarchy: Nhóm → Khối → Đơn vị → Khu vực" do
       get groups_path
       headers = html.css("table thead th").map(&:text).map(&:strip)
-      zone_index = headers.index { |h| h.include?("Khu vực") }
+      name_index = headers.index { |h| h.include?("Nhóm") }
+      block_index = headers.index { |h| h.include?("Khối") }
       unit_index = headers.index { |h| h.include?("Đơn vị") }
-      expect(zone_index).to be < unit_index
+      zone_index = headers.index { |h| h.include?("Khu vực") }
+      expect(name_index).to be < block_index
+      expect(block_index).to be < unit_index
+      expect(unit_index).to be < zone_index
     end
 
     it "hiển thị tên khu vực trong bảng" do
