@@ -30,15 +30,5 @@ RSpec.describe "Blocks", type: :system do
   it_behaves_like "zone-unit cascade filter behavior"
   it_behaves_like "per_page auto-submit behavior"
   it_behaves_like "confirm delete behavior"
-
-  context "as unit_admin" do
-    let(:unit_admin) { create(:user, :unit_admin, unit: unit1) }
-    before { sign_in unit_admin }
-
-    it "không hiển thị dropdown khu vực và đơn vị" do
-      visit blocks_path
-      expect(page).not_to have_select("zone_id")
-      expect(page).not_to have_select("unit_id")
-    end
-  end
+  it_behaves_like "non-admin filter visibility"
 end
