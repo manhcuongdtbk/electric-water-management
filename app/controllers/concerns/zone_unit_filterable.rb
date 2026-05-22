@@ -68,6 +68,54 @@ module ZoneUnitFilterable
     scope
   end
 
+  # SA-only: resolve zone/unit, compute available dropdowns, filter scope.
+  # Non-SA: trả scope không đổi.
+  #
+  # Dùng cho scope joining contact_points mà contact_points có thể thuộc zone
+  # trực tiếp (zone_id) hoặc gián tiếp qua unit (units.zone_id).
+  # Zone filter dùng OR: contact_points.zone_id = :zid OR units.zone_id = :zid.
+  #
+  # Scope phải có sẵn join tới units và zones (LEFT JOIN) để SQL hoạt động.
+  def apply_sa_zone_unit_filter_with_direct_zone(scope, zone_scope: zone_filter_scope, unit_scope: unit_filter_scope)
+    return scope unless current_user.system_admin?
+
+    @zone, @unit = resolve_zone_unit_filter(zone_scope: zone_scope, unit_scope: unit_scope)
+
+    base = scope.unscope(:order)
+    direct_zone_ids = base.where.not("contact_points.zone_id": nil)
+                          .distinct.pluck("contact_points.zone_id")
+    unit_ids = base.where.not("contact_points.unit_id": nil)
+                   .distinct.pluck("contact_points.unit_id")
+    unit_zone_ids = unit_ids.any? ? Unit.where(id: unit_ids).distinct.pluck(:zone_id) : []
+
+    @available_zones = available_zones_for_filter(zone_scope: zone_scope,
+                                                  zone_ids: (direct_zone_ids + unit_zone_ids).uniq)
+    @available_units = available_units_for_filter(@zone, unit_scope: unit_scope, unit_ids: unit_ids)
+
+    if @zone
+      scope = scope.where(
+        "contact_points.zone_id = :zone_id OR units.zone_id = :zone_id",
+        zone_id: @zone.id
+      )
+    end
+    scope = scope.where("contact_points.unit_id": @unit.id) if @unit
+    scope
+  end
+
+  # Non-SA: resolve zone/unit dựa trên đơn vị và vai trò của current_user.
+  # UA-ZM/CMD-ZM → [zone, nil] (thấy toàn khu vực, không filter đơn vị).
+  # UA/CMD → [zone, unit] (chỉ thấy đơn vị mình).
+  def resolve_current_user_zone_unit
+    return [nil, nil] unless current_user&.unit_id
+    unit = current_user.unit
+    zone = unit&.zone
+    if current_zone_manager?
+      [zone, nil]
+    else
+      [zone, unit]
+    end
+  end
+
   # SA-only: derive available zones/units từ một data scope bất kỳ.
   # Dùng cho trang xem data lịch sử (billing) hoặc trang không dùng apply_sa_zone_filter.
   #

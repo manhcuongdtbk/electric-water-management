@@ -67,17 +67,9 @@ class DashboardSummary
     unit = @user.unit
     return OpenStruct.new(role: @user.role.to_sym, period: @period, unit: nil, warnings: []) unless unit
 
-    managed_zone_ids = Zone.where(manager_unit_id: unit.id).pluck(:id)
-    cp_scope = ContactPoint.with_discarded.where(unit_id: unit.id)
-    if managed_zone_ids.any?
-      cp_scope = cp_scope.or(
-        ContactPoint.with_discarded.where(zone_id: managed_zone_ids, contact_point_type: "residential")
-      )
-    end
-    cp_ids = cp_scope.pluck(:id)
+    calcs = Calculation.accessible_by(@ability).where(period_id: @period.id)
 
-    calcs = Calculation.where(period_id: @period.id, contact_point_id: cp_ids)
-
+    managed_zone_ids = Zone.kept.where(manager_unit_id: unit.id).pluck(:id)
     zone_ids = ([unit.zone_id] + managed_zone_ids).compact.uniq
     warnings = Zone.with_discarded.where(id: zone_ids)
                     .flat_map { |z| ZoneWarningCollector.new(zone: z, period: @period).call }

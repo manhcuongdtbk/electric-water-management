@@ -22,7 +22,48 @@ RSpec.describe Billing::Query do
     end
   end
 
-  describe ".apply_filters" do
+  describe ".apply_zone_unit_filter" do
+    let(:base) { described_class.base_scope(sample.period, ability) }
+
+    it "filter theo unit" do
+      scoped = described_class.apply_zone_unit_filter(base, zone: nil, unit: sample.unit_b)
+      cp_names = scoped.map { |c| c.contact_point.name }
+      expect(cp_names).to contain_exactly("Đại đội 1")
+    end
+
+    it "filter theo zone bao gồm cả zone-residential" do
+      scoped = described_class.apply_zone_unit_filter(base, zone: sample.zone, unit: nil)
+      cp_names = scoped.map { |c| c.contact_point.name }
+      expect(cp_names).to include("Chỉ huy khu vực", "Ban Tác huấn", "Đại đội 1")
+    end
+
+    it "không filter → trả toàn bộ" do
+      scoped = described_class.apply_zone_unit_filter(base, zone: nil, unit: nil)
+      expect(scoped.count).to eq(5)
+    end
+  end
+
+  describe ".apply_search" do
+    let(:base) { described_class.base_scope(sample.period, ability) }
+
+    it "filter theo tên đầu mối" do
+      scoped = described_class.apply_search(base, q: "Ban")
+      cp_names = scoped.map { |c| c.contact_point.name }
+      expect(cp_names).to contain_exactly("Ban Tác huấn")
+    end
+
+    it "q trống → trả toàn bộ" do
+      scoped = described_class.apply_search(base, q: "")
+      expect(scoped.count).to eq(5)
+    end
+
+    it "q nil → trả toàn bộ" do
+      scoped = described_class.apply_search(base, q: nil)
+      expect(scoped.count).to eq(5)
+    end
+  end
+
+  describe ".apply_filters (backward compatible)" do
     let(:base) { described_class.base_scope(sample.period, ability) }
 
     it "filter theo unit" do

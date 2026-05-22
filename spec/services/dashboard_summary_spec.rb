@@ -59,6 +59,41 @@ RSpec.describe DashboardSummary do
     end
   end
 
+  describe "unit_admin không phải zone-manager" do
+    let(:user) { create(:user, :unit_admin, unit: sample.unit_b) }
+    let(:ability) { Ability.new(user) }
+
+    it "chỉ thấy đầu mối đơn vị mình, không thấy đầu mối khu vực" do
+      summary = described_class.new(user: user, ability: ability, period: sample.period).call
+      expect(summary.deficit_count + summary.surplus_count).to eq(1)
+    end
+
+    it "managed_zone_ids rỗng" do
+      summary = described_class.new(user: user, ability: ability, period: sample.period).call
+      expect(summary.managed_zone_ids).to be_empty
+    end
+  end
+
+  describe "commander zone-manager" do
+    let(:user) { create(:user, :commander, unit: sample.unit_a) }
+    let(:ability) { Ability.new(user) }
+
+    it "thấy đầu mối đơn vị + khu vực (như UA-ZM)" do
+      summary = described_class.new(user: user, ability: ability, period: sample.period).call
+      expect(summary.deficit_count + summary.surplus_count).to eq(4)
+    end
+  end
+
+  describe "commander không phải zone-manager" do
+    let(:user) { create(:user, :commander, unit: sample.unit_b) }
+    let(:ability) { Ability.new(user) }
+
+    it "chỉ thấy đầu mối đơn vị mình" do
+      summary = described_class.new(user: user, ability: ability, period: sample.period).call
+      expect(summary.deficit_count + summary.surplus_count).to eq(1)
+    end
+  end
+
   describe "T82 — warning tổn hao âm" do
     let(:user) { create(:user, :system_admin) }
     let(:ability) { Ability.new(user) }

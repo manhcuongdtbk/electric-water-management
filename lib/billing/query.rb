@@ -28,7 +28,7 @@ module Billing
         .includes(contact_point: [:block, :group, :zone, { unit: :zone }])
     end
 
-    def self.apply_filters(scope, zone:, unit:, q: nil)
+    def self.apply_zone_unit_filter(scope, zone:, unit:)
       if zone
         scope = scope.where(
           "contact_points.zone_id = :zid OR units.zone_id = :zid",
@@ -36,11 +36,18 @@ module Billing
         )
       end
       scope = scope.where("contact_points.unit_id = ?", unit.id) if unit
-      if q.present?
-        sanitized = ActiveRecord::Base.sanitize_sql_like(q.strip)
-        scope = scope.where("contact_points.name ILIKE ?", "%#{sanitized}%")
-      end
       scope
+    end
+
+    def self.apply_search(scope, q:)
+      return scope unless q.present?
+      sanitized = ActiveRecord::Base.sanitize_sql_like(q.strip)
+      scope.where("contact_points.name ILIKE ?", "%#{sanitized}%")
+    end
+
+    def self.apply_filters(scope, zone:, unit:, q: nil)
+      scope = apply_zone_unit_filter(scope, zone: zone, unit: unit)
+      apply_search(scope, q: q)
     end
 
     def self.summary(scope, period:)
