@@ -18,6 +18,7 @@
     ]
   end
 
+  show_zone_unit = current_user.role == "system_admin"
   extra_sort_params = { q: params[:q], per_page: params[:per_page],
                         zone_id: params[:zone_id], unit_id: params[:unit_id] }
 %>
@@ -37,12 +38,14 @@
         <%= sortable_header :name, "Nhóm",
               current_sort: params[:sort], current_dir: params[:dir],
               extra_params: extra_sort_params %>
-        <%= sortable_header :zone, "Khu vực",
-              current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: extra_sort_params %>
-        <%= sortable_header :unit, "Đơn vị",
-              current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: extra_sort_params %>
+        <% if show_zone_unit %>
+          <%= sortable_header :zone, "Khu vực",
+                current_sort: params[:sort], current_dir: params[:dir],
+                extra_params: extra_sort_params %>
+          <%= sortable_header :unit, "Đơn vị",
+                current_sort: params[:sort], current_dir: params[:dir],
+                extra_params: extra_sort_params %>
+        <% end %>
         <%= sortable_header :block, "Khối",
               current_sort: params[:sort], current_dir: params[:dir],
               extra_params: extra_sort_params %>
@@ -51,13 +54,15 @@
     </thead>
     <tbody class="divide-y divide-gray-200">
       <% if @groups.empty? %>
-        <tr><td colspan="5" class="px-4 py-6 text-center text-gray-500"><%= t("common.list.no_records") %></td></tr>
+        <tr><td colspan="<%= show_zone_unit ? 5 : 3 %>" class="px-4 py-6 text-center text-gray-500"><%= t("common.list.no_records") %></td></tr>
       <% end %>
       <% @groups.each do |g| %>
         <tr class="hover:bg-gray-50 transition-colors">
           <td class="px-4 py-2 text-sm font-medium text-gray-900"><%= g.name %></td>
-          <td class="px-4 py-2 text-sm text-gray-600"><%= g.unit&.zone&.name %></td>
-          <td class="px-4 py-2 text-sm text-gray-600"><%= g.unit&.name %></td>
+          <% if show_zone_unit %>
+            <td class="px-4 py-2 text-sm text-gray-600"><%= g.unit&.zone&.name %></td>
+            <td class="px-4 py-2 text-sm text-gray-600"><%= g.unit&.name %></td>
+          <% end %>
           <td class="px-4 py-2 text-sm text-gray-600"><%= g.block&.name || "—" %></td>
           <td class="px-4 py-2 text-sm text-right space-x-2">
             <% if can?(:update, g) || can?(:destroy, g) %>

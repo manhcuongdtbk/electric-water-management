@@ -34,4 +34,5 @@ RSpec.describe "Groups filter cascade", type: :system do
   it_behaves_like "per_page auto-submit behavior"
   it_behaves_like "confirm delete behavior"
   it_behaves_like "role-based filter visibility"
+  it_behaves_like "zone-unit column visibility"
 end
