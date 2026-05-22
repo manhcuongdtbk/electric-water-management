@@ -6,12 +6,16 @@
 #   - Các role khác (UA-ZM, UA, CMD-ZM, CMD) không thấy dropdown
 #
 # Yêu cầu trong caller:
-#   path:           → URL trang index
-#   zone1:          → Zone có unit là zone manager
-#   unit1:          → Unit thuộc zone1 và là zone manager
-#   system_admin:   → User system_admin (đã sign_in ở before block)
+#   path:   → URL trang index
+#   zone1:  → Zone có unit là zone manager
+#   unit1:  → Unit thuộc zone1 và là zone manager
 RSpec.shared_examples "role-based filter visibility" do
   context "as system_admin" do
+    before do
+      user = create(:user, :system_admin)
+      sign_in user
+    end
+
     it "hiển thị dropdown khu vực và đơn vị" do
       visit path
       expect(page).to have_select("zone_id")
@@ -20,7 +24,7 @@ RSpec.shared_examples "role-based filter visibility" do
   end
 
   %w[unit_admin commander].each do |role|
-    context "as #{role} - zone manager" do
+    context "as #{role} zone manager" do
       before do
         user = create(:user, role.to_sym, unit: unit1)
         sign_in user
@@ -33,10 +37,10 @@ RSpec.shared_examples "role-based filter visibility" do
       end
     end
 
-    context "as #{role} - non zone manager" do
+    context "as #{role} không phải zone manager" do
       before do
-        non_zone_manager = create(:unit, zone: zone1)
-        user = create(:user, role.to_sym, unit: non_zone_manager)
+        non_zone_manager_unit = create(:unit, zone: zone1)
+        user = create(:user, role.to_sym, unit: non_zone_manager_unit)
         sign_in user
       end
 
