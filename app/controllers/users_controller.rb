@@ -21,15 +21,15 @@ class UsersController < ApplicationController
     @filter_role = params[:role] if ROLES.include?(params[:role])
     scope = scope.where(role: @filter_role) if @filter_role
 
-    @zone, @unit = resolve_zone_unit_filter
-    all_unit_ids = scope.where.not(unit_id: nil).distinct.pluck(:unit_id)
-    all_zone_ids = Unit.where(id: all_unit_ids).distinct.pluck(:zone_id)
-    @available_zones = available_zones_for_filter(zone_ids: all_zone_ids)
-    @available_units = available_units_for_filter(@zone, unit_ids: all_unit_ids)
-    if @zone
-      scope = scope.where("units.zone_id = ?", @zone.id)
+    if current_user.system_admin?
+      @zone, @unit = resolve_zone_unit_filter
+      all_unit_ids = scope.where.not(unit_id: nil).distinct.pluck(:unit_id)
+      all_zone_ids = Unit.where(id: all_unit_ids).distinct.pluck(:zone_id)
+      @available_zones = available_zones_for_filter(zone_ids: all_zone_ids)
+      @available_units = available_units_for_filter(@zone, unit_ids: all_unit_ids)
+      scope = scope.where("units.zone_id = ?", @zone.id) if @zone
+      scope = scope.where(unit_id: @unit.id) if @unit
     end
-    scope = scope.where(unit_id: @unit.id) if @unit
 
     if (q = params[:q]).present?
       scope = scope.where("users.username ILIKE ? OR users.display_name ILIKE ?",
