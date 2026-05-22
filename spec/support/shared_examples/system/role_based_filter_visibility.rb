@@ -7,8 +7,8 @@
 #
 # Yêu cầu trong caller:
 #   path:           → URL trang index
-#   zone1:          → Zone có unit là đơn vị quản lý khu vực
-#   unit1:          → Unit thuộc zone1 và là đơn vị quản lý khu vực
+#   zone1:          → Zone có unit là zone manager
+#   unit1:          → Unit thuộc zone1 và là zone manager
 #   system_admin:   → User system_admin (đã sign_in ở before block)
 RSpec.shared_examples "role-based filter visibility" do
   context "as system_admin" do
@@ -20,7 +20,7 @@ RSpec.shared_examples "role-based filter visibility" do
   end
 
   %w[unit_admin commander].each do |role|
-    context "as #{role} quản lý khu vực" do
+    context "as #{role} zone manager" do
       before do
         user = create(:user, role.to_sym, unit: unit1)
         sign_in user
@@ -33,10 +33,10 @@ RSpec.shared_examples "role-based filter visibility" do
       end
     end
 
-    context "as #{role} không quản lý khu vực" do
+    context "as #{role} không phải zone manager" do
       before do
-        non_manager = create(:unit, zone: zone1)
-        user = create(:user, role.to_sym, unit: non_manager)
+        non_zone_manager_unit = create(:unit, zone: zone1)
+        user = create(:user, role.to_sym, unit: non_zone_manager_unit)
         sign_in user
       end
 
