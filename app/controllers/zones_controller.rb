@@ -26,10 +26,7 @@ class ZonesController < ApplicationController
     if params[:sort].to_s == "manager_unit"
       scope = scope.joins("LEFT JOIN units manager_units ON manager_units.id = zones.manager_unit_id")
     end
-    if (q = params[:q]).present?
-      sanitized = ActiveRecord::Base.sanitize_sql_like(q.strip)
-      scope = scope.where("zones.name ILIKE ?", "%#{sanitized}%")
-    end
+    scope = apply_search(scope, columns: "zones.name")
     scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:created_at, :desc])
     @total_count = scope.count
     @pagy, @zones = pagy_with_per_page(scope)
