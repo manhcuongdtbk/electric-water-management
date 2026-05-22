@@ -6,38 +6,57 @@
   add_link = can?(:create, Group) ?
     link_to(t("common.actions.add") + " " + t("resources.group"), new_group_path,
       class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700") : nil
+
+  toolbar_filters = []
+  if current_user.role == "system_admin"
+    toolbar_filters = [
+      { label: "Khu vực:", param: :zone_id,
+        options: @available_zones.pluck(:name, :id), selected: @zone&.id,
+        children: [:unit_id] },
+      { label: "Đơn vị:", param: :unit_id,
+        options: @available_units.pluck(:name, :id), selected: @unit&.id }
+    ]
+  end
+
+  extra_sort_params = { q: params[:q], per_page: params[:per_page],
+                        zone_id: params[:zone_id], unit_id: params[:unit_id] }
 %>
 
 <%= render "shared/list_toolbar",
       url: groups_path,
-      search_placeholder: t("common.list.search_by_name"),
+      search_placeholder: "Tìm theo tên nhóm...",
       total_count: @total_count,
       add_link: add_link,
-      per_page_storage_key: "groups_per_page" %>
+      per_page_storage_key: "groups_per_page",
+      filters: toolbar_filters %>
 
 <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
   <table class="min-w-full divide-y divide-gray-200">
     <thead class="bg-gray-50">
       <tr>
-        <%= sortable_header :name, t("activerecord.attributes.group.name"),
+        <%= sortable_header :name, "Nhóm",
               current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: { q: params[:q], per_page: params[:per_page] } %>
-        <%= sortable_header :unit, t("activerecord.attributes.group.unit"),
+              extra_params: extra_sort_params %>
+        <%= sortable_header :zone, "Khu vực",
               current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: { q: params[:q], per_page: params[:per_page] } %>
-        <%= sortable_header :block, t("activerecord.attributes.group.block"),
+              extra_params: extra_sort_params %>
+        <%= sortable_header :unit, "Đơn vị",
               current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: { q: params[:q], per_page: params[:per_page] } %>
+              extra_params: extra_sort_params %>
+        <%= sortable_header :block, "Khối",
+              current_sort: params[:sort], current_dir: params[:dir],
+              extra_params: extra_sort_params %>
         <%= list_header t("common.list.actions"), align: :right %>
       </tr>
     </thead>
     <tbody class="divide-y divide-gray-200">
       <% if @groups.empty? %>
-        <tr><td colspan="4" class="px-4 py-6 text-center text-gray-500"><%= t("common.list.no_records") %></td></tr>
+        <tr><td colspan="5" class="px-4 py-6 text-center text-gray-500"><%= t("common.list.no_records") %></td></tr>
       <% end %>
       <% @groups.each do |g| %>
         <tr class="hover:bg-gray-50 transition-colors">
           <td class="px-4 py-2 text-sm font-medium text-gray-900"><%= g.name %></td>
+          <td class="px-4 py-2 text-sm text-gray-600"><%= g.unit&.zone&.name %></td>
           <td class="px-4 py-2 text-sm text-gray-600"><%= g.unit&.name %></td>
           <td class="px-4 py-2 text-sm text-gray-600"><%= g.block&.name || "—" %></td>
           <td class="px-4 py-2 text-sm text-right space-x-2">

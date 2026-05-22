@@ -14,9 +14,12 @@
   #   add_link:             HTML — link_to nút thêm mới (nil nếu không có quyền).
   #   filters:              Array of Hash — dropdown filters. Mỗi item:
   #                           { label: "Khu vực:", param: :zone_id,
-  #                             options: [["Khu vực 1", 1], ...], selected: @selected_zone_id }
+  #                             options: [["Khu vực 1", 1], ...], selected: @selected_zone_id,
+  #                             children: [:unit_id] }
   #                           "Tất cả" tự thêm ở đầu, không cần truyền.
-  #                           Khi không truyền (mặc định []), không render dropdown nào.
+  #                           children: (tùy chọn) Array of param names — khi đổi filter này,
+  #                             reset các filter con về "Tất cả" trước khi submit (cascade).
+  #                           Khi không truyền filters (mặc định []), không render dropdown nào.
   #   per_page_storage_key: String — localStorage key cho per_page (mặc định "list_per_page").
   #                           Mỗi trang nên truyền key riêng để per_page không ảnh hưởng trang khác.
   extra_hidden ||= {}
@@ -26,10 +29,14 @@
   per_page_storage_key ||= "list_per_page"
   current_per_page = (params[:per_page].presence || 25).to_i
   has_filter = params[:q].present? || extra_hidden.values.any?(&:present?) || filters.any? { |f| params[f[:param]].present? }
+  has_cascade = filters.any? { |f| f[:children].present? }
+  form_controllers = ["auto-submit"]
+  form_controllers.unshift("reset-child-select") if has_cascade
 %>
 
 <div class="bg-white border border-gray-200 rounded-lg p-3 mb-3 flex items-center justify-between gap-3 flex-wrap">
-  <%= form_with url: url, method: :get, local: true, class: "flex items-center gap-3 flex-wrap" do %>
+  <%= form_with url: url, method: :get, local: true, class: "flex items-center gap-3 flex-wrap",
+        data: filters.any? ? { controller: form_controllers.join(" ") } : {} do %>
     <% extra_hidden.each do |k, v| %>
       <%= hidden_field_tag k, v %>
     <% end %>
@@ -47,6 +54,18 @@
     </div>
 
     <% filters.each do |filter| %>
+      <%
+        is_parent = filter[:children].present?
+        is_child = filters.any? { |f| (f[:children] || []).include?(filter[:param]) }
+
+        select_data = {}
+        if is_parent
+          select_data[:action] = "change->reset-child-select#reset change->auto-submit#submit"
+        else
+          select_data[:action] = "change->auto-submit#submit"
+        end
+        select_data[:reset_child_select_target] = "child" if is_child
+      %>
       <div class="flex items-center gap-2">
         <label class="text-xs text-gray-600 whitespace-nowrap"><%= filter[:label] %></label>
         <%= select_tag filter[:param],
@@ -54,7 +73,7 @@
                 [["Tất cả", ""]] + filter[:options],
                 filter[:selected]
               ),
-              onchange: "this.form.requestSubmit()",
+              data: select_data,
               class: "rounded border border-gray-300 text-sm px-2 py-1" %>
       </div>
     <% end %>
@@ -69,6 +88,7 @@
     </div>
   <% end %>
 
+  <%# Vùng trạng thái: xóa bộ lọc, tổng bản ghi, nút thêm %>
   <div class="flex items-center gap-3">
     <% if has_filter %>
       <%= link_to url, class: "inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-800 border border-red-300 bg-red-50 rounded-full px-2.5 py-1 hover:bg-red-100" do %>

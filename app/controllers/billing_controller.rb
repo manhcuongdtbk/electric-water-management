@@ -1,6 +1,7 @@
 class BillingController < ApplicationController
   include AuthorizeResource
   include BusinessRoleRequired
+  include ZoneUnitFilterable
 
   def show
     @available_periods = Period.order(year: :desc, month: :desc)
@@ -21,8 +22,8 @@ class BillingController < ApplicationController
       format.html do
         @pagy, @calculations = pagy(scope, items: (params[:per_page] || 50).to_i)
         preload_personnel(@calculations)
-        @available_zones = available_zones_for_filter
-        @available_units = available_units_for_filter(@zone)
+        @available_zones = available_zones_for_billing_filter
+        @available_units = available_units_for_filter(@zone, unit_scope: Unit.with_discarded)
       end
       format.xlsx do
         @calculations = scope.to_a
@@ -65,9 +66,7 @@ class BillingController < ApplicationController
 
   def resolve_filter
     if current_user.role == "system_admin"
-      zone = params[:zone_id].present? ? Zone.with_discarded.find_by(id: params[:zone_id]) : nil
-      unit = params[:unit_id].present? ? Unit.with_discarded.find_by(id: params[:unit_id]) : nil
-      [zone, unit]
+      resolve_zone_unit_filter(zone_scope: Zone.with_discarded, unit_scope: Unit.with_discarded)
     else
       unit = current_user.unit
       zone = unit&.zone
@@ -113,21 +112,19 @@ class BillingController < ApplicationController
     end
   end
 
-  def available_zones_for_filter
+  # Billing-specific: non-admin chỉ thấy zone của mình.
+  def available_zones_for_billing_filter
     if current_user.role == "system_admin"
-      Zone.with_discarded.order(:name)
+      available_zones_for_filter(zone_scope: Zone.with_discarded)
     else
       [current_user.unit&.zone].compact
     end
   end
 
-  def available_units_for_filter(zone)
-    base = Unit.with_discarded.order(:name)
-    base = base.where(zone_id: zone.id) if zone
-    base
-  end
-
   def redirect_filter_params
-    params.permit(:period_id, :zone_id, :unit_id, :q).to_h.compact_blank
+    result = params.permit(:period_id, :zone_id, :unit_id, :q).to_h.compact_blank
+    # Khi auto-select zone từ unit, zone_id không có trong params gốc → thêm vào
+    result[:zone_id] ||= @zone&.id&.to_s if @zone
+    result.compact_blank
   end
 end

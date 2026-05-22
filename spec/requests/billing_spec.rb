@@ -60,6 +60,20 @@ RSpec.describe "Billing", type: :request do
         expect(response.body).not_to include("Ban Tác huấn")
       end
 
+      it "chọn đơn vị mà chưa chọn khu vực → khu vực tự chọn theo" do
+        get billing_path(unit_id: sample.unit_b.id)
+        html = Nokogiri::HTML(response.body)
+        selected_zone = html.css("select#zone_id option[selected]")
+        expect(selected_zone.first&.text).to eq(sample.zone.name)
+      end
+
+      it "chọn đơn vị → dropdown đơn vị chỉ hiện đơn vị thuộc khu vực tự chọn" do
+        get billing_path(unit_id: sample.unit_b.id)
+        html = Nokogiri::HTML(response.body)
+        unit_options = html.css("select#unit_id option").map(&:text)
+        expect(unit_options).to include(sample.unit_b.name)
+      end
+
       it "xem kỳ cũ qua period_id" do
         sample.period.update!(closed: true)
         new_period = PeriodService.new
