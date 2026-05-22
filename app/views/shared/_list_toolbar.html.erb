@@ -2,7 +2,7 @@
   # Toolbar dùng chung cho các trang danh sách (index).
   #
   # Bao gồm: ô tìm kiếm, dropdown filters (nếu có), chọn số dòng/trang, tổng bản ghi, nút thêm mới.
-  # Mọi form trong toolbar giữ lại params của nhau qua hidden fields để không mất filter khi thao tác.
+  # Tất cả controls nằm trong 1 form duy nhất — submit bất kỳ control nào đều gửi toàn bộ giá trị hiện tại.
   #
   # Locals (bắt buộc):
   #   url:                  String — URL cho form (vd: units_path).
@@ -25,40 +25,29 @@
   filters ||= []
   per_page_storage_key ||= "list_per_page"
   current_per_page = (params[:per_page].presence || 25).to_i
-  filter_params = filters.map { |f| [f[:param], params[f[:param]]] }.to_h
-  has_filter = params[:q].present? || extra_hidden.values.any?(&:present?) || filter_params.values.any?(&:present?)
+  has_filter = params[:q].present? || extra_hidden.values.any?(&:present?) || filters.any? { |f| params[f[:param]].present? }
 %>
 
 <div class="bg-white border border-gray-200 rounded-lg p-3 mb-3 flex items-center justify-between gap-3 flex-wrap">
-  <div class="flex items-center gap-3 flex-wrap">
-    <%# Form tìm kiếm: giữ lại per_page, filter params, extra_hidden %>
-    <%= form_with url: url, method: :get, local: true, class: "flex items-center gap-2" do %>
-      <% extra_hidden.each do |k, v| %>
-        <%= hidden_field_tag k, v %>
-      <% end %>
-      <%= hidden_field_tag :per_page, current_per_page %>
-      <% filter_params.each do |k, v| %>
-        <%= hidden_field_tag k, v if v.present? %>
-      <% end %>
+  <%= form_with url: url, method: :get, local: true, class: "flex items-center gap-3 flex-wrap" do %>
+    <% extra_hidden.each do |k, v| %>
+      <%= hidden_field_tag k, v %>
+    <% end %>
+    <% if params[:sort].present? %>
+      <%= hidden_field_tag :sort, params[:sort] %>
+      <%= hidden_field_tag :dir, params[:dir] %>
+    <% end %>
+
+    <div class="flex items-center gap-2">
       <%= text_field_tag :q, params[:q],
             placeholder: search_placeholder,
             class: "rounded border border-gray-300 text-sm px-3 py-1.5 w-64" %>
       <%= submit_tag t("common.actions.search"),
             class: "px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded cursor-pointer" %>
-      <% if has_filter %>
-        <%= link_to t("common.list.clear_filter"), url,
-              class: "text-sm text-gray-600 hover:text-gray-800 underline" %>
-      <% end %>
-    <% end %>
+    </div>
 
-    <%# Dropdown filters: mỗi filter là 1 form riêng, giữ lại q, per_page, các filter khác %>
     <% filters.each do |filter| %>
-      <%= form_with url: url, method: :get, local: true, class: "flex items-center gap-2" do %>
-        <%= hidden_field_tag :q, params[:q] if params[:q].present? %>
-        <%= hidden_field_tag :per_page, current_per_page %>
-        <% filter_params.each do |k, v| %>
-          <%= hidden_field_tag k, v if v.present? && k.to_s != filter[:param].to_s %>
-        <% end %>
+      <div class="flex items-center gap-2">
         <label class="text-xs text-gray-600 whitespace-nowrap"><%= filter[:label] %></label>
         <%= select_tag filter[:param],
               options_for_select(
@@ -67,34 +56,25 @@
               ),
               onchange: "this.form.requestSubmit()",
               class: "rounded border border-gray-300 text-sm px-2 py-1" %>
-      <% end %>
+      </div>
     <% end %>
 
-    <%# Chọn số dòng/trang: giữ lại q, sort, dir, extra_hidden, filter params %>
-    <%= form_with url: url, method: :get, local: true, class: "flex items-center gap-2" do %>
-      <% extra_hidden.each do |k, v| %>
-        <%= hidden_field_tag k, v %>
-      <% end %>
-      <% if params[:q].present? %>
-        <%= hidden_field_tag :q, params[:q] %>
-      <% end %>
-      <% if params[:sort].present? %>
-        <%= hidden_field_tag :sort, params[:sort] %>
-        <%= hidden_field_tag :dir, params[:dir] %>
-      <% end %>
-      <% filter_params.each do |k, v| %>
-        <%= hidden_field_tag k, v if v.present? %>
-      <% end %>
+    <div class="flex items-center gap-2">
       <label class="text-xs text-gray-600 whitespace-nowrap"><%= t("common.list.per_page") %></label>
       <%= select_tag :per_page,
             options_for_select([10, 25, 50, 100].map { |n| [n, n] }, current_per_page),
             data: { controller: "per-page", action: "change->per-page#submit",
                     per_page_storage_key_value: per_page_storage_key },
             class: "rounded border border-gray-300 text-sm px-2 py-1" %>
-    <% end %>
-  </div>
+    </div>
+  <% end %>
 
   <div class="flex items-center gap-3">
+    <% if has_filter %>
+      <%= link_to url, class: "inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-800 border border-red-300 bg-red-50 rounded-full px-2.5 py-1 hover:bg-red-100" do %>
+        <span>✕</span> <%= t("common.list.clear_filter") %>
+      <% end %>
+    <% end %>
     <span class="text-sm text-gray-600"><%= list_total(total_count) %></span>
     <% if add_link %>
       <%= add_link %>
