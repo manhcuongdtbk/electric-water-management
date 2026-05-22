@@ -12,15 +12,12 @@ RSpec.describe "Zones", type: :system do
   def path_with_params(**params) = zones_path(**params)
   def create_extra_data = 12.times { |i| Zone.create!(name: "Khu vực Extra #{i}", main_meters_attributes: [{ name: "CT-#{i}" }]) }
 
-  it_behaves_like "per_page auto-submit behavior"
+  let(:search_text) { "Alpha" }
+  let(:content_match) { "Khu vực Alpha" }
+  let(:content_no_match) { "Khu vực Beta" }
 
-  it "tìm kiếm theo tên khu vực" do
-    visit zones_path
-    fill_in "q", with: "Alpha"
-    click_on I18n.t("common.actions.search")
-    expect(page).to have_content("Khu vực Alpha")
-    expect(page).not_to have_content("Khu vực Beta")
-  end
+  it_behaves_like "search behavior"
+  it_behaves_like "per_page auto-submit behavior"
 
   it "confirm xóa zone" do
     zone_empty = Zone.create!(name: "Khu vực trống", main_meters_attributes: [{ name: "CT-X" }])

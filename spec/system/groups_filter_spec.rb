@@ -18,6 +18,11 @@ RSpec.describe "Groups filter cascade", type: :system do
   def path_with_params(**params) = groups_path(**params)
   def create_extra_data = 12.times { |i| create(:group, unit: unit1, name: "Nhóm Extra #{i}") }
 
+  let(:search_text) { "Nhóm Alpha" }
+  let(:content_match) { "Nhóm Alpha-1" }
+  let(:content_no_match) { "Nhóm Beta-1" }
+
+  it_behaves_like "search behavior"
   it_behaves_like "zone filter behavior"
   it_behaves_like "zone-unit cascade filter behavior"
   it_behaves_like "per_page auto-submit behavior"

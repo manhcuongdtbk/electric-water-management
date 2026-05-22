@@ -107,3 +107,20 @@ RSpec.shared_examples "per_page auto-submit behavior" do
     expect(page).to have_css("table tbody tr", count: 10)
   end
 end
+
+# Shared examples cho tìm kiếm trong _list_toolbar.
+#
+# Yêu cầu trong caller:
+#   path:             → URL trang index
+#   search_text:      → Text tìm kiếm (vd: tên đơn vị, tên khu vực)
+#   content_match:    → Text phải có trong kết quả
+#   content_no_match: → Text không được có trong kết quả
+RSpec.shared_examples "search behavior" do
+  it "tìm kiếm submit đúng kết quả" do
+    visit path
+    fill_in "q", with: search_text
+    click_on I18n.t("common.actions.search")
+    expect(page).to have_content(content_match)
+    expect(page).not_to have_content(content_no_match)
+  end
+end

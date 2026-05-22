@@ -16,18 +16,15 @@ RSpec.describe "Units filter", type: :system do
   def path_with_params(**params) = units_path(**params)
   def create_extra_data = 12.times { |i| create(:unit, zone: zone1, name: "Đơn vị Extra #{i}") }
 
+  let(:search_text) { "Đơn vị A1" }
+  let(:content_match) { "Đơn vị A1" }
+  let(:content_no_match) { "Đơn vị B1" }
+
+  it_behaves_like "search behavior"
   it_behaves_like "zone filter behavior"
   it_behaves_like "per_page auto-submit behavior"
 
   # --- Page-specific ---
-
-  it "tìm kiếm theo tên đơn vị" do
-    visit units_path
-    fill_in "q", with: "Đơn vị A1"
-    click_on I18n.t("common.actions.search")
-    expect(page).to have_content("Đơn vị A1")
-    expect(page).not_to have_content("Đơn vị B1")
-  end
 
   it "xóa unit quản lý khu vực → confirm có cảnh báo" do
     visit units_path
