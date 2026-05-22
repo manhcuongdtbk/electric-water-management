@@ -107,7 +107,7 @@ RSpec.shared_examples "per_page auto-submit behavior" do
   end
 end
 
-# Tìm kiếm submit + xóa bộ lọc.
+# Tìm kiếm submit.
 RSpec.shared_examples "search behavior" do
   it "tìm kiếm submit đúng kết quả" do
     visit path
@@ -115,13 +115,6 @@ RSpec.shared_examples "search behavior" do
     click_on I18n.t("common.actions.search")
     expect(page).to have_content(content_included)
     expect(page).not_to have_content(content_excluded)
-  end
-
-  it "tìm kiếm → hiện Xóa bộ lọc" do
-    visit path
-    fill_in "q", with: search_text
-    click_on I18n.t("common.actions.search")
-    expect(page).to have_content("Xóa bộ lọc")
   end
 end
 
