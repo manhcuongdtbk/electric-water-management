@@ -33,22 +33,7 @@ class ContactPointsController < ApplicationController
     @filter_type = params[:type] if TYPES.include?(params[:type])
     scope = scope.where(contact_point_type: @filter_type) if @filter_type
 
-    if current_user.system_admin?
-      @zone, @unit = resolve_zone_unit_filter
-      # Tính available zones/units TRƯỚC khi filter để dropdown không bị giới hạn
-      all_zone_ids = scope.unscope(:order).distinct.pluck(:zone_id).compact +
-                     Unit.where(id: scope.unscope(:order).where.not(unit_id: nil).distinct.pluck(:unit_id)).pluck(:zone_id)
-      all_unit_ids = scope.unscope(:order).where.not(unit_id: nil).distinct.pluck(:unit_id)
-      @available_zones = available_zones_for_filter(zone_ids: all_zone_ids.uniq)
-      @available_units = available_units_for_filter(@zone, unit_ids: all_unit_ids)
-      if @zone
-        scope = scope.where(
-          "contact_points.zone_id = :zone_id OR units.zone_id = :zone_id",
-          zone_id: @zone.id
-        )
-      end
-      scope = scope.where(unit_id: @unit.id) if @unit
-    end
+    scope = apply_sa_zone_unit_filter_with_direct_zone(scope)
 
     @visible_types = %w[residential public]
     @visible_types += %w[water_pump non_establishment] if current_user.system_admin? || current_zone_manager?

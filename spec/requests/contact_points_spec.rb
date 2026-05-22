@@ -31,6 +31,41 @@ RSpec.describe "ContactPoints", type: :request do
       expect(response.body).to include("RES1")
       expect(response.body).not_to include("PUB1")
     end
+
+    context "SA filter theo zone (bao gồm zone trực tiếp + qua unit)" do
+      let!(:zone2) { create(:zone, name: "Khu vực 2") }
+      let!(:unit_z2) { create(:unit, name: "Đơn vị Z2", zone: zone2) }
+
+      let!(:cp_unit_a) do
+        create(:contact_point, :residential, unit: unit_a, name: "CP Đơn vị A",
+               initial_personnel_counts: { ranks.last.id => 1 })
+      end
+      let!(:cp_unit_z2) do
+        create(:contact_point, :residential, unit: unit_z2, name: "CP Đơn vị Z2",
+               initial_personnel_counts: { ranks.last.id => 1 })
+      end
+      let!(:cp_zone_direct) do
+        create(:contact_point, :zone_residential, zone: zone, name: "CP Khu vực trực tiếp",
+               initial_personnel_counts: { ranks.last.id => 1 })
+      end
+
+      it "chọn zone → hiện đầu mối thuộc zone trực tiếp + đầu mối đơn vị trong zone" do
+        get contact_points_path(zone_id: zone.id)
+        expect(response.body).to include("CP Đơn vị A", "CP Khu vực trực tiếp")
+        expect(response.body).not_to include("CP Đơn vị Z2")
+      end
+
+      it "chọn unit → chỉ hiện đầu mối thuộc unit đó" do
+        get contact_points_path(unit_id: unit_a.id)
+        expect(response.body).to include("CP Đơn vị A")
+        expect(response.body).not_to include("CP Đơn vị Z2", "CP Khu vực trực tiếp")
+      end
+
+      it "không chọn filter → hiện tất cả" do
+        get contact_points_path
+        expect(response.body).to include("CP Đơn vị A", "CP Đơn vị Z2", "CP Khu vực trực tiếp")
+      end
+    end
   end
 
   describe "POST /contact_points (T33)" do

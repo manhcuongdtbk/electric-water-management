@@ -8,14 +8,22 @@ class BillingController < ApplicationController
     @period = resolve_period
     return redirect_to pricing_path, alert: t("flash.no_periods_yet") unless @period
 
-    @zone, @unit = resolve_filter
-    @show_zone_column = @zone.nil?
-    @show_unit_column = @unit.nil?
-
     @ranks = @period.ranks.order(:position).to_a
     @base_scope = Billing::Query.base_scope(@period, current_ability)
-    scope = Billing::Query.apply_filters(@base_scope, zone: @zone, unit: @unit, q: params[:q])
+
+    if current_user.system_admin?
+      scope = apply_sa_zone_unit_filter_with_direct_zone(@base_scope,
+                zone_scope: Zone.with_discarded, unit_scope: Unit.with_discarded)
+    else
+      @zone, @unit = resolve_current_user_zone_unit
+      scope = Billing::Query.apply_zone_unit_filter(@base_scope, zone: @zone, unit: @unit)
+      @available_zones = [current_user.unit&.zone].compact
+    end
+    scope = Billing::Query.apply_search(scope, q: params[:q])
                           .order(Arel.sql(Billing::Query::SORT_ORDER))
+
+    @show_zone_column = @zone.nil?
+    @show_unit_column = @unit.nil?
     @total_count = scope.count
     @summary = Billing::Query.summary(scope, period: @period)
     @warnings = collect_warnings_for_zones(zones_in_scope(@period))
@@ -24,10 +32,6 @@ class BillingController < ApplicationController
       format.html do
         @pagy, @calculations = pagy(scope, items: (params[:per_page] || 50).to_i)
         preload_personnel(@calculations)
-        set_sa_available_filters_from(@base_scope,
-          zone_id_sql: "COALESCE(units.zone_id, contact_points.zone_id)",
-          unit_id_sql: "contact_points.unit_id")
-        @available_zones ||= [current_user.unit&.zone].compact
       end
       format.xlsx do
         @calculations = scope.to_a
@@ -72,13 +76,7 @@ class BillingController < ApplicationController
     if current_user.system_admin?
       resolve_zone_unit_filter(zone_scope: Zone.with_discarded, unit_scope: Unit.with_discarded)
     else
-      unit = current_user.unit
-      zone = unit&.zone
-      if zone && Zone.exists?(id: zone.id, manager_unit_id: unit.id)
-        [zone, nil]
-      else
-        [zone, unit]
-      end
+      resolve_current_user_zone_unit
     end
   end
 
