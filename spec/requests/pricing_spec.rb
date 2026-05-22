@@ -29,11 +29,12 @@ RSpec.describe "Pricing", type: :request do
     end
     let(:html) { Nokogiri::HTML(response.body) }
 
-    it "hiển thị phân trang khi có hơn 10 kỳ" do
+    it "hiển thị phân trang khi có hơn 25 kỳ" do
+      (1..12).each { |m| create(:period, year: 2024, month: m, closed: true, unit_price: 1800) }
       get pricing_path
       expect(response).to have_http_status(:ok)
       rows = html.css("table tbody tr")
-      expect(rows.size).to eq(10)
+      expect(rows.size).to eq(25)
       expect(html.css("nav.pagy").size).to be >= 1
     end
 
