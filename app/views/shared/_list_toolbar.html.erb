@@ -12,15 +12,12 @@
   #   search_placeholder:   String — placeholder ô tìm kiếm (mặc định: "Tìm kiếm...").
   #   extra_hidden:         Hash — hidden fields tĩnh giữ lại khi submit (vd: {type: @filter_type}).
   #   add_link:             HTML — link_to nút thêm mới (nil nếu không có quyền).
-  #   filters:              Array of Hash — dropdown filters. Mỗi item:
-  #                           { label: "Khu vực:", param: :zone_id,
-  #                             options: [["Khu vực 1", 1], ...], selected: @selected_zone_id,
-  #                             children: [:unit_id] }
+  #   filters:              Array of Hash — dropdown hoặc date filters. Mỗi item:
+  #                           Dropdown: { label:, param:, options:, selected:, children:, blank_text: }
+  #                           Date:     { label:, param:, type: :date, value: }
   #                           blank_text: (tùy chọn) text option đầu tiên (mặc định "Tất cả").
-  #                             Dùng cho trang chọn entity thay vì filter (vd: "— Chọn đơn vị —").
-  #                           children: (tùy chọn) Array of param names — khi đổi filter này,
-  #                             reset các filter con về "Tất cả" trước khi submit (cascade).
-  #                           Khi không truyền filters (mặc định []), không render dropdown nào.
+  #                           children: (tùy chọn) Array of param names — cascade reset.
+  #                           Khi không truyền filters (mặc định []), không render filter nào.
   #   per_page_storage_key: String — localStorage key cho per_page (mặc định "list_per_page").
   #                           Mỗi trang nên truyền key riêng để per_page không ảnh hưởng trang khác.
   #   show_search:          Boolean — hiển thị ô tìm kiếm (mặc định true).
@@ -81,13 +78,19 @@
       %>
       <div class="flex items-center gap-2">
         <label class="text-xs text-gray-600 whitespace-nowrap"><%= filter[:label] %></label>
-        <%= select_tag filter[:param],
-              options_for_select(
-                [[filter[:blank_text] || "Tất cả", ""]] + filter[:options],
-                filter[:selected]
-              ),
-              data: select_data,
-              class: "rounded border border-gray-300 text-sm px-2 py-1" %>
+        <% if filter[:type] == :date %>
+          <%= date_field_tag filter[:param], filter[:value],
+                data: { action: "change->auto-submit#submit" },
+                class: "rounded border border-gray-300 text-sm px-2 py-1" %>
+        <% else %>
+          <%= select_tag filter[:param],
+                options_for_select(
+                  [[filter[:blank_text] || "Tất cả", ""]] + filter[:options],
+                  filter[:selected]
+                ),
+                data: select_data,
+                class: "rounded border border-gray-300 text-sm px-2 py-1" %>
+        <% end %>
       </div>
     <% end %>
 

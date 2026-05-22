@@ -8,7 +8,7 @@ class AuditLogsController < ApplicationController
 
   EVENTS = %w[create update destroy].freeze
 
-  PER_PAGE_OPTIONS = [10, 25, 50, 100].freeze
+  include ListSortable
 
   def index
     authorize!(:read, PaperTrail::Version)
@@ -16,7 +16,7 @@ class AuditLogsController < ApplicationController
     scope = apply_filters(scope)
     scope = scope.order(created_at: :desc)
     @total_count = scope.count
-    @pagy, @versions = pagy(scope, limit: per_page_limit)
+    @pagy, @versions = pagy_with_per_page(scope)
     @audited_models = AUDITED_MODELS
     @events = EVENTS
     @users = User.order(:username).pluck(:username, :id)
@@ -34,11 +34,6 @@ class AuditLogsController < ApplicationController
   end
 
   private
-
-  def per_page_limit
-    pp = params[:per_page].to_i
-    PER_PAGE_OPTIONS.include?(pp) ? pp : 25
-  end
 
   def apply_filters(scope)
     if (event = params[:event]).present? && EVENTS.include?(event)
@@ -66,14 +61,9 @@ class AuditLogsController < ApplicationController
 
   def parse_date(value)
     return nil if value.blank?
-    # Ưu tiên format Việt Nam dd/mm/yyyy. Fallback ISO yyyy-mm-dd.
-    Date.strptime(value, "%d/%m/%Y")
+    Date.parse(value)
   rescue ArgumentError, TypeError
-    begin
-      Date.strptime(value, "%Y-%m-%d")
-    rescue ArgumentError, TypeError
-      nil
-    end
+    nil
   end
 
   def decode_yaml(yaml_str)
