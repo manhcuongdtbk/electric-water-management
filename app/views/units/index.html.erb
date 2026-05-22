@@ -31,7 +31,8 @@
               extra_params: { q: params[:q], per_page: params[:per_page], zone_id: params[:zone_id] } %>
         <%= sortable_header :is_manager, "Đơn vị quản lý khu vực",
               current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: { q: params[:q], per_page: params[:per_page], zone_id: params[:zone_id] } %>
+              extra_params: { q: params[:q], per_page: params[:per_page], zone_id: params[:zone_id] },
+              align: :center %>
         <%= list_header t("common.list.actions"), align: :right %>
       </tr>
     </thead>
