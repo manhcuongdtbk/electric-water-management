@@ -43,11 +43,11 @@
         <tr class="hover:bg-gray-50 transition-colors">
           <td class="px-4 py-2 text-sm font-medium text-gray-900"><%= u.name %></td>
           <td class="px-4 py-2 text-sm text-gray-600"><%= u.zone.name %></td>
-          <td class="px-4 py-2 text-sm text-gray-600">
+          <td class="px-4 py-2 text-sm text-center text-gray-600">
             <% if u.managed_zones.any? %>
-              <span class="text-green-700 bg-green-100 px-2 py-0.5 rounded text-xs">Có</span>
+              <span class="text-green-600">✓</span>
             <% else %>
-              <span class="text-gray-500">Không</span>
+              <span class="text-gray-400">—</span>
             <% end %>
           </td>
           <td class="px-4 py-2 text-sm text-right space-x-2">

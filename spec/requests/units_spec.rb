@@ -33,13 +33,12 @@ RSpec.describe "Units", type: :request do
       expect(manager_header).not_to include("Là")
     end
 
-    it "cột quản lý khu vực hiển thị Có/Không" do
+    it "cột quản lý khu vực hiển thị ✓ / —" do
       create(:unit, zone: zone, name: "Đơn vị không quản lý")
       get units_path
       body = response.body
-      expect(body).to include(">Có<")
-      expect(body).to include("Không")
-      expect(body).not_to include("Có (")
+      expect(body).to include("✓")
+      expect(body).to include("—")
     end
 
     it "lọc theo khu vực" do
