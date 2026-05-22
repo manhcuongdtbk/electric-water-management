@@ -5,25 +5,28 @@
 #   - Chọn đơn vị mà chưa chọn khu vực → tự chọn khu vực của đơn vị.
 #   - Đổi khu vực → reset đơn vị (xử lý bên client bằng reset-child-select Stimulus controller).
 #   - Đổi đơn vị sang "Tất cả" → giữ khu vực.
+#   - Kỳ cũ mở lại → tự dùng with_discarded để hiện zone/unit đã xóa.
 #
-# Sử dụng cơ bản (resolve + available):
-#   include ZoneUnitFilterable
-#   @zone, @unit = resolve_zone_unit_filter
-#   @available_zones = available_zones_for_filter(zone_ids: [...])
-#   @available_units = available_units_for_filter(@zone, unit_ids: [...])
-#
-# Sử dụng nhanh (SA-only filter cho scope có unit_id):
-#   scope = apply_sa_zone_unit_filter(scope)
-#   # Tự set @zone, @unit, @available_zones, @available_units nếu SA.
-#   # Non-SA: trả scope không đổi.
+# Sử dụng nhanh:
+#   scope = apply_sa_zone_unit_filter(scope)  # zone+unit cascade
+#   scope = apply_sa_zone_filter(scope)       # zone-only
 module ZoneUnitFilterable
   extend ActiveSupport::Concern
 
   private
 
+  # Scope tự động: .kept khi kỳ bình thường, .with_discarded khi kỳ cũ mở lại.
+  def zone_filter_scope
+    respond_to?(:reopened_old_period?, true) && reopened_old_period? ? Zone.with_discarded : Zone.kept
+  end
+
+  def unit_filter_scope
+    respond_to?(:reopened_old_period?, true) && reopened_old_period? ? Unit.with_discarded : Unit.kept
+  end
+
   # Resolve zone và unit từ params.
   # Nếu unit được chọn mà zone chưa chọn → tự set zone = unit.zone.
-  def resolve_zone_unit_filter(zone_scope: Zone.kept, unit_scope: Unit.kept)
+  def resolve_zone_unit_filter(zone_scope: zone_filter_scope, unit_scope: unit_filter_scope)
     zone = params[:zone_id].present? ? zone_scope.find_by(id: params[:zone_id]) : nil
     unit = params[:unit_id].present? ? unit_scope.find_by(id: params[:unit_id]) : nil
     zone ||= unit&.zone if unit
@@ -33,12 +36,8 @@ module ZoneUnitFilterable
   # SA-only: resolve zone/unit, compute available dropdowns, filter scope.
   # Non-SA: trả scope không đổi.
   #
-  # Dùng cho scope có cột unit_id (groups, blocks, users, pump_allocations, units).
-  # Contact_points override vì zone filter phức tạp hơn (zone_id trực tiếp + qua unit).
-  #
-  # Options:
-  #   zone_column: SQL expression cho zone filter (mặc định "units.zone_id")
-  #   unit_id_column: cột unit_id trên bảng chính (mặc định :unit_id)
+  # Dùng cho scope có cột unit_id (groups, blocks, users).
+  # Contact_points override vì zone filter phức tạp hơn.
   def apply_sa_zone_unit_filter(scope, zone_column: "units.zone_id", unit_id_column: :unit_id)
     return scope unless current_user.system_admin?
 
@@ -56,30 +55,44 @@ module ZoneUnitFilterable
   # Non-SA: trả scope không đổi.
   #
   # Dùng cho scope có cột zone_id trực tiếp (units, pump_allocations).
-  # Không có unit filter — chỉ zone dropdown đơn.
   def apply_sa_zone_filter(scope, zone_id_column: :zone_id)
     return scope unless current_user.system_admin?
 
-    @zone = params[:zone_id].present? ? Zone.kept.find_by(id: params[:zone_id]) : nil
+    zs = zone_filter_scope
+    @zone = params[:zone_id].present? ? zs.find_by(id: params[:zone_id]) : nil
     @available_zones = available_zones_for_filter(
+      zone_scope: zs,
       zone_ids: scope.unscope(:order).distinct.pluck(zone_id_column).compact
     )
     scope = scope.where(zone_id_column => @zone.id) if @zone
     scope
   end
 
+  # SA-only: derive available zones/units từ một data scope bất kỳ.
+  # Dùng cho trang xem data lịch sử (billing) hoặc trang không dùng apply_sa_zone_filter.
+  #
+  # data_scope: scope chứa data cần derive (vd: Billing::Query.base_scope)
+  # zone_id_sql: SQL expression cho zone_id (mặc định "zone_id")
+  # unit_id_sql: SQL expression cho unit_id (mặc định "unit_id")
+  def set_sa_available_filters_from(data_scope, zone_id_sql: "zone_id", unit_id_sql: "unit_id")
+    return unless current_user.system_admin?
+
+    zone_ids = data_scope.unscope(:order).pluck(Arel.sql(zone_id_sql)).compact.uniq
+    @available_zones = available_zones_for_filter(zone_ids: zone_ids)
+
+    unit_ids = data_scope.unscope(:order).pluck(Arel.sql(unit_id_sql)).compact.uniq
+    @available_units = available_units_for_filter(@zone, unit_ids: unit_ids)
+  end
+
   # Danh sách khu vực cho dropdown filter.
-  # Có thể giới hạn bằng zone_ids (chỉ khu vực có data trong scope).
-  def available_zones_for_filter(zone_scope: Zone.kept, zone_ids: nil)
+  def available_zones_for_filter(zone_scope: zone_filter_scope, zone_ids: nil)
     scope = zone_scope.order(:name)
     scope = scope.where(id: zone_ids) if zone_ids
     scope
   end
 
   # Danh sách đơn vị cho dropdown filter.
-  # Nếu zone được chọn → chỉ hiện đơn vị thuộc zone đó.
-  # Có thể giới hạn bằng unit_ids (chỉ đơn vị có data trong scope).
-  def available_units_for_filter(zone, unit_scope: Unit.kept, unit_ids: nil)
+  def available_units_for_filter(zone, unit_scope: unit_filter_scope, unit_ids: nil)
     scope = unit_scope.order(:name)
     scope = scope.where(zone_id: zone.id) if zone
     scope = scope.where(id: unit_ids) if unit_ids
