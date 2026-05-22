@@ -1,0 +1,34 @@
+require "rails_helper"
+
+RSpec.describe "Zones", type: :system do
+  let!(:period) { create(:period, closed: false) }
+  let!(:zone1) { Zone.create!(name: "Khu vực Alpha", main_meters_attributes: [{ name: "CT-A" }]) }
+  let!(:zone2) { Zone.create!(name: "Khu vực Beta", main_meters_attributes: [{ name: "CT-B" }]) }
+  let(:system_admin) { create(:user, :system_admin) }
+
+  before { sign_in system_admin }
+
+  let(:path) { zones_path }
+  def path_with_params(**params) = zones_path(**params)
+  def create_extra_data = 12.times { |i| Zone.create!(name: "Khu vực Extra #{i}", main_meters_attributes: [{ name: "CT-#{i}" }]) }
+
+  it_behaves_like "per_page auto-submit behavior"
+
+  it "tìm kiếm theo tên khu vực" do
+    visit zones_path
+    fill_in "q", with: "Alpha"
+    click_on I18n.t("common.actions.search")
+    expect(page).to have_content("Khu vực Alpha")
+    expect(page).not_to have_content("Khu vực Beta")
+  end
+
+  it "confirm xóa zone" do
+    zone_empty = Zone.create!(name: "Khu vực trống", main_meters_attributes: [{ name: "CT-X" }])
+    visit zones_path
+    accept_confirm(/Khu vực trống/) do
+      within("tr", text: "Khu vực trống") { click_on I18n.t("common.actions.destroy") }
+    end
+    expect(page).to have_current_path(zones_path)
+    expect(page).not_to have_css("table tbody tr", text: "Khu vực trống")
+  end
+end
