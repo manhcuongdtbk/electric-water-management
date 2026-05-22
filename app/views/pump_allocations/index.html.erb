@@ -8,54 +8,16 @@
       class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700") : nil
 %>
 
-<div class="bg-white border border-gray-200 rounded-lg p-3 mb-3 flex items-center justify-between gap-3 flex-wrap">
-  <div class="flex items-center gap-3 flex-wrap">
-    <%= form_with url: pump_allocations_path, method: :get, local: true, class: "flex items-center gap-2" do %>
-      <%= hidden_field_tag :per_page, params[:per_page] if params[:per_page].present? %>
-      <%= hidden_field_tag :zone_id, @selected_zone_id if @selected_zone_id.present? %>
-      <%= text_field_tag :q, params[:q],
-            placeholder: "Tìm theo tên đối tượng...",
-            class: "rounded border border-gray-300 text-sm px-3 py-1.5 w-64" %>
-      <%= submit_tag t("common.actions.search"),
-            class: "px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded cursor-pointer" %>
-      <% if params[:q].present? || @selected_zone_id.present? %>
-        <%= link_to t("common.list.clear_filter"), pump_allocations_path,
-              class: "text-sm text-gray-600 hover:text-gray-800 underline" %>
-      <% end %>
-    <% end %>
-
-    <%= form_with url: pump_allocations_path, method: :get, local: true, class: "flex items-center gap-2" do %>
-      <%= hidden_field_tag :q, params[:q] if params[:q].present? %>
-      <%= hidden_field_tag :per_page, params[:per_page] if params[:per_page].present? %>
-      <label class="text-xs text-gray-600 whitespace-nowrap">Khu vực:</label>
-      <%= select_tag :zone_id,
-            options_for_select(
-              [["Tất cả", ""]] + @zones.pluck(:name, :id),
-              @selected_zone_id
-            ),
-            onchange: "this.form.requestSubmit()",
-            class: "rounded border border-gray-300 text-sm px-2 py-1" %>
-    <% end %>
-
-    <%= form_with url: pump_allocations_path, method: :get, local: true, class: "flex items-center gap-2" do %>
-      <%= hidden_field_tag :q, params[:q] if params[:q].present? %>
-      <%= hidden_field_tag :zone_id, @selected_zone_id if @selected_zone_id.present? %>
-      <label class="text-xs text-gray-600 whitespace-nowrap"><%= t("common.list.per_page") %></label>
-      <%= select_tag :per_page,
-            options_for_select([10, 25, 50, 100].map { |n| [n, n] }, (params[:per_page].presence || 25).to_i),
-            data: { controller: "per-page", action: "change->per-page#submit",
-                    per_page_storage_key_value: "pump_allocations_per_page" },
-            class: "rounded border border-gray-300 text-sm px-2 py-1" %>
-    <% end %>
-  </div>
-
-  <div class="flex items-center gap-3">
-    <span class="text-sm text-gray-600"><%= list_total(@total_count) %></span>
-    <% if add_link %>
-      <%= add_link %>
-    <% end %>
-  </div>
-</div>
+<%= render "shared/list_toolbar",
+      url: pump_allocations_path,
+      search_placeholder: "Tìm theo tên đối tượng...",
+      total_count: @total_count,
+      add_link: add_link,
+      per_page_storage_key: "pump_allocations_per_page",
+      filters: [
+        { label: "Khu vực:", param: :zone_id,
+          options: @zones.pluck(:name, :id), selected: @selected_zone_id }
+      ] %>
 
 <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
   <table class="min-w-full divide-y divide-gray-200">
