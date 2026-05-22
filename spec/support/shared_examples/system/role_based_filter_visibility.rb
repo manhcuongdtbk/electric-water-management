@@ -2,11 +2,12 @@
 # Dùng Capybara API — chỉ dùng trong type: :system.
 #
 # Verify:
-#   - system_admin thấy dropdown zone/unit
-#   - Các role khác (UA-ZM, UA, CMD-ZM, CMD) không thấy dropdown
+#   - system_admin thấy dropdown filters
+#   - Các role khác (UA-ZM, UA, CMD-ZM, CMD) không thấy dropdown filters
 #
 # Yêu cầu trong caller:
-#   path:   → URL trang index
+#   path:              → URL trang index
+#   filter_select_ids: → Array HTML ids của selects cần check (vd: ["zone_id"] hoặc ["zone_id", "unit_id"])
 RSpec.shared_examples "role-based filter visibility" do
   context "as system_admin" do
     before do
@@ -14,10 +15,11 @@ RSpec.shared_examples "role-based filter visibility" do
       sign_in user
     end
 
-    it "hiển thị dropdown khu vực và đơn vị" do
+    it "hiển thị dropdown filters" do
       visit path
-      expect(page).to have_select("zone_id")
-      expect(page).to have_select("unit_id")
+      filter_select_ids.each do |select_id|
+        expect(page).to have_select(select_id)
+      end
     end
   end
 
@@ -30,10 +32,11 @@ RSpec.shared_examples "role-based filter visibility" do
         sign_in user
       end
 
-      it "không hiển thị dropdown khu vực và đơn vị" do
+      it "không hiển thị dropdown filters" do
         visit path
-        expect(page).not_to have_select("zone_id")
-        expect(page).not_to have_select("unit_id")
+        filter_select_ids.each do |select_id|
+          expect(page).not_to have_select(select_id)
+        end
       end
     end
 
@@ -46,10 +49,11 @@ RSpec.shared_examples "role-based filter visibility" do
         sign_in user
       end
 
-      it "không hiển thị dropdown khu vực và đơn vị" do
+      it "không hiển thị dropdown filters" do
         visit path
-        expect(page).not_to have_select("zone_id")
-        expect(page).not_to have_select("unit_id")
+        filter_select_ids.each do |select_id|
+          expect(page).not_to have_select(select_id)
+        end
       end
     end
   end

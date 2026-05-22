@@ -8,16 +8,23 @@
       class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700") : nil
 %>
 
+<%
+  toolbar_filters = []
+  if current_user.role == "system_admin"
+    toolbar_filters = [
+      { label: "Khu vực:", param: :zone_id,
+        options: @zones.pluck(:name, :id), selected: @selected_zone_id }
+    ]
+  end
+%>
+
 <%= render "shared/list_toolbar",
       url: pump_allocations_path,
       search_placeholder: "Tìm theo tên đối tượng...",
       total_count: @total_count,
       add_link: add_link,
       per_page_storage_key: "pump_allocations_per_page",
-      filters: [
-        { label: "Khu vực:", param: :zone_id,
-          options: @zones.pluck(:name, :id), selected: @selected_zone_id }
-      ] %>
+      filters: toolbar_filters %>
 
 <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
   <table class="min-w-full divide-y divide-gray-200">

@@ -24,6 +24,7 @@ RSpec.describe "Units filter", type: :system do
   # unit1 là manager → confirm có cảnh báo quản lý khu vực
   let(:deletable_name) { unit1.name }
   let(:confirm_message_pattern) { /quản lý khu vực/ }
+  let(:filter_select_ids) { %w[zone_id] }
 
   it_behaves_like "search behavior"
   it_behaves_like "single filter behavior"
@@ -31,4 +32,5 @@ RSpec.describe "Units filter", type: :system do
   it_behaves_like "sort preserved behavior"
   it_behaves_like "per_page auto-submit behavior"
   it_behaves_like "confirm delete behavior"
+  it_behaves_like "role-based filter visibility"
 end

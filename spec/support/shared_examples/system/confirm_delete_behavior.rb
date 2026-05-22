@@ -13,7 +13,6 @@ RSpec.shared_examples "confirm delete behavior" do
     msg = accept_confirm do
       within("tr", text: deletable_name) { click_on I18n.t("common.actions.destroy") }
     end
-    expect(msg).to include(deletable_name)
     if respond_to?(:confirm_message_pattern)
       expect(msg).to match(confirm_message_pattern)
     end

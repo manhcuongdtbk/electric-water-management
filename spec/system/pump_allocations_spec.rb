@@ -23,9 +23,14 @@ RSpec.describe "Pump allocations filter", type: :system do
   def path_with_params(**params) = pump_allocations_path(**params)
   def create_extra_data = 12.times { |i| create(:pump_allocation, zone: zone1, period: period, unit: create(:unit, zone: zone1, name: "Unit Extra #{i}"), contact_point: nil) }
 
+  let(:deletable_name) { alloc1.unit.name }
+  let(:filter_select_ids) { %w[zone_id] }
+
   it_behaves_like "search behavior"
   it_behaves_like "single filter behavior"
   it_behaves_like "search and filter combination behavior"
   it_behaves_like "sort preserved behavior"
   it_behaves_like "per_page auto-submit behavior"
+  it_behaves_like "confirm delete behavior"
+  it_behaves_like "role-based filter visibility"
 end

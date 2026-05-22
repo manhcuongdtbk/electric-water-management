@@ -23,11 +23,15 @@ RSpec.describe "Groups filter cascade", type: :system do
   def path_with_params(**params) = groups_path(**params)
   def create_extra_data = 12.times { |i| create(:group, unit: unit1, name: "Nhóm Extra #{i}") }
 
+  let(:deletable_name) { group1.name }
+  let(:filter_select_ids) { %w[zone_id unit_id] }
+
   it_behaves_like "search behavior"
   it_behaves_like "single filter behavior"
   it_behaves_like "search and filter combination behavior"
   it_behaves_like "sort preserved behavior"
   it_behaves_like "zone-unit cascade filter behavior"
   it_behaves_like "per_page auto-submit behavior"
+  it_behaves_like "confirm delete behavior"
   it_behaves_like "role-based filter visibility"
 end
