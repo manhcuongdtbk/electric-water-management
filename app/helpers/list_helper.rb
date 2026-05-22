@@ -16,10 +16,10 @@ module ListHelper
     current = current_sort.to_s == column.to_s
     if current && current_dir.to_s.downcase == "desc"
       url_params = extra_params.compact.except(:sort, :dir)
-      arrow = "⇓"
+      arrow = "↓"
     elsif current
       url_params = extra_params.compact.merge(sort: column, dir: "desc")
-      arrow = "⇑"
+      arrow = "↑"
     else
       url_params = extra_params.compact.merge(sort: column, dir: "asc")
       arrow = "⇅"

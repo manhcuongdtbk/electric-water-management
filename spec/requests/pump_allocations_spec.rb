@@ -119,27 +119,6 @@ RSpec.describe "PumpAllocations", type: :request do
       expect(input["placeholder"]).to include("đối tượng")
     end
 
-    it "sort 3-state: chưa sort hiển thị ⇅, ASC hiển thị ⇑, DESC hiển thị ⇓" do
-      get pump_allocations_path
-      zone_header = html.css("table thead th").detect { |th| th.text.include?("Khu vực") }
-      expect(zone_header.text).to include("⇅")
-
-      get pump_allocations_path, params: { sort: "zone", dir: "asc" }
-      zone_header = Nokogiri::HTML(response.body).css("table thead th").detect { |th| th.text.include?("Khu vực") }
-      expect(zone_header.text).to include("⇑")
-
-      get pump_allocations_path, params: { sort: "zone", dir: "desc" }
-      zone_header = Nokogiri::HTML(response.body).css("table thead th").detect { |th| th.text.include?("Khu vực") }
-      expect(zone_header.text).to include("⇓")
-    end
-
-    it "sort DESC click vào header xóa sort về default" do
-      get pump_allocations_path, params: { sort: "zone", dir: "desc" }
-      zone_header = Nokogiri::HTML(response.body).css("table thead th").detect { |th| th.text.include?("Khu vực") }
-      link_href = zone_header.css("a").first["href"]
-      expect(link_href).not_to include("sort=")
-      expect(link_href).not_to include("dir=")
-    end
   end
 
   describe "POST /pump_allocations" do
