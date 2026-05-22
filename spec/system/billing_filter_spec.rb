@@ -6,15 +6,22 @@ RSpec.describe "Billing filter cascade", type: :system do
 
   before { sign_in system_admin }
 
-  it "chọn khu vực → bảng lọc đúng, dropdown đơn vị chỉ hiện đơn vị thuộc khu vực" do
-    visit billing_path
-    expect(page).to have_content("Tất cả khu vực")
+  # Shared examples cần zone1/zone2/unit1/unit2 — billing chỉ có 1 zone nên
+  # test cascade riêng. Dùng shared example cho phần auto-select zone từ unit.
+  let(:path) { billing_path }
+  let(:zone1) { sample.zone }
+  let(:zone2) { sample.zone } # billing test data chỉ có 1 zone
+  let(:unit1) { sample.unit_a }
+  let(:unit2) { sample.unit_b }
+  let(:zone_blank_text) { "Tất cả khu vực" }
+  let(:unit_blank_text) { "Tất cả đơn vị" }
+  def path_with_params(**params) = billing_path(**params)
 
+  it "chọn khu vực → dropdown đơn vị hiện đơn vị thuộc khu vực" do
+    visit billing_path
     select sample.zone.name, from: "zone_id"
     expect(page).to have_select("zone_id", selected: sample.zone.name)
-    unit_options = find("select#unit_id").all("option").map(&:text)
-    expect(unit_options).to include("Tất cả đơn vị")
-    expect(unit_options).to include(sample.unit_a.name)
+    expect(page).to have_select("unit_id", with_options: [sample.unit_a.name])
   end
 
   it "đổi khu vực → reset đơn vị về Tất cả" do

@@ -10,32 +10,10 @@ RSpec.describe "Units filter", type: :system do
 
   before { sign_in system_admin }
 
-  it "chọn khu vực → bảng chỉ hiện đơn vị thuộc khu vực đó" do
-    visit units_path
-    expect(page).to have_content("Đơn vị A1")
-    expect(page).to have_content("Đơn vị B1")
+  let(:path) { units_path }
+  let(:content_zone1) { "Đơn vị A1" }
+  let(:content_zone2) { "Đơn vị B1" }
+  def path_with_params(**params) = units_path(**params)
 
-    select "Khu vực Alpha", from: "zone_id"
-    expect(page).to have_content("Đơn vị A1")
-    expect(page).not_to have_content("Đơn vị B1")
-  end
-
-  it "chọn khu vực rồi chọn Tất cả → hiện lại toàn bộ" do
-    visit units_path(zone_id: zone1.id)
-    expect(page).not_to have_content("Đơn vị B1")
-
-    select "Tất cả", from: "zone_id"
-    expect(page).to have_content("Đơn vị A1")
-    expect(page).to have_content("Đơn vị B1")
-  end
-
-  it "Xóa bộ lọc reset tất cả về mặc định" do
-    visit units_path(zone_id: zone1.id)
-    expect(page).to have_content("Xóa bộ lọc")
-
-    click_on "Xóa bộ lọc"
-    expect(page).to have_content("Đơn vị A1")
-    expect(page).to have_content("Đơn vị B1")
-    expect(find("select#zone_id").value).to eq("")
-  end
+  it_behaves_like "zone filter behavior"
 end

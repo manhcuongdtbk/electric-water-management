@@ -12,62 +12,23 @@ RSpec.describe "Groups filter cascade", type: :system do
 
   before { sign_in system_admin }
 
-  it "chọn khu vực → đơn vị chỉ hiện đơn vị thuộc khu vực, bảng lọc đúng" do
-    visit groups_path
-    expect(page).to have_content("Nhóm Alpha-1")
-    expect(page).to have_content("Nhóm Beta-1")
+  let(:path) { groups_path }
+  let(:content_zone1) { "Nhóm Alpha-1" }
+  let(:content_zone2) { "Nhóm Beta-1" }
+  def path_with_params(**params) = groups_path(**params)
 
-    select "Khu vực Alpha", from: "zone_id"
-    # auto-submit: trang tải lại với zone filter
-    expect(page).to have_content("Nhóm Alpha-1")
-    expect(page).not_to have_content("Nhóm Beta-1")
+  it_behaves_like "zone filter behavior"
+  it_behaves_like "zone-unit cascade filter behavior"
 
-    # Dropdown đơn vị chỉ chứa đơn vị thuộc khu vực Alpha
-    unit_options = find("select#unit_id").all("option").map(&:text)
-    expect(unit_options).to include("Đơn vị A1")
-    expect(unit_options).not_to include("Đơn vị B1")
-  end
-
-  it "đổi khu vực → reset đơn vị về Tất cả" do
+  it "Xóa bộ lọc reset cả zone và unit" do
     visit groups_path(zone_id: zone1.id, unit_id: unit1.id)
-    expect(find("select#unit_id").value).to eq(unit1.id.to_s)
-
-    select "Khu vực Beta", from: "zone_id"
-    # reset-child-select reset unit về "", rồi auto-submit
-    expect(page).to have_content("Nhóm Beta-1")
-    expect(find("select#unit_id").value).to eq("")
-  end
-
-  it "chọn đơn vị mà chưa chọn khu vực → khu vực tự chọn theo" do
-    visit groups_path
-    select "Đơn vị B1", from: "unit_id"
-
-    expect(page).to have_content("Nhóm Beta-1")
-    expect(page).not_to have_content("Nhóm Alpha-1")
-    expect(find("select#zone_id").value).to eq(zone2.id.to_s)
-  end
-
-  it "đổi đơn vị sang Tất cả → giữ khu vực" do
-    visit groups_path(zone_id: zone1.id, unit_id: unit1.id)
-
-    select "Tất cả", from: "unit_id"
-    expect(page).to have_content("Nhóm Alpha-1")
-    expect(find("select#zone_id").value).to eq(zone1.id.to_s)
-  end
-
-  it "Xóa bộ lọc reset tất cả về mặc định" do
-    visit groups_path(zone_id: zone1.id)
-    expect(page).to have_content("Xóa bộ lọc")
-
     click_on "Xóa bộ lọc"
-    expect(page).to have_content("Nhóm Alpha-1")
-    expect(page).to have_content("Nhóm Beta-1")
+
     expect(find("select#zone_id").value).to eq("")
     expect(find("select#unit_id").value).to eq("")
   end
 
   it "per_page auto-submit khi đổi" do
-    # Tạo thêm data để có hơn 10 nhóm
     12.times { |i| create(:group, unit: unit1, name: "Nhóm Extra #{i}") }
     visit groups_path
     expect(page).to have_css("table tbody tr", count: 14)
