@@ -22,11 +22,15 @@ RSpec.describe "Units filter", type: :system do
 
   let(:sort_column) { "name" }
 
+  let(:deletable_record) { create(:unit, zone: zone1, name: "Đơn vị xóa được") }
+  let(:deletable_name) { deletable_record.name }
+
   it_behaves_like "search behavior"
   it_behaves_like "zone filter behavior"
   it_behaves_like "search and filter combination behavior"
   it_behaves_like "sort preserved behavior"
   it_behaves_like "per_page auto-submit behavior"
+  it_behaves_like "confirm delete behavior"
 
   # --- Page-specific ---
 

@@ -18,17 +18,11 @@ RSpec.describe "Zones", type: :system do
 
   let(:sort_column) { "name" }
 
+  let(:deletable_record) { Zone.create!(name: "Khu vực trống", main_meters_attributes: [{ name: "CT-X" }]) }
+  let(:deletable_name) { deletable_record.name }
+
   it_behaves_like "search behavior"
   it_behaves_like "sort preserved behavior"
   it_behaves_like "per_page auto-submit behavior"
-
-  it "confirm xóa zone" do
-    zone_empty = Zone.create!(name: "Khu vực trống", main_meters_attributes: [{ name: "CT-X" }])
-    visit zones_path
-    accept_confirm(/Khu vực trống/) do
-      within("tr", text: "Khu vực trống") { click_on I18n.t("common.actions.destroy") }
-    end
-    expect(page).to have_current_path(zones_path)
-    expect(page).not_to have_css("table tbody tr", text: "Khu vực trống")
-  end
+  it_behaves_like "confirm delete behavior"
 end
