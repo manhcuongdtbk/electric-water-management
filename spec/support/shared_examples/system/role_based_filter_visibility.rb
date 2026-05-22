@@ -22,7 +22,7 @@ RSpec.shared_examples "role-based filter visibility" do
   end
 
   %w[unit_admin commander].each do |role|
-    context "as #{role} zone manager" do
+    context "as #{role} - zone manager" do
       before do
         zone = create(:zone)
         zone_manager_unit = create(:unit, zone: zone)
@@ -37,12 +37,12 @@ RSpec.shared_examples "role-based filter visibility" do
       end
     end
 
-    context "as #{role} không phải zone manager" do
+    context "as #{role} - non zone manager" do
       before do
         zone = create(:zone)
         create(:unit, zone: zone) # first unit = auto zone manager
-        non_zone_manager_unit = create(:unit, zone: zone)
-        user = create(:user, role.to_sym, unit: non_zone_manager_unit)
+        non_zone_manager = create(:unit, zone: zone)
+        user = create(:user, role.to_sym, unit: non_zone_manager)
         sign_in user
       end
 
