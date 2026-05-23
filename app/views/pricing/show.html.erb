@@ -70,7 +70,7 @@
         </div>
       <% else %>
         <div class="grid grid-cols-2 gap-4 text-sm">
-          <div><span class="font-medium text-gray-700">Đơn giá:</span> <%= money_to_vi(@current_period.unit_price) %> VND/kWh</div>
+          <div><span class="font-medium text-gray-700">Đơn giá:</span> <%= unit_price_to_vi(@current_period.unit_price) %> đ/kW</div>
           <div><span class="font-medium text-gray-700">Tiêu chuẩn bơm nước:</span> <%= @current_period.water_pump_standard %> kWh/người</div>
           <div><span class="font-medium text-gray-700">Tỷ lệ tiết kiệm của Bộ:</span> <%= @current_period.savings_rate %>%</div>
           <div><span class="font-medium text-gray-700">Công cộng Sư đoàn:</span> <%= @current_period.division_public_rate %>%</div>

@@ -29,6 +29,24 @@ RSpec.describe NumberHelperVi, type: :helper do
     end
   end
 
+  describe "#unit_price_to_vi" do
+    it "hiển thị đầy đủ thập phân, không làm tròn" do
+      expect(helper.unit_price_to_vi(2336.4)).to eq("2.336,4")
+    end
+
+    it "số nguyên không có phần thập phân" do
+      expect(helper.unit_price_to_vi(2336)).to eq("2.336")
+    end
+
+    it "nhiều chữ số thập phân giữ nguyên" do
+      expect(helper.unit_price_to_vi(2336.456)).to eq("2.336,456")
+    end
+
+    it "nil → chuỗi rỗng" do
+      expect(helper.unit_price_to_vi(nil)).to eq("")
+    end
+  end
+
   describe "#money_to_vi" do
     it "0 chữ số thập phân, dấu chấm nghìn, thêm đ" do
       expect(helper.money_to_vi(96578.38)).to eq("96.578 đ")
