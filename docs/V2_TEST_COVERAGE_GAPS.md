@@ -59,25 +59,25 @@
 - billing_spec: SA, UA-ZM, UA, CMD-ZM, CMD, TECH
 - contact_points_spec: SA, UA-ZM, UA, CMD-ZM, CMD, TECH
 
-**Gap — Trang chỉ test 1-2 role:**
+**Gap — đã cover bởi role_access_matrix_spec (108 tests, 18 trang × 6 role):**
 
 | Trang | SA | UA-ZM | UA | CMD-ZM | CMD | TECH | Trạng thái |
 |---|---|---|---|---|---|---|---|
-| pump_allocations | [x] | [ ] | [ ] | [ ] | [ ] | [ ] | Cần 5 role |
-| blocks | [x] | [ ] | [ ] | [ ] | [ ] | [ ] | Cần 5 role |
-| groups | [x] | [ ] | [ ] | [ ] | [ ] | [ ] | Cần 5 role |
-| zones | [x] | [ ] | [ ] | [ ] | [ ] | [ ] | Cần 5 role |
-| units | [x] | [ ] | [ ] | [ ] | [ ] | [ ] | Cần 5 role |
-| ranks | [x] | [ ] | [ ] | [ ] | [ ] | [ ] | Cần 5 role |
-| history | [x] | [ ] | [ ] | [ ] | [ ] | [x] | Cần 4 role |
-| dashboard | [x] | [x] | [ ] | [ ] | [ ] | [x] | Cần 3 role |
-| meter_entries | [x] | [ ] | [x] | [ ] | [x] | [ ] | Cần 3 role |
-| pump_entries | [x] | [x] | [ ] | [x] | [ ] | [ ] | Cần 3 role |
-| electricity_supply | [x] | [x] | [x] | [x] | [ ] | [ ] | Cần 2 role |
-| unit_config | [x] | [x] | [x] | [ ] | [x] | [ ] | Cần 2 role |
-| pricing | [x] | [ ] | [x] | [ ] | [x] | [ ] | Cần 3 role |
-| audit_logs | [x] | [ ] | [x] | [ ] | [ ] | [x] | Cần 2 role |
-| backups | [ ] | [ ] | [x] | [ ] | [ ] | [x] | Cần 2 role |
+| pump_allocations | [x] | [x] | [x] | [x] | [x] | [x] | Done |
+| blocks | [x] | [x] | [x] | [x] | [x] | [x] | Done |
+| groups | [x] | [x] | [x] | [x] | [x] | [x] | Done |
+| zones | [x] | [x] | [x] | [x] | [x] | [x] | Done |
+| units | [x] | [x] | [x] | [x] | [x] | [x] | Done |
+| ranks | [x] | [x] | [x] | [x] | [x] | [x] | Done |
+| history | [x] | [x] | [x] | [x] | [x] | [x] | Done |
+| dashboard | [x] | [x] | [x] | [x] | [x] | [x] | Done |
+| meter_entries | [x] | [x] | [x] | [x] | [x] | [x] | Done |
+| pump_entries | [x] | [x] | [x] | [x] | [x] | [x] | Done |
+| electricity_supply | [x] | [x] | [x] | [x] | [x] | [x] | Done |
+| unit_config | [x] | [x] | [x] | [x] | [x] | [x] | Done |
+| pricing | [x] | [x] | [x] | [x] | [x] | [x] | Done |
+| audit_logs | [x] | [x] | [x] | [x] | [x] | [x] | Done |
+| backups | [x] | [x] | [x] | [x] | [x] | [x] | Done |
 
 ---
 
