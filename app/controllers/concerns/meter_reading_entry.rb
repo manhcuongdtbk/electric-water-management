@@ -8,6 +8,7 @@ module MeterReadingEntry
     include PeriodGuard
     include AuthorizeResource
     include BusinessRoleRequired
+    include ZoneUnitFilterable
 
     before_action :require_open_period, only: [:update]
   end
@@ -15,6 +16,7 @@ module MeterReadingEntry
   def show
     @period = current_period
     @readings = load_readings
+    @show_zone_unit = current_user.system_admin?
   end
 
   def update
@@ -55,12 +57,16 @@ module MeterReadingEntry
 
   def load_readings
     return MeterReading.none unless @period
-    MeterReading.includes(meter: :contact_point)
+    scope = MeterReading.includes(meter: { contact_point: [{ unit: :zone }, :zone] })
                 .where(period: @period)
                 .accessible_by(current_ability)
                 .joins(meter: :contact_point)
+                .joins("LEFT JOIN units ON units.id = contact_points.unit_id")
                 .where(contact_point_type_condition)
-                .order("contact_points.name, meters.name")
+
+    scope = apply_sa_zone_unit_filter_with_direct_zone(scope)
+    scope = apply_search(scope, columns: "contact_points.name")
+    scope.order("contact_points.name, meters.name")
   end
 
   # Override in subclass: filter loại công tơ

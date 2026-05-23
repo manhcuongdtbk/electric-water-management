@@ -2,46 +2,68 @@
 
 <% can_edit = @period.present? && can?(:update, MeterReading) %>
 
+<%
+  toolbar_filters = []
+  if current_user.system_admin?
+    toolbar_filters = [
+      { label: "Khu vực:", param: :zone_id,
+        options: @available_zones&.map { |z| [z.name, z.id] } || [],
+        selected: @zone&.id, children: [:unit_id] },
+      { label: "Đơn vị:", param: :unit_id,
+        options: @available_units&.map { |u| [u.name, u.id] } || [],
+        selected: @unit&.id }
+    ]
+  end
+%>
+
+<%= render "shared/list_toolbar",
+     url: meter_entries_path,
+     total_count: @readings.size,
+     filters: toolbar_filters,
+     search_placeholder: "Tìm theo tên đầu mối...",
+     show_per_page: false %>
 
 <%= form_with url: meter_entries_path, method: :patch, local: true do %>
   <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden mb-4">
     <table class="min-w-full divide-y divide-gray-200 text-sm">
       <thead class="bg-gray-50">
         <tr>
+          <% if @show_zone_unit %>
+            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Khu vực</th>
+            <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Đơn vị</th>
+          <% end %>
           <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Đầu mối</th>
           <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Công tơ</th>
           <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Đầu kỳ</th>
           <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Cuối kỳ</th>
-          <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Sử dụng tự tính</th>
-          <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Nhập thủ công</th>
+          <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Sử dụng</th>
           <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Ghi chú</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-200">
         <% @readings.each do |r| %>
-          <tr>
+          <tr class="hover:bg-gray-50 transition-colors">
+            <% if @show_zone_unit %>
+              <td class="px-3 py-2 text-gray-600"><%= r.meter.contact_point.effective_zone&.name %></td>
+              <td class="px-3 py-2 text-gray-600"><%= r.meter.contact_point.unit&.name %></td>
+            <% end %>
             <td class="px-3 py-2 text-gray-900"><%= r.meter.contact_point.name %></td>
             <td class="px-3 py-2 text-gray-600"><%= r.meter.name %></td>
             <td class="px-3 py-2 text-right">
+              <%= hidden_field_tag "meter_readings[#{r.id}][lock_version]", r.lock_version %>
               <%= number_field_tag "meter_readings[#{r.id}][reading_start]", r.reading_start,
                   step: "0.01", disabled: !can_edit,
                   class: "w-28 rounded border border-gray-300 px-2 py-1 text-sm text-right" %>
             </td>
             <td class="px-3 py-2 text-right">
-              <%= hidden_field_tag "meter_readings[#{r.id}][lock_version]", r.lock_version %>
               <%= number_field_tag "meter_readings[#{r.id}][reading_end]", r.reading_end,
                   step: "0.01", disabled: !can_edit,
                   class: "w-28 rounded border border-gray-300 px-2 py-1 text-sm text-right" %>
             </td>
             <td class="px-3 py-2 text-right text-gray-600">
               <% if r.reading_end && r.reading_start %>
-                <%= number_to_vi([r.reading_end - r.reading_start, 0].max) %>
+                <%= number_to_vi(r.usage) %>
               <% end %>
-            </td>
-            <td class="px-3 py-2 text-right">
-              <%= number_field_tag "meter_readings[#{r.id}][manual_usage]", r.manual_usage,
-                  step: "0.01", disabled: !can_edit,
-                  class: "w-24 rounded border border-gray-300 px-2 py-1 text-sm text-right" %>
             </td>
             <td class="px-3 py-2">
               <%= text_field_tag "meter_readings[#{r.id}][manual_usage_note]", r.manual_usage_note,
