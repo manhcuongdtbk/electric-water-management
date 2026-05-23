@@ -97,5 +97,6 @@ export default class extends Controller {
 
   clearSelects(wrapper) {
     wrapper.querySelectorAll("select").forEach((s) => { s.value = "" })
+    wrapper.querySelectorAll("input[type=hidden]").forEach((h) => { h.value = "" })
   }
 }
