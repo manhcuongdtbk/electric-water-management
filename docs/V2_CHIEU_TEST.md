@@ -113,13 +113,17 @@ Chiều này ảnh hưởng:
 
 Billing và history có dropdown chọn kỳ để xem. Kỳ đang xem (context hiển thị) độc lập với kỳ đang mở (trạng thái hệ thống):
 
-| Kỳ đang mở | Kỳ đang xem | Data hiển thị | Recalculate | Dropdown zone/unit | Sửa được |
-|---|---|---|---|---|---|
-| N (mới nhất) | N | Data kỳ N | Có | `with_discarded` (billing SA luôn dùng with_discarded) | Có (billing không sửa trực tiếp, nhưng recalculate hoạt động) |
-| N (mới nhất) | N-2 (đóng) | Data kỳ N-2 | Không (kỳ N-2 đóng) | `with_discarded` (cần hiện entity đã xóa) | Không |
-| Không có | N-2 (đóng) | Data kỳ N-2 | Không | `with_discarded` | Không |
-| N-2 (cũ mở lại) | N-2 | Data kỳ N-2 | Có | `with_discarded` | Sửa data per kỳ |
-| N-2 (cũ mở lại) | N-1 (đóng) | Data kỳ N-1 | Không (kỳ N-1 đóng) | `with_discarded` | Không |
+| Kỳ đang mở | Kỳ đang xem | Data hiển thị | Recalculate | Sửa được |
+|---|---|---|---|---|
+| N (mới nhất) | N | Data kỳ N | Có | Có (recalculate hoạt động) |
+| N (mới nhất) | N-2 (đóng) | Data kỳ N-2 | Không (kỳ N-2 đóng) | Không |
+| Không có | N-2 (đóng) | Data kỳ N-2 | Không | Không |
+| N-2 (cũ mở lại) | N-2 | Data kỳ N-2 | Có | Sửa data per kỳ |
+| N-2 (cũ mở lại) | N-1 (đóng) | Data kỳ N-1 | Không (kỳ N-1 đóng) | Không |
+
+**Dropdown zone/unit (chỉ SA):** SA có dropdown chọn zone/unit trên billing. Dropdown luôn dùng `with_discarded` (không phụ thuộc kỳ đang xem) vì SA cần chọn được zone/unit đã xóa khi xem data kỳ cũ. Nếu dùng `.kept`, SA không tìm được zone đã xóa → không filter được → không xem được data kỳ cũ theo zone.
+
+**Non-SA không có dropdown zone/unit trên billing.** Zone/unit lấy từ `current_user.unit` và `current_user.unit.zone` (belongs_to association, luôn trả record kể cả discarded). Không cần `with_discarded`.
 
 Chiều này chỉ ảnh hưởng billing và history (các trang khác luôn hiện kỳ đang mở hoặc không có period selector).
 
