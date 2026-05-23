@@ -1,39 +1,35 @@
 <% if @available_periods.size < 2 %>
   <div class="bg-yellow-50 border border-yellow-300 text-yellow-900 rounded p-4">
-    Cần ít nhất 2 kỳ để so sánh. Hiện tại hệ thống chỉ có <%= @available_periods.size %> kỳ.
+    <%= t("history.compare.need_at_least_two", count: @available_periods.size) %>
   </div>
 <% else %>
-  <%= form_with url: history_path, method: :get, local: true,
-        class: "flex flex-wrap gap-4 items-end mb-4",
-        data: { controller: "auto-submit" } do %>
-    <%= hidden_field_tag :mode, "compare" %>
-    <div>
-      <label class="block text-xs text-gray-600 mb-1">Kỳ A</label>
-      <%= select_tag :period_a,
-            options_from_collection_for_select(@available_periods, :id,
-                                                ->(p) { "Tháng #{p.month}/#{p.year}" }, @period_a&.id),
-            include_blank: "-- Chọn --",
-            data: { action: "change->auto-submit#submit" },
-            class: "rounded border border-gray-300 text-sm" %>
-    </div>
-    <div>
-      <label class="block text-xs text-gray-600 mb-1">Kỳ B</label>
-      <%= select_tag :period_b,
-            options_from_collection_for_select(@available_periods, :id,
-                                                ->(p) { "Tháng #{p.month}/#{p.year}" }, @period_b&.id),
-            include_blank: "-- Chọn --",
-            data: { action: "change->auto-submit#submit" },
-            class: "rounded border border-gray-300 text-sm" %>
-    </div>
-  <% end %>
+  <%
+    period_options = @available_periods.map { |p| [period_label(p), p.id] }
+    toolbar_filters = [
+      { label: t("history.compare.period_a"), param: :period_a,
+        options: period_options, selected: @period_a&.id,
+        blank_text: "-- #{t('history.compare.select')} --" },
+      { label: t("history.compare.period_b"), param: :period_b,
+        options: period_options, selected: @period_b&.id,
+        blank_text: "-- #{t('history.compare.select')} --" }
+    ]
+  %>
+  <%= render "shared/list_toolbar",
+       url: history_path,
+       total_count: @comparison&.size || 0,
+       filters: toolbar_filters,
+       extra_hidden: { mode: "compare" },
+       show_search: false,
+       show_per_page: false,
+       show_total: @comparison.present? %>
 
   <% if @comparison.nil? %>
     <div class="bg-gray-50 border border-gray-200 rounded p-4 text-gray-600">
-      Vui lòng chọn cả 2 kỳ để so sánh.
+      <%= t("history.compare.select_both") %>
     </div>
   <% elsif @comparison.empty? %>
     <div class="bg-gray-50 border border-gray-200 rounded p-4 text-gray-600">
-      Không có dữ liệu để so sánh.
+      <%= t("history.compare.no_data") %>
     </div>
   <% else %>
     <%
