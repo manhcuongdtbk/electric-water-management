@@ -198,3 +198,27 @@
 
 ### 23/05/2026
 - Rà soát ban đầu: xác định gap cho 12 chiều.
+
+---
+
+## Design issues phát hiện qua audit
+
+### Ability cấp read model thừa → vô tình mở page access
+
+**Vấn đề:** Ability cho UA/CMD `can :read, Zone` và `can :read, Unit` để hỗ trợ data access (form dropdown, association). Nhưng vô tình cho phép truy cập /zones và /units page qua direct URL (accessible_by trả data → controller render 200).
+
+**Thực tế:** UA-ZM/UA/CMD-ZM/CMD không bao giờ truy cập Zone/Unit qua `accessible_by`. Tất cả đều qua association (`current_user.unit.zone`) hoặc direct query (`Zone.kept.where(manager_unit_id: ...)`).
+
+**Ảnh hưởng:** Các trang sau cho phép truy cập khi không nên:
+
+| Trang | Role không nên access | Hiện tại | Đúng |
+|---|---|---|---|
+| /zones | UA, CMD (non-ZM), UA-ZM, CMD-ZM | 200 (trống hoặc read-only) | Redirect |
+| /units | UA-ZM, UA, CMD-ZM, CMD | 200 (chỉ đơn vị mình) | Redirect |
+| /pricing | UA-ZM, UA, CMD-ZM, CMD | 200 (read-only) | Redirect |
+| /users | UA-ZM, UA, CMD-ZM, CMD | 200 (trống) | Redirect |
+| /pump_allocations | UA, CMD (non-ZM) | 200 (trống) | Redirect |
+
+**Hướng fix:** Bỏ `can :read, Zone/Unit` khỏi unit_admin/commander Ability (không ảnh hưởng nghiệp vụ vì không chỗ nào dùng accessible_by cho Zone/Unit). Hoặc thêm page-level authorize! vào controller.
+
+**Trạng thái:** Ghi nhận, chưa fix.
