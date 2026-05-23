@@ -41,6 +41,47 @@ RSpec.describe "History", type: :request do
         expect(response).to have_http_status(:ok)
       end
 
+      it "bảng compare có merge Khối + Nhóm (giống billing)" do
+        get history_path(mode: "compare",
+                         period_a: sample.period.id,
+                         period_b: sample.period.id)
+        doc = Nokogiri::HTML(response.body)
+        headers = doc.css("table thead th").map(&:text).map(&:strip)
+        expect(headers).to include("Khối", "Nhóm", "Tên đầu mối")
+      end
+
+      it "bảng compare có header nhóm cột (Tiêu chuẩn, Khoản trừ, Sử dụng, Kết quả)" do
+        get history_path(mode: "compare",
+                         period_a: sample.period.id,
+                         period_b: sample.period.id)
+        expect(response.body).to include("Tiêu chuẩn")
+        expect(response.body).to include("Khoản trừ")
+        expect(response.body).to include("Sử dụng")
+        expect(response.body).to include("Kết quả")
+      end
+
+      it "bảng compare có hàng tổng" do
+        get history_path(mode: "compare",
+                         period_a: sample.period.id,
+                         period_b: sample.period.id)
+        expect(response.body).to include("TỔNG")
+      end
+
+      it "bảng compare hiện đơn giá" do
+        get history_path(mode: "compare",
+                         period_a: sample.period.id,
+                         period_b: sample.period.id)
+        expect(response.body).to include("Đơn giá điện")
+      end
+
+      it "bảng compare thiếu màu đỏ, thừa màu xanh" do
+        get history_path(mode: "compare",
+                         period_a: sample.period.id,
+                         period_b: sample.period.id)
+        expect(response.body).to include("text-red-700")
+        expect(response.body).to include("text-green-700")
+      end
+
       it "render bảng so sánh khi truyền 2 period" do
         sample.main_meter.main_meter_readings.create!(period: period_b, usage: 2100)
         sample.meters.each do |key, meter|
@@ -83,6 +124,22 @@ RSpec.describe "History", type: :request do
                          to_period_id: sample.period.id)
         expect(response.body).to include(billing_path(period_id: sample.period.id))
         expect(response.body).not_to include("mode=single")
+      end
+
+      it "dropdown kỳ không có option 'Tất cả' (blank_text: nil)" do
+        get history_path(mode: "range")
+        doc = Nokogiri::HTML(response.body)
+        options = doc.css("select#from_period_id option").map(&:text)
+        expect(options).not_to include("Tất cả")
+      end
+
+      it "xóa bộ lọc giữ mode=range (không chuyển sang compare)" do
+        get history_path(mode: "range",
+                         from_period_id: sample.period.id,
+                         to_period_id: sample.period.id)
+        doc = Nokogiri::HTML(response.body)
+        clear_link = doc.css("a").find { |a| a.text.include?(I18n.t("common.list.clear_filter")) }
+        expect(clear_link&.attr("href")).to include("mode=range") if clear_link
       end
 
       it "auto-swap khi from > to" do
