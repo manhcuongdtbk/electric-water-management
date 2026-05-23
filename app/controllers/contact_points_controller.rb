@@ -61,18 +61,16 @@ class ContactPointsController < ApplicationController
   def create
     @contact_point = ContactPoint.new(create_params)
     @contact_point.initial_personnel_counts = personnel_counts_param
+    # Xác định thuộc đơn vị hay khu vực. Radio button assignment_mode gửi từ form
+    # cho SA và UA-ZM. UA không có radio (mặc định đơn vị, hidden field unit_id).
+    # Khi JS bị tắt, cả zone_id lẫn unit_id có thể gửi cùng lúc — server phải
+    # chọn đúng 1 dựa trên assignment_mode hoặc giá trị có trong params.
     if params[:assignment_mode] == "zone" || (params[:assignment_mode].blank? && @contact_point.zone_id.present? && @contact_point.unit_id.blank?)
-      # Mode "khu vực": xoá unit/block/group
       @contact_point.unit_id = nil
       @contact_point.block_id = nil
       @contact_point.group_id = nil
     elsif params[:assignment_mode] == "unit" || @contact_point.unit_id.present?
-      # Mode "đơn vị": xoá zone_id (server-side safety net)
       @contact_point.zone_id = nil
-    elsif current_user.unit_id.present?
-      # Non-SA không có radio button → mặc định đơn vị mình
-      @contact_point.zone_id = nil
-      @contact_point.unit_id = current_user.unit_id
     end
     authorize!(:create, @contact_point)
 
