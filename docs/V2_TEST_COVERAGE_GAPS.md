@@ -1,27 +1,29 @@
 # Kết quả rà soát test coverage theo 12 chiều kiểm thử
 
 > **Ngày rà soát:** 23/05/2026
-> **Cơ sở:** docs/V2_CHIEU_TEST.md v1.0.0, 1129 test cases hiện có
-> **Trạng thái:** Đang xử lý
+> **Cập nhật lần cuối:** 23/05/2026
+> **Cơ sở:** docs/V2_CHIEU_TEST.md v1.0.0
+> **Test ban đầu:** 1129 → **Test hiện tại:** 1344 (+215)
+> **Trạng thái:** Hoàn thành. 3/3 Critical, 16/17 Important, 6/10 Nice-to-have done. 5 skipped (1 low ROI, 4 covered gián tiếp).
 
 ---
 
 ## Tổng quan
 
-| Chiều | Trạng thái | Gap chính |
+| Chiều | Trạng thái | Ghi chú |
 |---|---|---|
-| 1 - Trạng thái kỳ | ⚠️ Thiếu | State A chưa test trên 9+ trang |
-| 2 - Vai trò | ⚠️ Thiếu nhiều | 6+ trang chỉ test SA (1/6 role) |
-| 3 - Trang/thao tác | — | Đánh giá qua chiều 1 + 2 |
-| 4 - Entity state | ✅ Tốt | Gap nhỏ: MainMeter discard visibility |
-| 5 - Loại đầu mối | ⚠️ Thiếu | Public, water_pump discard cleanup chưa test riêng |
-| 6 - Thuộc về | ✅ Tốt | Cover qua billing, contact_points, engine specs |
-| 7 - Kỳ xem ≠ kỳ mở | ⚠️ Thiếu | Kịch bản nguy hiểm chưa test. Non-SA xem kỳ cũ chưa test |
-| 8 - Trạng thái tính toán | ❌ Chưa cover | Billing/dashboard khi chưa tính, stale chưa test |
-| 9 - Đầy đủ dữ liệu | ✅ Tốt | Cover qua engine specs (edge cases B=0, C<0) + warning specs |
-| 10 - Vị trí phân cấp | ⚠️ Thiếu | Vị trí 3 chưa test. NULLS LAST sort chưa test |
-| 11 - Cách nhận data | ✅ Tốt | Cover qua period_service_spec + model after_create specs |
-| 12 - HTML vs Excel | ❌ Chưa cover | Không verify nội dung xlsx |
+| 1 - Trạng thái kỳ | ✅ Đủ | State A: PeriodGuard concern spec. State B: mọi test. State C: structure_change_guard + old_period specs |
+| 2 - Vai trò | ✅ Đủ | 108 tests (18 trang × 6 role) qua role_access_matrix_spec |
+| 3 - Trang/thao tác | ✅ Đủ | Cover qua chiều 1 + 2 + CRUD specs per trang |
+| 4 - Entity state | ✅ Đủ | discarded_entity_visibility_spec + model discard specs |
+| 5 - Loại đầu mối | ✅ Đủ | 4 loại cleanup tested: residential, public, water_pump, non_establishment |
+| 6 - Thuộc về | ✅ Đủ | Cover qua billing, contact_points, engine specs |
+| 7 - Kỳ xem ≠ kỳ mở | ✅ Đủ | dimension_coverage_spec: SA + non-SA xem kỳ cũ, kịch bản nguy hiểm |
+| 8 - Trạng thái tính toán | ✅ Đủ | billing_spec: empty, stale, xlsx empty. dashboard_spec: empty |
+| 9 - Đầy đủ dữ liệu | ✅ Đủ | Engine specs (B=0, C<0) + warning specs |
+| 10 - Vị trí phân cấp | ✅ Đủ | RowspanComputer 5 vị trí. Nice-to-have: NULLS LAST sort, Excel data merge |
+| 11 - Cách nhận data | ✅ Đủ | period_service_spec + model after_create specs |
+| 12 - HTML vs Excel | ✅ Đủ | billing_spec: formulas, column count per role, merge, num_fmt, column index shift |
 
 ---
 
@@ -248,8 +250,27 @@ Ngoài 12 chiều, rà soát mọi model, controller, service, concern, helper, 
 ## Lịch sử
 
 ### 23/05/2026
-- Rà soát ban đầu: xác định gap cho 12 chiều.
-- Rà soát toàn hệ thống: 3 critical, 17 important, 10 nice-to-have.
+
+**Rà soát:**
+- Rà soát 12 chiều: xác định gap per chiều.
+- Rà soát toàn hệ thống (models, controllers, services, concerns, helpers, libs): 3 Critical, 17 Important, 10 Nice-to-have.
+
+**Fill gaps (PRs #213-#221, +215 tests):**
+- Chiều 12 (Excel): 5/5 done — formulas, column count, merge, num_fmt, column index shift (#213, #214)
+- Chiều 8 (Tính toán): 4/4 done — empty, stale, xlsx empty, dashboard empty (#214)
+- Chiều 2 (Vai trò): 108 tests, 18 trang × 6 role (#215)
+- Chiều 7 (Kỳ xem ≠ mở): 4/4 done — SA + non-SA xem kỳ cũ, kịch bản nguy hiểm (#216)
+- Chiều 5 (Loại CP): 2/2 done — public + water_pump cleanup (#216)
+- Chiều 10 (Vị trí): 2/2 done — vị trí 2 + 3 rowspan (#216)
+- Critical 3/3: Unit cleanup, NumberHelperVi, CMD-ZM ability (#217)
+- Important 16/17: model validations, CRUD actions, transaction rollback, sort/sidebar (#217, #220)
+- Nice-to-have 6/10: backup methods, rank uniqueness, helpers, history range (#221)
+
+**Bug fix:**
+- NumberHelperVi trailing zeros: `to_s("F")` → `sprintf` (#218)
+
+**Design issues ghi nhận (chưa fix):**
+- Ability cấp `can :read, Zone/Unit` thừa cho UA/CMD → vô tình mở page access.
 
 ---
 
