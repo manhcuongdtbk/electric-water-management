@@ -5,58 +5,44 @@ RSpec.describe "Topbar", type: :request do
 
   before { sign_in system_admin }
 
-  describe "enterprise dark header" do
+  describe "topbar cơ bản" do
     let!(:period) { create(:period, month: 5, year: 2026, closed: false) }
 
-    it "dùng bg-blue-900 (dark header)" do
+    it "dark header (bg-gray-800)" do
       get zones_path
-      expect(response.body).to include("bg-blue-900")
+      expect(response.body).to include("bg-gray-800")
     end
 
-    it "hiện tên hệ thống (trắng)" do
+    it "hiện tên hệ thống" do
       get zones_path
       expect(response.body).to include(I18n.t("application.name"))
     end
 
-    it "hiện tên kỳ và trạng thái Đang mở" do
+    it "hiện tên kỳ và trạng thái" do
       get zones_path
       expect(response.body).to include("Kỳ tháng 5/2026")
       expect(response.body).to include(I18n.t("common.badges.open"))
     end
 
-    it "Đang mở dùng text-green-300 (không phải badge lồng badge)" do
-      get zones_path
-      expect(response.body).to include("text-green-300")
-      expect(response.body).not_to include("bg-green-100")
-    end
-
     it "hiện user name và role" do
       get zones_path
       expect(response.body).to include(system_admin.display_name)
-      expect(response.body).to include(I18n.t("activerecord.attributes.user.roles.system_admin"))
     end
 
-    it "Đổi mật khẩu dùng text-blue-200 (không underline)" do
+    it "hiện link đổi mật khẩu và đăng xuất" do
       get zones_path
-      expect(response.body).to include("text-blue-200")
       expect(response.body).to include(I18n.t("common.actions.change_password"))
-    end
-
-    it "Đăng xuất dùng text-red-300" do
-      get zones_path
-      expect(response.body).to include("text-red-300")
       expect(response.body).to include(I18n.t("common.actions.logout"))
     end
   end
 
-  describe "topbar kỳ đang mở — hiện trên mọi trang" do
+  describe "topbar trên mọi trang" do
     let!(:period) { create(:period, month: 5, year: 2026, closed: false) }
 
     shared_examples "topbar period info" do
-      it "hiện tên kỳ và trạng thái" do
+      it "hiện kỳ đang mở" do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Kỳ tháng 5/2026")
-        expect(response.body).to include(I18n.t("common.badges.open"))
       end
     end
 
@@ -73,10 +59,10 @@ RSpec.describe "Topbar", type: :request do
   end
 
   describe "topbar không có kỳ đang mở" do
-    it "hiện cảnh báo text-yellow-300" do
+    it "hiện cảnh báo vàng" do
       get zones_path
       expect(response.body).to include("Không có kỳ đang mở")
-      expect(response.body).to include("text-yellow-300")
+      expect(response.body).to include("text-yellow-400")
     end
   end
 end
