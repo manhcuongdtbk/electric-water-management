@@ -67,11 +67,13 @@ RSpec.describe "History", type: :request do
         expect(response.body).to include("TỔNG")
       end
 
-      it "bảng compare hiện đơn giá" do
+      it "bảng compare luôn hiện đơn giá 2 kỳ đầy đủ (không làm tròn)" do
         get history_path(mode: "compare",
                          period_a: sample.period.id,
                          period_b: sample.period.id)
-        expect(response.body).to include("Đơn giá điện")
+        expect(response.body).to include("2.336,4 đ/kW")
+        # Luôn hiện cả 2 kỳ, kể cả khi đơn giá giống nhau
+        expect(response.body).to include("5/2026:")
       end
 
       it "header 3 hàng — nhóm 1 metric dùng rowspan, không lệch cột" do

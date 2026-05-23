@@ -18,6 +18,13 @@ RSpec.describe "Pricing", type: :request do
       expect(response.body).to include("Kỳ đang mở")
       expect(response.body).to include("Lưu cập nhật")
     end
+
+    it "cột đơn giá hiện đầy đủ (không làm tròn)" do
+      create(:period, year: 2026, month: 5, closed: false, unit_price: 2336.4)
+      get pricing_path
+      # Bảng danh sách kỳ hiện "2.336,4 đ/kW" không phải "2.336 đ"
+      expect(response.body).to include("2.336,4 đ/kW")
+    end
   end
 
   describe "GET /pricing — phân trang và bộ lọc" do

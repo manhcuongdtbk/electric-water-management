@@ -44,9 +44,10 @@ RSpec.describe "Billing", type: :request do
         expect(table_area).not_to include("Đang mở")
       end
 
-      it "hiện đơn giá điện trên bảng" do
+      it "hiện đơn giá điện đầy đủ (không làm tròn)" do
         get billing_path
-        expect(response.body).to include("Đơn giá điện")
+        # unit_price = 2336.4 → hiện "2.336,4" không phải "2.336"
+        expect(response.body).to include("2.336,4 đ/kW")
       end
 
       it "SA chọn zone → ẩn cột Khu vực (I17)" do
