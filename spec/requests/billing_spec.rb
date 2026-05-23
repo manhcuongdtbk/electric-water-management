@@ -86,6 +86,13 @@ RSpec.describe "Billing", type: :request do
         expect(response.body).not_to include("Chỉ huy khu vực")
       end
 
+      it "ẩn cột Khu vực và Đơn vị (28 cột)" do
+        get billing_path
+        doc = Nokogiri::HTML(response.body)
+        headers = doc.css("table thead th").map(&:text).map(&:strip)
+        expect(headers).not_to include(a_string_including("Khu vực"))
+        expect(headers).not_to include(a_string_including("Đơn vị"))
+      end
     end
 
     context "commander zone-manager (nghiệp vụ 6: tương tự UA-ZM)" do
@@ -170,6 +177,16 @@ RSpec.describe "Billing", type: :request do
       sign_in commander
       post recalculate_billing_path
       expect(response).to redirect_to(new_user_session_path).or redirect_to(root_path)
+    end
+
+    it "unit_admin zone-manager tính toán lại khu vực mình" do
+      ua_zm = create(:user, :unit_admin, unit: sample.unit_a)
+      sign_in ua_zm
+      expect {
+        post recalculate_billing_path
+      }.to change { Calculation.where(period: sample.period).count }.from(0).to(5)
+      expect(response).to have_http_status(:redirect)
+      expect(response.location).to include(billing_path)
     end
 
     it "kỳ đã đóng → không cho tính toán lại" do
