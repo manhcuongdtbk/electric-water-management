@@ -479,6 +479,12 @@ vi:
       compare: "So sánh 2 kỳ"
       range: "Theo khoảng thời gian"
     compare:
+      period_a: "Kỳ A"
+      period_b: "Kỳ B"
+      select: "Chọn"
+      need_at_least_two: "Cần ít nhất 2 kỳ để so sánh. Hiện tại hệ thống chỉ có %{count} kỳ."
+      select_both: "Vui lòng chọn cả 2 kỳ để so sánh."
+      no_data: "Không có dữ liệu để so sánh."
       only_in_a: "chỉ có ở kỳ %{label}"
       only_in_b: "mới ở kỳ %{label}"
     range:
