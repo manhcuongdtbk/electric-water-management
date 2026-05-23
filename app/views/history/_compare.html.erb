@@ -81,13 +81,18 @@
         end
       end
 
-      # Delta color: chỉ cho cột kết quả
+      # Delta color theo ngữ nghĩa: tăng = xấu (đỏ) hay tốt (xanh)?
+      # Metrics "xấu khi tăng": trừ nhiều hơn, dùng nhiều hơn, thiếu nhiều hơn
+      # Metrics "tốt khi tăng": còn nhiều hơn, thừa nhiều hơn
+      # Metrics trung tính: quân số, tiêu chuẩn
+      bad_when_increase = %i[total_deduction residential_usage water_pump_usage total_usage deficit deficit_amount]
+      good_when_increase = %i[remaining_standard surplus surplus_amount]
+
       delta_class = ->(attr, value) do
         return "" if value.nil? || value == 0
-        case attr
-        when :deficit, :deficit_amount
+        if bad_when_increase.include?(attr)
           value > 0 ? "text-red-600" : "text-green-600"
-        when :surplus, :surplus_amount
+        elsif good_when_increase.include?(attr)
           value > 0 ? "text-green-600" : "text-red-600"
         else
           ""
