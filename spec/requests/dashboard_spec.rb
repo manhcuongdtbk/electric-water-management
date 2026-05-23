@@ -52,6 +52,33 @@ RSpec.describe "Dashboard", type: :request do
     end
   end
 
+  describe "Chiều 8 — dashboard khi calculations trống" do
+    let(:sample) { setup_zone_one_full_sample }
+    # KHÔNG gọi CalculationOrchestrator
+
+    context "SA" do
+      let(:user) { create(:user, :system_admin) }
+      before { sign_in user }
+
+      it "render bình thường, deficit/surplus = 0" do
+        get dashboard_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Tổng quan")
+      end
+    end
+
+    context "UA-ZM" do
+      let(:user) { create(:user, :unit_admin, unit: sample.unit_a) }
+      before { sign_in user }
+
+      it "render bình thường, deficit_count = 0" do
+        get dashboard_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Tổng quan")
+      end
+    end
+  end
+
   describe "GET /dashboard với data" do
     let(:sample) { setup_zone_one_full_sample }
     before { CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call }

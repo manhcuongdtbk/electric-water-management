@@ -213,6 +213,15 @@ RSpec.describe "Billing", type: :request do
           expect(total_formulas.size).to be >= 18
         end
 
+        it "number format: kW dùng #,##0.00, tiền dùng #,##0, quân số dùng 0" do
+          get billing_path(format: :xlsx)
+          xlsx = parse_xlsx(response.body)
+          formats_used = xlsx.cell_formats.values.uniq
+          expect(formats_used).to include("#,##0.00")  # kW (2 chữ số thập phân)
+          expect(formats_used).to include("#,##0")     # tiền (0 chữ số thập phân)
+          expect(formats_used).to include("0")         # quân số (integer)
+        end
+
         it "merge cells cho header nhóm lớn (row 3)" do
           get billing_path(format: :xlsx)
           xlsx = parse_xlsx(response.body)
@@ -299,6 +308,62 @@ RSpec.describe "Billing", type: :request do
       post recalculate_billing_path(period_id: sample.period.id)
       expect(response).to redirect_to(billing_path(period_id: sample.period.id))
       expect(flash[:alert]).to include("đã đóng")
+    end
+  end
+
+  describe "Chiều 8 — trạng thái tính toán" do
+    let(:admin) { create(:user, :system_admin) }
+    let(:ua) { create(:user, :unit_admin, unit: sample.unit_b) }
+
+    before { sign_in admin }
+
+    context "calculations trống (chưa tính lần nào)" do
+      before { sample }  # setup data nhưng KHÔNG gọi CalculationOrchestrator
+
+      it "billing render bình thường, hiện thông báo chưa có dữ liệu" do
+        get billing_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Chưa có dữ liệu tính toán")
+      end
+
+      it "billing xlsx trả về file hợp lệ (không crash)" do
+        get billing_path(format: :xlsx)
+        expect(response).to have_http_status(:ok)
+        expect(response.content_type).to include("spreadsheetml.sheet")
+      end
+
+      it "non-SA billing cũng render bình thường khi chưa tính" do
+        sign_in ua
+        get billing_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Chưa có dữ liệu tính toán")
+      end
+    end
+
+    context "calculations stale (data thay đổi sau khi tính)" do
+      before do
+        CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
+      end
+
+      it "billing vẫn hiện kết quả cũ sau khi sửa meter_readings" do
+        old_deficit = Calculation.find_by(
+          period: sample.period,
+          contact_point: sample.contact_points[:ban_tac_huan]
+        )&.deficit
+
+        # Sửa meter_reading → data thay đổi nhưng chưa tính lại
+        reading = sample.meters[:ct_a1].meter_readings.find_by!(period: sample.period)
+        reading.update!(reading_end: reading.reading_end + 999)
+
+        get billing_path
+        expect(response).to have_http_status(:ok)
+        # Calculation vẫn giữ giá trị cũ (stale)
+        current_deficit = Calculation.find_by(
+          period: sample.period,
+          contact_point: sample.contact_points[:ban_tac_huan]
+        )&.deficit
+        expect(current_deficit).to eq(old_deficit)
+      end
     end
   end
 end

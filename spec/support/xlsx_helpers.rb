@@ -15,7 +15,7 @@ module XlsxHelpers
     sheets = {}
     Zip::InputStream.open(StringIO.new(response_body)) do |zip|
       while (entry = zip.get_next_entry)
-        sheets[entry.name] = zip.read if entry.name =~ /sheet1\.xml|sharedStrings\.xml/
+        sheets[entry.name] = zip.read if entry.name =~ /sheet1\.xml|sharedStrings\.xml|styles\.xml/
       end
     end
 
@@ -59,12 +59,35 @@ module XlsxHelpers
       merges << mc["ref"]
     end
 
+    # Parse styles: cell style index → numFmt format code
+    num_fmts = {}
+    cell_xfs = []
+    if sheets["xl/styles.xml"]
+      styles_doc = Nokogiri::XML(sheets["xl/styles.xml"])
+      styles_doc.remove_namespaces!
+      styles_doc.xpath("//numFmt").each { |n| num_fmts[n["numFmtId"].to_i] = n["formatCode"] }
+      styles_doc.xpath("//cellXfs/xf").each { |xf| cell_xfs << xf["numFmtId"].to_i }
+    end
+
+    cell_formats = {}
+    doc.xpath("//row").each do |row_node|
+      row_node.xpath("c").each do |cell|
+        ref = cell["r"]
+        style_idx = cell["s"]&.to_i
+        if style_idx && cell_xfs[style_idx]
+          fmt_id = cell_xfs[style_idx]
+          cell_formats[ref] = num_fmts[fmt_id] if num_fmts[fmt_id]
+        end
+      end
+    end
+
     OpenStruct.new(
       rows: rows,
       formulas: formulas,
       merges: merges,
       shared_strings: shared_strings,
-      column_count: rows.compact.map { |r| r&.size || 0 }.max || 0
+      column_count: rows.compact.map { |r| r&.size || 0 }.max || 0,
+      cell_formats: cell_formats
     )
   end
 

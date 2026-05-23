@@ -139,10 +139,10 @@
 
 | Gap | Trạng thái |
 |---|---|
-| Billing render khi calculations trống (chưa tính lần nào) | [ ] Cần thêm |
-| Dashboard render khi calculations trống | [ ] Cần thêm |
-| Billing render khi calculations stale (data thay đổi sau tính) | [ ] Nice-to-have |
-| Excel export khi calculations trống | [ ] Cần thêm |
+| Billing render khi calculations trống (chưa tính lần nào) | [x] billing_spec — SA + non-SA render "Chưa có dữ liệu tính toán" |
+| Dashboard render khi calculations trống | [x] dashboard_spec — SA + UA-ZM render bình thường |
+| Billing render khi calculations stale (data thay đổi sau tính) | [x] billing_spec — sửa reading_end, verify calculations giữ giá trị cũ |
+| Excel export khi calculations trống | [x] billing_spec — xlsx trả file hợp lệ khi chưa tính |
 
 ---
 
@@ -175,7 +175,7 @@
 | Formula correctness (SUM, tiêu chuẩn còn lại, thành tiền) | [x] billing_spec — 5 formula tests (SUM ranks, std+pump, SUM deductions, std-deduction, kw*price) |
 | Column count per role (SA 30, UA-ZM 29, UA 28) | [x] billing_spec — SA header có Khu vực+Đơn vị, UA ẩn cả 2, UA-ZM có Đơn vị ẩn Khu vực |
 | Cell merge correctness (khối/nhóm/đơn vị/khu vực) | [x] billing_spec — header nhóm lớn merge row 3 |
-| Number format (num_fmt) | [ ] Nice-to-have |
+| Number format (num_fmt) | [x] billing_spec — kW=#,##0.00, tiền=#,##0, quân số=0 |
 | Formula column index shift khi số cột thay đổi theo role | [x] billing_spec — UA xlsx formula vẫn reference $B$1 đúng |
 
 ---
