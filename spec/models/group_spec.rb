@@ -29,6 +29,14 @@ RSpec.describe Group do
       expect(cp.reload.group_id).to be_nil
     end
 
+    it "validate_block_unit_match: block phải cùng unit (I3)" do
+      other_unit = create(:unit, zone: unit.zone)
+      other_block = create(:block, unit: other_unit)
+      group = build(:group, unit: unit, block: other_block, name: "Nhóm sai block")
+      expect(group).not_to be_valid
+      expect(group.errors[:block_id]).to be_present
+    end
+
     it "đầu mối vẫn giữ block_id (chỉ nhóm bị xóa)" do
       block = create(:block, unit: unit)
       group_with_block = create(:group, unit: unit, block: block, name: "Nhóm trong khối")

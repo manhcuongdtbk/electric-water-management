@@ -202,20 +202,20 @@ Ngoài 12 chiều, rà soát mọi model, controller, service, concern, helper, 
 
 | # | Code | Gap | File |
 |---|---|---|---|
-| C1 | Unit model `cleanup_current_period_data` | before_discard xóa unit_configs + pump_allocations kỳ mở — chưa test | unit_spec.rb |
-| C2 | NumberHelperVi | `number_to_vi`, `money_to_vi` chưa có spec — format số tiếng Việt + ROUND_HALF_UP | (chưa có file spec) |
-| C3 | Ability CMD-ZM | Commander zone-manager chưa test — 1/6 role hoàn toàn thiếu trong ability_spec | ability_spec.rb |
+| C1 | Unit model `cleanup_current_period_data` | [x] unit_spec — hard delete unit_configs + pump_allocations kỳ mở, giữ kỳ cũ | unit_spec.rb |
+| C2 | NumberHelperVi | [x] number_helper_vi_spec — number_to_vi, money_to_vi, ROUND_HALF_UP, format tiếng Việt | number_helper_vi_spec.rb |
+| C3 | Ability CMD-ZM | [x] ability_spec — 8 tests: read zone CPs, main_meters, pump_allocations, calculations; cannot CUD | ability_spec.rb |
 
 ### Important (17)
 
 | # | Code | Gap | Trạng thái |
 |---|---|---|---|
-| I1 | ContactPoint `validate_block_group_unit_match` | Block/group phải thuộc cùng unit — 4 error paths chưa test | [ ] |
-| I2 | ContactPoint `propagate_personnel_count_to_current_snapshot` | after_update non_establishment → snapshot chưa test | [ ] |
-| I3 | Group `validate_block_unit_match` | Block phải cùng unit — chưa test | [ ] |
-| I4 | PumpAllocation `validate_contact_point_must_be_zone_level` | CP target phải zone-level — chưa test | [ ] |
-| I5 | PumpAllocation `validate_target_belongs_to_zone` | Target phải cùng zone — chưa test | [ ] |
-| I6 | Unit `discard_blocks_and_groups` | after_discard cascade — chưa test model level | [ ] |
+| I1 | ContactPoint `validate_block_group_unit_match` | [x] contact_point_spec — 4 error paths | [ ] |
+| I2 | ContactPoint `propagate_personnel_count_to_current_snapshot` | [x] contact_point_spec — update snapshot | [ ] |
+| I3 | Group `validate_block_unit_match` | [x] group_spec — block unit mismatch | [ ] |
+| I4 | PumpAllocation `validate_contact_point_must_be_zone_level` | [x] pump_allocation_spec — unit CP chặn, zone CP cho phép | [ ] |
+| I5 | PumpAllocation `validate_target_belongs_to_zone` | [x] pump_allocation_spec — unit + CP zone mismatch | [ ] |
+| I6 | Unit `discard_blocks_and_groups` | [x] unit_spec — cascade discard blocks + groups | [ ] |
 | I7 | Blocks controller | show/edit/update actions chưa test | [ ] |
 | I8 | Groups controller | show/edit/update actions chưa test | [ ] |
 | I9 | Ranks controller | index content, show/edit/update + period isolation guard chưa test | [ ] |
@@ -223,8 +223,8 @@ Ngoài 12 chiều, rà soát mọi model, controller, service, concern, helper, 
 | I11 | MeterEntries | Batch update transaction rollback chưa test | [ ] |
 | I12 | ElectricitySupply | Tạo main_meter_reading mới (new_main_meter_readings params) chưa test | [ ] |
 | I13 | ElectricitySupply | Batch update failure rollback chưa test | [ ] |
-| I14 | ListSortable `apply_sort` | Sort column whitelisting + SQL injection prevention chưa test | [ ] |
-| I15 | SidebarHelper | `allowed_sidebar_items` per role chưa test | [ ] |
+| I14 | ListSortable `apply_sort` | [x] list_sortable_spec — 5 tests: ASC, DESC, invalid, default, SQL injection | [ ] |
+| I15 | SidebarHelper | [x] sidebar_helper_spec — 6 role sidebar item counts | [ ] |
 | I16 | BackupRestoreRunner | Restore flow (pg_restore, error handling) chưa test | [ ] |
 | I17 | Billing SA filter | Dynamic column hiding khi SA chọn zone/unit chưa test HTML | [ ] |
 

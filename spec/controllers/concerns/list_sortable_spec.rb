@@ -17,6 +17,41 @@ RSpec.describe ListSortable do
   let!(:zone2) { create(:zone, name: "Khu vực Nam") }
   let!(:zone3) { create(:zone, name: "100% tải") }
 
+  describe "#apply_sort" do
+    it "sắp xếp theo cột hợp lệ ASC" do
+      obj = test_class.new(sort: "name", dir: "asc")
+      result = obj.send(:apply_sort, Zone.all, allowed: { name: "zones.name" })
+      names = result.pluck(:name)
+      expect(names).to eq(names.sort)
+    end
+
+    it "sắp xếp theo cột hợp lệ DESC" do
+      obj = test_class.new(sort: "name", dir: "desc")
+      result = obj.send(:apply_sort, Zone.all, allowed: { name: "zones.name" })
+      names = result.pluck(:name)
+      expect(names).to eq(names.sort.reverse)
+    end
+
+    it "sort key không hợp lệ → dùng default" do
+      obj = test_class.new(sort: "hacked_column")
+      result = obj.send(:apply_sort, Zone.all, allowed: { name: "zones.name" }, default: [:name, :asc])
+      names = result.pluck(:name)
+      expect(names).to eq(names.sort)
+    end
+
+    it "sort key không hợp lệ + không có default → không sort" do
+      obj = test_class.new(sort: "hacked_column")
+      result = obj.send(:apply_sort, Zone.all, allowed: { name: "zones.name" })
+      expect(result.to_sql).not_to include("ORDER BY")
+    end
+
+    it "không chấp nhận sort key ngoài whitelist (chống SQL injection)" do
+      obj = test_class.new(sort: "name; DROP TABLE zones;--")
+      result = obj.send(:apply_sort, Zone.all, allowed: { name: "zones.name" })
+      expect(result.to_sql).not_to include("DROP")
+    end
+  end
+
   describe "#apply_search" do
     it "tìm theo 1 cột" do
       obj = test_class.new(q: "Bắc")
