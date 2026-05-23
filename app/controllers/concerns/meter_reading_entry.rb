@@ -26,8 +26,9 @@ module MeterReadingEntry
         reading = load_readings.find_by(id: id)
         next unless reading
         authorize!(:update, reading)
-        permitted = attrs.permit(:reading_end, :manual_usage, :manual_usage_note, :lock_version)
+        permitted = attrs.permit(:reading_start, :reading_end, :manual_usage, :manual_usage_note, :lock_version)
         cleaned = {
+          reading_start: permitted[:reading_start].presence || 0,
           reading_end: permitted[:reading_end].presence,
           manual_usage: permitted[:manual_usage].presence,
           manual_usage_note: permitted[:manual_usage_note].to_s.strip,

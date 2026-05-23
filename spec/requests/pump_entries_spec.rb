@@ -82,5 +82,15 @@ RSpec.describe "PumpEntries", type: :request do
       expect(response).to redirect_to(pump_entries_path)
       expect(r.reload.reading_end).to eq(1000)
     end
+
+    it "lưu reading_start công tơ bơm nước" do
+      sample
+      r = MeterReading.find_by(meter: sample.meters[:ct_bn1], period: sample.period)
+      patch pump_entries_path, params: {
+        meter_readings: { r.id.to_s => { reading_start: "200", reading_end: r.reading_end.to_s, lock_version: r.lock_version } }
+      }
+      expect(response).to redirect_to(pump_entries_path)
+      expect(r.reload.reading_start.to_f).to eq(200.0)
+    end
   end
 end

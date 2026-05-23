@@ -108,6 +108,53 @@ RSpec.describe "MeterEntries", type: :request do
     end
   end
 
+  describe "reading_start editable" do
+    let(:admin) { create(:user, :system_admin) }
+    before { sample; sign_in admin }
+
+    it "form hiện input cho reading_start (không phải text readonly)" do
+      get meter_entries_path
+      doc = Nokogiri::HTML(response.body)
+      r = MeterReading.joins(meter: :contact_point)
+            .where(period: sample.period, contact_points: { contact_point_type: %w[residential public] })
+            .first
+      expect(doc.css("input[name='meter_readings[#{r.id}][reading_start]']")).to be_present
+    end
+
+    it "update reading_start thành công" do
+      r = MeterReading.find_by(meter: sample.meters[:ct_a1], period: sample.period)
+      old_start = r.reading_start
+
+      patch meter_entries_path, params: {
+        meter_readings: {
+          r.id.to_s => {
+            reading_start: "500",
+            reading_end: r.reading_end.to_s,
+            lock_version: r.lock_version
+          }
+        }
+      }
+      expect(response).to redirect_to(meter_entries_path)
+      expect(r.reload.reading_start.to_f).to eq(500.0)
+    end
+
+    it "reading_start trống → default 0" do
+      r = MeterReading.find_by(meter: sample.meters[:ct_a1], period: sample.period)
+
+      patch meter_entries_path, params: {
+        meter_readings: {
+          r.id.to_s => {
+            reading_start: "",
+            reading_end: r.reading_end.to_s,
+            lock_version: r.lock_version
+          }
+        }
+      }
+      expect(response).to redirect_to(meter_entries_path)
+      expect(r.reload.reading_start.to_f).to eq(0.0)
+    end
+  end
+
   describe "batch update transaction rollback (I11)" do
     let(:admin) { create(:user, :system_admin) }
     before { sample; sign_in admin }
