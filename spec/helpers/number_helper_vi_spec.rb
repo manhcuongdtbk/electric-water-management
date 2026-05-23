@@ -12,7 +12,7 @@ RSpec.describe NumberHelperVi, type: :helper do
     end
 
     it "precision tùy chỉnh" do
-      expect(helper.number_to_vi(1234.5678, precision: 0)).to eq("1.235,0")
+      expect(helper.number_to_vi(1234.5678, precision: 0)).to eq("1.235")
       expect(helper.number_to_vi(1234.5678, precision: 3)).to eq("1.234,568")
     end
 
@@ -20,12 +20,12 @@ RSpec.describe NumberHelperVi, type: :helper do
       expect(helper.number_to_vi(nil)).to eq("")
     end
 
-    it "0 → 0,0" do
-      expect(helper.number_to_vi(0)).to eq("0,0")
+    it "0 → 0,00 (giữ đúng 2 chữ số thập phân)" do
+      expect(helper.number_to_vi(0)).to eq("0,00")
     end
 
-    it "số âm" do
-      expect(helper.number_to_vi(-1234.5)).to eq("-1.234,5")
+    it "số âm — giữ đúng precision" do
+      expect(helper.number_to_vi(-1234.5)).to eq("-1.234,50")
     end
   end
 
