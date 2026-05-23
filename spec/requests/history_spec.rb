@@ -68,6 +68,12 @@ RSpec.describe "History", type: :request do
         get history_path(mode: "range", from: "2026-04", to: "2026-06")
         expect(response).to have_http_status(:ok)
       end
+
+      it "link kỳ trong range trỏ tới billing, không phải history single" do
+        get history_path(mode: "range", from: "2026-05", to: "2026-05")
+        expect(response.body).to include(billing_path(period_id: sample.period.id))
+        expect(response.body).not_to include("mode=single")
+      end
     end
 
     context "mode=single redirect sang billing" do

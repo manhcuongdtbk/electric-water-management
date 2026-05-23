@@ -57,7 +57,7 @@
           <tr class="border-t border-gray-100 hover:bg-yellow-50">
             <td class="px-4 py-2">
               <%= link_to period_label(period),
-                    history_path(mode: "single", period_id: period.id),
+                    billing_path(period_id: period.id),
                     class: "text-blue-700 hover:underline" %>
             </td>
             <td class="px-4 py-2 text-right text-red-700">
