@@ -152,7 +152,7 @@
         <% @all_periods.each do |p| %>
           <tr class="hover:bg-gray-50 transition-colors">
             <td class="px-4 py-2 text-sm text-gray-900">Tháng <%= p.month %>/<%= p.year %></td>
-            <td class="px-4 py-2 text-sm text-right text-gray-600"><%= money_to_vi(p.unit_price) %></td>
+            <td class="px-4 py-2 text-sm text-right text-gray-600"><%= unit_price_to_vi(p.unit_price) %> đ/kW</td>
             <td class="px-4 py-2 text-sm">
               <% if p.open? %>
                 <span class="text-green-700 bg-green-100 px-2 py-1 rounded text-xs">Đang mở</span>

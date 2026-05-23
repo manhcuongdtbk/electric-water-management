@@ -104,9 +104,9 @@ RSpec.describe "Dashboard", type: :request do
         expect(main_content).not_to include("Đang mở")
       end
 
-      it "hiện đơn giá điện" do
+      it "hiện đơn giá điện đầy đủ (không làm tròn)" do
         get dashboard_path
-        expect(response.body).to include("Đơn giá điện")
+        expect(response.body).to include("2.336,4 đ/kW")
       end
 
       it "tiêu đề bảng khu vực việt hoá (không có 'per')" do
