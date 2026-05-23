@@ -52,12 +52,12 @@ UA-ZM và CMD-ZM không phải role riêng trong database. Xác định qua `cur
 | Khai báo | Khối (/blocks) | CRUD | BusinessRoleRequired + PeriodGuard + StructureChangeGuard | CRUD | CRUD (đơn vị) | CRUD (đơn vị) | Xem (đơn vị) | Xem (đơn vị) | Chặn |
 | Khai báo | Nhóm (/groups) | CRUD | BusinessRoleRequired + PeriodGuard + StructureChangeGuard | CRUD | CRUD (đơn vị) | CRUD (đơn vị) | Xem (đơn vị) | Xem (đơn vị) | Chặn |
 | Khai báo | Cấu hình đơn vị (/unit_config) | Xem, sửa | BusinessRoleRequired + PeriodGuard | Sửa | Sửa (đơn vị+khu vực OD) | Sửa (đơn vị) | Xem (disabled) | Xem (disabled) | Chặn |
-| Thiết lập | Khu vực (/zones) | CRUD | BusinessRoleRequired + PeriodGuard + StructureChangeGuard | CRUD | Xem (khu vực mình) | Chặn | Xem (khu vực mình) | Chặn | Chặn |
-| Thiết lập | Đơn vị (/units) | CRUD | BusinessRoleRequired + PeriodGuard + StructureChangeGuard | CRUD | Chặn | Chặn | Chặn | Chặn | Chặn |
-| Thiết lập | Phân bổ bơm nước (/pump_allocations) | CRUD | BusinessRoleRequired + PeriodGuard | CRUD | CRUD (khu vực) | Chặn | Xem (khu vực) | Chặn | Chặn |
-| Thiết lập | Đơn giá điện (/pricing) | Mở/đóng/mở lại kỳ | BusinessRoleRequired + authorize! | Toàn quyền | Chặn | Chặn | Chặn | Chặn | Chặn |
+| Thiết lập | Khu vực (/zones) | CRUD | BusinessRoleRequired + PeriodGuard + StructureChangeGuard | CRUD | Xem (khu vực mình) | Xem (sidebar ẩn) | Xem (khu vực mình) | Xem (sidebar ẩn) | Chặn |
+| Thiết lập | Đơn vị (/units) | CRUD | BusinessRoleRequired + PeriodGuard + StructureChangeGuard | CRUD | Xem (đơn vị mình, sidebar ẩn) | Xem (đơn vị mình, sidebar ẩn) | Xem (đơn vị mình, sidebar ẩn) | Xem (đơn vị mình, sidebar ẩn) | Chặn |
+| Thiết lập | Phân bổ bơm nước (/pump_allocations) | CRUD | BusinessRoleRequired + PeriodGuard | CRUD | CRUD (khu vực) | Xem (trống, sidebar ẩn) | Xem (khu vực) | Xem (trống, sidebar ẩn) | Chặn |
+| Thiết lập | Đơn giá điện (/pricing) | Mở/đóng/mở lại kỳ | BusinessRoleRequired + authorize! | Toàn quyền | Xem (sidebar ẩn) | Xem (sidebar ẩn) | Xem (sidebar ẩn) | Xem (sidebar ẩn) | Chặn |
 | Thiết lập | Nhóm cấp bậc (/ranks) | CRUD | BusinessRoleRequired + PeriodGuard + StructureChangeGuard | CRUD | Xem | Xem | Xem | Xem | Chặn |
-| Hệ thống | Tài khoản (/users) | CRUD | authorize! (CanCanCan) | CRUD (trừ TECH) | Chặn | Chặn | Chặn | Chặn | CRUD (tất cả) |
+| Hệ thống | Tài khoản (/users) | CRUD | authorize! (CanCanCan) | CRUD (trừ TECH) | Xem (trống, sidebar ẩn) | Xem (trống, sidebar ẩn) | Xem (trống, sidebar ẩn) | Xem (trống, sidebar ẩn) | CRUD (tất cả) |
 | Hệ thống | Nhật ký (/audit_logs) | Xem | authorize!(:read, PaperTrail::Version) | Xem | Chặn | Chặn | Chặn | Chặn | Xem |
 | Hệ thống | Sao lưu (/backups) | CRUD | authorize!(:manage, Backup) | Chặn | Chặn | Chặn | Chặn | Chặn | CRUD |
 
