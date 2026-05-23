@@ -38,7 +38,7 @@ UA-ZM và CMD-ZM không phải role riêng trong database. Xác định qua `cur
 
 ### Chiều 3 — Trang và thao tác
 
-17 trang, mỗi trang có tập thao tác và lớp bảo vệ riêng. Mọi trang đều có ít nhất 1 lớp kiểm soát truy cập:
+18 trang, mỗi trang có tập thao tác và lớp bảo vệ riêng. Mọi trang đều có ít nhất 1 lớp kiểm soát truy cập:
 
 | Nhóm | Trang | Thao tác | Kiểm soát truy cập | SA | UA-ZM | UA | CMD-ZM | CMD | TECH |
 |---|---|---|---|---|---|---|---|---|---|
@@ -115,7 +115,7 @@ Billing và history có dropdown chọn kỳ để xem. Kỳ đang xem (context 
 
 | Kỳ đang mở | Kỳ đang xem | Data hiển thị | Recalculate | Dropdown zone/unit | Sửa được |
 |---|---|---|---|---|---|
-| N (mới nhất) | N | Data kỳ N | Có | `zone_filter_scope` (auto-detect) | Có (billing không sửa trực tiếp, nhưng recalculate hoạt động) |
+| N (mới nhất) | N | Data kỳ N | Có | `with_discarded` (billing SA luôn dùng with_discarded) | Có (billing không sửa trực tiếp, nhưng recalculate hoạt động) |
 | N (mới nhất) | N-2 (đóng) | Data kỳ N-2 | Không (kỳ N-2 đóng) | `with_discarded` (cần hiện entity đã xóa) | Không |
 | Không có | N-2 (đóng) | Data kỳ N-2 | Không | `with_discarded` | Không |
 | N-2 (cũ mở lại) | N-2 | Data kỳ N-2 | Có | `with_discarded` | Sửa data per kỳ |
