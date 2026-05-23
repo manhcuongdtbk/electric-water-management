@@ -81,32 +81,7 @@
         end
       end
 
-      # Delta color theo ngữ nghĩa: tăng = xấu (đỏ) hay tốt (xanh)?
-      # Metrics "xấu khi tăng": trừ nhiều hơn, dùng nhiều hơn, thiếu nhiều hơn
-      # Metrics "tốt khi tăng": còn nhiều hơn, thừa nhiều hơn
-      # Metrics trung tính: quân số, tiêu chuẩn
-      bad_when_increase = %i[total_deduction residential_usage water_pump_usage total_usage deficit deficit_amount]
-      good_when_increase = %i[remaining_standard surplus surplus_amount]
-
-      delta_class = ->(attr, value) do
-        return "" if value.nil? || value == 0
-        if bad_when_increase.include?(attr)
-          value > 0 ? "text-red-600" : "text-green-600"
-        elsif good_when_increase.include?(attr)
-          value > 0 ? "text-green-600" : "text-red-600"
-        else
-          ""
-        end
-      end
-
-      # Value color: thiếu đỏ, thừa xanh (giống billing)
-      value_class = ->(color_hint) do
-        case color_hint
-        when :deficit then "text-red-700"
-        when :surplus then "text-green-700"
-        else ""
-        end
-      end
+      delta_class = ->(_attr, _value) { "" }
 
       # Rowspan — dùng RowspanComputer giống billing
       fake_calcs = @comparison.map do |row|
@@ -203,8 +178,8 @@
 
                 <%# All metrics by section %>
                 <% all_metrics.each do |_label, attr, type, color_hint| %>
-                  <td class="<%= num_cell %> <%= value_class.call(color_hint) %>"><%= row.calc_a ? format_value.call(row.calc_a.send(attr), type) : empty_mark %></td>
-                  <td class="<%= num_cell %> <%= value_class.call(color_hint) %>"><%= row.calc_b ? format_value.call(row.calc_b.send(attr), type) : empty_mark %></td>
+                  <td class="<%= num_cell %>"><%= row.calc_a ? format_value.call(row.calc_a.send(attr), type) : empty_mark %></td>
+                  <td class="<%= num_cell %>"><%= row.calc_b ? format_value.call(row.calc_b.send(attr), type) : empty_mark %></td>
                   <td class="<%= num_cell %> <%= row.diff ? delta_class.call(attr, row.diff[attr]) : '' %>"><%= row.diff ? format_value.call(row.diff[attr], type) : empty_mark %></td>
                 <% end %>
 
@@ -233,8 +208,8 @@
                 <td class="<%= num_cell %>"><%= sum_b[:total_personnel] %></td>
                 <td class="<%= num_cell %>"><%= sum_d[:total_personnel] %></td>
                 <% all_metrics.each do |_label, attr, type, color_hint| %>
-                  <td class="<%= num_cell %> <%= value_class.call(color_hint) %>"><%= format_value.call(sum_a[attr], type) %></td>
-                  <td class="<%= num_cell %> <%= value_class.call(color_hint) %>"><%= format_value.call(sum_b[attr], type) %></td>
+                  <td class="<%= num_cell %>"><%= format_value.call(sum_a[attr], type) %></td>
+                  <td class="<%= num_cell %>"><%= format_value.call(sum_b[attr], type) %></td>
                   <td class="<%= num_cell %> <%= delta_class.call(attr, sum_d[attr]) %>"><%= format_value.call(sum_d[attr], type) %></td>
                 <% end %>
                 <td class="<%= cell %>"></td>

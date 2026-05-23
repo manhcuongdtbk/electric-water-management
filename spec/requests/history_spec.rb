@@ -91,12 +91,16 @@ RSpec.describe "History", type: :request do
         expect(rowspan2_count).to be >= 11
       end
 
-      it "bảng compare thiếu màu đỏ, thừa màu xanh" do
+      it "bảng compare không dùng màu cho giá trị" do
         get history_path(mode: "compare",
                          period_a: sample.period.id,
                          period_b: sample.period.id)
-        expect(response.body).to include("text-red-700")
-        expect(response.body).to include("text-green-700")
+        doc = Nokogiri::HTML(response.body)
+        table_html = doc.css("table").to_s
+        expect(table_html).not_to include("text-red-600")
+        expect(table_html).not_to include("text-green-600")
+        expect(table_html).not_to include("text-red-700")
+        expect(table_html).not_to include("text-green-700")
       end
 
       it "render bảng so sánh khi truyền 2 period" do
