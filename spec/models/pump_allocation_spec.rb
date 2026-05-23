@@ -93,6 +93,46 @@ RSpec.describe PumpAllocation do
     end
   end
 
+  describe "validate_contact_point_must_be_zone_level (I4)" do
+    let(:zone) { create(:zone) }
+    let(:unit) { create(:unit, zone: zone) }
+    let(:period) { create(:period, closed: false) }
+
+    it "chặn phân bổ cho CP thuộc đơn vị (phải zone-level)" do
+      unit_cp = create(:contact_point, :residential, unit: unit)
+      alloc = build(:pump_allocation, zone: zone, period: period, contact_point: unit_cp, unit: nil)
+      expect(alloc).not_to be_valid
+      expect(alloc.errors[:contact_point_id]).to be_present
+    end
+
+    it "cho phép CP thuộc khu vực (zone-level)" do
+      zone_cp = create(:contact_point, :zone_residential, zone: zone)
+      alloc = build(:pump_allocation, zone: zone, period: period, contact_point: zone_cp, unit: nil)
+      expect(alloc).to be_valid
+    end
+  end
+
+  describe "validate_target_belongs_to_zone (I5)" do
+    let(:zone_a) { create(:zone) }
+    let(:zone_b) { create(:zone) }
+    let(:unit_a) { create(:unit, zone: zone_a) }
+    let(:period) { create(:period, closed: false) }
+
+    it "chặn unit thuộc zone khác" do
+      unit_b = create(:unit, zone: zone_b)
+      alloc = build(:pump_allocation, zone: zone_a, period: period, unit: unit_b, contact_point: nil)
+      expect(alloc).not_to be_valid
+      expect(alloc.errors[:unit_id]).to be_present
+    end
+
+    it "chặn CP thuộc zone khác" do
+      cp_b = create(:contact_point, :zone_residential, zone: zone_b)
+      alloc = build(:pump_allocation, zone: zone_a, period: period, contact_point: cp_b, unit: nil)
+      expect(alloc).not_to be_valid
+      expect(alloc.errors[:contact_point_id]).to be_present
+    end
+  end
+
   describe "optimistic locking" do
     it "có cột lock_version" do
       expect(PumpAllocation.column_names).to include("lock_version")

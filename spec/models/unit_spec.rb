@@ -100,6 +100,47 @@ RSpec.describe Unit do
     end
   end
 
+  describe "before_discard :cleanup_current_period_data (C1)" do
+    let!(:period) { create(:period, closed: false) }
+    let(:zone) { create(:zone) }
+    let(:unit) { create(:unit, zone: zone) }
+
+    it "hard delete unit_configs kỳ đang mở, giữ kỳ cũ" do
+      old_period = create(:period, year: 2025, month: 1, closed: true)
+      UnitConfig.create!(unit: unit, period: old_period, unit_public_rate: 5)
+      config_current = UnitConfig.find_by(unit: unit, period: period)
+      config_old = UnitConfig.find_by(unit: unit, period: old_period)
+
+      unit.discard
+      expect(UnitConfig.find_by(id: config_current.id)).to be_nil
+      expect(UnitConfig.find_by(id: config_old.id)).to be_present
+    end
+
+    it "hard delete pump_allocations kỳ đang mở, giữ kỳ cũ" do
+      alloc_current = PumpAllocation.create!(zone: zone, period: period, unit: unit, coefficient: 1)
+      old_period = create(:period, year: 2025, month: 1, closed: true)
+      alloc_old = PumpAllocation.create!(zone: zone, period: old_period, unit: unit, coefficient: 1)
+
+      unit.discard
+      expect(PumpAllocation.find_by(id: alloc_current.id)).to be_nil
+      expect(PumpAllocation.find_by(id: alloc_old.id)).to be_present
+    end
+  end
+
+  describe "after_discard :discard_blocks_and_groups (I6)" do
+    let(:zone) { create(:zone) }
+    let(:unit) { create(:unit, zone: zone) }
+    let!(:period) { create(:period, closed: false) }
+
+    it "cascade discard blocks và groups" do
+      block = create(:block, unit: unit)
+      group = create(:group, unit: unit)
+      unit.discard
+      expect(block.reload).to be_discarded
+      expect(group.reload).to be_discarded
+    end
+  end
+
   describe "discard" do
     it "có scope kept" do
       kept = create(:unit)

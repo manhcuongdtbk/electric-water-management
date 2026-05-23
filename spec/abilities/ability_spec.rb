@@ -118,6 +118,14 @@ RSpec.describe Ability do
       expect(ability).not_to be_able_to(:update, zone)
       expect(ability).not_to be_able_to(:create, Zone.new)
     end
+
+    it "đọc zone (hiện tại — cần cho UI, xem design issue trong V2_TEST_COVERAGE_GAPS.md)" do
+      expect(ability).to be_able_to(:read, zone)
+    end
+
+    it "đọc đơn vị mình" do
+      expect(ability).to be_able_to(:read, my_unit)
+    end
   end
 
   describe "unit_admin là zone-manager (T62)" do
@@ -183,6 +191,63 @@ RSpec.describe Ability do
       meter = build(:meter, contact_point: cp)
       reading = build(:meter_reading, meter: meter)
       expect(ability).not_to be_able_to(:update, reading)
+    end
+  end
+
+  describe "commander zone-manager (CMD-ZM)" do
+    let(:zone) { create(:zone) }
+    let!(:my_unit) { create(:unit, zone: zone) }
+    let(:user) { create(:user, :commander, unit: my_unit) }
+    subject(:ability) { Ability.new(user) }
+
+    it "đọc contact_point thuộc khu vực" do
+      cp = build(:contact_point, :zone_residential, zone: zone)
+      expect(ability).to be_able_to(:read, cp)
+    end
+
+    it "không tạo/sửa contact_point thuộc khu vực" do
+      cp = build(:contact_point, :zone_residential, zone: zone)
+      expect(ability).not_to be_able_to(:create, cp)
+      expect(ability).not_to be_able_to(:update, cp)
+    end
+
+    it "đọc main_meter khu vực mình" do
+      mm = create(:main_meter, zone: zone)
+      expect(ability).to be_able_to(:read, mm)
+    end
+
+    it "đọc main_meter_readings khu vực mình" do
+      mm = create(:main_meter, zone: zone)
+      reading = build(:main_meter_reading, main_meter: mm)
+      expect(ability).to be_able_to(:read, reading)
+    end
+
+    it "không sửa main_meter_readings" do
+      mm = create(:main_meter, zone: zone)
+      reading = build(:main_meter_reading, main_meter: mm)
+      expect(ability).not_to be_able_to(:update, reading)
+    end
+
+    it "đọc pump_allocations khu vực mình" do
+      alloc = build(:pump_allocation, zone: zone, unit: my_unit, contact_point: nil)
+      expect(ability).to be_able_to(:read, alloc)
+    end
+
+    it "không CRUD pump_allocations" do
+      alloc = build(:pump_allocation, zone: zone, unit: my_unit, contact_point: nil)
+      expect(ability).not_to be_able_to(:create, alloc)
+      expect(ability).not_to be_able_to(:update, alloc)
+    end
+
+    it "đọc calculations khu vực mình" do
+      cp = create(:contact_point, :zone_residential, zone: zone)
+      period = create(:period, closed: false)
+      calc = create(:calculation, contact_point: cp, period: period)
+      expect(ability).to be_able_to(:read, calc)
+    end
+
+    it "không recalculate" do
+      expect(ability).not_to be_able_to(:recalculate, Calculation.new)
     end
   end
 

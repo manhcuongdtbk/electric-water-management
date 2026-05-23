@@ -132,6 +132,52 @@ RSpec.describe "ContactPoints", type: :request do
     end
   end
 
+  describe "UA-ZM tạo zone-level CP (không qua accessible_by Zone)" do
+    let(:ua_zm) { create(:user, :unit_admin, unit: unit_a) }
+    before { sign_in ua_zm }
+
+    it "tạo residential thuộc khu vực" do
+      post contact_points_path, params: {
+        contact_point: {
+          name: "Chỉ huy khu vực", contact_point_type: "residential",
+          zone_id: zone.id,
+          personnel_counts: { ranks.last.id.to_s => "1" },
+          meters_attributes: { "0" => { name: "CT-KV", no_loss: "0" } }
+        }
+      }
+      expect(response).to redirect_to(contact_points_path(type: "residential"))
+      cp = ContactPoint.find_by!(name: "Chỉ huy khu vực")
+      expect(cp.zone_id).to eq(zone.id)
+      expect(cp.unit_id).to be_nil
+    end
+
+    it "tạo water_pump thuộc khu vực" do
+      post contact_points_path, params: {
+        contact_point: {
+          name: "Trạm bơm test", contact_point_type: "water_pump",
+          zone_id: zone.id,
+          meters_attributes: { "0" => { name: "CT-BN-test", no_loss: "0" } }
+        }
+      }
+      expect(response).to redirect_to(contact_points_path(type: "water_pump"))
+      cp = ContactPoint.find_by!(name: "Trạm bơm test")
+      expect(cp.zone_id).to eq(zone.id)
+    end
+
+    it "tạo non_establishment thuộc khu vực" do
+      post contact_points_path, params: {
+        contact_point: {
+          name: "Thợ điện", contact_point_type: "non_establishment",
+          zone_id: zone.id, personnel_count: "3"
+        }
+      }
+      expect(response).to redirect_to(contact_points_path(type: "non_establishment"))
+      cp = ContactPoint.find_by!(name: "Thợ điện")
+      expect(cp.zone_id).to eq(zone.id)
+      expect(cp.personnel_count).to eq(3)
+    end
+  end
+
   describe "PATCH /contact_points/:id (T48)" do
     before { sign_in system_admin }
 

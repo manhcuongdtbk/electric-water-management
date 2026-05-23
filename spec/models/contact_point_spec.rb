@@ -343,6 +343,58 @@ RSpec.describe ContactPoint do
     end
   end
 
+  describe "validate_block_group_unit_match (I1)" do
+    let(:zone) { create(:zone) }
+    let(:unit_a) { create(:unit, zone: zone) }
+    let(:unit_b) { create(:unit, zone: zone) }
+    let(:block_a) { create(:block, unit: unit_a) }
+    let(:group_a) { create(:group, unit: unit_a) }
+    let!(:period) { create(:period, closed: false) }
+    let!(:rank) { create(:rank, period: period, name: "Test", quota: 100, position: 1) }
+
+    it "chặn block thuộc unit khác" do
+      cp = build(:contact_point, :residential, unit: unit_b, block: block_a,
+                 initial_personnel_counts: { rank.id => 1 })
+      expect(cp).not_to be_valid
+      expect(cp.errors[:block_id]).to be_present
+    end
+
+    it "chặn group thuộc unit khác" do
+      cp = build(:contact_point, :residential, unit: unit_b, group: group_a,
+                 initial_personnel_counts: { rank.id => 1 })
+      expect(cp).not_to be_valid
+      expect(cp.errors[:group_id]).to be_present
+    end
+
+    it "chặn block cho CP thuộc khu vực (unit blank)" do
+      cp = build(:contact_point, :zone_residential, zone: zone, block: block_a,
+                 initial_personnel_counts: { rank.id => 1 })
+      expect(cp).not_to be_valid
+      expect(cp.errors[:block_id]).to be_present
+    end
+
+    it "chặn group cho CP thuộc khu vực (unit blank)" do
+      cp = build(:contact_point, :zone_residential, zone: zone, group: group_a,
+                 initial_personnel_counts: { rank.id => 1 })
+      expect(cp).not_to be_valid
+      expect(cp.errors[:group_id]).to be_present
+    end
+  end
+
+  describe "propagate_personnel_count_to_current_snapshot (I2)" do
+    let(:zone) { create(:zone) }
+    let!(:period) { create(:period, closed: false) }
+
+    it "update snapshot khi sửa personnel_count non_establishment" do
+      cp = create(:contact_point, :non_establishment, zone: zone, personnel_count: 5)
+      snapshot = cp.non_establishment_snapshots.find_by!(period: period)
+      expect(snapshot.personnel_count).to eq(5)
+
+      cp.update!(personnel_count: 10)
+      expect(snapshot.reload.personnel_count).to eq(10)
+    end
+  end
+
   describe "auto-snapshot khi tạo đầu mối lúc kỳ đang mở (T25, T26)" do
     context "khi không có kỳ đang mở (T26)" do
       it "không tạo personnel_entries cho residential" do
