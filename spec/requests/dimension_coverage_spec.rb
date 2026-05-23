@@ -113,7 +113,9 @@ RSpec.describe "Test dimension coverage", type: :request do
       end
 
       it "UA xem history range → trả 200" do
-        get history_path(mode: "range", from: "2026-05", to: "2026-06")
+        get history_path(mode: "range",
+                         from_period_id: sample.period.id,
+                         to_period_id: sample.period.id)
         expect(response).to have_http_status(:ok)
       end
     end

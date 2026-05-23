@@ -94,7 +94,9 @@ RSpec.describe "History range content (N10)", type: :request do
   end
 
   it "range mode hiển thị summary per kỳ" do
-    get history_path(mode: "range", from: "2026-05", to: "2026-05")
+    get history_path(mode: "range",
+                     from_period_id: sample.period.id,
+                     to_period_id: sample.period.id)
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("5/2026")
   end

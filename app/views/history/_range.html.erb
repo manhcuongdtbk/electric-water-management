@@ -1,55 +1,35 @@
 <%
-  earliest_year = (Period.minimum(:year) || Date.current.year) - 1
-  latest_year   = (Period.maximum(:year) || Date.current.year) + 1
-  year_options  = (earliest_year..latest_year).to_a
-  month_options = (1..12).map { |m| ["Tháng #{m}", m] }
+  period_options = @available_periods.map { |p| [period_label(p), p.id] }
+  toolbar_filters = [
+    { label: t("history.range.from_period"), param: :from_period_id,
+      options: period_options, selected: @from_period&.id },
+    { label: t("history.range.to_period"), param: :to_period_id,
+      options: period_options, selected: @to_period&.id }
+  ]
 %>
 
-<%= form_with url: history_path, method: :get, local: true,
-      class: "flex flex-wrap gap-4 items-end mb-4" do %>
-  <%= hidden_field_tag :mode, "range" %>
+<%= render "shared/list_toolbar",
+     url: history_path,
+     total_count: @total_count,
+     filters: toolbar_filters,
+     extra_hidden: { mode: "range" },
+     show_search: false,
+     show_per_page: false,
+     total_label: t("history.range.total_periods", count: @total_count) %>
 
-  <div>
-    <label class="block text-xs text-gray-600 mb-1">Từ tháng</label>
-    <div class="flex gap-2">
-      <%= select_tag :from_month,
-            options_for_select(month_options, @from.month),
-            class: "rounded border border-gray-300 text-sm" %>
-      <%= select_tag :from_year,
-            options_for_select(year_options.map { |y| ["Năm #{y}", y] }, @from.year),
-            class: "rounded border border-gray-300 text-sm" %>
-    </div>
-  </div>
-
-  <div>
-    <label class="block text-xs text-gray-600 mb-1">Đến tháng</label>
-    <div class="flex gap-2">
-      <%= select_tag :to_month,
-            options_for_select(month_options, @to.month),
-            class: "rounded border border-gray-300 text-sm" %>
-      <%= select_tag :to_year,
-            options_for_select(year_options.map { |y| ["Năm #{y}", y] }, @to.year),
-            class: "rounded border border-gray-300 text-sm" %>
-    </div>
-  </div>
-
-  <%= submit_tag "Xem",
-        class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 cursor-pointer" %>
-<% end %>
-
-<% if @period_summaries.empty? %>
+<% if @period_summaries.blank? %>
   <div class="bg-gray-50 border border-gray-200 rounded p-4 text-gray-600">
-    Không có kỳ nào trong khoảng <strong><%= @from.strftime("%m/%Y") %></strong> đến <strong><%= @to.strftime("%m/%Y") %></strong>.
+    <%= t("history.range.no_periods_in_range") %>
   </div>
 <% else %>
   <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
     <table class="w-full text-sm">
       <thead class="bg-gray-50">
         <tr>
-          <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Kỳ</th>
-          <th class="px-4 py-2 text-right text-xs font-semibold text-gray-700">Tổng thâm điện (kW)</th>
-          <th class="px-4 py-2 text-right text-xs font-semibold text-gray-700">Thành tiền phải thu</th>
-          <th class="px-4 py-2 text-center text-xs font-semibold text-gray-700">Trạng thái</th>
+          <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700"><%= t("history.range.columns.period") %></th>
+          <th class="px-4 py-2 text-right text-xs font-semibold text-gray-700"><%= t("history.range.columns.deficit_kw") %></th>
+          <th class="px-4 py-2 text-right text-xs font-semibold text-gray-700"><%= t("history.range.columns.deficit_amount") %></th>
+          <th class="px-4 py-2 text-center text-xs font-semibold text-gray-700"><%= t("history.range.columns.status") %></th>
         </tr>
       </thead>
       <tbody>
@@ -76,9 +56,9 @@
             </td>
             <td class="px-4 py-2 text-center">
               <% if period.open? %>
-                <span class="inline-block px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs">Đang mở</span>
+                <span class="inline-block px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs"><%= t("common.badges.open") %></span>
               <% else %>
-                <span class="inline-block px-2 py-0.5 rounded bg-gray-200 text-gray-700 text-xs">Đã đóng</span>
+                <span class="inline-block px-2 py-0.5 rounded bg-gray-200 text-gray-700 text-xs"><%= t("common.badges.closed") %></span>
               <% end %>
             </td>
           </tr>
