@@ -1,26 +1,27 @@
-<header class="bg-white border-b border-gray-200 h-14 flex items-center px-6 justify-between flex-shrink-0">
-  <div class="flex items-center space-x-4">
-    <h1 class="text-base font-semibold text-gray-900"><%= t("application.name") %></h1>
+<header class="bg-blue-900 h-14 flex items-center px-6 justify-between flex-shrink-0">
+  <div class="flex items-center">
+    <h1 class="text-base font-semibold text-white"><%= t("application.name") %></h1>
+    <span class="mx-4 text-blue-700">│</span>
     <% if current_period %>
-      <span class="text-sm text-gray-600 bg-blue-50 px-3 py-1 rounded">
-        <%= period_label(current_period) %>
-        <span class="ml-1 text-xs font-medium text-green-700 bg-green-100 px-1.5 py-0.5 rounded"><%= t("common.badges.open") %></span>
+      <span class="text-sm text-blue-200">
+        <%= period_label(current_period) %> —
+        <span class="text-green-300"><%= t("common.badges.open") %></span>
       </span>
     <% else %>
-      <span class="text-sm text-yellow-700 bg-yellow-50 px-3 py-1 rounded">
+      <span class="text-sm text-yellow-300">
         <%= t("dashboard.no_period.title", default: "Không có kỳ đang mở") %>
       </span>
     <% end %>
   </div>
-  <div class="flex items-center space-x-4">
-    <span class="text-sm text-gray-700">
+  <div class="flex items-center space-x-3 text-sm">
+    <span class="text-white">
       <%= current_user.display_name %>
-      <span class="text-gray-400">(<%= t("activerecord.attributes.user.roles.#{current_user.role}", default: current_user.role) %>)</span>
+      <span class="text-blue-300">· <%= t("activerecord.attributes.user.roles.#{current_user.role}", default: current_user.role) %></span>
     </span>
     <%= link_to t("common.actions.change_password"), edit_password_change_path,
-          class: "text-sm text-blue-600 hover:text-blue-800 underline" %>
+          class: "text-blue-200 hover:text-white no-underline" %>
     <%= button_to t("common.actions.logout"), destroy_user_session_path, method: :delete,
-        class: "text-sm text-red-600 hover:text-red-800 underline cursor-pointer bg-transparent border-0 p-0",
+        class: "text-red-300 hover:text-red-100 cursor-pointer bg-transparent border-0 p-0",
         form: { data: { turbo: false } } %>
   </div>
 </header>
