@@ -36,6 +36,19 @@ RSpec.describe "Billing", type: :request do
         expect(response.body).to include("Chỉ huy khu vực")
       end
 
+      it "không hiện badge 'Đang mở' (topbar đã có)" do
+        get billing_path
+        doc = Nokogiri::HTML(response.body)
+        # Billing page body (không tính topbar) không chứa badge Đang mở
+        table_area = doc.css("main").text
+        expect(table_area).not_to include("Đang mở")
+      end
+
+      it "hiện đơn giá điện trên bảng" do
+        get billing_path
+        expect(response.body).to include("Đơn giá điện")
+      end
+
       it "SA chọn zone → ẩn cột Khu vực (I17)" do
         get billing_path(zone_id: sample.zone.id)
         doc = Nokogiri::HTML(response.body)
