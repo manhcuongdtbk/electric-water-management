@@ -15,7 +15,7 @@
     ]
   %>
   <%= render "shared/list_toolbar",
-       url: history_path,
+       url: history_path(mode: "compare"),
        total_count: @comparison&.size || 0,
        filters: toolbar_filters,
        extra_hidden: { mode: "compare" },

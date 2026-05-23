@@ -83,9 +83,13 @@
                 data: { action: "change->auto-submit#submit" },
                 class: "rounded border border-gray-300 text-sm px-2 py-1" %>
         <% else %>
+          <%
+            # blank_text: nil → không có option trống. Không truyền hoặc truyền string → có option trống.
+            blank_option = filter.key?(:blank_text) && filter[:blank_text].nil? ? [] : [[filter[:blank_text] || "Tất cả", ""]]
+          %>
           <%= select_tag filter[:param],
                 options_for_select(
-                  [[filter[:blank_text] || "Tất cả", ""]] + filter[:options],
+                  blank_option + filter[:options],
                   filter[:selected]
                 ),
                 data: select_data,

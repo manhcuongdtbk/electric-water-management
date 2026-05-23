@@ -2,14 +2,14 @@
   period_options = @available_periods.map { |p| [period_label(p), p.id] }
   toolbar_filters = [
     { label: t("history.range.from_period"), param: :from_period_id,
-      options: period_options, selected: @from_period&.id },
+      options: period_options, selected: @from_period&.id, blank_text: nil },
     { label: t("history.range.to_period"), param: :to_period_id,
-      options: period_options, selected: @to_period&.id }
+      options: period_options, selected: @to_period&.id, blank_text: nil }
   ]
 %>
 
 <%= render "shared/list_toolbar",
-     url: history_path,
+     url: history_path(mode: "range"),
      total_count: @total_count,
      filters: toolbar_filters,
      extra_hidden: { mode: "range" },
