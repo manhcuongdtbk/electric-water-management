@@ -54,6 +54,25 @@ RSpec.describe Backup do
     end
   end
 
+  describe "#file_exists? (N1)" do
+    it "false khi file không tồn tại" do
+      backup = build(:backup, filename: "nonexistent.dump")
+      expect(backup.file_exists?).to be false
+    end
+  end
+
+  describe "#human_size (N1)" do
+    it "format kích thước đọc được" do
+      backup = build(:backup, size_bytes: 1_048_576)
+      expect(backup.human_size).to include("MB")
+    end
+
+    it "0 bytes" do
+      backup = build(:backup, size_bytes: 0)
+      expect(backup.human_size).to include("0")
+    end
+  end
+
   describe "audit" do
     it "tạo Backup ghi nhật ký PaperTrail event=create" do
       expect {
