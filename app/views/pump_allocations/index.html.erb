@@ -1,6 +1,5 @@
 <% page_title t("sidebar.items.pump_allocations") %>
 
-<%= render "shared/period_indicator", period: @period %>
 
 <%
   add_link = (@period && can?(:create, PumpAllocation)) ?
