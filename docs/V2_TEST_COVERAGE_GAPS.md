@@ -172,11 +172,11 @@
 
 | Gap | Trạng thái |
 |---|---|
-| Formula correctness (SUM, tiêu chuẩn còn lại, thành tiền) | [ ] Cần thêm |
-| Column count per role (SA 30, UA-ZM 29, UA 28) | [ ] Cần thêm |
-| Cell merge correctness (khối/nhóm/đơn vị/khu vực) | [ ] Cần thêm |
+| Formula correctness (SUM, tiêu chuẩn còn lại, thành tiền) | [x] billing_spec — 5 formula tests (SUM ranks, std+pump, SUM deductions, std-deduction, kw*price) |
+| Column count per role (SA 30, UA-ZM 29, UA 28) | [x] billing_spec — SA header có Khu vực+Đơn vị, UA ẩn cả 2, UA-ZM có Đơn vị ẩn Khu vực |
+| Cell merge correctness (khối/nhóm/đơn vị/khu vực) | [x] billing_spec — header nhóm lớn merge row 3 |
 | Number format (num_fmt) | [ ] Nice-to-have |
-| Formula column index shift khi số cột thay đổi theo role | [ ] Cần thêm |
+| Formula column index shift khi số cột thay đổi theo role | [x] billing_spec — UA xlsx formula vẫn reference $B$1 đúng |
 
 ---
 

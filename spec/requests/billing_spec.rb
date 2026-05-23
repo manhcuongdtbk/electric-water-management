@@ -134,24 +134,126 @@ RSpec.describe "Billing", type: :request do
     end
 
     context "format :xlsx" do
-      let(:user) { create(:user, :system_admin) }
+      include XlsxHelpers
+
       before { sign_in user }
 
-      it "trả về file xlsx" do
-        get billing_path(format: :xlsx)
-        expect(response).to have_http_status(:ok)
-        expect(response.content_type).to include("spreadsheetml.sheet")
-        expect(response.headers["Content-Disposition"]).to include("bang-tinh-tien")
+      context "SA (30 cột)" do
+        let(:user) { create(:user, :system_admin) }
+
+        it "trả về file xlsx" do
+          get billing_path(format: :xlsx)
+          expect(response).to have_http_status(:ok)
+          expect(response.content_type).to include("spreadsheetml.sheet")
+          expect(response.headers["Content-Disposition"]).to include("bang-tinh-tien")
+        end
+
+        it "export xlsx kỳ cũ" do
+          sample.period.update!(closed: true)
+          PeriodService.new.open_new_period(year: 2026, month: 6,
+                                            unit_price: BigDecimal("2336.4"))
+          get billing_path(period_id: sample.period.id, format: :xlsx)
+          expect(response).to have_http_status(:ok)
+          expect(response.headers["Content-Disposition"]).to include("bang-tinh-tien-#{sample.period.month}")
+        end
+
+        it "SA 30 cột — header chứa Khu vực và Đơn vị" do
+          get billing_path(format: :xlsx)
+          xlsx = parse_xlsx(response.body)
+          header_row = xlsx.rows[3]
+          header_texts = header_row&.compact || []
+          expect(header_texts).to include("Khu vực", "Đơn vị", "Khối", "Nhóm", "Tên đầu mối")
+        end
+
+        it "formulas đúng: tổng quân số = SUM(rank cols)" do
+          get billing_path(format: :xlsx)
+          xlsx = parse_xlsx(response.body)
+          # Data bắt đầu từ row 6 (index 5). Formulas trong XML không có leading "=".
+          personnel_formulas = xlsx.formulas.select { |_ref, f| f =~ /SUM\([A-Z]+6:[A-Z]+6\)/ }
+          expect(personnel_formulas).not_to be_empty
+        end
+
+        it "formulas đúng: tổng tiêu chuẩn = sinh hoạt + bơm nước" do
+          get billing_path(format: :xlsx)
+          xlsx = parse_xlsx(response.body)
+          std_formulas = xlsx.formulas.select { |ref, f| ref =~ /6$/ && f =~ /[A-Z]+6\+[A-Z]+6/ }
+          expect(std_formulas).not_to be_empty
+        end
+
+        it "formulas đúng: tổng trừ = SUM(tiết kiệm:khác)" do
+          get billing_path(format: :xlsx)
+          xlsx = parse_xlsx(response.body)
+          deduction_formulas = xlsx.formulas.select { |ref, f| ref =~ /6$/ && f =~ /SUM\([A-Z]+6:[A-Z]+6\)/ }
+          # Ít nhất 2 SUM formulas per data row: tổng quân số + tổng trừ
+          expect(deduction_formulas.size).to be >= 2
+        end
+
+        it "formulas đúng: tiêu chuẩn còn lại = tổng tiêu chuẩn - tổng trừ" do
+          get billing_path(format: :xlsx)
+          xlsx = parse_xlsx(response.body)
+          remaining_formulas = xlsx.formulas.select { |ref, f| ref =~ /6$/ && f =~ /[A-Z]+6-[A-Z]+6/ }
+          expect(remaining_formulas).not_to be_empty
+        end
+
+        it "formulas đúng: thành tiền = kW * đơn giá ($B$1)" do
+          get billing_path(format: :xlsx)
+          xlsx = parse_xlsx(response.body)
+          amount_formulas = xlsx.formulas.select { |_ref, f| f.include?("$B$1") }
+          # Mỗi data row có 2 formulas tham chiếu đơn giá: thành tiền thừa + thành tiền thiếu
+          expect(amount_formulas.size).to be >= 2
+        end
+
+        it "hàng tổng có formulas SUM cho mọi cột số" do
+          get billing_path(format: :xlsx)
+          xlsx = parse_xlsx(response.body)
+          # Hàng tổng tham chiếu range data rows (row 6 trở đi).
+          total_formulas = xlsx.formulas.select { |_ref, f| f =~ /SUM\([A-Z]+6:[A-Z]+\d+\)/ }
+          # 7 ranks + tổng quân số + 3 tiêu chuẩn + 6 khoản trừ + tiêu chuẩn còn lại
+          # + 3 sử dụng + 4 kết quả = 25 SUM formulas ở hàng tổng
+          expect(total_formulas.size).to be >= 18
+        end
+
+        it "merge cells cho header nhóm lớn (row 3)" do
+          get billing_path(format: :xlsx)
+          xlsx = parse_xlsx(response.body)
+          expect(xlsx.merges).not_to be_empty
+          header_merges = xlsx.merges.select { |m| m.include?("3") }
+          expect(header_merges).not_to be_empty
+        end
       end
 
-      it "export xlsx kỳ cũ" do
-        sample.period.update!(closed: true)
-        new_period = PeriodService.new
-                                  .open_new_period(year: 2026, month: 6,
-                                                   unit_price: BigDecimal("2336.4")).period
-        get billing_path(period_id: sample.period.id, format: :xlsx)
-        expect(response).to have_http_status(:ok)
-        expect(response.headers["Content-Disposition"]).to include("bang-tinh-tien-#{sample.period.month}")
+      context "UA (28 cột — ẩn Khu vực + Đơn vị)" do
+        let(:user) { create(:user, :unit_admin, unit: sample.unit_b) }
+
+        it "xlsx ẩn cột Khu vực và Đơn vị" do
+          get billing_path(format: :xlsx)
+          xlsx = parse_xlsx(response.body)
+          header_row = xlsx.rows[3]
+          header_texts = header_row&.compact || []
+          expect(header_texts).not_to include("Khu vực")
+          expect(header_texts).not_to include("Đơn vị")
+        end
+
+        it "formula column index đúng (không bị lệch do thiếu 2 cột)" do
+          get billing_path(format: :xlsx)
+          xlsx = parse_xlsx(response.body)
+          # Thành tiền vẫn phải tham chiếu $B$1 (đơn giá)
+          amount_formulas = xlsx.formulas.select { |_ref, f| f.include?("$B$1") }
+          expect(amount_formulas.size).to be >= 2
+        end
+      end
+
+      context "UA-ZM (29 cột — có Đơn vị, ẩn Khu vực)" do
+        let(:user) { create(:user, :unit_admin, unit: sample.unit_a) }
+
+        it "xlsx có cột Đơn vị, ẩn cột Khu vực" do
+          get billing_path(format: :xlsx)
+          xlsx = parse_xlsx(response.body)
+          header_row = xlsx.rows[3]
+          header_texts = header_row&.compact || []
+          expect(header_texts).to include("Đơn vị")
+          expect(header_texts).not_to include("Khu vực")
+        end
       end
     end
   end
