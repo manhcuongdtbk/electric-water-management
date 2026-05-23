@@ -1,0 +1,85 @@
+# Docker Compose cho DEVELOPMENT.
+# Chạy: docker compose -f compose.dev.yml up -d
+# Dừng: docker compose -f compose.dev.yml down
+#
+# Khác với production:
+# - Source code mount từ máy Mac vào container (sửa code → Rails tự reload)
+# - Không build image — dùng base Ruby image + cài gems lúc start
+# - Hiện log ra terminal để debug
+# - PostgreSQL data + backups nằm trong thư mục nhìn thấy được
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: electric_water_management
+      POSTGRES_PASSWORD: dev_password
+      POSTGRES_DB: electric_water_management_development
+      TZ: Asia/Ho_Chi_Minh
+    volumes:
+      - ./docker/dev/pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U electric_water_management"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      RAILS_ENV: development
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: electric_water_management
+      DATABASE_NAME: electric_water_management_development
+      ELECTRIC_WATER_MANAGEMENT_DATABASE_PASSWORD: dev_password
+      BACKUP_DIR: /rails/storage/backups
+      PORT: "3000"
+      BINDING: "0.0.0.0"
+      TZ: Asia/Ho_Chi_Minh
+    volumes:
+      - .:/rails
+      - bundle_cache:/usr/local/bundle
+      - ./docker/dev/backups:/rails/storage/backups
+    networks:
+      - dev
+    expose:
+      - "3000"
+    command: >
+      bash -c "
+        bundle install --quiet &&
+        bin/rails db:prepare &&
+        foreman start -f Procfile.dev
+      "
+    tty: true
+    stdin_open: true
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - dev
+
+volumes:
+  bundle_cache:
+
+networks:
+  dev:
+    driver: bridge

@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# Shortcut cho các lệnh Docker development thường dùng.
+#
+# Cách dùng:
+#   bin/docker rspec              → chạy toàn bộ test
+#   bin/docker rspec spec/models  → chạy test 1 thư mục
+#   bin/docker console            → mở Rails console
+#   bin/docker bash               → mở shell trong container app
+#   bin/docker bash postgres      → mở shell trong container postgres
+#   bin/docker logs               → xem logs container app
+#   bin/docker logs postgres      → xem logs container postgres
+#   bin/docker ps                 → xem trạng thái containers
+#   bin/docker up                 → khởi động Docker (foreground)
+#   bin/docker stop               → dừng Docker
+#   bin/docker start              → chạy lại Docker đã dừng
+#   bin/docker down               → dừng + xóa containers
+#   bin/docker exec app <lệnh>   → chạy lệnh trong container app
+#   bin/docker exec postgres <lệnh> → chạy lệnh trong container postgres
+
+set -e
+
+COMPOSE="docker compose -f compose.dev.yml"
+
+case "${1}" in
+  logs)
+    shift
+    $COMPOSE logs --tail 50 "${@:-app}"
+    ;;
+  ps)
+    $COMPOSE ps
+    ;;
+  up)
+    shift
+    $COMPOSE up "$@"
+    ;;
+  stop)
+    $COMPOSE stop
+    ;;
+  start)
+    $COMPOSE start
+    ;;
+  down)
+    shift
+    $COMPOSE down "$@"
+    ;;
+  rspec)
+    shift
+    $COMPOSE exec app bundle exec rspec "$@"
+    ;;
+  console)
+    $COMPOSE exec app bundle exec rails console
+    ;;
+  bash)
+    shift
+    $COMPOSE exec "${1:-app}" bash
+    ;;
+  exec)
+    shift
+    $COMPOSE exec "$@"
+    ;;
+  *)
+    $COMPOSE exec app "$@"
+    ;;
+esac

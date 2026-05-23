@@ -19,6 +19,18 @@ Khi code mâu thuẫn với thiết kế → sửa code. Khi thiết kế mâu t
 
 Rails 8, PostgreSQL, Tailwind, Hotwire (Turbo + Stimulus), Devise, CanCanCan, PaperTrail, Discard, Pagy, caxlsx + caxlsx_rails, RSpec + Capybara.
 
+## Development environment
+
+Development chạy hoàn toàn trong Docker (3 containers: postgres, app, nginx). Khi cần verify UI hoặc chạy app, dùng `preview_start` với server name `docker-dev` (cấu hình trong `.claude/launch.json`). Không chạy `docker compose` thủ công — để preview quản lý process.
+
+`bin/docker` là shortcut cho các lệnh Docker development:
+
+- Chạy test: `bin/docker rspec` (hoặc `bin/docker rspec spec/models`)
+- Rails console: `bin/docker console`
+- Xem logs: `bin/docker logs`
+- Mở shell: `bin/docker bash`
+- Trạng thái: `bin/docker ps`
+
 ## Ngôn ngữ
 
 - Code (tên biến, method, cột, model, controller, test): tiếng Anh
