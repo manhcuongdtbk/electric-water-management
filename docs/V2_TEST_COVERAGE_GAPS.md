@@ -216,17 +216,17 @@ Ngoài 12 chiều, rà soát mọi model, controller, service, concern, helper, 
 | I4 | PumpAllocation `validate_contact_point_must_be_zone_level` | [x] pump_allocation_spec — unit CP chặn, zone CP cho phép | [ ] |
 | I5 | PumpAllocation `validate_target_belongs_to_zone` | [x] pump_allocation_spec — unit + CP zone mismatch | [ ] |
 | I6 | Unit `discard_blocks_and_groups` | [x] unit_spec — cascade discard blocks + groups | [ ] |
-| I7 | Blocks controller | show/edit/update actions chưa test | [ ] |
-| I8 | Groups controller | show/edit/update actions chưa test | [ ] |
-| I9 | Ranks controller | index content, show/edit/update + period isolation guard chưa test | [ ] |
-| I10 | PumpAllocations controller | edit/update/destroy + `ensure_allocation_belongs_to_open_period` chưa test | [ ] |
-| I11 | MeterEntries | Batch update transaction rollback chưa test | [ ] |
-| I12 | ElectricitySupply | Tạo main_meter_reading mới (new_main_meter_readings params) chưa test | [ ] |
-| I13 | ElectricitySupply | Batch update failure rollback chưa test | [ ] |
+| I7 | Blocks controller | [x] blocks_spec — update name + trùng tên validation | [ ] |
+| I8 | Groups controller | [x] groups_spec — update name + trùng tên validation | [ ] |
+| I9 | Ranks controller | [x] ranks_spec — update name/quota + period isolation guard | [ ] |
+| I10 | PumpAllocations controller | [x] pump_allocations_spec — update/destroy + period guard | [ ] |
+| I11 | MeterEntries | [x] meter_entries_spec — 1 record lỗi → rollback tất cả | [ ] |
+| I12 | ElectricitySupply | [x] electricity_supply_spec — tạo main_meter_reading mới | [ ] |
+| I13 | ElectricitySupply | [x] electricity_supply_spec — invalid usage → lỗi validation | [ ] |
 | I14 | ListSortable `apply_sort` | [x] list_sortable_spec — 5 tests: ASC, DESC, invalid, default, SQL injection | [ ] |
 | I15 | SidebarHelper | [x] sidebar_helper_spec — 6 role sidebar item counts | [ ] |
 | I16 | BackupRestoreRunner | Restore flow (pg_restore, error handling) chưa test | [ ] |
-| I17 | Billing SA filter | Dynamic column hiding khi SA chọn zone/unit chưa test HTML | [ ] |
+| I17 | Billing SA filter | [x] billing_spec — chọn zone ẩn cột, chọn zone+unit ẩn cả 2 | [ ] |
 
 ### Nice-to-have (10)
 

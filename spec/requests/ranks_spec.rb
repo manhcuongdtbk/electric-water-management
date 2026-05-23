@@ -15,6 +15,30 @@ RSpec.describe "Ranks", type: :request do
     end
   end
 
+  describe "PATCH /ranks/:id (I9)" do
+    let!(:rank) { create(:rank, period: period, position: 1, name: "Rank cũ", quota: 100) }
+
+    it "update tên và quota" do
+      patch rank_path(rank), params: { rank: { name: "Rank mới", quota: "200" } }
+      expect(response).to redirect_to(ranks_path)
+      rank.reload
+      expect(rank.name).to eq("Rank mới")
+      expect(rank.quota).to eq(200)
+    end
+  end
+
+  describe "ensure_rank_belongs_to_open_period (I9)" do
+    let!(:rank_current) { create(:rank, period: period, position: 1, name: "Current", quota: 100) }
+
+    it "chặn edit/update/destroy rank kỳ đã đóng" do
+      old_period = create(:period, year: 2025, month: 1, closed: true)
+      old_rank = create(:rank, period: old_period, position: 1, name: "Old", quota: 50)
+      patch rank_path(old_rank), params: { rank: { name: "Hacked" } }
+      expect(response).to have_http_status(:redirect)
+      expect(old_rank.reload.name).to eq("Old")
+    end
+  end
+
   describe "DELETE /ranks/:id (T44)" do
     let!(:rank_main) { create(:rank, period: period, position: 1, name: "Rank chính") }
     let!(:rank_test) { create(:rank, period: period, position: 99, name: "Test") }

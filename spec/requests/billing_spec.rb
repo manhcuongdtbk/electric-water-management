@@ -36,6 +36,22 @@ RSpec.describe "Billing", type: :request do
         expect(response.body).to include("Chỉ huy khu vực")
       end
 
+      it "SA chọn zone → ẩn cột Khu vực (I17)" do
+        get billing_path(zone_id: sample.zone.id)
+        doc = Nokogiri::HTML(response.body)
+        headers = doc.css("table thead th").map(&:text).map(&:strip)
+        expect(headers).not_to include(a_string_matching(/\AKhu vực\z/))
+        expect(headers).to include(a_string_including("Đơn vị"))
+      end
+
+      it "SA chọn zone + unit → ẩn cả Khu vực và Đơn vị (I17)" do
+        get billing_path(zone_id: sample.zone.id, unit_id: sample.unit_a.id)
+        doc = Nokogiri::HTML(response.body)
+        headers = doc.css("table thead th").map(&:text).map(&:strip)
+        expect(headers).not_to include(a_string_matching(/\AKhu vực\z/))
+        expect(headers).not_to include(a_string_matching(/\AĐơn vị\z/))
+      end
+
       # Dropdown chọn kỳ, filter/cascade, đổi kỳ auto-submit, nút Tính toán lại/Xuất Excel,
       # non-SA dropdown visibility: cover bởi system specs (spec/system/billing_filter_spec.rb).
 

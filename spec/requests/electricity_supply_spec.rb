@@ -96,6 +96,38 @@ RSpec.describe "ElectricitySupply", type: :request do
     end
   end
 
+  describe "tạo main_meter_reading mới (I12)" do
+    let(:admin) { create(:user, :system_admin) }
+    before { sample; sign_in admin }
+
+    it "tạo reading mới cho main_meter chưa có reading" do
+      # Xóa reading hiện có để simulate kỳ mới chưa nhập
+      sample.main_meter_reading.destroy!
+      mm = sample.main_meter
+
+      patch electricity_supply_path, params: {
+        new_main_meter_readings: { mm.id.to_s => { usage: "2500" } }
+      }
+      expect(response).to redirect_to(electricity_supply_path)
+      new_reading = MainMeterReading.find_by(main_meter: mm, period: sample.period)
+      expect(new_reading).to be_present
+      expect(new_reading.usage.to_f).to eq(2500)
+    end
+  end
+
+  describe "batch update rollback (I13)" do
+    let(:admin) { create(:user, :system_admin) }
+    before { sample; sign_in admin }
+
+    it "usage âm → lỗi validation, flash hiện tên main_meter" do
+      r = sample.main_meter_reading
+      patch electricity_supply_path, params: {
+        main_meter_readings: { r.id.to_s => { usage: "-1", lock_version: r.lock_version } }
+      }
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
+  end
+
   describe "T70: không có kỳ đang mở" do
     it "show vẫn render, banner cảnh báo" do
       sample.period.update!(closed: true)

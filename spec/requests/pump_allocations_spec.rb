@@ -128,6 +128,38 @@ RSpec.describe "PumpAllocations", type: :request do
       expect(PumpAllocation.count).to eq(1)
     end
 
+  end
+
+  describe "PATCH /pump_allocations/:id (I10)" do
+    let!(:alloc) { create(:pump_allocation, zone: zone, period: period, unit: unit, contact_point: nil, coefficient: 1) }
+
+    it "update coefficient thành công" do
+      patch pump_allocation_path(alloc), params: { pump_allocation: { coefficient: "2.5" } }
+      expect(response).to redirect_to(pump_allocations_path)
+      expect(alloc.reload.coefficient.to_f).to eq(2.5)
+    end
+  end
+
+  describe "DELETE /pump_allocations/:id (I10)" do
+    let!(:alloc) { create(:pump_allocation, zone: zone, period: period, unit: unit, contact_point: nil, coefficient: 1) }
+
+    it "xóa phân bổ" do
+      expect { delete pump_allocation_path(alloc) }.to change(PumpAllocation, :count).by(-1)
+      expect(response).to redirect_to(pump_allocations_path)
+    end
+  end
+
+  describe "ensure_allocation_belongs_to_open_period (I10)" do
+    it "chặn edit allocation kỳ đã đóng" do
+      old_period = create(:period, year: 2025, month: 1, closed: true)
+      old_alloc = create(:pump_allocation, zone: zone, period: old_period, unit: unit, contact_point: nil)
+      patch pump_allocation_path(old_alloc), params: { pump_allocation: { coefficient: "99" } }
+      expect(response).to redirect_to(pump_allocations_path)
+      expect(old_alloc.reload.coefficient.to_f).not_to eq(99)
+    end
+  end
+
+  describe "POST /pump_allocations — validations" do
     it "T53: chặn khi tổng fixed_percentage > 100" do
       create(:pump_allocation, zone: zone, period: period, unit: unit,
              contact_point: nil, fixed_percentage: 80, coefficient: 1)
