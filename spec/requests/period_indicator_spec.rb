@@ -8,9 +8,9 @@ RSpec.describe "Topbar", type: :request do
   describe "topbar cơ bản" do
     let!(:period) { create(:period, month: 5, year: 2026, closed: false) }
 
-    it "dark header (bg-gray-800)" do
+    it "light header (bg-white border-b)" do
       get zones_path
-      expect(response.body).to include("bg-gray-800")
+      expect(response.body).to include("bg-white")
     end
 
     it "hiện tên hệ thống" do
@@ -62,7 +62,7 @@ RSpec.describe "Topbar", type: :request do
     it "hiện cảnh báo vàng" do
       get zones_path
       expect(response.body).to include("Không có kỳ đang mở")
-      expect(response.body).to include("text-yellow-400")
+      expect(response.body).to include("text-yellow-700")
     end
   end
 end

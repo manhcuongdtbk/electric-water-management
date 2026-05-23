@@ -1,19 +1,25 @@
-<header class="bg-gray-800 h-12 flex items-center px-6 justify-between flex-shrink-0 text-sm">
-  <div class="flex items-center space-x-6">
-    <span class="font-semibold text-white"><%= t("application.name") %></span>
+<header class="bg-white border-b border-gray-200 h-14 flex items-center px-6 justify-between flex-shrink-0">
+  <div class="flex items-center space-x-5">
+    <span class="text-base font-bold text-gray-900"><%= t("application.name") %></span>
     <% if current_period %>
-      <span class="text-gray-300"><%= period_label(current_period) %> — <%= t("common.badges.open") %></span>
+      <span class="bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full">
+        <%= period_label(current_period) %> · <span class="text-green-600 font-medium"><%= t("common.badges.open") %></span>
+      </span>
     <% else %>
-      <span class="text-yellow-400"><%= t("dashboard.no_period.title", default: "Không có kỳ đang mở") %></span>
+      <span class="bg-yellow-50 text-yellow-700 text-xs px-3 py-1 rounded-full">
+        <%= t("dashboard.no_period.title", default: "Không có kỳ đang mở") %>
+      </span>
     <% end %>
   </div>
-  <div class="flex items-center space-x-4 text-gray-300">
-    <span class="text-white"><%= current_user.display_name %></span>
-    <span><%= t("activerecord.attributes.user.roles.#{current_user.role}", default: current_user.role) %></span>
+  <div class="flex items-center text-sm space-x-3">
+    <span class="text-gray-700">
+      <%= current_user.display_name %>
+      <span class="text-gray-400">(<%= t("activerecord.attributes.user.roles.#{current_user.role}", default: current_user.role) %>)</span>
+    </span>
     <%= link_to t("common.actions.change_password"), edit_password_change_path,
-          class: "hover:text-white" %>
+          class: "bg-gray-100 text-gray-700 px-3 py-1.5 rounded text-sm font-medium hover:bg-gray-300 hover:shadow-sm active:bg-gray-400 transition-all duration-150" %>
     <%= button_to t("common.actions.logout"), destroy_user_session_path, method: :delete,
-        class: "text-red-400 hover:text-red-300 cursor-pointer bg-transparent border-0 p-0",
-        form: { data: { turbo: false } } %>
+        class: "bg-red-600 text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-red-700 cursor-pointer border-0",
+        form: { class: "inline", data: { turbo: false } } %>
   </div>
 </header>
