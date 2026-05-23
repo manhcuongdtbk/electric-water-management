@@ -132,6 +132,51 @@ RSpec.describe "ContactPoints", type: :request do
     end
   end
 
+  describe "assignment_mode xử lý đúng khi cả zone_id và unit_id có trong params" do
+    before { sign_in system_admin }
+
+    it "assignment_mode=unit → giữ unit_id, xoá zone_id" do
+      post contact_points_path, params: {
+        assignment_mode: "unit",
+        contact_point: {
+          name: "Nhà ăn", contact_point_type: "public",
+          unit_id: unit_a.id, zone_id: zone.id,
+          meters_attributes: { "0" => { name: "CT-test", no_loss: "0" } }
+        }
+      }
+      cp = ContactPoint.find_by!(name: "Nhà ăn")
+      expect(cp.unit_id).to eq(unit_a.id)
+      expect(cp.zone_id).to be_nil
+    end
+
+    it "assignment_mode=zone → giữ zone_id, xoá unit_id" do
+      post contact_points_path, params: {
+        assignment_mode: "zone",
+        contact_point: {
+          name: "Đèn đường", contact_point_type: "public",
+          unit_id: unit_a.id, zone_id: zone.id,
+          meters_attributes: { "0" => { name: "CT-dd", no_loss: "0" } }
+        }
+      }
+      cp = ContactPoint.find_by!(name: "Đèn đường")
+      expect(cp.zone_id).to eq(zone.id)
+      expect(cp.unit_id).to be_nil
+    end
+
+    it "không có assignment_mode, chỉ zone_id → zone-level (backward compat)" do
+      post contact_points_path, params: {
+        contact_point: {
+          name: "Cổng gác", contact_point_type: "public",
+          zone_id: zone.id,
+          meters_attributes: { "0" => { name: "CT-cg", no_loss: "0" } }
+        }
+      }
+      cp = ContactPoint.find_by!(name: "Cổng gác")
+      expect(cp.zone_id).to eq(zone.id)
+      expect(cp.unit_id).to be_nil
+    end
+  end
+
   describe "UA-ZM tạo zone-level CP (không qua accessible_by Zone)" do
     let(:ua_zm) { create(:user, :unit_admin, unit: unit_a) }
     before { sign_in ua_zm }
