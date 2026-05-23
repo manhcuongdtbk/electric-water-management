@@ -243,6 +243,53 @@ Input đặc thù per trang:
 | Đầu mối (/contact_points) | Lọc theo loại (`type`: residential/public/water_pump/non_establishment) |
 | Nhật ký (/audit_logs) | Lọc theo event, item_type, whodunnit, khoảng ngày (from/to) |
 
+### Tương tác giữa các input (cascade, conditional, dynamic)
+
+Nhiều trang dùng chung pattern tương tác input. Sửa 1 chỗ phải test tất cả trang dùng chung pattern đó.
+
+**Cascade dropdown (parent → child):**
+
+| Pattern | Stimulus controller | Trang |
+|---|---|---|
+| Zone → Unit (index filter) | `reset_child_select` + `auto_submit` (qua `_list_toolbar`) | billing (SA), contact_points (SA), blocks (SA), groups (SA), users (SA), unit_config (SA) |
+| Zone → Unit/CP (form) | `pump_allocation_form` | pump_allocations form |
+| Unit → Block (form) | `scoped_block_select` | groups form (SA) |
+
+Chọn parent → child dropdown chỉ hiện items thuộc parent. Đổi parent → reset child. Chọn child mà chưa chọn parent → auto-select parent. Nguyên tắc này phải nhất quán trên mọi trang.
+
+**Toggle hiện/ẩn field:**
+
+| Pattern | Stimulus controller | Trang |
+|---|---|---|
+| Đơn vị / Khu vực ownership | `contact_point_assignment` | contact_points form residential + public (SA only) |
+| Role → Unit field | `role_unit_toggle` | users form |
+| Target: đơn vị / đầu mối | `pump_allocation_form` | pump_allocations form |
+| Allocation: phần trăm cố định / hệ số | `pump_allocation_form` | pump_allocations form |
+
+Chọn option A → hiện fields A, ẩn fields B. Chọn option B → ngược lại. Đổi toggle không được mất data đã nhập (hoặc phải clear rõ ràng).
+
+**Dynamic form elements:**
+
+| Pattern | Stimulus controller | Trang |
+|---|---|---|
+| Thêm/xóa công tơ (nested) | `nested_meters` | contact_points form (residential, public, water_pump) |
+| Chọn loại đầu mối → redirect form | `type_redirect` | contact_points new |
+
+**Auto-submit khi input thay đổi:**
+
+| Pattern | Stimulus controller | Trang |
+|---|---|---|
+| Filter dropdown change → submit | `auto_submit` | Mọi index page qua `_list_toolbar` |
+| Per page change → submit | `per_page` | Mọi index page |
+| Period selector change → submit | `auto_submit` | billing, history, pricing |
+
+**Conditional field theo giá trị data:**
+
+| Pattern | Cách xử lý | Trang |
+|---|---|---|
+| reading_end < reading_start → hiện manual_usage + note | View template (không dùng Stimulus) | meter_entries, pump_entries |
+| Other deduction type (fixed/coefficient) → ý nghĩa giá trị khác | View template | unit_config |
+
 ### C (Create) — form tạo mới
 
 | Loại input | Ví dụ | Cần kiểm thử |
