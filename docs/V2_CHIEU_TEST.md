@@ -1,6 +1,6 @@
 # Các chiều kiểm thử — Hệ thống quản lý điện nội bộ Sư đoàn (Hệ thống v2)
 
-> **Phiên bản:** 0.2.0 (bản nháp — chưa duyệt)
+> **Phiên bản:** 1.0.0
 > **Ngày:** 23/05/2026
 > **Tính chất:** Định nghĩa không gian kiểm thử. Mỗi chiều là một biến độc lập tạo code path khác nhau trong hệ thống. Giao điểm giữa các chiều là nơi bug dễ xảy ra nhất.
 > **Nguồn:** Audit toàn bộ codebase, đối chiếu 4 tài liệu, 1129+ test cases hiện có.
