@@ -1,6 +1,6 @@
 <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden mb-6">
   <div class="px-4 py-3 border-b border-gray-200">
-    <h3 class="text-sm font-semibold text-gray-900">Sử dụng điện công cộng và bơm nước per khu vực</h3>
+    <h3 class="text-sm font-semibold text-gray-900">Sử dụng điện công cộng và bơm nước theo khu vực</h3>
   </div>
   <table class="w-full text-sm">
     <thead class="bg-gray-50">
@@ -12,7 +12,7 @@
     </thead>
     <tbody>
       <% @summary.zones.each do |data| %>
-        <tr class="border-t border-gray-100 hover:bg-yellow-50">
+        <tr class="border-t border-gray-100 hover:bg-gray-50 transition-colors">
           <td class="px-4 py-2"><%= data[:zone].name %></td>
           <td class="px-4 py-2 text-right"><%= number_to_vi(data[:public_usage]) %></td>
           <td class="px-4 py-2 text-right"><%= number_to_vi(data[:pump_usage]) %></td>
@@ -26,6 +26,9 @@
 </div>
 
 <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+  <div class="px-4 py-3 border-b border-gray-200">
+    <h3 class="text-sm font-semibold text-gray-900">Thâm điện và trạng thái nhập liệu theo đơn vị</h3>
+  </div>
   <table class="w-full text-sm">
     <thead class="bg-gray-50">
       <tr>
@@ -38,7 +41,7 @@
     </thead>
     <tbody>
       <% @summary.units.each do |data| %>
-        <tr class="border-t border-gray-100 hover:bg-yellow-50">
+        <tr class="border-t border-gray-100 hover:bg-gray-50 transition-colors">
           <td class="px-4 py-2"><%= data[:unit].name %></td>
           <td class="px-4 py-2 text-gray-600"><%= data[:unit].zone&.name %></td>
           <td class="px-4 py-2 text-right text-red-700 font-medium"><%= number_to_vi(data[:deficit_kw]) %></td>
