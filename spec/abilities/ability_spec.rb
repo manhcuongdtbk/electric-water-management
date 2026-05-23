@@ -118,6 +118,14 @@ RSpec.describe Ability do
       expect(ability).not_to be_able_to(:update, zone)
       expect(ability).not_to be_able_to(:create, Zone.new)
     end
+
+    it "đọc zone (hiện tại — cần cho UI, xem design issue trong V2_TEST_COVERAGE_GAPS.md)" do
+      expect(ability).to be_able_to(:read, zone)
+    end
+
+    it "đọc đơn vị mình" do
+      expect(ability).to be_able_to(:read, my_unit)
+    end
   end
 
   describe "unit_admin là zone-manager (T62)" do
