@@ -54,7 +54,7 @@
         { name: "Khoản trừ", metrics: [
           ["Tổng trừ", :total_deduction, :num]
         ]},
-        { name: nil, metrics: [
+        { name: "Tiêu chuẩn còn lại", metrics: [
           ["Tiêu chuẩn còn lại", :remaining_standard, :num]
         ]},
         { name: "Sử dụng", metrics: [
@@ -134,50 +134,46 @@
               <th colspan="<%= info_cols %>" class="<%= header_cell %>">Thông tin đầu mối</th>
               <th colspan="3" class="<%= header_cell %>">Quân số</th>
               <% metric_sections.each do |section| %>
-                <% colspan = section[:metrics].size * 3 %>
-                <% if section[:name] %>
-                  <th colspan="<%= colspan %>" class="<%= header_cell %>"><%= section[:name] %></th>
-                <% else %>
-                  <%# Tiêu chuẩn còn lại — rowspan 3 %>
-                  <th colspan="3" rowspan="2" class="<%= header_cell %>">Tiêu chuẩn còn lại</th>
-                <% end %>
+                <th colspan="<%= section[:metrics].size * 3 %>" class="<%= header_cell %>"><%= section[:name] %></th>
               <% end %>
               <th rowspan="3" class="<%= header_cell %>">Ghi chú</th>
             </tr>
 
-            <%# Row 2: tên metric %>
+            <%# Row 2: tên metric (hoặc A/B/Δ nếu nhóm chỉ có 1 metric) %>
             <tr>
               <th rowspan="2" class="<%= header_cell %>">Khu vực</th>
               <th rowspan="2" class="<%= header_cell %>">Đơn vị</th>
               <th rowspan="2" class="<%= header_cell %>">Khối</th>
               <th rowspan="2" class="<%= header_cell %>">Nhóm</th>
               <th rowspan="2" class="<%= header_cell %>">Tên đầu mối</th>
-              <%# Quân số %>
-              <th class="<%= header_cell %>"><%= a_label %></th>
-              <th class="<%= header_cell %>"><%= b_label %></th>
-              <th class="<%= header_cell %>">Δ</th>
+              <%# Quân số — 1 metric → A/B/Δ trực tiếp ở row 2, rowspan 2 %>
+              <th rowspan="2" class="<%= header_cell %>"><%= a_label %></th>
+              <th rowspan="2" class="<%= header_cell %>"><%= b_label %></th>
+              <th rowspan="2" class="<%= header_cell %>">Δ</th>
               <% metric_sections.each do |section| %>
-                <% next if section[:name].nil? %>
-                <% section[:metrics].each do |label, _attr, _type, _color| %>
-                  <th colspan="3" class="<%= header_cell %>"><%= label %></th>
+                <% if section[:metrics].size == 1 %>
+                  <%# Nhóm 1 metric: A/B/Δ trực tiếp, rowspan 2 %>
+                  <th rowspan="2" class="<%= header_cell %>"><%= a_label %></th>
+                  <th rowspan="2" class="<%= header_cell %>"><%= b_label %></th>
+                  <th rowspan="2" class="<%= header_cell %>">Δ</th>
+                <% else %>
+                  <% section[:metrics].each do |label, _attr, _type, _color| %>
+                    <th colspan="3" class="<%= header_cell %>"><%= label %></th>
+                  <% end %>
                 <% end %>
               <% end %>
             </tr>
 
-            <%# Row 3: A/B/Δ per metric %>
+            <%# Row 3: A/B/Δ per metric (chỉ cho nhóm có nhiều metric) %>
             <tr>
               <% metric_sections.each do |section| %>
-                <% next if section[:name].nil? %>
+                <% next if section[:metrics].size == 1 %>
                 <% section[:metrics].size.times do %>
                   <th class="<%= header_cell %>"><%= a_label %></th>
                   <th class="<%= header_cell %>"><%= b_label %></th>
                   <th class="<%= header_cell %>">Δ</th>
                 <% end %>
               <% end %>
-              <%# Tiêu chuẩn còn lại A/B/Δ %>
-              <th class="<%= header_cell %>"><%= a_label %></th>
-              <th class="<%= header_cell %>"><%= b_label %></th>
-              <th class="<%= header_cell %>">Δ</th>
             </tr>
           </thead>
 

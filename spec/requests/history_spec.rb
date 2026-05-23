@@ -74,6 +74,21 @@ RSpec.describe "History", type: :request do
         expect(response.body).to include("Đơn giá điện")
       end
 
+      it "header 3 hàng — nhóm 1 metric dùng rowspan, không lệch cột" do
+        get history_path(mode: "compare",
+                         period_a: sample.period.id,
+                         period_b: sample.period.id)
+        doc = Nokogiri::HTML(response.body)
+        # Row 1 có "Tiêu chuẩn còn lại" colspan=3
+        row1_texts = doc.css("table thead tr:first-child th").map(&:text).map(&:strip)
+        expect(row1_texts).to include("Tiêu chuẩn còn lại")
+        # Row 2 có A/B/Δ cho nhóm 1 metric (Khoản trừ, Tiêu chuẩn còn lại) với rowspan=2
+        row2_ths = doc.css("table thead tr:nth-child(2) th")
+        rowspan2_count = row2_ths.count { |th| th["rowspan"] == "2" }
+        # 5 info cols (rowspan=2) + Quân số A/B/Δ (3×rowspan=2) + Khoản trừ A/B/Δ (3×rowspan=2) + Tiêu chuẩn còn lại A/B/Δ (3×rowspan=2) = 14
+        expect(rowspan2_count).to be >= 11
+      end
+
       it "bảng compare thiếu màu đỏ, thừa màu xanh" do
         get history_path(mode: "compare",
                          period_a: sample.period.id,
