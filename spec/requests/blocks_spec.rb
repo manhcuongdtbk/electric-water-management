@@ -77,6 +77,22 @@ RSpec.describe "Blocks", type: :request do
     end
   end
 
+  describe "PATCH /blocks/:id (I7)" do
+    let!(:block) { create(:block, unit: unit, name: "Phòng cũ") }
+
+    it "update tên thành công" do
+      patch block_path(block), params: { block: { name: "Phòng mới" } }
+      expect(response).to redirect_to(blocks_path)
+      expect(block.reload.name).to eq("Phòng mới")
+    end
+
+    it "update tên trùng → lỗi validation" do
+      create(:block, unit: unit, name: "Phòng trùng")
+      patch block_path(block), params: { block: { name: "Phòng trùng" } }
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
+  end
+
   describe "DELETE /blocks/:id (T42 cascade nullify)" do
     it "discard khối + nullify children" do
       block = create(:block, unit: unit, name: "Phòng X")

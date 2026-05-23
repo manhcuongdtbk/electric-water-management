@@ -82,6 +82,22 @@ RSpec.describe "Groups", type: :request do
     end
   end
 
+  describe "PATCH /groups/:id (I8)" do
+    let!(:group) { create(:group, unit: unit, name: "Nhóm cũ") }
+
+    it "update tên thành công" do
+      patch group_path(group), params: { group: { name: "Nhóm mới" } }
+      expect(response).to redirect_to(groups_path)
+      expect(group.reload.name).to eq("Nhóm mới")
+    end
+
+    it "update tên trùng → lỗi validation" do
+      create(:group, unit: unit, name: "Nhóm trùng")
+      patch group_path(group), params: { group: { name: "Nhóm trùng" } }
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
+  end
+
   describe "DELETE /groups/:id (T43 cascade nullify)" do
     it "discard nhóm + nullify group_id của contact_points kept" do
       group = create(:group, unit: unit, name: "Nhóm B")

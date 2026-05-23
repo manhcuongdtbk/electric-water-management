@@ -108,6 +108,26 @@ RSpec.describe "MeterEntries", type: :request do
     end
   end
 
+  describe "batch update transaction rollback (I11)" do
+    let(:admin) { create(:user, :system_admin) }
+    before { sample; sign_in admin }
+
+    it "1 record lỗi → rollback tất cả, flash chỉ rõ record sai" do
+      r1 = MeterReading.find_by(meter: sample.meters[:ct_a1], period: sample.period)
+      r2 = MeterReading.find_by(meter: sample.meters[:ct_a2], period: sample.period)
+      old_end_r1 = r1.reading_end
+
+      patch meter_entries_path, params: {
+        meter_readings: {
+          r1.id.to_s => { reading_end: "5000", lock_version: r1.lock_version },
+          r2.id.to_s => { reading_end: "-1", lock_version: r2.lock_version }  # invalid
+        }
+      }
+      # reading_end ≥ 0 validation → r2 fails → rollback r1 too
+      expect(r1.reload.reading_end).to eq(old_end_r1)  # r1 NOT changed (rollback)
+    end
+  end
+
   describe "T74: optimistic locking" do
     it "raise StaleObjectError khi lock_version cũ → flash alert + redirect" do
       sample
