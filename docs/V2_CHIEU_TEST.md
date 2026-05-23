@@ -121,11 +121,11 @@ Billing và history có dropdown chọn kỳ để xem. Kỳ đang xem (context 
 | N-2 (cũ mở lại) | N-2 | Data kỳ N-2 | Có | Sửa data per kỳ |
 | N-2 (cũ mở lại) | N-1 (đóng) | Data kỳ N-1 | Không (kỳ N-1 đóng) | Không |
 
-**Dropdown zone/unit (chỉ SA):** SA có dropdown chọn zone/unit trên billing. Dropdown luôn dùng `with_discarded` (không phụ thuộc kỳ đang xem) vì SA cần chọn được zone/unit đã xóa khi xem data kỳ cũ. Nếu dùng `.kept`, SA không tìm được zone đã xóa → không filter được → không xem được data kỳ cũ theo zone.
+**Dropdown kỳ (tất cả role):** Mọi role truy cập billing đều có dropdown chọn kỳ (`@available_periods`). SA, UA-ZM, UA, CMD-ZM, CMD đều có thể xem data kỳ cũ bất kỳ. Vì vậy chiều 7 ảnh hưởng tất cả role, không chỉ SA.
 
-**Non-SA không có dropdown zone/unit trên billing.** Zone/unit lấy từ `current_user.unit` và `current_user.unit.zone` (belongs_to association, luôn trả record kể cả discarded). Không cần `with_discarded`.
+**Dropdown zone/unit (chỉ SA):** SA có thêm dropdown chọn zone/unit trên billing. Dropdown luôn dùng `with_discarded` vì SA cần chọn được zone/unit đã xóa khi xem data kỳ cũ. Non-SA không có dropdown zone/unit — zone/unit lấy từ `current_user.unit` (belongs_to association, luôn trả record kể cả discarded).
 
-Chiều này chỉ ảnh hưởng billing và history (các trang khác luôn hiện kỳ đang mở hoặc không có period selector).
+Chiều này ảnh hưởng billing và history cho tất cả role (các trang khác luôn hiện kỳ đang mở hoặc không có period selector).
 
 Kịch bản nguy hiểm: SA mở lại kỳ cũ N-2, nhưng trên billing chọn xem kỳ N-1. `current_period` trả N-2 (đang mở) nhưng UI hiện data N-1. Recalculate phải disabled vì N-1 đóng.
 
