@@ -506,8 +506,15 @@ RSpec.describe "ContactPoints", type: :request do
     context "as unit admin who does NOT manage any zone" do
       before { sign_in admin_b }
 
-      it "residential form does not show zone mode radio" do
+      it "residential NEW form does not show zone mode radio" do
         get new_contact_point_path(type: "residential")
+        expect(response.body).not_to include("Khu vực (cấp khu vực")
+      end
+
+      it "residential EDIT form does not show zone mode radio either" do
+        cp = create(:contact_point, :residential, unit: unit_b, name: "Test edit",
+                    initial_personnel_counts: { ranks.last.id => 1 })
+        get edit_contact_point_path(cp)
         expect(response.body).not_to include("Khu vực (cấp khu vực")
       end
     end

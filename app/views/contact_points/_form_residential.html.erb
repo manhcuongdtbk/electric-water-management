@@ -7,7 +7,7 @@
           data-controller="contact-point-assignment">
   <legend class="text-sm font-medium text-gray-700 px-1">Đầu mối thuộc về</legend>
 
-  <% unless current_user.unit_id.present? && !current_zone_manager? && contact_point.new_record? %>
+  <% unless current_user.unit_id.present? && !current_zone_manager? %>
     <div class="flex gap-4 mb-3">
       <label class="flex items-center gap-2 text-sm">
         <input type="radio" name="assignment_mode" value="unit"
