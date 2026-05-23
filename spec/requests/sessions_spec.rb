@@ -87,6 +87,19 @@ RSpec.describe "Devise sessions", type: :request do
     end
   end
 
+  describe "flash boolean true không hiện trên login page" do
+    it "session timeout set flash[:timedout]=true → không render chữ 'true'" do
+      post "/users/sign_in", params: { user: { username: "testUser", password: "Abc@1234" } }
+      travel 2.hours + 5.minutes do
+        get root_path
+        follow_redirect! while response.redirect? && response.location != new_user_session_url
+        get new_user_session_path
+        expect(response.body).not_to include(">true<")
+        expect(response.body).not_to match(%r{<div[^>]*>\s*<p>true</p>\s*</div>})
+      end
+    end
+  end
+
   describe "T91: đăng nhập đa thiết bị" do
     it "2 cookie jars độc lập đều đăng nhập được" do
       post "/users/sign_in", params: { user: { username: "testUser", password: "Abc@1234" } }
