@@ -70,7 +70,7 @@ module SidebarHelper
   end
 
   def sidebar_item_class(path)
-    base = "block px-3 py-2 rounded-md text-sm transition hover:bg-gray-100"
+    base = "block pl-3 pr-2 py-1.5 rounded text-sm whitespace-nowrap transition hover:bg-gray-100"
     if current_page?(path)
       "#{base} bg-blue-50 text-blue-700 font-semibold"
     else
