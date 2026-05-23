@@ -38,28 +38,28 @@ UA-ZM và CMD-ZM không phải role riêng trong database. Xác định qua `cur
 
 ### Chiều 3 — Trang và thao tác
 
-14 trang, mỗi trang có tập thao tác riêng:
+17 trang, mỗi trang có tập thao tác và lớp bảo vệ riêng. Mọi trang đều có ít nhất 1 lớp kiểm soát truy cập:
 
-| Nhóm | Trang | Thao tác chính | Guard |
-|---|---|---|---|
-| Xem kết quả | Tổng quan (/dashboard) | Xem | BusinessRoleRequired |
-| Xem kết quả | Bảng tính tiền (/billing) | Xem, recalculate, xuất Excel | BusinessRoleRequired |
-| Xem kết quả | Tra cứu lịch sử (/history) | Xem, so sánh 2 kỳ, xem theo khoảng | BusinessRoleRequired |
-| Nhập liệu | Nhập số điện lực (/electricity_supply) | Xem, sửa | PeriodGuard |
-| Nhập liệu | Chỉ số đầu mối (/meter_entries) | Xem, sửa | PeriodGuard |
-| Nhập liệu | Chỉ số bơm nước (/pump_entries) | Xem, sửa | PeriodGuard |
-| Khai báo | Đầu mối (/contact_points) | CRUD | PeriodGuard + StructureChangeGuard |
-| Khai báo | Khối (/blocks) | CRUD | PeriodGuard + StructureChangeGuard |
-| Khai báo | Nhóm (/groups) | CRUD | PeriodGuard + StructureChangeGuard |
-| Khai báo | Cấu hình đơn vị (/unit_config) | Xem, sửa | PeriodGuard |
-| Thiết lập | Khu vực (/zones) | CRUD | PeriodGuard + StructureChangeGuard |
-| Thiết lập | Đơn vị (/units) | CRUD | PeriodGuard + StructureChangeGuard |
-| Thiết lập | Phân bổ bơm nước (/pump_allocations) | CRUD | PeriodGuard |
-| Thiết lập | Đơn giá điện (/pricing) | Mở/đóng/mở lại kỳ | Không có guard (quản lý kỳ) |
-| Thiết lập | Nhóm cấp bậc (/ranks) | CRUD | PeriodGuard + StructureChangeGuard |
-| Hệ thống | Tài khoản (/users) | CRUD | Không có PeriodGuard |
-| Hệ thống | Nhật ký (/audit_logs) | Xem | Không có PeriodGuard |
-| Hệ thống | Sao lưu (/backups) | CRUD | Không có PeriodGuard |
+| Nhóm | Trang | Thao tác | Kiểm soát truy cập | SA | UA-ZM | UA | CMD-ZM | CMD | TECH |
+|---|---|---|---|---|---|---|---|---|---|
+| Xem kết quả | Tổng quan (/dashboard) | Xem | BusinessRoleRequired | Xem | Xem | Xem | Xem | Xem | Chặn |
+| Xem kết quả | Bảng tính tiền (/billing) | Xem, recalculate, Excel | BusinessRoleRequired + authorize! | Xem+Tính+Excel | Xem+Tính+Excel | Xem+Tính+Excel | Xem+Excel | Xem+Excel | Chặn |
+| Xem kết quả | Tra cứu lịch sử (/history) | Xem, so sánh | BusinessRoleRequired | Xem | Xem | Xem | Xem | Xem | Chặn |
+| Nhập liệu | Nhập số điện lực (/electricity_supply) | Xem, sửa | BusinessRoleRequired + PeriodGuard + authorize! | Sửa | Sửa | Chặn | Xem (disabled) | Chặn | Chặn |
+| Nhập liệu | Chỉ số đầu mối (/meter_entries) | Xem, sửa | BusinessRoleRequired + PeriodGuard (qua MeterReadingEntry) | Sửa | Sửa | Sửa | Xem (disabled) | Xem (disabled) | Chặn |
+| Nhập liệu | Chỉ số bơm nước (/pump_entries) | Xem, sửa | BusinessRoleRequired + PeriodGuard (qua MeterReadingEntry) | Sửa | Sửa | Trống | Xem (disabled) | Trống | Chặn |
+| Khai báo | Đầu mối (/contact_points) | CRUD | BusinessRoleRequired + PeriodGuard + StructureChangeGuard | CRUD | CRUD (đơn vị+khu vực) | CRUD (đơn vị) | Xem (đơn vị+khu vực) | Xem (đơn vị) | Chặn |
+| Khai báo | Khối (/blocks) | CRUD | BusinessRoleRequired + PeriodGuard + StructureChangeGuard | CRUD | CRUD (đơn vị) | CRUD (đơn vị) | Xem (đơn vị) | Xem (đơn vị) | Chặn |
+| Khai báo | Nhóm (/groups) | CRUD | BusinessRoleRequired + PeriodGuard + StructureChangeGuard | CRUD | CRUD (đơn vị) | CRUD (đơn vị) | Xem (đơn vị) | Xem (đơn vị) | Chặn |
+| Khai báo | Cấu hình đơn vị (/unit_config) | Xem, sửa | BusinessRoleRequired + PeriodGuard | Sửa | Sửa (đơn vị+khu vực OD) | Sửa (đơn vị) | Xem (disabled) | Xem (disabled) | Chặn |
+| Thiết lập | Khu vực (/zones) | CRUD | BusinessRoleRequired + PeriodGuard + StructureChangeGuard | CRUD | Xem (khu vực mình) | Chặn | Xem (khu vực mình) | Chặn | Chặn |
+| Thiết lập | Đơn vị (/units) | CRUD | BusinessRoleRequired + PeriodGuard + StructureChangeGuard | CRUD | Chặn | Chặn | Chặn | Chặn | Chặn |
+| Thiết lập | Phân bổ bơm nước (/pump_allocations) | CRUD | BusinessRoleRequired + PeriodGuard | CRUD | CRUD (khu vực) | Chặn | Xem (khu vực) | Chặn | Chặn |
+| Thiết lập | Đơn giá điện (/pricing) | Mở/đóng/mở lại kỳ | BusinessRoleRequired + authorize! | Toàn quyền | Chặn | Chặn | Chặn | Chặn | Chặn |
+| Thiết lập | Nhóm cấp bậc (/ranks) | CRUD | BusinessRoleRequired + PeriodGuard + StructureChangeGuard | CRUD | Xem | Xem | Xem | Xem | Chặn |
+| Hệ thống | Tài khoản (/users) | CRUD | authorize! (CanCanCan) | CRUD (trừ TECH) | Chặn | Chặn | Chặn | Chặn | CRUD (tất cả) |
+| Hệ thống | Nhật ký (/audit_logs) | Xem | authorize!(:read, PaperTrail::Version) | Xem | Chặn | Chặn | Chặn | Chặn | Xem |
+| Hệ thống | Sao lưu (/backups) | CRUD | authorize!(:manage, Backup) | Chặn | Chặn | Chặn | Chặn | Chặn | CRUD |
 
 ### Chiều 4 — Trạng thái entity (kept / discarded)
 
@@ -172,18 +172,26 @@ Chiều này ảnh hưởng:
 
 ### Chiều 11 — Cách entity nhận data cho kỳ
 
-Cùng 1 entity trong cùng 1 kỳ, data ban đầu có thể đến từ 3 đường khác nhau:
+Cùng 1 entity trong cùng 1 kỳ, data ban đầu có thể đến từ 3 đường khác nhau. Áp dụng cho TẤT CẢ data per kỳ:
 
-| Đường | Khi nào xảy ra | reading_start | personnel_entries | other_deductions |
-|---|---|---|---|---|
-| Kế thừa (PeriodService snapshot) | Mở kỳ mới, entity đã tồn tại từ kỳ trước | = reading_end kỳ trước | Copy count từ kỳ trước | Copy type + value từ kỳ trước |
-| Tạo giữa kỳ (after_create callback) | Tạo entity khi kỳ đang mở | = 0 | Từ form tạo (cho mỗi rank hiện có) | fixed, 0 |
-| Kỳ đầu tiên (PeriodService defaults) | Kỳ đầu tiên của hệ thống, chưa có kỳ trước | User nhập tay (cả start và end) | Từ form tạo | fixed, 0 |
+| Data per kỳ | Kế thừa (mở kỳ mới, entity đã tồn tại) | Tạo giữa kỳ (after_create callback) | Kỳ đầu tiên (defaults) |
+|---|---|---|---|
+| meter_readings.reading_start | = reading_end kỳ trước | = 0 | User nhập tay |
+| meter_readings.no_loss | = meters.no_loss (giá trị hiện tại) | = meters.no_loss | = meters.no_loss |
+| personnel_entries | Copy count từ kỳ trước (match by rank position) | Từ form tạo (cho mỗi rank hiện có) | Từ form tạo |
+| other_deductions | Copy type + value từ kỳ trước | fixed, 0 | fixed, 0 |
+| unit_configs | Copy unit_public_rate từ kỳ trước | unit_public_rate = 0% | unit_public_rate = 0% |
+| non_establishment_snapshots | Copy personnel_count từ kỳ trước (hoặc contact_point.personnel_count) | = contact_point.personnel_count | = contact_point.personnel_count |
+| pump_allocations | Copy coefficient + fixed_percentage từ kỳ trước | Không tự tạo (user thêm thủ công) | Không tự tạo |
+| main_meter_readings | **KHÔNG kế thừa** — nhập mới mỗi kỳ | Không tự tạo (user nhập trên /electricity_supply) | Không tự tạo |
+| ranks | Copy name + quota + position từ kỳ trước | Không áp dụng (rank là cấu hình chung, không per entity) | 7 ranks mặc định (570, 440, 305, 130, 210, 110, 24) |
 
 Kịch bản quan trọng:
 - Rank mới thêm giữa kỳ → entity kế thừa có N personnel_entries, entity tạo giữa kỳ có N+1 (after_create tạo cho rank mới)
 - Entity tạo giữa kỳ có reading_start = 0 → sử dụng = reading_end - 0 = reading_end (có thể rất lớn nếu công tơ không mới lắp)
+- Đơn vị mới tạo giữa kỳ → unit_config tự tạo với unit_public_rate = 0%, other_deductions của các CP trong đơn vị mới cũng = 0
 - Đóng kỳ cũ sau khi sửa → cảnh báo mismatch reading_end vs reading_start kỳ kế tiếp
+- main_meter_readings không kế thừa → mỗi kỳ mới, /electricity_supply hiện "Chưa nhập" cho tất cả main_meters
 
 ### Chiều 12 — Định dạng output (HTML vs Excel)
 
