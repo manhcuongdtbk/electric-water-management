@@ -1,4 +1,5 @@
 <% flash.each do |key, message| %>
+  <% next if message == true || message.blank? %>
   <% auto_dismiss = key.to_s == "notice" %>
   <div class="<%= flash_class(key) %> p-3 mb-4 rounded text-sm" role="alert"
        <% if auto_dismiss %>data-controller="auto-dismiss" data-auto-dismiss-delay-value="5000"<% end %>>
