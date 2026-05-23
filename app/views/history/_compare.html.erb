@@ -113,17 +113,12 @@
       info_cols = 5  # Khu vực, Đơn vị, Khối, Nhóm, Tên
     %>
 
-    <% if price_a != price_b %>
-      <p class="text-sm text-gray-700 mb-2">
-        Đơn giá điện: <strong><%= a_label %>: <%= money_to_vi(price_a) %>/kW</strong>
-        —
-        <strong><%= b_label %>: <%= money_to_vi(price_b) %>/kW</strong>
-      </p>
-    <% else %>
-      <p class="text-sm text-gray-700 mb-2">
-        Đơn giá điện: <strong><%= money_to_vi(price_a) %>/kW</strong>
-      </p>
-    <% end %>
+    <p class="text-sm text-gray-700 mb-2">
+      Đơn giá điện:
+      <strong><%= a_label %>: <%= unit_price_to_vi(price_a) %> đ/kW</strong>
+      —
+      <strong><%= b_label %>: <%= unit_price_to_vi(price_b) %> đ/kW</strong>
+    </p>
 
     <div class="-mx-6">
       <div class="overflow-x-auto px-6 max-h-[70vh] overflow-y-auto">
