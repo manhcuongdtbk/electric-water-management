@@ -4,6 +4,7 @@
     <% if current_period %>
       <span class="text-sm text-gray-600 bg-blue-50 px-3 py-1 rounded">
         <%= period_label(current_period) %>
+        <span class="ml-1 text-xs font-medium text-green-700 bg-green-100 px-1.5 py-0.5 rounded"><%= t("common.badges.open") %></span>
       </span>
     <% else %>
       <span class="text-sm text-yellow-700 bg-yellow-50 px-3 py-1 rounded">

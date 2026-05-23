@@ -6,7 +6,6 @@
   </div>
 <% end %>
 
-<%= render "shared/period_indicator", period: @period if @unit %>
 
 <% if current_user.system_admin? %>
   <%= render "shared/list_toolbar",
