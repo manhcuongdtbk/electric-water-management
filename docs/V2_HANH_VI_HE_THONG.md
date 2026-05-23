@@ -1,7 +1,7 @@
 # Hành vi hệ thống — Hệ thống quản lý điện nội bộ Sư đoàn (Hệ thống v2)
 
-> **Phiên bản:** 1.0.0
-> **Ngày:** 21/05/2026
+> **Phiên bản:** 1.1.0
+> **Ngày:** 24/05/2026
 > **Tính chất:** Tài liệu mô tả hành vi thực tế của hệ thống đã được verify qua code và test. Bổ sung cho V2_XAC_NHAN_NGHIEP_VU (cái gì) và V2_THIET_KE_HE_THONG (làm thế nào) bằng cách trả lời "hệ thống hành xử ra sao" trong các kịch bản thực tế.
 > **Nguồn:** Kết quả audit toàn diện codebase, 14 đợt page-by-page, 781+ test cases.
 
@@ -33,7 +33,9 @@ User model có 4 enum values (`system_admin`, `unit_admin`, `commander`, `techni
 | CMD | Chỉ huy đơn vị không quản lý khu vực | `role == "commander"` + không quản lý khu vực | Chỉ xem, phạm vi như UA |
 | TECH | Kỹ thuật viên | `role == "technician"` | Tài khoản, sao lưu, nhật ký. Không thấy dữ liệu nghiệp vụ |
 
-UA-ZM và CMD-ZM không phải role riêng trong database — là unit_admin/commander có đơn vị được chỉ định quản lý khu vực. Code xác định qua `current_zone_manager?` (kiểm tra `Zone.kept.exists?(manager_unit_id: current_user.unit_id)`).
+UA-ZM và CMD-ZM không phải role riêng trong database — là unit_admin/commander có đơn vị được chỉ định quản lý khu vực. Code xác định qua `current_zone_manager?` (kiểm tra `Zone.kept.exists?(manager_unit_id: current_user.unit_id)`). Zone đã xóa → user mất vai trò zone-manager (`.kept` loại zone discarded).
+
+**"Zone manager" = quản lý thứ bên trong khu vực** (đầu mối, công tơ, phân bổ bơm nước), **không phải** quản lý bản thân khu vực (tạo/sửa/xóa zone = SA only).
 
 **Khác biệt giữa các variant quản lý khu vực:**
 
@@ -56,8 +58,8 @@ UA-ZM và CMD-ZM không phải role riêng trong database — là unit_admin/com
 
 | Loại | Thuộc về | Có công tơ | Loại công tơ | Có trong bảng tính tiền | Ai quản lý |
 |---|---|---|---|---|---|
-| Sinh hoạt | Đơn vị hoặc khu vực | Có | Công tơ sinh hoạt | Có | Thuộc đơn vị: UA/UA-ZM. Thuộc khu vực: UA-ZM. SA toàn quyền |
-| Công cộng | Đơn vị hoặc khu vực | Có | Công tơ công cộng | Không | Thuộc đơn vị: UA/UA-ZM. Thuộc khu vực: UA-ZM. SA toàn quyền |
+| Sinh hoạt | Đơn vị hoặc khu vực | Có | Công tơ sinh hoạt | Có | Thuộc đơn vị: UA/UA-ZM. Thuộc khu vực: UA-ZM. SA toàn quyền. Form tạo/sửa: SA và UA-ZM có radio "Đơn vị/Khu vực" (`assignment_mode` param). UA không có radio (mặc định đơn vị). |
+| Công cộng | Đơn vị hoặc khu vực | Có | Công tơ công cộng | Không | Thuộc đơn vị: UA/UA-ZM. Thuộc khu vực: UA-ZM. SA toàn quyền. Form tạo/sửa: tương tự sinh hoạt. |
 | Bơm nước | Khu vực | Có | Công tơ bơm nước | Không | UA-ZM. SA toàn quyền |
 | Ngoài biên chế | Khu vực | Không | — | Không | UA-ZM. SA toàn quyền |
 
@@ -156,6 +158,14 @@ meter_entries hiển thị công tơ **sinh hoạt + công cộng** (residential
 | CMD-ZM | Sinh hoạt + công cộng đơn vị mình + khu vực | Bơm nước khu vực mình | Không (disabled) |
 | CMD | Sinh hoạt + công cộng đơn vị mình | Trống | Không (disabled) |
 | TECH | Redirect /users | Redirect /users | — |
+
+**Tính năng trang nhập liệu:**
+
+- **Search:** tìm theo tên đầu mối (dùng `apply_search` từ `ListSortable`).
+- **Filter zone/unit:** chỉ SA có dropdown filter khu vực/đơn vị. Non-SA thấy data theo phạm vi Ability.
+- **Cột Khu vực + Đơn vị:** chỉ SA thấy. Non-SA ẩn (chỉ thấy data đơn vị mình).
+- **Số đầu kỳ (reading_start):** editable mọi kỳ (không chỉ kỳ đầu tiên). Kỳ kế thừa pre-fill từ reading_end kỳ trước, user có thể sửa nếu cần.
+- **Cột "Sử dụng":** hiển thị `reading_end - reading_start` (hoặc manual_usage nếu có). Không có cột "Nhập thủ công" riêng trên giao diện — manual_usage nhập qua form sửa đầu mối.
 
 ### Cấu hình đơn vị (/unit_config)
 
@@ -266,7 +276,7 @@ Kết quả: `Calculation.where(period: kỳ_N_1)` có record Zone A → hiện.
 | Data | Copy từ kỳ trước | Mặc định nếu không có kỳ trước |
 |---|---|---|
 | ranks | Tên + quota + position | 7 ranks mặc định |
-| meter_readings | reading_start = reading_end cũ, no_loss từ meters.no_loss | reading_start = 0 |
+| meter_readings | reading_start = reading_end cũ (editable), no_loss từ meters.no_loss | reading_start = 0 (editable) |
 | personnel_entries | count từ kỳ trước | 0 |
 | non_establishment_snapshots | personnel_count từ kỳ trước hoặc contact_point | contact_point.personnel_count |
 | unit_configs | unit_public_rate từ kỳ trước | 0% |
@@ -340,6 +350,13 @@ Code từ session AI trước có thể thiếu suy nghĩ sâu về edge cases. 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.1.0 (24/05/2026)
+
+- Mục 1: làm rõ zone-manager = quản lý thứ bên trong khu vực, không phải quản lý zone entity. Zone đã xóa → mất vai trò zone-manager.
+- Mục 2: thêm thông tin form tạo/sửa đầu mối sinh hoạt/công cộng — SA và UA-ZM có radio assignment_mode, UA không có.
+- Mục 4 meter_entries/pump_entries: thêm search, filter zone/unit (SA), cột zone/unit (SA), reading_start editable mọi kỳ, bỏ cột nhập thủ công, đổi tên "Sử dụng tự tính" → "Sử dụng".
+- Mục 6: meter_readings reading_start editable mọi kỳ (không chỉ kỳ đầu).
 
 ### v1.0.0 (21/05/2026)
 
