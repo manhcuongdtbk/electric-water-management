@@ -40,6 +40,23 @@ RSpec.describe Rank do
     end
   end
 
+  describe "validates position uniqueness scoped to period (N2)" do
+    let(:period) { create(:period, closed: false) }
+    let!(:rank1) { create(:rank, period: period, position: 1, name: "Rank 1", quota: 100) }
+
+    it "chặn trùng position trong cùng period" do
+      rank2 = build(:rank, period: period, position: 1, name: "Rank 2", quota: 200)
+      expect(rank2).not_to be_valid
+      expect(rank2.errors[:position]).to be_present
+    end
+
+    it "cho phép cùng position ở period khác" do
+      other_period = create(:period, year: 2025, month: 1, closed: true)
+      rank2 = build(:rank, period: other_period, position: 1, name: "Rank 2", quota: 200)
+      expect(rank2).to be_valid
+    end
+  end
+
   describe "after_create :seed_personnel_entries_for_residentials" do
     let(:period) { create(:period, closed: false) }
 

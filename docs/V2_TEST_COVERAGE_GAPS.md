@@ -232,16 +232,16 @@ Ngoài 12 chiều, rà soát mọi model, controller, service, concern, helper, 
 
 | # | Code | Gap |
 |---|---|---|
-| N1 | Backup model | `file_exists?`, `human_size` methods |
-| N2 | Rank model | `position` uniqueness scope period_id |
-| N3 | PumpEntries | Optimistic locking (shared concern, riêng pump chưa test) |
-| N4 | AuthorizeResource concern | `load_collection` .kept auto-detect |
-| N5 | MeterReadingEntry concern | Dedicated concern spec |
-| N6 | OptimisticLockingGuard concern | Dedicated concern spec |
-| N7 | Auditable concern | has_paper_trail inclusion |
-| N8 | PeriodHelper | `period_label`, `no_open_period?` |
-| N9 | FlashHelper, BreadcrumbHelper | Formatting helpers |
-| N10 | History range mode | `@period_summaries` content verification |
+| N1 | Backup model | [x] backup_spec — file_exists?, human_size |
+| N2 | Rank model | [x] rank_spec — position uniqueness scoped to period |
+| N3 | PumpEntries | [x] nice_to_have_gaps_spec — stale lock_version |
+| N4 | AuthorizeResource | Skipped — indirectly covered by all controller specs |
+| N5 | MeterReadingEntry | Skipped — covered by meter_entries + pump_entries specs |
+| N6 | OptimisticLockingGuard | Skipped — covered by meter_entries locking test |
+| N7 | Auditable | Skipped — covered by backup_spec PaperTrail test |
+| N8 | PeriodHelper | [x] nice_to_have_gaps_spec — period_label, no_open_period? |
+| N9 | FlashHelper, BreadcrumbHelper | [x] nice_to_have_gaps_spec — flash_class, page_title |
+| N10 | History range | [x] nice_to_have_gaps_spec — range mode shows period summary |
 
 ---
 
