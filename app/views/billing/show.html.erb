@@ -5,17 +5,6 @@
     <%= t("flash.no_open_period") %>
   </div>
 <% else %>
-  <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-    <p class="text-sm text-gray-700">
-      Đơn giá điện: <strong><%= money_to_vi(@period.unit_price) %>/kW</strong>
-      <% if @period.open? %>
-        <span class="ml-2 px-2 py-0.5 rounded bg-green-100 text-green-800 text-xs">Đang mở</span>
-      <% else %>
-        <span class="ml-2 px-2 py-0.5 rounded bg-gray-200 text-gray-700 text-xs">Đã đóng</span>
-      <% end %>
-    </p>
-  </div>
-
   <%
     billing_filters = [
       { label: "Kỳ:", param: :period_id,
@@ -57,6 +46,13 @@
         action_links: billing_action_links %>
 
   <%= render "warnings" %>
+
+  <p class="text-sm text-gray-700 mb-2">
+    Đơn giá điện: <strong><%= money_to_vi(@period.unit_price) %>/kW</strong>
+    <% unless @period.open? %>
+      <span class="ml-2 px-2 py-0.5 rounded bg-gray-200 text-gray-700 text-xs">Đã đóng</span>
+    <% end %>
+  </p>
 
   <div class="-mx-6">
     <div class="overflow-x-auto px-6 max-h-[70vh] overflow-y-auto"
