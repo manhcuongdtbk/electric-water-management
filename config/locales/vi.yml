@@ -123,8 +123,8 @@ vi:
         contact_point_id: "Đầu mối"
         period: "Kỳ tính toán"
         period_id: "Kỳ tính toán"
-        other_type: "Loại khấu trừ khác"
-        other_value: "Giá trị khấu trừ khác"
+        other_type: "Loại khoản trừ khác"
+        other_value: "Giá trị khoản trừ khác"
       pump_allocation:
         zone: "Khu vực"
         zone_id: "Khu vực"
@@ -215,12 +215,12 @@ vi:
   services:
     loss_calculator:
       warnings:
-        subtotal_exceeds_main: "Tổng sử dụng các công tơ con lớn hơn công tơ tổng — tổn hao đã clamp về 0"
-        no_loss_bearing_meters: "Khu vực không có công tơ có tổn hao — tổn hao = 0"
-        zone_empty: "Khu vực chưa có đầu mối — bỏ qua tính tổn hao"
+        subtotal_exceeds_main: "Tổng sử dụng các công tơ con lớn hơn công tơ tổng — tổn hao được đặt về 0"
+        no_loss_bearing_meters: "Khu vực không có công tơ có tổn hao — không thể tính tổn hao"
+        zone_empty: "Khu vực chưa có đầu mối — không tính tổn hao"
     pump_allocation_calculator:
       warnings:
-        zero_personnel: "Đối tượng phân bổ không có quân số — bỏ qua đối tượng này"
+        zero_personnel: "Đối tượng phân bổ không có quân số — không phân bổ cho đối tượng này"
         no_pump_meter: "Khu vực không có công tơ bơm nước — bỏ qua phân bổ bơm nước"
     period_service:
       errors:
@@ -365,9 +365,9 @@ vi:
       MeterReading: "Chỉ số công tơ"
       MainMeterReading: "Chỉ số công tơ tổng"
       PersonnelEntry: "Quân số kỳ"
-      NonEstablishmentSnapshot: "Snapshot ngoài biên chế"
+      NonEstablishmentSnapshot: "Quân số ngoài biên chế theo kỳ"
       UnitConfig: "Cấu hình đơn vị"
-      OtherDeduction: "Khấu trừ khác"
+      OtherDeduction: "Khoản trừ khác"
       Backup: "Bản sao lưu"
   backups:
     page_title: "Sao lưu dữ liệu"
