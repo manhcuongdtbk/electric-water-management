@@ -194,10 +194,62 @@
 
 ---
 
+## Rà soát toàn hệ thống (lần 2)
+
+Ngoài 12 chiều, rà soát mọi model, controller, service, concern, helper, lib.
+
+### Critical (3)
+
+| # | Code | Gap | File |
+|---|---|---|---|
+| C1 | Unit model `cleanup_current_period_data` | before_discard xóa unit_configs + pump_allocations kỳ mở — chưa test | unit_spec.rb |
+| C2 | NumberHelperVi | `number_to_vi`, `money_to_vi` chưa có spec — format số tiếng Việt + ROUND_HALF_UP | (chưa có file spec) |
+| C3 | Ability CMD-ZM | Commander zone-manager chưa test — 1/6 role hoàn toàn thiếu trong ability_spec | ability_spec.rb |
+
+### Important (17)
+
+| # | Code | Gap | Trạng thái |
+|---|---|---|---|
+| I1 | ContactPoint `validate_block_group_unit_match` | Block/group phải thuộc cùng unit — 4 error paths chưa test | [ ] |
+| I2 | ContactPoint `propagate_personnel_count_to_current_snapshot` | after_update non_establishment → snapshot chưa test | [ ] |
+| I3 | Group `validate_block_unit_match` | Block phải cùng unit — chưa test | [ ] |
+| I4 | PumpAllocation `validate_contact_point_must_be_zone_level` | CP target phải zone-level — chưa test | [ ] |
+| I5 | PumpAllocation `validate_target_belongs_to_zone` | Target phải cùng zone — chưa test | [ ] |
+| I6 | Unit `discard_blocks_and_groups` | after_discard cascade — chưa test model level | [ ] |
+| I7 | Blocks controller | show/edit/update actions chưa test | [ ] |
+| I8 | Groups controller | show/edit/update actions chưa test | [ ] |
+| I9 | Ranks controller | index content, show/edit/update + period isolation guard chưa test | [ ] |
+| I10 | PumpAllocations controller | edit/update/destroy + `ensure_allocation_belongs_to_open_period` chưa test | [ ] |
+| I11 | MeterEntries | Batch update transaction rollback chưa test | [ ] |
+| I12 | ElectricitySupply | Tạo main_meter_reading mới (new_main_meter_readings params) chưa test | [ ] |
+| I13 | ElectricitySupply | Batch update failure rollback chưa test | [ ] |
+| I14 | ListSortable `apply_sort` | Sort column whitelisting + SQL injection prevention chưa test | [ ] |
+| I15 | SidebarHelper | `allowed_sidebar_items` per role chưa test | [ ] |
+| I16 | BackupRestoreRunner | Restore flow (pg_restore, error handling) chưa test | [ ] |
+| I17 | Billing SA filter | Dynamic column hiding khi SA chọn zone/unit chưa test HTML | [ ] |
+
+### Nice-to-have (10)
+
+| # | Code | Gap |
+|---|---|---|
+| N1 | Backup model | `file_exists?`, `human_size` methods |
+| N2 | Rank model | `position` uniqueness scope period_id |
+| N3 | PumpEntries | Optimistic locking (shared concern, riêng pump chưa test) |
+| N4 | AuthorizeResource concern | `load_collection` .kept auto-detect |
+| N5 | MeterReadingEntry concern | Dedicated concern spec |
+| N6 | OptimisticLockingGuard concern | Dedicated concern spec |
+| N7 | Auditable concern | has_paper_trail inclusion |
+| N8 | PeriodHelper | `period_label`, `no_open_period?` |
+| N9 | FlashHelper, BreadcrumbHelper | Formatting helpers |
+| N10 | History range mode | `@period_summaries` content verification |
+
+---
+
 ## Lịch sử
 
 ### 23/05/2026
 - Rà soát ban đầu: xác định gap cho 12 chiều.
+- Rà soát toàn hệ thống: 3 critical, 17 important, 10 nice-to-have.
 
 ---
 
