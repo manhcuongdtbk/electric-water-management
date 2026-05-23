@@ -62,11 +62,11 @@ RSpec.describe "MeterEntries", type: :request do
         sign_in commander
       end
 
-      it "hiển thị dữ liệu nhưng tất cả input đều disabled" do
+      it "hiển thị dữ liệu nhưng tất cả data input đều disabled" do
         get meter_entries_path
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("CT-A1")
-        html.css("input[type='number'], input[type='text']").each do |input|
+        html.css("table input[type='number'], table input[type='text']").each do |input|
           next if input["type"] == "hidden"
           expect(input["disabled"]).to be_present,
             "Expected input '#{input['name']}' to be disabled for commander"
@@ -75,7 +75,8 @@ RSpec.describe "MeterEntries", type: :request do
 
       it "nút Lưu toàn bộ bị disabled hoặc ẩn" do
         get meter_entries_path
-        submit = html.css("input[name='commit']")
+        # Chỉ check submit trong form data (patch), không check submit toolbar (get)
+        submit = html.css("form[method='post'] input[name='commit']")
         if submit.any?
           expect(submit.first["disabled"]).to be_present,
             "Expected submit button to be disabled for commander"
@@ -105,6 +106,75 @@ RSpec.describe "MeterEntries", type: :request do
         expect(submit).to be_present
         expect(submit.first["disabled"]).to be_nil
       end
+    end
+  end
+
+  describe "search, filter, zone/unit columns" do
+    let(:admin) { create(:user, :system_admin) }
+    let(:ua) { create(:user, :unit_admin, unit: sample.unit_a) }
+    before { sample }
+
+    context "SA" do
+      before { sign_in admin }
+
+      it "hiện cột Khu vực và Đơn vị" do
+        get meter_entries_path
+        doc = Nokogiri::HTML(response.body)
+        headers = doc.css("table thead th").map(&:text).map(&:strip).map(&:downcase)
+        expect(headers).to include("khu vực", "đơn vị")
+      end
+
+      it "hiện dropdown filter khu vực" do
+        get meter_entries_path
+        expect(response.body).to include("zone_id")
+      end
+
+      it "search theo tên đầu mối" do
+        get meter_entries_path, params: { q: "Ban" }
+        expect(response.body).to include("Ban Tác huấn")
+        expect(response.body).not_to include("Văn thư")
+      end
+    end
+
+    context "non-SA" do
+      before { sign_in ua }
+
+      it "không hiện cột Khu vực và Đơn vị" do
+        get meter_entries_path
+        doc = Nokogiri::HTML(response.body)
+        headers = doc.css("table thead th").map(&:text).map(&:strip).map(&:downcase)
+        expect(headers).not_to include("khu vực")
+        expect(headers).not_to include("đơn vị")
+      end
+
+      it "không hiện dropdown filter khu vực" do
+        get meter_entries_path
+        expect(response.body).not_to include("zone_id")
+      end
+
+      it "search vẫn hoạt động" do
+        get meter_entries_path, params: { q: "Ban" }
+        expect(response.body).to include("Ban Tác huấn")
+      end
+    end
+  end
+
+  describe "ẩn cột nhập thủ công, đổi tên sử dụng" do
+    before { sample; sign_in create(:user, :system_admin) }
+
+    it "không có cột Nhập thủ công" do
+      get meter_entries_path
+      doc = Nokogiri::HTML(response.body)
+      headers = doc.css("table thead th").map(&:text).map(&:strip)
+      expect(headers).not_to include(a_string_matching(/nhập thủ công/i))
+    end
+
+    it "cột sử dụng (không có 'tự tính')" do
+      get meter_entries_path
+      doc = Nokogiri::HTML(response.body)
+      headers = doc.css("table thead th").map(&:text).map(&:strip)
+      expect(headers).to include(a_string_matching(/\Asử dụng\z/i))
+      expect(headers).not_to include(a_string_matching(/tự tính/i))
     end
   end
 

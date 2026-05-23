@@ -26,11 +26,11 @@ RSpec.describe "PumpEntries", type: :request do
         sign_in commander
       end
 
-      it "hiển thị dữ liệu nhưng tất cả input đều disabled" do
+      it "hiển thị dữ liệu nhưng tất cả data input đều disabled" do
         get pump_entries_path
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("CT-BN1")
-        html.css("input[type='number'], input[type='text']").each do |input|
+        html.css("table input[type='number'], table input[type='text']").each do |input|
           next if input["type"] == "hidden"
           expect(input["disabled"]).to be_present,
             "Expected input '#{input['name']}' to be disabled for commander"
@@ -39,7 +39,7 @@ RSpec.describe "PumpEntries", type: :request do
 
       it "nút Lưu toàn bộ bị disabled hoặc ẩn" do
         get pump_entries_path
-        submit = html.css("input[name='commit']")
+        submit = html.css("form[method='post'] input[name='commit']")
         if submit.any?
           expect(submit.first["disabled"]).to be_present,
             "Expected submit button to be disabled for commander"
