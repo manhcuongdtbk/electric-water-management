@@ -107,8 +107,8 @@
 
 | Gap | Trạng thái |
 |---|---|
-| Public CP discard cleanup (meter_readings) | [ ] Cần thêm |
-| Water_pump CP discard cleanup (meter_readings) | [ ] Cần thêm |
+| Public CP discard cleanup (meter_readings) | [x] dimension_coverage_spec — xóa public CP, verify meter_readings cleanup |
+| Water_pump CP discard cleanup (meter_readings) | [x] dimension_coverage_spec — xóa water_pump CP, verify meter_readings cleanup |
 
 ---
 
@@ -123,10 +123,10 @@
 
 | Gap | Trạng thái |
 |---|---|
-| SA xem kỳ N-1 khi kỳ cũ N-2 đang mở (kịch bản nguy hiểm) | [ ] Cần thêm |
-| Non-SA (UA-ZM, UA, CMD-ZM, CMD) xem kỳ cũ trên billing | [ ] Cần thêm |
-| Recalculate disabled khi xem kỳ đóng (khác kỳ đang mở) | [ ] Cần thêm |
-| History period selector cho non-SA | [ ] Cần thêm |
+| SA xem kỳ N-1 khi kỳ cũ N-2 đang mở (kịch bản nguy hiểm) | [x] dimension_coverage_spec — xem kỳ 6 khi kỳ 5 mở, verify "Đã đóng" |
+| Non-SA (UA-ZM, UA, CMD-ZM, CMD) xem kỳ cũ trên billing | [x] dimension_coverage_spec — UA-ZM + UA xem kỳ cũ, verify data scoping |
+| Recalculate disabled khi xem kỳ đóng (khác kỳ đang mở) | [x] dimension_coverage_spec — verify "Đã đóng" khi xem kỳ đóng |
+| History period selector cho non-SA | [x] dimension_coverage_spec — UA compare + range trả 200 |
 
 ---
 
@@ -155,10 +155,10 @@
 
 | Gap | Trạng thái |
 |---|---|
-| Vị trí 2 (trong khối, không nhóm) — rowspan test | [ ] Cần thêm |
-| Vị trí 3 (trong nhóm trực tiếp, không khối) — rowspan test | [ ] Cần thêm |
-| Sort order NULLS LAST cho block/group | [ ] Cần thêm |
-| Excel merge cho 5 vị trí | [ ] Cần thêm (liên quan chiều 12) |
+| Vị trí 2 (trong khối, không nhóm) — rowspan test | [x] dimension_coverage_spec — RowspanComputer block merge=2 |
+| Vị trí 3 (trong nhóm trực tiếp, không khối) — rowspan test | [x] dimension_coverage_spec — RowspanComputer group merge=2, block nil merge=2 |
+| Sort order NULLS LAST cho block/group | [ ] Nice-to-have (SQL order đã có NULLS LAST, chưa test riêng) |
+| Excel merge cho 5 vị trí | [ ] Nice-to-have (header merge tested, data merge chưa test per vị trí) |
 
 ---
 
