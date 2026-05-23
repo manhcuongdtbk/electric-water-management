@@ -64,15 +64,37 @@ RSpec.describe "History", type: :request do
       let(:user) { create(:user, :system_admin) }
       before { sign_in user }
 
-      it "trả 200 với mode range" do
-        get history_path(mode: "range", from: "2026-04", to: "2026-06")
+      it "trả 200 với mode range, dùng period dropdown filter" do
+        get history_path(mode: "range",
+                         from_period_id: sample.period.id,
+                         to_period_id: sample.period.id)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("5/2026")
+      end
+
+      it "mặc định hiện tất cả kỳ khi không chọn filter" do
+        get history_path(mode: "range")
         expect(response).to have_http_status(:ok)
       end
 
-      it "link kỳ trong range trỏ tới billing, không phải history single" do
-        get history_path(mode: "range", from: "2026-05", to: "2026-05")
+      it "link kỳ trỏ tới billing" do
+        get history_path(mode: "range",
+                         from_period_id: sample.period.id,
+                         to_period_id: sample.period.id)
         expect(response.body).to include(billing_path(period_id: sample.period.id))
         expect(response.body).not_to include("mode=single")
+      end
+
+      it "auto-swap khi from > to" do
+        old_period = create(:period, year: 2025, month: 12, closed: true)
+        # from = kỳ mới (5/2026), to = kỳ cũ (12/2025) → swap
+        get history_path(mode: "range",
+                         from_period_id: sample.period.id,
+                         to_period_id: old_period.id)
+        expect(response).to have_http_status(:ok)
+        # Sau swap: from = 12/2025, to = 5/2026 → hiện cả 2 kỳ
+        expect(response.body).to include("12/2025")
+        expect(response.body).to include("5/2026")
       end
     end
 

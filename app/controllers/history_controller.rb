@@ -28,49 +28,26 @@ class HistoryController < ApplicationController
   end
 
   def load_range
-    @from = parse_month_year(params[:from_month], params[:from_year]) ||
-            parse_year_month(params[:from]) ||
-            default_range_start
-    @to = parse_month_year(params[:to_month], params[:to_year], end_of_month: true) ||
-          parse_year_month(params[:to]) ||
-          default_range_end
+    @from_period = @available_periods.find_by(id: params[:from_period_id]) || @available_periods.last
+    @to_period = @available_periods.find_by(id: params[:to_period_id]) || @available_periods.first
 
-    from_key = @from.year * 12 + @from.month
-    to_key   = @to.year * 12 + @to.month
-
-    @periods = @available_periods.select do |p|
-      key = p.year * 12 + p.month
-      key >= from_key && key <= to_key
+    # Auto-swap nếu from > to
+    if @from_period && @to_period
+      @from_period, @to_period = @to_period, @from_period if period_key(@from_period) > period_key(@to_period)
     end
 
+    @periods = @available_periods.select do |p|
+      key = period_key(p)
+      key >= period_key(@from_period) && key <= period_key(@to_period)
+    end
+
+    @total_count = @periods.size
     @period_summaries = @periods.map do |p|
       [p, DashboardSummary.new(user: current_user, ability: current_ability, period: p).call]
     end
   end
 
-  def parse_year_month(value)
-    return nil if value.blank?
-    Date.strptime(value, "%Y-%m")
-  rescue ArgumentError
-    nil
-  end
-
-  def parse_month_year(month, year, end_of_month: false)
-    return nil if month.blank? || year.blank?
-    m = month.to_i
-    y = year.to_i
-    return nil unless m.between?(1, 12) && y.between?(2000, 2100)
-    date = Date.new(y, m, 1)
-    end_of_month ? date.end_of_month : date
-  rescue ArgumentError, Date::Error
-    nil
-  end
-
-  def default_range_start
-    (Date.current - 2.months).beginning_of_month
-  end
-
-  def default_range_end
-    Date.current.end_of_month
+  def period_key(period)
+    period.year * 12 + period.month
   end
 end

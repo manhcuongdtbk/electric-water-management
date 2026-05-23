@@ -481,3 +481,15 @@ vi:
     compare:
       only_in_a: "chỉ có ở kỳ %{label}"
       only_in_b: "mới ở kỳ %{label}"
+    range:
+      from_period: "Từ kỳ"
+      to_period: "Đến kỳ"
+      total_periods:
+        one: "Tổng: 1 kỳ"
+        other: "Tổng: %{count} kỳ"
+      no_periods_in_range: "Không có kỳ nào trong khoảng đã chọn."
+      columns:
+        period: "Kỳ"
+        deficit_kw: "Tổng thâm điện (kW)"
+        deficit_amount: "Thành tiền phải thu"
+        status: "Trạng thái"
