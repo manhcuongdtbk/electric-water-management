@@ -1,0 +1,487 @@
+# Kiến thức production — Hệ thống quản lý điện nội bộ Sư đoàn
+
+> **Đối tượng:** Developer hoặc người muốn hiểu hệ thống chạy thế nào ở production.
+> **Tiền đề:** Bạn biết code Rails nhưng chưa biết Docker và chưa từng deploy production.
+
+---
+
+## Mục lục
+
+1. [Bức tranh tổng thể](#1-bức-tranh-tổng-thể)
+2. [Docker là gì](#2-docker-là-gì)
+3. [3 containers trong hệ thống](#3-3-containers-trong-hệ-thống)
+4. [Các file liên quan và vai trò](#4-các-file-liên-quan-và-vai-trò)
+5. [Luồng khởi động](#5-luồng-khởi-động)
+6. [Luồng xử lý request](#6-luồng-xử-lý-request)
+7. [Giải thích từng file](#7-giải-thích-từng-file)
+8. [Biến môi trường](#8-biến-môi-trường)
+9. [Dữ liệu và volume](#9-dữ-liệu-và-volume)
+10. [Sao lưu và khôi phục](#10-sao-lưu-và-khôi-phục)
+11. [3 môi trường](#11-3-môi-trường)
+12. [Các khái niệm cần biết](#12-các-khái-niệm-cần-biết)
+13. [Xử lý sự cố](#13-xử-lý-sự-cố)
+
+---
+
+## 1. Bức tranh tổng thể
+
+Hệ thống chạy trên 1 máy tính (Ubuntu) trong mạng LAN nội bộ Sư đoàn, không có internet. Người dùng truy cập bằng trình duyệt từ máy tính khác trong LAN.
+
+Trên máy đó, Docker chạy 3 "hộp" (container) song song:
+
+```
+Trình duyệt (máy khác trong LAN)
+        │
+        ▼ port 80
+   ┌─────────┐
+   │  nginx   │  Web server — nhận request, chuyển cho Rails
+   └────┬─────┘
+        │ port 3000 (nội bộ Docker, không lộ ra LAN)
+   ┌────▼─────┐
+   │   app    │  Application server — Rails xử lý nghiệp vụ
+   └────┬─────┘
+        │ port 5432 (nội bộ Docker)
+   ┌────▼──────┐
+   │ postgres  │  Database — lưu toàn bộ dữ liệu
+   └───────────┘
+```
+
+Người dùng chỉ thấy port 80. 2 port còn lại (3000, 5432) nằm trong mạng nội bộ Docker, không ai ngoài truy cập được.
+
+---
+
+## 2. Docker là gì
+
+Khi deploy không dùng Docker, phải cài thủ công: Ruby, PostgreSQL, nginx, các thư viện — trên mỗi máy khác nhau. Dễ sai version, thiếu thư viện, xung đột.
+
+Docker đóng gói tất cả vào 1 "image" (ảnh). Image giống file ISO cài Windows — chứa mọi thứ cần thiết. Từ image tạo ra "container" (hộp chạy thực). Máy nào có Docker đều chạy được, không cần cài thêm gì.
+
+**Thuật ngữ:**
+
+| Thuật ngữ | Nghĩa | Ví dụ đời thực |
+|---|---|---|
+| Image | Khuôn mẫu, chỉ đọc | File ISO cài Windows |
+| Container | Thể hiện đang chạy của image | Máy tính đã cài xong, đang dùng |
+| Volume | Nơi lưu dữ liệu bền vững | Ổ cứng ngoài — rút máy ra vẫn còn |
+| Network | Mạng nội bộ giữa các containers | Switch mạng nối 3 máy lại |
+| Dockerfile | Công thức build image | Hướng dẫn cài đặt từng bước |
+| Docker Compose | Điều phối nhiều containers | Quản lý dự án giám sát 3 nhóm |
+
+---
+
+## 3. 3 containers trong hệ thống
+
+### postgres — Database
+
+- Dùng image `postgres:16-alpine` (có sẵn, không cần build)
+- Lưu toàn bộ dữ liệu: khu vực, đơn vị, đầu mối, công tơ, chỉ số, kết quả tính toán, tài khoản
+- Data lưu trong volume (không mất khi restart container)
+- Healthcheck: Docker kiểm tra PostgreSQL sẵn sàng chưa mỗi 10 giây
+
+### app — Application server
+
+- Build từ `Dockerfile` trong repo (chứa Ruby, gems, source code đã compile)
+- Bên trong chạy: Thrust (HTTP/2 proxy) → Puma (Rails server)
+- Chờ postgres healthy rồi mới start
+- Khi start: chạy database migrations, tạo tài khoản mặc định (nếu lần đầu)
+
+### nginx — Web server
+
+- Dùng image `nginx:alpine` (có sẵn, không cần build)
+- Nhận request từ trình duyệt (port 80), chuyển cho app (port 3000)
+- Nén response (gzip) để gửi nhanh hơn trên mạng
+- Chặn request quá 20MB
+- Chờ tối đa 5 phút cho request nặng (tính toán, xuất Excel)
+
+---
+
+## 4. Các file liên quan và vai trò
+
+### Files build và chạy
+
+| File | Làm gì | Ai đọc |
+|---|---|---|
+| `Dockerfile` | Công thức build image app (Ruby + gems + source code) | Docker |
+| `compose.yml` | Ghép 3 containers, định nghĩa env vars, volumes, network | Docker Compose |
+| `docker/nginx.conf` | Cấu hình nginx: proxy request, nén, timeout | nginx container |
+| `bin/docker-entrypoint` | Chạy khi container app start: tạo thư mục backup, set port, chạy db:prepare | Container app |
+| `bin/thrust` | Entry point cho Thrust HTTP/2 proxy (Rails 8 mặc định) | Container app |
+| `.env.example` | Template biến môi trường — copy thành `.env` rồi điền giá trị | Người deploy |
+
+### Files data và vận hành
+
+| File | Làm gì | Ai dùng |
+|---|---|---|
+| `db/seeds.rb` | Tạo 2 tài khoản mặc định (kyThuat, quanTri) khi database mới | db:prepare |
+| `lib/tasks/backups.rake` | Lệnh restore database từ bản sao lưu | Kỹ thuật viên (terminal) |
+| `script/setup-auto-backup` | Thiết lập sao lưu tự động sang ổ cứng phụ | Người deploy (1 lần) |
+
+### Files cho delivery
+
+| File | Làm gì | Ai dùng |
+|---|---|---|
+| `bin/prepare-delivery` | Tạo bản sạch để ship cho khách (xóa dấu vết phát triển) | Developer |
+| `docs/HUONG_DAN_DEPLOY.md` | Hướng dẫn deploy chi tiết từng bước | Người thực hiện deploy |
+
+---
+
+## 5. Luồng khởi động
+
+Khi chạy `docker compose up -d`:
+
+```
+docker compose up -d
+       │
+       ▼ đọc compose.yml
+       │
+       ├── 1. Tạo network nội bộ (bridge)
+       │       3 containers nằm trong cùng mạng, tìm nhau bằng tên
+       │
+       ├── 2. Start postgres
+       │       Tạo database + user từ biến môi trường (.env)
+       │       Healthcheck mỗi 10 giây: pg_isready
+       │
+       ├── 3. Start app (chờ postgres healthy)
+       │       ENTRYPOINT: tini → bin/docker-entrypoint
+       │         ├── mkdir thư mục backup
+       │         ├── export HTTP_PORT (cho Thrust)
+       │         ├── db:prepare (tạo database nếu chưa có, chạy migrations, seed)
+       │         └── exec CMD: bin/thrust → bin/rails server (Puma)
+       │             Puma lắng nghe 0.0.0.0:3000
+       │
+       └── 4. Start nginx (chờ app)
+               Đọc docker/nginx.conf
+               Lắng nghe port 80
+               Proxy mọi request → app:3000
+```
+
+Sau khi cả 3 container Up, truy cập `http://<IP-server>` từ trình duyệt.
+
+---
+
+## 6. Luồng xử lý request
+
+Khi người dùng mở trình duyệt và truy cập hệ thống:
+
+```
+1. Trình duyệt gửi request → nginx (port 80)
+2. nginx nén request headers, chuyển cho Thrust (port 3000)
+3. Thrust xử lý HTTP/2, cache static files, chuyển cho Puma
+4. Puma giao cho Rails xử lý:
+   - Router tìm controller phù hợp
+   - Controller kiểm tra quyền (CanCanCan)
+   - Controller đọc/ghi database (PostgreSQL)
+   - View render HTML
+5. Response đi ngược: Rails → Puma → Thrust (nén) → nginx → trình duyệt
+```
+
+**Web server vs Application server:**
+
+- **nginx (web server):** Nhận request từ trình duyệt, quyết định chuyển cho ai. Giống lễ tân — tiếp khách, chỉ đường, phát tài liệu có sẵn (CSS, JS, hình ảnh).
+- **Puma (application server):** Chạy code Ruby, đọc/ghi database, trả kết quả. Giống nhân viên phòng ban — xử lý công việc thực sự.
+- **Thrust:** Đứng giữa nginx và Puma, nén response và cache. Rails 8 thêm mặc định để deploy đơn giản không cần nginx. Project này có cả 2 — chức năng trùng thì Thrust bỏ qua.
+
+---
+
+## 7. Giải thích từng file
+
+### Dockerfile
+
+Công thức build image cho app container. Dùng "multi-stage build" — 3 giai đoạn:
+
+**Giai đoạn 1 (base):** Cài Ruby + các phần mềm cần khi chạy (PostgreSQL client cho backup, tini cho signal handling, locales cho tiếng Việt).
+
+**Giai đoạn 2 (build):** Kế thừa base, thêm build tools (gcc, make). Cài gems, compile assets (CSS/JS). Build tools chỉ cần ở giai đoạn này — không đi vào image cuối.
+
+**Giai đoạn 3 (final):** Kế thừa base (không có build tools), copy gems và code đã compile từ giai đoạn 2. Tạo user `rails` (không chạy bằng root — bảo mật). Image cuối nhẹ hơn nhiều vì không chứa build tools.
+
+```dockerfile
+ENTRYPOINT ["/usr/bin/tini", "--", "/rails/bin/docker-entrypoint"]
+CMD ["./bin/thrust", "./bin/rails", "server"]
+```
+
+ENTRYPOINT luôn chạy khi container start (setup). CMD là lệnh chính giữ container sống. Docker ghép: `tini → docker-entrypoint → thrust → rails server`.
+
+### compose.yml
+
+Ghép 3 containers lại. Định nghĩa:
+- **Biến môi trường:** đọc từ file `.env` (mật khẩu database, secret key)
+- **Volumes:** nơi lưu dữ liệu bền vững (database, backups)
+- **Network:** mạng nội bộ để containers nói chuyện
+- **Ports:** chỉ nginx mở port 80 ra ngoài
+- **Depends on:** app chờ postgres healthy, nginx chờ app
+
+### docker/nginx.conf
+
+Cấu hình nginx:
+- Lắng nghe port 80, nhận mọi request
+- Nén response (gzip) cho CSS, JS, JSON — giảm dung lượng truyền trên mạng
+- Chặn request > 20MB
+- Proxy mọi request cho `app:3000` (Docker DNS tự resolve tên container thành IP)
+- Health check `/up` riêng, không ghi log (tránh spam)
+- Timeout 5 phút cho request nặng (tính toán bảng tính tiền, xuất Excel)
+
+### bin/docker-entrypoint
+
+Script chạy mỗi khi container app start:
+1. Tạo thư mục backup nếu chưa có
+2. Set `HTTP_PORT` cho Thrust (đồng bộ với Railway nếu deploy trên đó)
+3. Kiểm tra CMD có phải `rails server` không — nếu đúng thì chạy `db:prepare` (tạo database + migrations + seed). Nếu CMD là lệnh khác (bash, console) thì skip
+4. `exec` CMD — thay thế bash bằng CMD để signal handling đúng
+
+### bin/thrust
+
+3 dòng, load Thruster gem. Thrust là HTTP/2 proxy của Rails 8:
+- Nén response (gzip)
+- Cache static files (CSS, JS — set header cache 1 năm)
+- HTTP/2 (gửi nhiều file trong 1 kết nối)
+
+Trước Rails 8 cần nginx cho những việc này. Rails 8 thêm Thrust để deploy đơn giản không cần nginx. Project này có cả 2 — nginx lo phần nặng, Thrust bổ sung HTTP/2.
+
+### .env.example
+
+Template cho biến môi trường. Copy thành `.env`, điền giá trị thực:
+
+```
+POSTGRES_PASSWORD=<mật khẩu database>
+SECRET_KEY_BASE=<khóa mã hóa session/cookie — 128 ký tự hex>
+```
+
+File `.env` không bao giờ commit vào git (chứa mật khẩu).
+
+### db/seeds.rb
+
+Tạo 2 tài khoản mặc định khi database mới:
+- `kyThuat` / `Abc@1234` (kỹ thuật viên — quản lý tài khoản, sao lưu)
+- `quanTri` / `Abc@1234` (quản trị viên hệ thống — quản lý nghiệp vụ)
+
+Cả 2 bắt buộc đổi mật khẩu lần đầu đăng nhập. Không thể xóa.
+
+### lib/tasks/backups.rake
+
+Lệnh restore database từ terminal (không có nút trên giao diện vì quá nguy hiểm — ghi đè toàn bộ dữ liệu):
+
+```bash
+docker compose exec app bundle exec rails "backups:restore[tên-file.dump]"
+```
+
+Hỏi xác nhận `YES` trước khi chạy.
+
+### script/setup-auto-backup
+
+Thiết lập sao lưu tự động sang ổ cứng phụ. Chạy 1 lần khi deploy:
+
+```bash
+sudo ./script/setup-auto-backup /mnt/backup
+```
+
+Script tạo cron job chạy mỗi ngày 2:00 sáng:
+- pg_dump database ra file
+- Giữ tối đa 7 bản, xóa bản cũ nhất tự động
+- Log tại `/mnt/backup/ewm-backup/backup.log`
+
+### bin/prepare-delivery
+
+Tạo bản sạch để ship cho khách. Source code gốc chứa file phát triển (CLAUDE.md, .claude/) và dấu vết AI trong git history. Script:
+1. Clone repo
+2. Xóa dấu vết AI khỏi commit messages
+3. Xóa file phát triển
+4. Output: thư mục `electric-water-management-delivery/` sẵn sàng ship
+
+---
+
+## 8. Biến môi trường
+
+Biến môi trường là cách truyền cấu hình vào container mà không hardcode trong code.
+
+### Production (file .env)
+
+| Biến | Giá trị | Bắt buộc |
+|---|---|---|
+| `POSTGRES_USER` | `electric_water_management` (mặc định) | Không (có default) |
+| `POSTGRES_PASSWORD` | Mật khẩu database | Có |
+| `POSTGRES_DB` | `electric_water_management_production` (mặc định) | Không (có default) |
+| `SECRET_KEY_BASE` | Chuỗi 128 hex (tạo bằng `rails secret`) | Có |
+
+### Set sẵn trong compose.yml (không cần điền)
+
+| Biến | Giá trị | Tại sao |
+|---|---|---|
+| `RAILS_ENV` | `production` | Chạy production mode |
+| `DATABASE_HOST` | `postgres` | Tên container database |
+| `DISABLE_SSL_REDIRECT` | `1` | LAN không có SSL |
+| `RAILS_LOG_TO_STDOUT` | `1` | Log hiện trong `docker compose logs` |
+| `BACKUP_DIR` | `/rails/storage/backups` | Thư mục lưu backup trong container |
+| `TZ` | `Asia/Ho_Chi_Minh` | Timezone Việt Nam |
+
+---
+
+## 9. Dữ liệu và volume
+
+Container bị xóa → dữ liệu bên trong mất. Volume giữ dữ liệu bên ngoài container.
+
+### 3 volumes trong compose.yml
+
+| Volume | Chứa gì | Mất = hậu quả |
+|---|---|---|
+| `pg_data` | Toàn bộ database PostgreSQL | Mất hết dữ liệu nghiệp vụ |
+| `storage_data` | File Rails (Active Storage) | Mất file upload (nếu có) |
+| `backups_data` | File backup (pg_dump) | Mất bản sao lưu trong app |
+
+### Named volume vs Bind mount
+
+| Loại | Ví dụ | Ai quản lý | Nhìn thấy trên máy |
+|---|---|---|---|
+| Named volume | `pg_data:/var/lib/postgresql/data` | Docker | Không (nằm sâu trong Docker) |
+| Bind mount | `./docker/nginx.conf:/etc/nginx/nginx.conf` | Bạn | Có (file trên máy host) |
+
+Production dùng named volumes (Docker quản lý, an toàn). Development dùng bind mounts (nhìn thấy file, dễ debug).
+
+---
+
+## 10. Sao lưu và khôi phục
+
+### 3 lớp bảo vệ dữ liệu
+
+**Lớp 1 — Sao lưu qua giao diện (khi cần):**
+- Kỹ thuật viên đăng nhập → trang Sao lưu dữ liệu → bấm Tạo bản sao lưu
+- Dùng `pg_dump` tạo file backup trong container
+- Tối đa 3 bản. Dùng trước thao tác quan trọng (cập nhật phiên bản, restore)
+
+**Lớp 2 — Khôi phục từ terminal:**
+- `docker compose exec app bundle exec rails "backups:restore[tên-file.dump]"`
+- Ghi đè toàn bộ database — hỏi xác nhận YES
+- Dùng khi cần quay lại trạng thái cũ
+
+**Lớp 3 — Sao lưu tự động sang ổ cứng phụ (bắt buộc):**
+- Cron job chạy mỗi ngày 2:00 sáng
+- pg_dump database ra ổ cứng phụ
+- Giữ 7 bản, xóa cũ nhất tự động
+- Bảo vệ khi ổ chính hỏng
+
+---
+
+## 11. 3 môi trường
+
+| | Development | Staging | Production |
+|---|---|---|---|
+| Hạ tầng | Docker Desktop (Mac) | Railway | Ubuntu Mini PC (LAN offline) |
+| Dockerfile | Dockerfile.dev | Dockerfile | Dockerfile |
+| Web server | nginx container | Railway edge proxy | nginx container |
+| Database | PostgreSQL container | Railway PostgreSQL | PostgreSQL container |
+| Config | compose.dev.yml | railway.json | compose.yml + .env |
+| Deploy | `bin/docker up` | Auto-deploy khi push main | `docker compose up -d` |
+
+**Development:** Source code mount từ máy Mac vào container — sửa file → Rails tự reload. Dùng `bin/docker` shortcut cho mọi lệnh.
+
+**Staging:** Railway build image từ Dockerfile, tự quản lý database và proxy. Auto-deploy khi push branch main.
+
+**Production:** Offline. Build image trên máy có internet, save file, copy USB sang server. Hướng dẫn chi tiết trong `docs/HUONG_DAN_DEPLOY.md`.
+
+Cả 3 dùng cùng Dockerfile (staging và production) hoặc Dockerfile.dev (development). Đảm bảo code chạy giống nhau ở mọi nơi.
+
+---
+
+## 12. Các khái niệm cần biết
+
+### Process, Thread, Container
+
+**Process** = chương trình đang chạy. Mỗi container chạy 1 process chính. Các process có bộ nhớ riêng, không ảnh hưởng nhau.
+
+**Thread** = luồng xử lý bên trong process. Puma có 3 threads — xử lý 3 request đồng thời. Threads chia sẻ bộ nhớ trong cùng process.
+
+**Container** = process được cách ly. Giống process nhưng có filesystem riêng, network riêng, không thấy process khác.
+
+```
+docker compose up (process điều phối)
+├── postgres container (process)
+│   └── PostgreSQL server
+├── app container (process)
+│   └── tini → docker-entrypoint → Thrust → Puma
+│       ├── thread 1 → xử lý request A
+│       ├── thread 2 → xử lý request B
+│       └── thread 3 → chờ request mới
+└── nginx container (process)
+    └── nginx server
+```
+
+### ENTRYPOINT vs CMD
+
+| | ENTRYPOINT | CMD |
+|---|---|---|
+| Vai trò | Setup cố định (chạy mỗi lần start) | Lệnh chính (giữ container sống) |
+| Ghi đè được | Không (trừ `--entrypoint`) | Có (bình thường) |
+| Ví dụ | `tini → docker-entrypoint` (db:prepare) | `thrust → rails server` |
+
+### docker compose up vs start vs restart vs down
+
+| Lệnh | Làm gì | Khi nào dùng |
+|---|---|---|
+| `up` | Tạo container + chạy | Lần đầu hoặc sau khi sửa config |
+| `start` | Chạy lại container đã dừng | Hàng ngày (nhanh) |
+| `stop` | Dừng container (giữ lại) | Hàng ngày |
+| `restart` | Dừng rồi chạy lại 1 container | Khi app cần reload |
+| `down` | Dừng + xóa container + xóa network | Khi sửa compose.yml |
+| `down -v` | down + xóa volumes (mất database) | Khi muốn bắt đầu lại từ đầu |
+
+### exec vs run
+
+| Lệnh | Làm gì | ENTRYPOINT |
+|---|---|---|
+| `exec` | Nhảy vào container đang chạy | Bỏ qua |
+| `run` | Tạo container mới, chạy lệnh | Chạy |
+
+### Signal và tini
+
+Khi `docker stop`, Docker gửi signal SIGTERM bảo app tắt. Nhưng process PID 1 trong container không tự forward signal cho child processes. `tini` là init process nhỏ gọn đứng ở PID 1, forward signal đúng cách:
+
+```
+docker stop → SIGTERM → tini → Thrust → Puma → tắt sạch (xử lý xong request đang chạy)
+```
+
+Không có tini: Docker chờ 10 giây → kill cưỡng bức → request đang xử lý bị cắt.
+
+---
+
+## 13. Xử lý sự cố
+
+### Container không khởi động
+
+```bash
+docker compose logs <tên-container>   # Xem lỗi
+docker compose ps                      # Xem trạng thái
+```
+
+| Lỗi | Nguyên nhân | Cách xử lý |
+|---|---|---|
+| `POSTGRES_PASSWORD not set` | Thiếu file .env | Tạo .env từ .env.example |
+| `port is already allocated` | Port 80 bị chiếm | Dừng phần mềm khác hoặc đổi port |
+| `no space left on device` | Ổ cứng đầy | Dọn: `docker system prune` |
+| `fe_sendauth: no password` | Sai mật khẩu database | Kiểm tra POSTGRES_PASSWORD trong .env |
+
+### Quên mật khẩu
+
+Kỹ thuật viên hoặc quản trị viên reset qua giao diện (trang Tài khoản). Nếu quên cả 2 tài khoản mặc định:
+
+```bash
+docker compose exec app bundle exec rails runner "
+  User.find_by(username: 'kyThuat').update!(
+    password: 'Abc@1234', password_confirmation: 'Abc@1234',
+    force_password_change: true)
+"
+```
+
+### Hệ thống chậm
+
+```bash
+docker stats   # Xem CPU/RAM mỗi container
+```
+
+### Xóa toàn bộ và cài lại
+
+```bash
+docker compose down -v    # Xóa containers + database
+docker compose up -d      # Tạo lại (database trống, 2 tài khoản mặc định)
+```
+
+**Cảnh báo: mất toàn bộ dữ liệu.** Chỉ làm khi thực sự cần thiết.
