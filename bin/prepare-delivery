@@ -1,6 +1,23 @@
 #!/usr/bin/env bash
 set -e
 
+# Kiểm tra và cài git-filter-repo nếu chưa có
+if ! command -v git-filter-repo &>/dev/null; then
+  echo "git-filter-repo chưa cài. Đang cài..."
+  if command -v pip3 &>/dev/null; then
+    pip3 install git-filter-repo
+  elif command -v pip &>/dev/null; then
+    pip install git-filter-repo
+  elif command -v brew &>/dev/null; then
+    brew install git-filter-repo
+  else
+    echo "Không tìm thấy pip3, pip, hay brew. Vui lòng cài 1 trong các cách sau:"
+    echo "  pip3 install git-filter-repo"
+    echo "  brew install git-filter-repo"
+    exit 1
+  fi
+fi
+
 DELIVERY_DIR="${1:-../electric-water-management-delivery}"
 
 echo "=== Chuẩn bị bản delivery ==="
