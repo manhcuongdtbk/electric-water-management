@@ -1,6 +1,6 @@
 # Thiết kế hệ thống quản lý điện nội bộ Sư đoàn — Hệ thống v2
 
-> **Phiên bản tài liệu:** 2.10.0
+> **Phiên bản tài liệu:** 2.11.0
 > **Ngày:** 24/05/2026
 > **Tính chất:** Tài liệu thiết kế hệ thống v2, nguồn sự thật cho implementation.
 > **Nguồn nghiệp vụ:** V2_XAC_NHAN_NGHIEP_VU (phiên bản mới nhất tại thời điểm thiết kế: v2.11.0)
@@ -1226,6 +1226,14 @@ Mọi thao tác trên hệ thống đều được ghi lại (PaperTrail). Syste
 ---
 
 ## Lịch sử thay đổi
+
+### v2.11.0 (24/05/2026)
+
+- Sidebar per role: commander giờ thấy cùng trang với unit_admin cùng variant (CMD khớp UA 8 mục, CMD-ZM khớp UA-ZM 12 mục). Tất cả read-only (inputs disabled, nút Sửa/Xóa/Lưu ẩn).
+- Nhập số điện lực: CMD-ZM giờ thấy trên sidebar (read-only).
+- Chỉ số đầu mối: CMD và CMD-ZM giờ thấy trên sidebar (read-only).
+- Chỉ số bơm nước: CMD-ZM giờ thấy trên sidebar (read-only). CMD không thấy (không có data bơm nước).
+- Cấu hình đơn vị: CMD và CMD-ZM giờ thấy trên sidebar (read-only).
 
 ### v2.10.0 (24/05/2026)
 

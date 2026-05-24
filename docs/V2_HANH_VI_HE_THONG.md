@@ -1,6 +1,6 @@
 # Hành vi hệ thống — Hệ thống quản lý điện nội bộ Sư đoàn (Hệ thống v2)
 
-> **Phiên bản:** 1.1.0
+> **Phiên bản:** 1.2.0
 > **Ngày:** 24/05/2026
 > **Tính chất:** Tài liệu mô tả hành vi thực tế của hệ thống đã được verify qua code và test. Bổ sung cho V2_XAC_NHAN_NGHIEP_VU (cái gì) và V2_THIET_KE_HE_THONG (làm thế nào) bằng cách trả lời "hệ thống hành xử ra sao" trong các kịch bản thực tế.
 > **Nguồn:** Kết quả audit toàn diện codebase, 14 đợt page-by-page, 781+ test cases.
@@ -350,6 +350,12 @@ Code từ session AI trước có thể thiếu suy nghĩ sâu về edge cases. 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.2.0 (24/05/2026)
+
+- Mục 1: sidebar CMD khớp UA (8 mục), CMD-ZM khớp UA-ZM (12 mục). Commander thấy cùng trang với unit_admin cùng variant, chỉ xem (inputs disabled, nút ẩn).
+- Mục 4 unit_config: CMD-ZM và CMD giờ thấy trang (read-only), không còn sidebar ẩn.
+- Mục 4 electricity_supply: CMD-ZM giờ thấy trên sidebar (read-only), không còn sidebar ẩn.
 
 ### v1.1.0 (24/05/2026)
 
