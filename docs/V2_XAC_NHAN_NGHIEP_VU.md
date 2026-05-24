@@ -1,6 +1,6 @@
 # Xác nhận nghiệp vụ — Hệ thống quản lý điện nội bộ Sư đoàn (Hệ thống v2)
 
-> **Phiên bản:** 2.11.0
+> **Phiên bản:** 2.12.0
 > **Ngày:** 21/05/2026
 > **Tính chất:** Tài liệu nội bộ giữa chủ dự án và đội phát triển. Là nguồn sự thật duy nhất cho thiết kế và triển khai.
 > **Ngôn ngữ hệ thống:** Toàn bộ hệ thống phải được Việt hóa 100% (giao diện, thông báo, cảnh báo, xuất file) vì hệ thống dùng trong Sư đoàn Quân đội nhân dân Việt Nam.
@@ -675,7 +675,7 @@ Lưu ý:
 | Xóa nhóm đang có đầu mối | Có | Đầu mối chuyển lên cấp trên: nếu nhóm thuộc khối thì đầu mối lên khối, nếu nhóm thuộc đơn vị trực tiếp thì đầu mối lên đơn vị. Nhóm chỉ là hiển thị. |
 | Xóa đầu mối, công tơ có dữ liệu kỳ cũ | Có | Dữ liệu kỳ cũ giữ nguyên. Dữ liệu kỳ đang mở (chỉ số công tơ, quân số, khoản trừ, phân bổ bơm nước, kết quả tính toán) bị xóa thật để tính toán không bị ảnh hưởng bởi đầu mối đã xóa. |
 | Xóa nhóm cấp bậc đang có đầu mối sử dụng | Không | Phải chuyển hết quân số sang nhóm cấp bậc khác trước. |
-| Xóa tài khoản | Có | Trừ 2 tài khoản mặc định (kỹ thuật viên và quản trị viên hệ thống ban đầu). Không cho tự xóa chính mình. Tài khoản đang đăng nhập bị xóa thì buộc thoát ngay. |
+| Xóa tài khoản | Có | Trừ 2 tài khoản mặc định (kỹ thuật viên và quản trị viên hệ thống ban đầu). Không cho tự xóa chính mình. ~~Tài khoản đang đăng nhập bị xóa thì buộc thoát ngay~~ (nhu cầu thực tế không cần — hệ thống ít người dùng, xóa tài khoản hiếm khi xảy ra, session tự hết hạn sau 2 giờ). |
 
 ### 23.2. Sửa
 
@@ -816,13 +816,17 @@ Người dùng chỉ cần sửa chỗ có thay đổi. Mọi thao tác ở kỳ
 - Khi 2 người nhập liệu cùng lúc cho cùng 1 đơn vị: người lưu trước thành công bình thường. Người lưu sau nhận cảnh báo "dữ liệu đã bị thay đổi bởi người khác", hệ thống hiển thị dữ liệu mới nhất để người đó xem lại rồi quyết định lưu lại hay không.
 - Tự thoát sau 2 giờ không hoạt động.
 - 1 tài khoản cho phép đăng nhập nhiều thiết bị cùng lúc.
-- Xóa tài khoản đang đăng nhập (của người khác): session bị buộc thoát ngay.
+- ~~Xóa tài khoản đang đăng nhập (của người khác): session bị buộc thoát ngay~~ (nhu cầu thực tế không cần).
 - Thông báo khi đăng nhập: hiển thị "Kỳ tháng X đã mở, vui lòng nhập liệu" khi có kỳ mới.
 - Khi nhập thủ công số sử dụng công tơ (trường hợp cuối kỳ < đầu kỳ): có trường ghi chú optional kèm theo (ví dụ: "thay công tơ mới").
 
 ---
 
 ## 29. Lịch sử thay đổi
+
+### v2.12.0 (24/05/2026)
+
+- Xóa tài khoản đang đăng nhập buộc thoát ngay (mục 23.1, 28): đánh dấu nhu cầu thực tế không cần — hệ thống ít người dùng, xóa tài khoản hiếm khi xảy ra, session tự hết hạn sau 2 giờ.
 
 ### v2.11.0 (21/05/2026)
 

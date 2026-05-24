@@ -1,6 +1,6 @@
 # Thiết kế hệ thống quản lý điện nội bộ Sư đoàn — Hệ thống v2
 
-> **Phiên bản tài liệu:** 2.11.0
+> **Phiên bản tài liệu:** 2.12.0
 > **Ngày:** 24/05/2026
 > **Tính chất:** Tài liệu thiết kế hệ thống v2, nguồn sự thật cho implementation.
 > **Nguồn nghiệp vụ:** V2_XAC_NHAN_NGHIEP_VU (phiên bản mới nhất tại thời điểm thiết kế: v2.11.0)
@@ -1052,7 +1052,7 @@ Quy tắc xóa theo nghiệp vụ mục 23. Soft delete dùng gem discard (đán
 | Xóa nhóm đang có đầu mối | Có | Đầu mối: contact_point.group_id → null. Nếu nhóm thuộc khối → đầu mối lên khối (contact_point.block_id giữ nguyên). Nếu nhóm thuộc đơn vị trực tiếp → đầu mối lên đơn vị |
 | Xóa đầu mối, công tơ có dữ liệu kỳ cũ | Có | Soft delete (discard). Dữ liệu kỳ cũ (meter_readings, personnel_entries, calculations...) giữ nguyên. Cleanup data kỳ đang mở (xem mục Cleanup data khi discard). Nếu đầu mối đang có pump_allocation trong kỳ đang mở → discard pump_allocation đó luôn (xóa thật, không soft delete vì pump_allocations không có discarded_at). Kỳ cũ đã đóng: pump_allocations kỳ cũ giữ nguyên, calculations đã cache |
 | Xóa nhóm cấp bậc đang có đầu mối sử dụng | Không | Validation: phải chuyển hết quân số sang nhóm cấp bậc khác trước |
-| Xóa tài khoản | Có | Trừ 2 tài khoản mặc định (technician + system_admin ban đầu). Không cho tự xóa chính mình. Tài khoản đang đăng nhập bị xóa → buộc thoát ngay |
+| Xóa tài khoản | Có | Trừ 2 tài khoản mặc định (technician + system_admin ban đầu). Không cho tự xóa chính mình. ~~Tài khoản đang đăng nhập bị xóa → buộc thoát ngay~~ (nhu cầu thực tế không cần) |
 
 ### Cleanup data khi discard (v2.4.0)
 
@@ -1150,7 +1150,7 @@ Hệ thống hoạt động trên mạng nội bộ Sư đoàn, không cần int
 - Đổi mật khẩu lần đầu đăng nhập (force_password_change).
 - Session timeout: tự thoát sau 2 giờ không hoạt động (Devise :timeoutable).
 - 1 tài khoản cho phép đăng nhập nhiều thiết bị cùng lúc.
-- Xóa tài khoản đang đăng nhập (của người khác): session bị buộc thoát ngay.
+- ~~Xóa tài khoản đang đăng nhập (của người khác): session bị buộc thoát ngay~~ (nhu cầu thực tế không cần).
 
 ### Tài khoản mặc định
 
@@ -1226,6 +1226,10 @@ Mọi thao tác trên hệ thống đều được ghi lại (PaperTrail). Syste
 ---
 
 ## Lịch sử thay đổi
+
+### v2.12.0 (24/05/2026)
+
+- Xóa dữ liệu + Xác thực: đánh dấu buộc thoát session khi xóa tài khoản là nhu cầu thực tế không cần (khớp nghiệp vụ v2.12.0).
 
 ### v2.11.0 (24/05/2026)
 
