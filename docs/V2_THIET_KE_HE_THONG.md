@@ -1,6 +1,6 @@
 # Thiết kế hệ thống quản lý điện nội bộ Sư đoàn — Hệ thống v2
 
-> **Phiên bản tài liệu:** 2.12.0
+> **Phiên bản tài liệu:** 2.13.0
 > **Ngày:** 24/05/2026
 > **Tính chất:** Tài liệu thiết kế hệ thống v2, nguồn sự thật cho implementation.
 > **Nguồn nghiệp vụ:** V2_XAC_NHAN_NGHIEP_VU (phiên bản mới nhất tại thời điểm thiết kế: v2.11.0)
@@ -786,7 +786,7 @@ Chỉ làm việc kỹ thuật, không xem dữ liệu nghiệp vụ.
 | Tài khoản (mọi vai trò) | CRUD |
 | units | Chỉ đọc (form tạo tài khoản cần dropdown đơn vị để gán cho quản trị viên đơn vị và chỉ huy đơn vị; không có trang riêng hiển thị danh sách đơn vị cho kỹ thuật viên) |
 | Nhật ký | Xem |
-| Sao lưu và phục hồi | CRUD (tối đa 3 bản) |
+| Sao lưu và phục hồi | Tạo + xóa qua giao diện (tối đa 3 bản). ~~Restore qua giao diện~~ (restore qua dòng lệnh trên server) |
 | Dữ liệu nghiệp vụ | Không truy cập (ngoại trừ units chỉ đọc nêu trên) |
 
 ### Cross-zone scoping
@@ -951,7 +951,7 @@ Quân số không có trang nhập liệu riêng. Cập nhật quân số theo n
 |---|---|---|---|
 | Tài khoản | /users | users | CRUD tài khoản |
 | Nhật ký hoạt động | /audit_logs | audit_logs#index | Xem log (PaperTrail). Lọc theo: loại thao tác (tạo/sửa/xóa), đối tượng (model), người thao tác, khoảng thời gian |
-| Sao lưu dữ liệu | /backups | backups | Backup + restore (tối đa 3 bản) |
+| Sao lưu dữ liệu | /backups | backups | Tạo + xóa backup (tối đa 3 bản). Restore qua dòng lệnh |
 
 ### Sidebar per role
 
@@ -1209,9 +1209,9 @@ Mọi thao tác trên hệ thống đều được ghi lại (PaperTrail). Syste
 
 ### Sao lưu và phục hồi
 
-- Technician tạo backup toàn bộ data (pg_dump).
-- Technician restore hệ thống về 1 bản backup đã tạo (pg_restore).
+- Technician tạo backup toàn bộ data (pg_dump) qua giao diện.
 - Tối đa lưu được 3 bản backup.
+- Restore qua dòng lệnh trên server (rake task `backups:restore`), không qua giao diện — ghi đè toàn bộ database nên quá rủi ro để đặt nút trên giao diện.
 
 ### Stack kỹ thuật
 
@@ -1226,6 +1226,10 @@ Mọi thao tác trên hệ thống đều được ghi lại (PaperTrail). Syste
 ---
 
 ## Lịch sử thay đổi
+
+### v2.13.0 (24/05/2026)
+
+- Phân quyền technician + Sao lưu và phục hồi + Sidebar: restore không qua giao diện, chỉ qua dòng lệnh trên server (khớp nghiệp vụ v2.13.0).
 
 ### v2.12.0 (24/05/2026)
 
