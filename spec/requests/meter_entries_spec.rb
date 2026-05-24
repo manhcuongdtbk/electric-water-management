@@ -55,7 +55,7 @@ RSpec.describe "MeterEntries", type: :request do
   describe "view permission guards" do
     let(:html) { Nokogiri::HTML(response.body) }
 
-    context "as commander" do
+    context "as commander (zone-manager)" do
       let(:commander) { create(:user, :commander, unit: sample.unit_a) }
       before do
         sample
@@ -75,11 +75,29 @@ RSpec.describe "MeterEntries", type: :request do
 
       it "nút Lưu toàn bộ bị disabled hoặc ẩn" do
         get meter_entries_path
-        # Chỉ check submit trong form data (patch), không check submit toolbar (get)
         submit = html.css("form[method='post'] input[name='commit']")
         if submit.any?
           expect(submit.first["disabled"]).to be_present,
             "Expected submit button to be disabled for commander"
+        end
+      end
+    end
+
+    context "as commander (non zone-manager)" do
+      let(:commander) { create(:user, :commander, unit: sample.unit_b) }
+      before do
+        sample
+        sign_in commander
+      end
+
+      it "hiển thị dữ liệu đơn vị mình, inputs disabled" do
+        get meter_entries_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("CT-B1")
+        html.css("table input[type='number'], table input[type='text']").each do |input|
+          next if input["type"] == "hidden"
+          expect(input["disabled"]).to be_present,
+            "Expected input '#{input['name']}' to be disabled for commander"
         end
       end
     end

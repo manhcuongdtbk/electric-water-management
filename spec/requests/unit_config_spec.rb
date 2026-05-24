@@ -76,7 +76,7 @@ RSpec.describe "UnitConfig", type: :request do
   describe "view permission guards" do
     let(:html) { Nokogiri::HTML(response.body) }
 
-    context "as commander" do
+    context "as commander (zone-manager)" do
       let(:commander) { create(:user, :commander, unit: unit) }
       before { sign_in commander }
 
@@ -84,6 +84,33 @@ RSpec.describe "UnitConfig", type: :request do
         get unit_config_path
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("CP-1")
+        html.css("input[type='number'], select").each do |input|
+          next if input["type"] == "hidden"
+          expect(input["disabled"]).to be_present,
+            "Expected input '#{input['name']}' to be disabled for commander"
+        end
+      end
+
+      it "không hiển thị nút Lưu cấu hình" do
+        get unit_config_path
+        expect(html.css("input[name='commit']")).to be_empty
+      end
+    end
+
+    context "as commander (non zone-manager)" do
+      let!(:unit_b) { create(:unit, zone: zone, name: "Unit B") }
+      let!(:cp_b) {
+        create(:contact_point, :residential, unit: unit_b, name: "CP-B",
+               initial_personnel_counts: { rank.id => 2 })
+      }
+      let(:commander_b) { create(:user, :commander, unit: unit_b) }
+      before { sign_in commander_b }
+
+      it "hiển thị dữ liệu đơn vị mình, inputs disabled" do
+        get unit_config_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("CP-B")
+        expect(response.body).not_to include("CP-1")
         html.css("input[type='number'], select").each do |input|
           next if input["type"] == "hidden"
           expect(input["disabled"]).to be_present,
