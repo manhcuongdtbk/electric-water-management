@@ -15,7 +15,7 @@ Rails 8, PostgreSQL 16, Tailwind CSS, Hotwire (Turbo + Stimulus).
 | Web server | nginx container | Railway edge proxy | nginx container |
 | Database | PostgreSQL container | Railway PostgreSQL | PostgreSQL container |
 | Config | compose.dev.yml | railway.json | compose.yml + .env |
-| URL | http://localhost | https://electric-water-management-v2.up.railway.app | http://\<IP server\> |
+| URL | http://localhost | https://electric-water-management.up.railway.app | http://\<IP server\> |
 
 ## Development
 

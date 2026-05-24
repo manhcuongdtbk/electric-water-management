@@ -27,6 +27,8 @@
 
 ## 1. Bức tranh tổng thể
 
+> Mục 1-10 mô tả kiến trúc **production**. Mục 11 mô tả khác biệt giữa 4 môi trường (development, test, staging, production).
+
 Hệ thống chạy trên 1 máy tính (Ubuntu) trong mạng LAN nội bộ Sư đoàn, không có internet. Người dùng truy cập bằng trình duyệt từ máy tính khác trong LAN.
 
 Trên máy đó, Docker chạy 3 "hộp" (container) song song:
@@ -462,7 +464,7 @@ graph LR
 | Database | PostgreSQL container | PostgreSQL container (cùng server, DB khác) | Railway PostgreSQL | PostgreSQL container |
 | Config | compose.dev.yml | compose.dev.yml | railway.json | compose.yml + .env |
 | Deploy | `bin/docker up` | Tự động khi chạy test | Auto-deploy khi push main | `docker compose up -d` |
-| URL | http://localhost | Không (headless) | https://electric-water-management-v2.up.railway.app | http://\<IP server\> |
+| URL | http://localhost | Không (headless) | https://electric-water-management.up.railway.app | http://\<IP server\> |
 
 Staging và production dùng cùng Dockerfile (production build). Development và test dùng Dockerfile.dev.
 
@@ -583,8 +585,8 @@ PostgreSQL container
 **Lệnh RAILS_ENV:** Khi cần chạy lệnh Rails với env khác trong Docker, phải set bên trong container (không phải bên ngoài):
 
 ```bash
-# Sai — RAILS_ENV không vào container
-RAILS_ENV=test bin/docker exec app rails db:drop
+# Sai — RAILS_ENV set trên host, không vào container
+RAILS_ENV=test docker compose -f compose.dev.yml exec app bundle exec rails db:drop
 
 # Đúng — bin/docker forward RAILS_ENV vào container
 RAILS_ENV=test bin/docker exec app bundle exec rails db:drop
