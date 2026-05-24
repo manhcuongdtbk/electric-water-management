@@ -3,6 +3,10 @@
 # Đảm bảo thư mục backup tồn tại (mount qua volume riêng).
 mkdir -p "${BACKUP_DIR:-/rails/storage/backups}"
 
+# Thrust (Rails 8 HTTP/2 proxy) đọc HTTP_PORT, không đọc PORT.
+# Railway gán PORT và healthcheck trên port đó, nên cần đồng bộ.
+export HTTP_PORT="${PORT:-80}"
+
 # Chỉ chạy db:prepare khi command là `./bin/rails server` (tránh chạy mỗi
 # lần exec console/rake task).
 if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1}" == "server" ]; then
