@@ -964,14 +964,14 @@ Sidebar chỉ hiển thị các mục mà vai trò được phép thấy (theo b
 | Bảng tính tiền | ✓ | ✓ | ✓ | ✗ |
 | Tra cứu lịch sử | ✓ | ✓ | ✓ | ✗ |
 | **NHẬP LIỆU** | | | | |
-| Nhập số điện lực | ✓ | ✓ (zone-manager) | ✗ | ✗ |
-| Chỉ số đầu mối | ✓ | ✓ | ✗ | ✗ |
-| Chỉ số bơm nước | ✓ | ✓ (zone-manager) | ✗ | ✗ |
+| Nhập số điện lực | ✓ | ✓ (zone-manager) | ✓ (zone-manager, xem) | ✗ |
+| Chỉ số đầu mối | ✓ | ✓ | ✓ (xem) | ✗ |
+| Chỉ số bơm nước | ✓ | ✓ (zone-manager) | ✓ (zone-manager, xem) | ✗ |
 | **KHAI BÁO** | | | | |
 | Đầu mối | ✓ | ✓ | ✓ (xem) | ✗ |
 | Khối | ✓ | ✓ | ✓ (xem) | ✗ |
 | Nhóm | ✓ | ✓ | ✓ (xem) | ✗ |
-| Cấu hình đơn vị | ✓ | ✓ | ✗ | ✗ |
+| Cấu hình đơn vị | ✓ | ✓ | ✓ (xem) | ✗ |
 | **THIẾT LẬP** | | | | |
 | Khu vực | ✓ | ✓ (zone-manager, xem) | ✓ (zone-manager, xem) | ✗ |
 | Đơn vị | ✓ | ✗ | ✗ | ✗ |
