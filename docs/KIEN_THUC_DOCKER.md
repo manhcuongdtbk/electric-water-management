@@ -1,6 +1,6 @@
 # Kiến thức Docker — Hệ thống quản lý điện nội bộ Sư đoàn
 
-> **Phiên bản:** 1.0.0
+> **Phiên bản:** 1.1.0
 > **Ngày:** 24/05/2026
 > **Đối tượng:** Developer hoặc người muốn hiểu hệ thống chạy thế nào ở mọi môi trường.
 > **Tiền đề:** Bạn biết code Rails nhưng chưa biết Docker và chưa từng deploy.
@@ -101,16 +101,26 @@ Docker đóng gói tất cả vào 1 "image" (ảnh). Image giống file ISO cà
 
 ## 4. Các file liên quan và vai trò
 
-### Files build và chạy
+### Files production (staging + production)
 
 | File | Làm gì | Ai đọc |
 |---|---|---|
-| `Dockerfile` | Công thức build image app (Ruby + gems + source code) | Docker |
-| `compose.yml` | Ghép 3 containers, định nghĩa env vars, volumes, network | Docker Compose |
+| `Dockerfile` | Công thức build image app (Ruby + gems + source code) | Docker (staging + production) |
+| `compose.yml` | Ghép 3 containers production: env vars, volumes, network | Docker Compose (production) |
+| `railway.json` | Cấu hình Railway: builder, pre-deploy, healthcheck | Railway (staging) |
 | `docker/nginx.conf` | Cấu hình nginx: proxy request, nén, timeout | nginx container |
 | `bin/docker-entrypoint` | Chạy khi container app start: tạo thư mục backup, set port, chạy db:prepare | Container app |
 | `bin/thrust` | Entry point cho Thrust HTTP/2 proxy (Rails 8 mặc định) | Container app |
 | `.env.example` | Template biến môi trường — copy thành `.env` rồi điền giá trị | Người deploy |
+
+### Files development
+
+| File | Làm gì | Ai đọc |
+|---|---|---|
+| `Dockerfile.dev` | Công thức build image dev (Ruby + build tools, không precompile) | Docker Desktop |
+| `compose.dev.yml` | Ghép 3 containers dev: bind mounts, foreman, port mapping | Docker Compose |
+| `bin/docker` | Shortcut cho lệnh Docker dev (rspec, console, bash, logs, ...) | Developer |
+| `Procfile.dev` | Định nghĩa 2 processes cho foreman: rails server + tailwind watch | foreman trong container |
 
 ### Files data và vận hành
 
@@ -126,6 +136,7 @@ Docker đóng gói tất cả vào 1 "image" (ảnh). Image giống file ISO cà
 |---|---|---|
 | `bin/prepare-delivery` | Tạo bản sạch để ship cho khách (xóa dấu vết phát triển) | Developer |
 | `docs/HUONG_DAN_DEPLOY.md` | Hướng dẫn deploy chi tiết từng bước | Người thực hiện deploy |
+| `docs/KIEN_THUC_DOCKER.md` | Kiến thức Docker, 4 môi trường (tài liệu này) | Developer, người deploy |
 
 ---
 
@@ -297,6 +308,36 @@ Tạo bản sạch để ship cho khách. Source code gốc chứa file phát tr
 3. Xóa file phát triển
 4. Output: thư mục `electric-water-management-delivery/` sẵn sàng ship
 
+### Dockerfile.dev
+
+Công thức build image cho development. Khác Dockerfile production:
+- 1 giai đoạn (không multi-stage) — giữ build tools vì cần khi thêm gem mới
+- Không precompile assets — Tailwind watch realtime
+- Không copy source code — mount từ Mac vào container
+- Cài `foreman` để chạy nhiều process (Rails server + Tailwind watch)
+
+### compose.dev.yml
+
+Ghép 3 containers cho development. Khác compose.yml production:
+- Source code bind mount từ Mac (sửa file → Rails tự reload)
+- Database bind mount ra `docker/dev/pgdata/` (nhìn thấy trên Mac)
+- Gems cache trong named volume `bundle_cache` (không mất khi restart)
+- Env vars hardcoded (không dùng file .env)
+
+### bin/docker
+
+Shortcut script cho lệnh Docker development. Bọc `docker compose -f compose.dev.yml exec ...` thành lệnh ngắn:
+- Test commands (`rspec`, `prspec`) tự set `RAILS_ENV=test` — không đụng dev database
+- Các lệnh khác forward `RAILS_ENV` từ host nếu được set
+- Hỗ trợ chọn container: `bin/docker bash postgres`
+
+### railway.json
+
+Cấu hình cho Railway staging:
+- `builder: DOCKERFILE` — dùng cùng Dockerfile với production
+- `preDeployCommand: db:prepare` — chạy migrations trước khi start
+- `healthcheckPath: /up` — Railway kiểm tra app sẵn sàng
+
 ---
 
 ## 8. Biến môi trường
@@ -322,6 +363,29 @@ Biến môi trường là cách truyền cấu hình vào container mà không h
 | `RAILS_LOG_TO_STDOUT` | `1` | Log hiện trong `docker compose logs` |
 | `BACKUP_DIR` | `/rails/storage/backups` | Thư mục lưu backup trong container |
 | `TZ` | `Asia/Ho_Chi_Minh` | Timezone Việt Nam |
+
+### Development (hardcoded trong compose.dev.yml)
+
+Development không dùng file `.env` — tất cả giá trị hardcoded trong `compose.dev.yml` vì không cần bảo mật:
+
+| Biến | Giá trị | Ghi chú |
+|---|---|---|
+| `RAILS_ENV` | `development` | Reload code, log chi tiết |
+| `DATABASE_HOST` | `postgres` | Tên container |
+| `DATABASE_USERNAME` | `electric_water_management` | Khớp POSTGRES_USER |
+| `ELECTRIC_WATER_MANAGEMENT_DATABASE_PASSWORD` | `dev_password` | Mật khẩu dev (không bảo mật) |
+| `PORT` | `3000` | Foreman dùng port này thay vì mặc định 5000 |
+| `BINDING` | `0.0.0.0` | Rails lắng nghe mọi kết nối (nginx cần) |
+
+### Staging (Railway dashboard)
+
+Biến môi trường set trên Railway dashboard, không trong code:
+
+| Biến | Nguồn |
+|---|---|
+| `DATABASE_URL` | Railway PostgreSQL add-on tự gán |
+| `SECRET_KEY_BASE` | Tự generate |
+| `PORT` | Railway tự gán (Thrust đọc qua `HTTP_PORT` trong docker-entrypoint) |
 
 ---
 
@@ -703,6 +767,12 @@ docker compose up -d      # Tạo lại (database trống, 2 tài khoản mặc 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.1.0 (24/05/2026)
+
+- Mục 4: thêm files development (Dockerfile.dev, compose.dev.yml, bin/docker, Procfile.dev) và staging (railway.json). Tách rõ files production vs development.
+- Mục 7: thêm giải thích Dockerfile.dev, compose.dev.yml, bin/docker, railway.json.
+- Mục 8: thêm biến môi trường cho development (hardcoded) và staging (Railway dashboard).
 
 ### v1.0.0 (24/05/2026)
 
