@@ -43,20 +43,20 @@ RSpec.describe SidebarHelper, type: :helper do
       expect(items).to include(:electricity_supply, :pump_entries, :zones, :pump_allocations)
     end
 
-    it "CMD (non-ZM): 7 items — không có nhập liệu" do
+    it "CMD (non-ZM): 8 items — có meter_entries read-only" do
       cmd = create(:user, :commander, unit: other_unit)
       items = items_for(cmd)
-      expect(items.size).to eq(7)
-      expect(items).to include(:dashboard, :billing, :history, :contact_points, :blocks, :groups, :unit_config)
-      expect(items).not_to include(:meter_entries, :electricity_supply)
+      expect(items.size).to eq(8)
+      expect(items).to include(:dashboard, :billing, :history, :meter_entries, :contact_points, :blocks, :groups, :unit_config)
+      expect(items).not_to include(:electricity_supply)
     end
 
-    it "CMD-ZM: 9 items — thêm zones, pump_allocations" do
+    it "CMD-ZM: 10 items — thêm zones, pump_allocations" do
       cmd_zm = create(:user, :commander, unit: manager_unit)
       items = items_for(cmd_zm)
-      expect(items.size).to eq(9)
-      expect(items).to include(:zones, :pump_allocations, :unit_config)
-      expect(items).not_to include(:meter_entries, :electricity_supply)
+      expect(items.size).to eq(10)
+      expect(items).to include(:meter_entries, :zones, :pump_allocations, :unit_config)
+      expect(items).not_to include(:electricity_supply)
     end
   end
 end
