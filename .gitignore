@@ -7,8 +7,9 @@
 # Ignore bundler config.
 /.bundle
 
-# Ignore all environment files.
+# Ignore all environment files (except the example template).
 /.env*
+!/.env.example
 
 # Ignore all logfiles and tempfiles.
 /log/*
@@ -36,6 +37,9 @@
 
 /app/assets/builds/*
 !/app/assets/builds/.keep
+
+# Docker development data (PostgreSQL data + backups trên máy dev)
+/docker/dev/
 
 # Ignore Claude Code local-only config + worktrees
 /.claude/settings.local.json
