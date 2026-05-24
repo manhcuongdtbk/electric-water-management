@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+set -e
+
+DELIVERY_DIR="${1:-../electric-water-management-delivery}"
+
+echo "=== Chuẩn bị bản delivery ==="
+echo "Output: $DELIVERY_DIR"
+echo ""
+
+# 1. Clone fresh
+rm -rf "$DELIVERY_DIR"
+git clone . "$DELIVERY_DIR"
+cd "$DELIVERY_DIR"
+
+# 2. Rewrite git history: remove Co-Authored-By, linearize, clean merge messages
+echo "Dọn git history..."
+git filter-repo \
+  --message-callback '
+import re
+msg = message.decode("utf-8")
+lines = msg.split("\n")
+lines = [l for l in lines if "co-authored-by: claude" not in l.lower()]
+msg = "\n".join(lines).rstrip() + "\n"
+m = re.match(r"Merge pull request #\d+ from [^/]+/(.+)", msg)
+if m:
+    msg = m.group(1).strip() + "\n"
+m2 = re.match(r"Merge branch .(.+?).( into .+)?$", msg)
+if m2:
+    msg = m2.group(1).strip() + "\n"
+msg = re.sub(r"(?i)claude[-\s]*", "", msg)
+return msg.encode("utf-8")
+' \
+  --commit-callback '
+if len(commit.parents) > 1:
+    commit.parents = [commit.parents[0]]
+' \
+  --force --quiet
+
+# 3. Remove Claude files and references
+rm -rf .claude CLAUDE.md
+sed -i '' '/[Cc]laude/d' .gitignore
+
+# 4. Remove Claude references from file contents
+sed -i '' '/CLAUDE\.md/d' README.md
+sed -i '' 's/ Giải quyết: convention ghi rõ trong CLAUDE\.md\.//' docs/V2_THIET_KE_HE_THONG.md
+
+# 5. Commit removal
+git add -A
+git commit -m "Remove development tooling files" --quiet
+
+# 6. Summary
+COMMITS=$(git rev-list --count HEAD)
+MERGES=$(git rev-list --count --merges HEAD)
+CLAUDE_REFS=$(git log --all --grep="Claude" --oneline | wc -l | tr -d ' ')
+
+echo ""
+echo "=== Bản delivery sẵn sàng ==="
+echo "Thư mục:       $DELIVERY_DIR"
+echo "Commits:       $COMMITS"
+echo "Merge commits: $MERGES"
+echo "Claude refs:   $CLAUDE_REFS"
+echo ""
+echo "Bước tiếp:"
+echo "  cd $DELIVERY_DIR"
+echo "  git remote add origin <customer-repo-url>"
+echo "  git push -u origin main"
