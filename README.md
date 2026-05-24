@@ -72,7 +72,9 @@ bin/docker rspec                        # Toàn bộ
 bin/docker rspec spec/models            # Model specs
 bin/docker rspec spec/requests          # Request specs
 bin/docker rspec spec/system            # System specs (headless Chrome)
-bundle exec parallel_rspec spec/        # Song song (chạy local, không qua Docker)
+bin/docker prspec                       # Song song (auto-detect số processes)
+bin/docker prspec -n 2                  # Song song với 2 processes
+bin/docker prspec:setup                 # Tạo databases cho test song song (chạy 1 lần)
 ```
 
 ## Tài liệu

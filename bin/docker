@@ -4,6 +4,9 @@
 # Cách dùng:
 #   bin/docker rspec              → chạy toàn bộ test
 #   bin/docker rspec spec/models  → chạy test 1 thư mục
+#   bin/docker prspec             → chạy test song song (auto-detect số processes)
+#   bin/docker prspec -n 5        → chạy test song song với 5 processes
+#   bin/docker prspec:setup       → tạo databases cho test song song (chạy 1 lần)
 #   bin/docker console            → mở Rails console
 #   bin/docker bash               → mở shell trong container app
 #   bin/docker bash postgres      → mở shell trong container postgres
@@ -46,6 +49,20 @@ case "${1}" in
   rspec)
     shift
     $COMPOSE exec app bundle exec rspec "$@"
+    ;;
+  prspec)
+    shift
+    if echo "$@" | grep -q -- "-n"; then
+      $COMPOSE exec app bundle exec parallel_rspec spec/ "$@"
+    else
+      NCPU=$($COMPOSE exec -T app nproc)
+      N=$(( NCPU / 2 ))
+      [ "$N" -lt 2 ] && N=2
+      $COMPOSE exec app bundle exec parallel_rspec spec/ -n "$N" "$@"
+    fi
+    ;;
+  prspec:setup)
+    $COMPOSE exec app bundle exec rails parallel:setup
     ;;
   console)
     $COMPOSE exec app bundle exec rails console
