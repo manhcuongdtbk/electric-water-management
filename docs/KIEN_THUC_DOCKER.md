@@ -1,7 +1,7 @@
-# Kiến thức production — Hệ thống quản lý điện nội bộ Sư đoàn
+# Kiến thức Docker — Hệ thống quản lý điện nội bộ Sư đoàn
 
-> **Đối tượng:** Developer hoặc người muốn hiểu hệ thống chạy thế nào ở production.
-> **Tiền đề:** Bạn biết code Rails nhưng chưa biết Docker và chưa từng deploy production.
+> **Đối tượng:** Developer hoặc người muốn hiểu hệ thống chạy thế nào ở mọi môi trường.
+> **Tiền đề:** Bạn biết code Rails nhưng chưa biết Docker và chưa từng deploy.
 
 ---
 
@@ -17,7 +17,7 @@
 8. [Biến môi trường](#8-biến-môi-trường)
 9. [Dữ liệu và volume](#9-dữ-liệu-và-volume)
 10. [Sao lưu và khôi phục](#10-sao-lưu-và-khôi-phục)
-11. [3 môi trường](#11-3-môi-trường)
+11. [4 môi trường](#11-4-môi-trường) (Development, Test, Staging, Production)
 12. [Các khái niệm cần biết](#12-các-khái-niệm-cần-biết)
 13. [Xử lý sự cố](#13-xử-lý-sự-cố)
 
@@ -361,24 +361,180 @@ Production dùng named volumes (Docker quản lý, an toàn). Development dùng 
 
 ---
 
-## 11. 3 môi trường
+## 11. 4 môi trường
 
-| | Development | Staging | Production |
-|---|---|---|---|
-| Hạ tầng | Docker Desktop (Mac) | Railway | Ubuntu Mini PC (LAN offline) |
-| Dockerfile | Dockerfile.dev | Dockerfile | Dockerfile |
-| Web server | nginx container | Railway edge proxy | nginx container |
-| Database | PostgreSQL container | Railway PostgreSQL | PostgreSQL container |
-| Config | compose.dev.yml | railway.json | compose.yml + .env |
-| Deploy | `bin/docker up` | Auto-deploy khi push main | `docker compose up -d` |
+### Tổng quan
 
-**Development:** Source code mount từ máy Mac vào container — sửa file → Rails tự reload. Dùng `bin/docker` shortcut cho mọi lệnh.
+| | Development | Test | Staging | Production |
+|---|---|---|---|---|
+| Hạ tầng | Docker Desktop (Mac) | Docker Desktop (Mac) | Railway | Ubuntu Mini PC (LAN offline) |
+| Dockerfile | Dockerfile.dev | Dockerfile.dev | Dockerfile | Dockerfile |
+| Web server | nginx container | Không | Railway edge proxy | nginx container |
+| Database | PostgreSQL container | PostgreSQL container (cùng server, DB khác) | Railway PostgreSQL | PostgreSQL container |
+| Config | compose.dev.yml | compose.dev.yml | railway.json | compose.yml + .env |
+| Deploy | `bin/docker up` | Tự động khi chạy test | Auto-deploy khi push main | `docker compose up -d` |
+| URL | http://localhost | Không (headless) | https://electric-water-management-v2.up.railway.app | http://\<IP server\> |
 
-**Staging:** Railway build image từ Dockerfile, tự quản lý database và proxy. Auto-deploy khi push branch main.
+Staging và production dùng cùng Dockerfile (production build). Development và test dùng Dockerfile.dev.
 
-**Production:** Offline. Build image trên máy có internet, save file, copy USB sang server. Hướng dẫn chi tiết trong `docs/HUONG_DAN_DEPLOY.md`.
+### Development
 
-Cả 3 dùng cùng Dockerfile (staging và production) hoặc Dockerfile.dev (development). Đảm bảo code chạy giống nhau ở mọi nơi.
+**Yêu cầu:** Docker Desktop trên Mac (hoặc Linux). Không cần cài Ruby, PostgreSQL, hay bất cứ gì khác.
+
+**Lần đầu:**
+
+```bash
+git clone <repo>
+cd electric-water-management
+bin/docker up          # Tạo containers + cài gems + tạo database + start server
+# Mở http://localhost
+```
+
+**Hàng ngày:**
+
+```bash
+bin/docker start       # Sáng: chạy lại containers đã dừng
+# Code bình thường trên Mac, Rails tự reload khi sửa file
+bin/docker stop        # Chiều: dừng containers
+```
+
+Dùng `up` thay `start` khi: lần đầu, hoặc sau khi sửa `compose.dev.yml` / `Dockerfile.dev`.
+
+**Lệnh thường dùng:**
+
+```bash
+bin/docker rspec              # Chạy test
+bin/docker rspec spec/models  # Chạy test 1 thư mục
+bin/docker prspec             # Chạy test song song (auto-detect số processes)
+bin/docker prspec:setup       # Tạo databases cho test song song (1 lần)
+bin/docker console            # Rails console
+bin/docker bash               # Shell trong container app
+bin/docker bash postgres      # Shell trong container postgres
+bin/docker logs               # Xem logs container app
+bin/docker logs postgres      # Xem logs container postgres
+bin/docker ps                 # Trạng thái containers
+```
+
+**Khác production:** Source code mount từ Mac vào container (bind mount) — sửa file trên Mac, container thấy ngay. Production copy code vào image 1 lần (đóng gói cố định).
+
+**Tài khoản dev:** `quanTri` / `Abc@1234` (SA), `kyThuat` / `Abc@1234` (TECH). Tạo thêm test accounts qua giao diện hoặc rails runner.
+
+**Dữ liệu dev:** Database lưu trong `docker/dev/pgdata/` trên Mac (bind mount, nhìn thấy được). Backups lưu trong `docker/dev/backups/`. Cả 2 bị gitignore.
+
+**Cấu trúc Docker development:**
+
+```
+compose.dev.yml
+├── postgres (image: postgres:16-alpine)
+│   └── bind mount: ./docker/dev/pgdata → /var/lib/postgresql/data
+├── app (build: Dockerfile.dev)
+│   ├── bind mount: . → /rails (source code)
+│   ├── named volume: bundle_cache → /usr/local/bundle (gems)
+│   ├── bind mount: ./docker/dev/backups → /rails/storage/backups
+│   └── command: bundle install → db:prepare → foreman (rails server + tailwind watch)
+└── nginx (image: nginx:alpine)
+    └── bind mount: ./docker/nginx.conf → /etc/nginx/nginx.conf
+```
+
+**Dockerfile.dev vs Dockerfile (production):**
+
+| | Dockerfile.dev | Dockerfile |
+|---|---|---|
+| Giai đoạn | 1 (cài hết) | 3 (base → build → final) |
+| Gems | Cài lúc container start | Cài lúc build image |
+| Source code | Mount từ Mac | Copy vào image |
+| Build tools | Giữ lại (cần cho gem mới) | Vứt ở final stage |
+| Assets | Tailwind watch realtime | Precompile lúc build |
+| Size | ~800MB | ~500MB |
+
+### Test
+
+Test chạy bên trong container app, dùng database riêng (`electric_water_management_test`), cùng PostgreSQL server với development.
+
+```
+PostgreSQL container
+├── electric_water_management_development   ← dev data
+├── electric_water_management_test          ← test data (tự xóa/tạo lại mỗi test)
+├── electric_water_management_test2         ← parallel test
+├── electric_water_management_test3         ← parallel test
+└── ...
+```
+
+**Quan trọng:** `bin/docker rspec` tự set `RAILS_ENV=test` — không đụng dev database. Trước đây chạy lệnh test thủ công trong Docker mà quên set RAILS_ENV → xóa nhầm dev database. `bin/docker` đã fix bằng cách set cứng `RAILS_ENV=test` cho mọi lệnh test.
+
+**Lệnh RAILS_ENV:** Khi cần chạy lệnh Rails với env khác trong Docker, phải set bên trong container (không phải bên ngoài):
+
+```bash
+# Sai — RAILS_ENV không vào container
+RAILS_ENV=test bin/docker exec app rails db:drop
+
+# Đúng — bin/docker forward RAILS_ENV vào container
+RAILS_ENV=test bin/docker exec app bundle exec rails db:drop
+```
+
+**Parallel test:** `bin/docker prspec` chạy test song song. Auto-detect số processes = nproc / 2. Cần setup 1 lần: `bin/docker prspec:setup` (tạo databases test2, test3, ...).
+
+### Staging (Railway)
+
+Railway là platform cloud (giống Heroku). Dùng cho:
+- Demo cho khách trước khi deploy production
+- Test trên môi trường giống production (RAILS_ENV=production)
+
+**Cách hoạt động:** Push code lên branch main → Railway tự build image từ Dockerfile → deploy → URL public.
+
+**Cấu hình:** File `railway.json` trong repo:
+
+```json
+{
+  "build": { "builder": "DOCKERFILE" },
+  "deploy": {
+    "preDeployCommand": ["bin/rails db:prepare"],
+    "healthcheckPath": "/up"
+  }
+}
+```
+
+- `builder: DOCKERFILE` — Railway dùng cùng Dockerfile với production
+- `preDeployCommand` — chạy migrations trước khi start
+- `healthcheckPath` — Railway kiểm tra app sẵn sàng trước khi chuyển traffic
+
+**Khác production:**
+- Railway tự quản lý database (PostgreSQL add-on) và proxy (edge proxy thay nginx)
+- Có internet, có SSL (Railway tự cấp HTTPS)
+- Biến môi trường set trên Railway dashboard (không dùng file .env)
+
+### Production
+
+Server Ubuntu trong mạng LAN nội bộ Sư đoàn, không có internet.
+
+**Cách deploy:** Build image trên máy có internet → save file → copy USB → load trên server. Hướng dẫn chi tiết: `docs/HUONG_DAN_DEPLOY.md`.
+
+**Delivery:** Không ship source code gốc. Chạy `bin/prepare-delivery` tạo bản sạch (xóa dấu vết phát triển, dọn git history).
+
+**Cấu trúc Docker production:**
+
+```
+compose.yml
+├── postgres (image: postgres:16-alpine)
+│   └── named volume: pg_data
+├── app (image: ewm-app — pre-built)
+│   ├── named volume: storage_data
+│   ├── named volume: backups_data
+│   └── ENTRYPOINT: tini → docker-entrypoint → CMD: thrust → rails server
+└── nginx (image: nginx:alpine)
+    └── bind mount: docker/nginx.conf (read-only)
+```
+
+**Khác development:**
+
+| | Development | Production |
+|---|---|---|
+| Source code | Mount từ Mac (sửa → reload) | Copy vào image (đóng gói cố định) |
+| Database data | Bind mount (nhìn thấy trên Mac) | Named volume (Docker quản lý) |
+| RAILS_ENV | development (log chi tiết, reload) | production (cache, nén, tối ưu) |
+| Gems | Cài lúc start (mỗi lần) | Cài lúc build image (1 lần) |
+| Assets | Tailwind watch realtime | Precompile vào image |
+| Thrust | Không dùng | Có (HTTP/2, nén, cache) |
 
 ---
 
