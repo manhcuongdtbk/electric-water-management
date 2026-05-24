@@ -19,6 +19,19 @@ Khi code mâu thuẫn với thiết kế → sửa code. Khi thiết kế mâu t
 
 Rails 8, PostgreSQL, Tailwind, Hotwire (Turbo + Stimulus), Devise, CanCanCan, PaperTrail, Discard, Pagy, caxlsx + caxlsx_rails, RSpec + Capybara.
 
+## Environments
+
+3 môi trường, tất cả dùng Docker:
+
+| | Development | Staging | Production |
+|---|---|---|---|
+| Hạ tầng | Docker Desktop (Mac) | Railway | Ubuntu Mini PC (LAN offline) |
+| Dockerfile | Dockerfile.dev | Dockerfile | Dockerfile |
+| Web server | nginx container | Railway edge proxy | nginx container |
+| Database | PostgreSQL container | Railway PostgreSQL | PostgreSQL container |
+| Config | compose.dev.yml | railway.json | compose.yml + .env |
+| Deploy | `bin/docker up` | Auto-deploy khi push v2 | `docker compose up -d` |
+
 ## Development environment
 
 Development chạy hoàn toàn trong Docker (3 containers: postgres, app, nginx). Khi cần verify UI hoặc chạy app, dùng `preview_start` với server name `docker-dev` (cấu hình trong `.claude/launch.json`). Không chạy `docker compose` thủ công — để preview quản lý process.
@@ -28,7 +41,7 @@ Development chạy hoàn toàn trong Docker (3 containers: postgres, app, nginx)
 - Chạy test: `bin/docker rspec` (hoặc `bin/docker rspec spec/models`)
 - Rails console: `bin/docker console`
 - Xem logs: `bin/docker logs`
-- Mở shell: `bin/docker bash`
+- Mở shell: `bin/docker bash` (hoặc `bin/docker bash postgres`)
 - Trạng thái: `bin/docker ps`
 
 ## Ngôn ngữ
@@ -78,7 +91,7 @@ Development chạy hoàn toàn trong Docker (3 containers: postgres, app, nginx)
 ## Quy trình làm việc
 
 - Đọc thiết kế trước khi code. Không tự sáng tạo thêm field, model, hay logic ngoài thiết kế.
-- Chạy `bundle exec rspec` sau mỗi thay đổi. Chạy toàn bộ nhanh hơn với `bundle exec parallel_rspec spec/`.
+- Chạy `bin/docker rspec` sau mỗi thay đổi.
 - Test phải cover mọi output của trang (data, cảnh báo, filter, buttons), không chỉ output chính. Xem `docs/V2_HANH_VI_HE_THONG.md` mục 8.
 - System specs (type: :system) dùng Capybara + headless Chrome cho behavior cần browser (JS interaction, auto-submit, cascade filter). Shared examples nằm trong `spec/support/shared_examples/system/`.
 - Request specs test server-side logic (data scoping, column display, sort, CRUD, role-based access). Không trùng lặp với system spec.
