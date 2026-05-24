@@ -1,5 +1,7 @@
 # Kiến thức Docker — Hệ thống quản lý điện nội bộ Sư đoàn
 
+> **Phiên bản:** 1.0.0
+> **Ngày:** 24/05/2026
 > **Đối tượng:** Developer hoặc người muốn hiểu hệ thống chạy thế nào ở mọi môi trường.
 > **Tiền đề:** Bạn biết code Rails nhưng chưa biết Docker và chưa từng deploy.
 
@@ -29,21 +31,23 @@ Hệ thống chạy trên 1 máy tính (Ubuntu) trong mạng LAN nội bộ Sư 
 
 Trên máy đó, Docker chạy 3 "hộp" (container) song song:
 
-```
-Trình duyệt (máy khác trong LAN)
-        │
-        ▼ port 80
-   ┌─────────┐
-   │  nginx   │  Web server — nhận request, chuyển cho Rails
-   └────┬─────┘
-        │ port 3000 (nội bộ Docker, không lộ ra LAN)
-   ┌────▼─────┐
-   │   app    │  Application server — Rails xử lý nghiệp vụ
-   └────┬─────┘
-        │ port 5432 (nội bộ Docker)
-   ┌────▼──────┐
-   │ postgres  │  Database — lưu toàn bộ dữ liệu
-   └───────────┘
+```mermaid
+graph TD
+    Browser["Trình duyệt<br/>(máy khác trong LAN)"]
+    Browser -->|port 80| Nginx
+    subgraph Docker["Docker (1 máy Ubuntu)"]
+        subgraph Network["Mạng nội bộ Docker (bridge)"]
+            Nginx["nginx<br/>Web server<br/>Nhận request, chuyển cho Rails"]
+            Nginx -->|port 3000| App
+            App["app<br/>Thrust → Puma → Rails<br/>Xử lý nghiệp vụ"]
+            App -->|port 5432| PG
+            PG["postgres<br/>PostgreSQL<br/>Lưu toàn bộ dữ liệu"]
+        end
+        PGData[("pg_data<br/>Volume")]
+        BackupData[("backups_data<br/>Volume")]
+        PG --- PGData
+        App --- BackupData
+    end
 ```
 
 Người dùng chỉ thấy port 80. 2 port còn lại (3000, 5432) nằm trong mạng nội bộ Docker, không ai ngoài truy cập được.
@@ -129,30 +133,26 @@ Docker đóng gói tất cả vào 1 "image" (ảnh). Image giống file ISO cà
 
 Khi chạy `docker compose up -d`:
 
-```
-docker compose up -d
-       │
-       ▼ đọc compose.yml
-       │
-       ├── 1. Tạo network nội bộ (bridge)
-       │       3 containers nằm trong cùng mạng, tìm nhau bằng tên
-       │
-       ├── 2. Start postgres
-       │       Tạo database + user từ biến môi trường (.env)
-       │       Healthcheck mỗi 10 giây: pg_isready
-       │
-       ├── 3. Start app (chờ postgres healthy)
-       │       ENTRYPOINT: tini → bin/docker-entrypoint
-       │         ├── mkdir thư mục backup
-       │         ├── export HTTP_PORT (cho Thrust)
-       │         ├── db:prepare (tạo database nếu chưa có, chạy migrations, seed)
-       │         └── exec CMD: bin/thrust → bin/rails server (Puma)
-       │             Puma lắng nghe 0.0.0.0:3000
-       │
-       └── 4. Start nginx (chờ app)
-               Đọc docker/nginx.conf
-               Lắng nghe port 80
-               Proxy mọi request → app:3000
+```mermaid
+flowchart TD
+    Start["docker compose up -d"] --> ReadCompose["Đọc compose.yml"]
+    ReadCompose --> CreateNetwork["1. Tạo network nội bộ (bridge)"]
+    CreateNetwork --> StartPG["2. Start postgres"]
+    StartPG --> PGInit["Tạo database + user từ .env"]
+    PGInit --> PGHealth["Healthcheck: pg_isready mỗi 10s"]
+    PGHealth -->|Healthy| StartApp["3. Start app"]
+    StartApp --> Tini["tini (PID 1)"]
+    Tini --> Entrypoint["bin/docker-entrypoint"]
+    Entrypoint --> Mkdir["mkdir thư mục backup"]
+    Mkdir --> Port["export HTTP_PORT"]
+    Port --> DBPrepare["db:prepare<br/>(tạo DB / migrate / seed)"]
+    DBPrepare --> ExecCMD["exec CMD"]
+    ExecCMD --> Thrust["bin/thrust"]
+    Thrust --> Puma["bin/rails server (Puma)<br/>Lắng nghe 0.0.0.0:3000"]
+    Puma --> StartNginx["4. Start nginx"]
+    StartNginx --> NginxConf["Đọc docker/nginx.conf"]
+    NginxConf --> NginxListen["Lắng nghe port 80<br/>Proxy → app:3000"]
+    NginxListen --> Ready["Sẵn sàng nhận request"]
 ```
 
 Sau khi cả 3 container Up, truy cập `http://<IP-server>` từ trình duyệt.
@@ -163,16 +163,25 @@ Sau khi cả 3 container Up, truy cập `http://<IP-server>` từ trình duyệt
 
 Khi người dùng mở trình duyệt và truy cập hệ thống:
 
-```
-1. Trình duyệt gửi request → nginx (port 80)
-2. nginx nén request headers, chuyển cho Thrust (port 3000)
-3. Thrust xử lý HTTP/2, cache static files, chuyển cho Puma
-4. Puma giao cho Rails xử lý:
-   - Router tìm controller phù hợp
-   - Controller kiểm tra quyền (CanCanCan)
-   - Controller đọc/ghi database (PostgreSQL)
-   - View render HTML
-5. Response đi ngược: Rails → Puma → Thrust (nén) → nginx → trình duyệt
+```mermaid
+sequenceDiagram
+    participant B as Trình duyệt
+    participant N as nginx (port 80)
+    participant T as Thrust (port 3000)
+    participant P as Puma (Rails)
+    participant DB as PostgreSQL
+
+    B->>N: GET /billing
+    N->>T: Proxy request
+    T->>P: Forward request
+    P->>P: Router → Controller
+    P->>P: Kiểm tra quyền (CanCanCan)
+    P->>DB: Query data
+    DB-->>P: Kết quả
+    P->>P: View render HTML
+    P-->>T: Response HTML
+    T-->>N: Nén (gzip) + cache headers
+    N-->>B: Response tới trình duyệt
 ```
 
 **Web server vs Application server:**
@@ -343,6 +352,22 @@ Production dùng named volumes (Docker quản lý, an toàn). Development dùng 
 
 ### 3 lớp bảo vệ dữ liệu
 
+```mermaid
+graph LR
+    subgraph Layer1["Lớp 1: Qua giao diện"]
+        UI["Kỹ thuật viên<br/>bấm Tạo sao lưu"] --> PGDump1["pg_dump"]
+        PGDump1 --> BackupFile["File .dump<br/>trong container<br/>(tối đa 3 bản)"]
+    end
+    subgraph Layer2["Lớp 2: Khôi phục"]
+        Terminal["rake backups:restore"] --> PGRestore["pg_restore"]
+        PGRestore --> DB[("Database<br/>(ghi đè)")]
+    end
+    subgraph Layer3["Lớp 3: Tự động hàng ngày"]
+        Cron["Cron 2:00 sáng"] --> PGDump2["pg_dump"]
+        PGDump2 --> Disk[("Ổ cứng phụ<br/>7 bản xoay vòng")]
+    end
+```
+
 **Lớp 1 — Sao lưu qua giao diện (khi cần):**
 - Kỹ thuật viên đăng nhập → trang Sao lưu dữ liệu → bấm Tạo bản sao lưu
 - Dùng `pg_dump` tạo file backup trong container
@@ -376,6 +401,35 @@ Production dùng named volumes (Docker quản lý, an toàn). Development dùng 
 | URL | http://localhost | Không (headless) | https://electric-water-management-v2.up.railway.app | http://\<IP server\> |
 
 Staging và production dùng cùng Dockerfile (production build). Development và test dùng Dockerfile.dev.
+
+```mermaid
+graph LR
+    subgraph Dev["Development (Mac)"]
+        D_PG[(PostgreSQL)]
+        D_App["app<br/>Dockerfile.dev<br/>Source mount"]
+        D_Nginx["nginx"]
+        D_Nginx --> D_App --> D_PG
+    end
+    subgraph Test["Test (Mac)"]
+        T_DB[(test DB<br/>cùng PG server)]
+        T_App["rspec<br/>trong container app"]
+        T_App --> T_DB
+    end
+    subgraph Staging["Staging (Railway)"]
+        S_PG[(Railway PG)]
+        S_App["app<br/>Dockerfile<br/>Code trong image"]
+        S_Proxy["Railway proxy"]
+        S_Proxy --> S_App --> S_PG
+    end
+    subgraph Prod["Production (Ubuntu LAN)"]
+        P_PG[(PostgreSQL)]
+        P_App["app<br/>Dockerfile<br/>Code trong image"]
+        P_Nginx["nginx"]
+        P_Nginx --> P_App --> P_PG
+    end
+    Git["git push main"] -->|auto-deploy| Staging
+    USB["USB copy"] -->|offline deploy| Prod
+```
 
 ### Development
 
@@ -548,17 +602,21 @@ compose.yml
 
 **Container** = process được cách ly. Giống process nhưng có filesystem riêng, network riêng, không thấy process khác.
 
-```
-docker compose up (process điều phối)
-├── postgres container (process)
-│   └── PostgreSQL server
-├── app container (process)
-│   └── tini → docker-entrypoint → Thrust → Puma
-│       ├── thread 1 → xử lý request A
-│       ├── thread 2 → xử lý request B
-│       └── thread 3 → chờ request mới
-└── nginx container (process)
-    └── nginx server
+```mermaid
+graph TD
+    Compose["docker compose up<br/>(process điều phối)"]
+    Compose --> PG["postgres container (process)"]
+    Compose --> AppC["app container (process)"]
+    Compose --> NginxC["nginx container (process)"]
+    PG --> PGServer["PostgreSQL server"]
+    NginxC --> NginxServer["nginx server"]
+    AppC --> Tini["tini (PID 1)"]
+    Tini --> Entry["docker-entrypoint"]
+    Entry --> ThrustP["Thrust"]
+    ThrustP --> PumaP["Puma"]
+    PumaP --> T1["thread 1<br/>request A"]
+    PumaP --> T2["thread 2<br/>request B"]
+    PumaP --> T3["thread 3<br/>chờ request"]
 ```
 
 ### ENTRYPOINT vs CMD
@@ -641,3 +699,12 @@ docker compose up -d      # Tạo lại (database trống, 2 tài khoản mặc 
 ```
 
 **Cảnh báo: mất toàn bộ dữ liệu.** Chỉ làm khi thực sự cần thiết.
+
+---
+
+## Lịch sử thay đổi
+
+### v1.0.0 (24/05/2026)
+
+- Tài liệu ban đầu. Cover: Docker concepts, 3 containers (postgres, app, nginx), 11 files production, luồng khởi động, luồng request, biến môi trường, volumes, 3 lớp backup, 4 môi trường (development, test, staging, production), process/thread/container, ENTRYPOINT/CMD, exec/run, signal/tini, xử lý sự cố.
+- 6 mermaid diagrams: kiến trúc hệ thống, luồng khởi động, luồng request (sequence), 4 môi trường, process tree, backup strategy.
