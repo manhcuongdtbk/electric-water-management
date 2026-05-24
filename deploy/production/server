@@ -1,0 +1,497 @@
+#!/usr/bin/env bash
+#
+# SERVER — Cài đặt và quản lý hệ thống trên server production.
+#
+# Script này có 5 chức năng:
+#   install  — Cài mới (load images, tạo .env, khởi động, tự verify)
+#   update   — Cập nhật phiên bản (backup .env, thay code, khởi động lại, tự verify)
+#   backup   — Thiết lập sao lưu tự động sang ổ cứng phụ
+#   status   — Xem trạng thái hệ thống
+#   verify   — Kiểm tra 8 điểm: containers, health check, login, DB, backup
+#
+# Không truyền tham số → auto-detect: chưa cài → install, đã cài → menu chọn.
+#
+# Cách dùng:
+#   sudo ./deploy/production/server                              # Auto-detect
+#   sudo ./deploy/production/server install                      # Chỉ cài mới
+#   sudo ./deploy/production/server update <đường-dẫn-delivery>  # Chỉ cập nhật
+#   sudo ./deploy/production/server backup                       # Chỉ thiết lập sao lưu
+#   sudo ./deploy/production/server status                       # Xem trạng thái
+#   sudo ./deploy/production/server verify                       # Kiểm tra hệ thống
+#   sudo ./deploy/production/server --help                       # Hiện hướng dẫn
+#
+# Yêu cầu: Docker đã cài trên server (xem HUONG_DAN.md Phụ lục 1).
+
+set -e  # Dừng ngay nếu bất kỳ lệnh nào lỗi
+
+INSTALL_DIR="${EWM_INSTALL_DIR:-/opt/ewm}"   # Thư mục cài đặt trên server (override bằng EWM_INSTALL_DIR)
+
+# Hiện thời gian đã trôi qua
+START_TIME=$(date +%s)
+elapsed() {
+  NOW=$(date +%s)
+  DIFF=$((NOW - START_TIME))
+  printf "%dm%02ds" $((DIFF / 60)) $((DIFF % 60))
+}
+
+show_help() {
+  echo "SERVER — Cài đặt và quản lý hệ thống trên server production."
+  echo ""
+  echo "Cách dùng:"
+  echo "  sudo ./deploy/production/server                 # Auto-detect"
+  echo "  sudo ./deploy/production/server install          # Cài mới"
+  echo "  sudo ./deploy/production/server update <path>    # Cập nhật"
+  echo "  sudo ./deploy/production/server backup           # Sao lưu tự động"
+  echo "  sudo ./deploy/production/server status           # Xem trạng thái"
+  echo "  sudo ./deploy/production/server verify           # Kiểm tra hệ thống"
+}
+
+# Xử lý --help trước khi parse command
+case "${1:-}" in
+  --help|-h) show_help; exit 0 ;;
+esac
+
+COMMAND="${1:-auto}"      # Mặc định: auto-detect
+
+# ── Kiểm tra Docker ──────────────────────────────────────────
+# Docker phải đã cài và đang chạy trước khi làm bất cứ gì.
+
+check_docker() {
+  if ! command -v docker &>/dev/null; then
+    echo "Lỗi: Docker chưa cài."
+    echo "Xem hướng dẫn: deploy/production/HUONG_DAN.md Phụ lục 1"
+    exit 1
+  fi
+  if ! docker info &>/dev/null; then
+    echo "Lỗi: Docker không chạy hoặc user chưa có quyền."
+    echo "Thử: sudo $0 $*"
+    exit 1
+  fi
+}
+
+# ── Chờ hệ thống sẵn sàng ────────────────────────────────────
+# Sau khi khởi động, Rails cần thời gian để:
+#   1. Kết nối database
+#   2. Chạy migrations (nếu có)
+#   3. Start Puma web server
+# Hàm này gọi /up (health check) mỗi 2 giây, tối đa 2 phút.
+
+wait_healthy() {
+  echo "Chờ hệ thống sẵn sàng..."
+  for i in $(seq 1 60); do
+    # curl gọi health check, lấy HTTP status code
+    STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/up 2>/dev/null || echo "000")
+    if [ "$STATUS" = "200" ]; then
+      echo ""
+      return 0  # Thành công
+    fi
+    printf "."  # Hiện dấu chấm mỗi 2 giây cho người dùng biết đang chờ
+    sleep 2
+  done
+  echo ""
+  echo "Cảnh báo: hệ thống chưa sẵn sàng sau 2 phút."
+  echo "Kiểm tra lỗi: cd $INSTALL_DIR && docker compose logs app"
+  return 1  # Thất bại
+}
+
+# ══════════════════════════════════════════════════════════════
+# INSTALL — Cài đặt lần đầu
+# ══════════════════════════════════════════════════════════════
+# Chạy khi server chưa có hệ thống (/opt/ewm chưa tồn tại).
+# Thực hiện từ thư mục delivery trên USB hoặc đã copy vào máy.
+
+do_install() {
+  # Tìm thư mục chứa script này (= thư mục delivery)
+  SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+  SOURCE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+  # Không cho cài đè lên bản cũ (tránh mất dữ liệu)
+  if [ -d "$INSTALL_DIR" ]; then
+    echo "Lỗi: $INSTALL_DIR đã tồn tại."
+    echo "  Cập nhật: sudo ./deploy/production/server update <đường-dẫn-delivery>"
+    echo "  Cài lại:  sudo rm -rf $INSTALL_DIR rồi chạy lại"
+    exit 1
+  fi
+
+  echo ""
+  echo "=== CÀI ĐẶT HỆ THỐNG ==="
+  echo ""
+
+  # ── Bước 1: Copy source code vào /opt/ewm ──
+  echo "[1/4] Copy source code..."
+  cp -r "$SOURCE_DIR" "$INSTALL_DIR"
+  cd "$INSTALL_DIR"
+
+  # ── Bước 2: Load Docker images từ file ──
+  # ewm-images.tar.gz chứa 3 images: ewm-app, postgres, nginx
+  # Được tạo bởi deploy/production/build trên máy có internet
+  if [ ! -f ewm-images.tar.gz ]; then
+    echo "Lỗi: không tìm thấy ewm-images.tar.gz"
+    exit 1
+  fi
+  echo "[2/4] Load Docker images..."
+  docker load < ewm-images.tar.gz
+
+  # ── Bước 3: Tạo file cấu hình .env ──
+  # .env chứa mật khẩu database và khóa bảo mật.
+  # Không bao giờ commit vào git (chứa thông tin nhạy cảm).
+  if [ -f .env ]; then
+    echo "[3/4] File .env đã tồn tại — bỏ qua."
+  else
+    if [ ! -f SECRET_KEY_BASE.txt ]; then
+      echo "Lỗi: không tìm thấy SECRET_KEY_BASE.txt"
+      exit 1
+    fi
+    SECRET_KEY_BASE=$(cat SECRET_KEY_BASE.txt)
+
+    echo ""
+    echo "[3/4] Đặt mật khẩu database (ít nhất 8 ký tự):"
+    read -s -p "> " POSTGRES_PASSWORD
+    echo ""
+
+    if [ ${#POSTGRES_PASSWORD} -lt 8 ]; then
+      echo "Lỗi: mật khẩu phải có ít nhất 8 ký tự."
+      exit 1
+    fi
+
+    echo "Nhập lại mật khẩu để xác nhận:"
+    read -s -p "> " POSTGRES_PASSWORD_CONFIRM
+    echo ""
+
+    if [ "$POSTGRES_PASSWORD" != "$POSTGRES_PASSWORD_CONFIRM" ]; then
+      echo "Lỗi: mật khẩu không khớp."
+      exit 1
+    fi
+
+    # Tạo file .env với 4 biến môi trường
+    cat > .env << EOF
+POSTGRES_USER=electric_water_management
+POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+POSTGRES_DB=electric_water_management_production
+SECRET_KEY_BASE=$SECRET_KEY_BASE
+EOF
+    echo "Đã tạo .env"
+  fi
+
+  # ── Bước 4: Khởi động 3 containers ──
+  # docker compose đọc compose.yml, tạo network, start postgres → app → nginx
+  echo "[4/4] Khởi động..."
+  docker compose up -d
+
+  # Chờ Rails sẵn sàng
+  if wait_healthy; then
+    IP=$(hostname -I 2>/dev/null | awk '{print $1}')
+    echo ""
+    echo "=== CÀI ĐẶT HOÀN TẤT ($(elapsed)) ==="
+    echo ""
+    echo "Truy cập: http://${IP:-localhost}"
+    echo ""
+    echo "Đăng nhập lần đầu (bắt buộc đổi mật khẩu):"
+    echo "  Kỹ thuật viên:  kyThuat / Abc@1234"
+    echo "  Quản trị viên:  quanTri / Abc@1234"
+    do_verify
+  fi
+}
+
+# ══════════════════════════════════════════════════════════════
+# UPDATE — Cập nhật phiên bản
+# ══════════════════════════════════════════════════════════════
+# Chạy khi có bản delivery mới từ nhà phát triển.
+# Giữ nguyên database (chỉ thay code + images).
+
+do_update() {
+  NEW_DIR="${1}"
+
+  if [ -z "$NEW_DIR" ]; then
+    echo "Nhập đường dẫn thư mục delivery mới (trên USB hoặc đã copy):"
+    read -p "> " NEW_DIR
+  fi
+
+  if [ ! -d "$NEW_DIR" ] || [ ! -f "$NEW_DIR/ewm-images.tar.gz" ]; then
+    echo "Lỗi: $NEW_DIR không tồn tại hoặc thiếu ewm-images.tar.gz"
+    exit 1
+  fi
+
+  echo ""
+  echo "=== CẬP NHẬT HỆ THỐNG ==="
+  echo ""
+
+  # Bước 1: Backup file cấu hình (.env chứa mật khẩu + secret key)
+  echo "[1/5] Backup cấu hình..."
+  cp "$INSTALL_DIR/.env" /tmp/ewm-env-backup
+
+  # Bước 2: Dừng hệ thống (tắt 3 containers)
+  echo "[2/5] Dừng hệ thống..."
+  cd "$INSTALL_DIR" && docker compose down
+
+  # Bước 3: Thay code mới (xóa code cũ, copy code mới)
+  echo "[3/5] Thay code mới..."
+  rm -rf "$INSTALL_DIR"
+  cp -r "$NEW_DIR" "$INSTALL_DIR"
+  cd "$INSTALL_DIR"
+
+  # Bước 4: Khôi phục .env + load images mới
+  echo "[4/5] Khôi phục cấu hình + load images..."
+  cp /tmp/ewm-env-backup .env
+  docker load < ewm-images.tar.gz
+
+  # Bước 5: Khởi động lại
+  echo "[5/5] Khởi động..."
+  docker compose up -d
+
+  if wait_healthy; then
+    echo "=== CẬP NHẬT HOÀN TẤT ($(elapsed)) ==="
+    do_verify
+  fi
+}
+
+# ══════════════════════════════════════════════════════════════
+# BACKUP — Thiết lập sao lưu tự động
+# ══════════════════════════════════════════════════════════════
+# Tạo cron job chạy mỗi ngày lúc 2:00 sáng:
+#   - pg_dump database ra ổ cứng phụ
+#   - Giữ tối đa 7 bản, xóa bản cũ nhất tự động
+# Cần ổ cứng phụ đã mount sẵn.
+
+do_backup() {
+  echo ""
+  echo "=== THIẾT LẬP SAO LƯU TỰ ĐỘNG ==="
+  echo ""
+  echo "Nhập đường dẫn ổ cứng phụ (ví dụ: /mnt/backup):"
+  read -p "> " BACKUP_DEST
+
+  if [ -z "$BACKUP_DEST" ] || [ ! -d "$BACKUP_DEST" ]; then
+    echo "Lỗi: thư mục $BACKUP_DEST không tồn tại."
+    echo "Mount ổ cứng phụ trước. Xem deploy/production/HUONG_DAN.md mục Sao lưu tự động."
+    exit 1
+  fi
+
+  BACKUP_DIR="$BACKUP_DEST/ewm-backup"
+  BACKUP_SCRIPT="$INSTALL_DIR/deploy/run-backup"
+
+  mkdir -p "$BACKUP_DIR"
+
+  # Tạo script sao lưu (chạy bởi cron, không chạy thủ công)
+  cat > "$BACKUP_SCRIPT" << EOF
+#!/usr/bin/env bash
+set -e
+BACKUP_DIR="$BACKUP_DIR"
+EWM_DIR="$INSTALL_DIR"
+TIMESTAMP=\$(date +%Y%m%d_%H%M%S)
+CURRENT="\$BACKUP_DIR/\$TIMESTAMP"
+mkdir -p "\$CURRENT"
+cd "\$EWM_DIR"
+docker compose exec -T postgres pg_dump -U \${POSTGRES_USER:-electric_water_management} -Fc \${POSTGRES_DB:-electric_water_management_production} > "\$CURRENT/database.dump"
+docker compose cp app:/rails/storage/backups "\$CURRENT/app-backups" 2>/dev/null || true
+cd "\$BACKUP_DIR"
+ls -dt */ 2>/dev/null | tail -n +8 | xargs rm -rf 2>/dev/null || true
+echo "\$(date): Sao lưu hoàn tất → \$CURRENT" >> "\$BACKUP_DIR/backup.log"
+EOF
+  chmod +x "$BACKUP_SCRIPT"
+
+  # Thêm vào cron (chạy mỗi ngày lúc 2:00 sáng)
+  CRON_LINE="0 2 * * * $BACKUP_SCRIPT"
+  (crontab -l 2>/dev/null | grep -v "$BACKUP_SCRIPT"; echo "$CRON_LINE") | crontab -
+
+  echo ""
+  echo "=== SAO LƯU TỰ ĐỘNG ĐÃ THIẾT LẬP ==="
+  echo "Thư mục: $BACKUP_DIR"
+  echo "Lịch:    Mỗi ngày lúc 2:00 sáng"
+  echo "Giữ:     7 bản (xóa cũ nhất tự động)"
+}
+
+# ══════════════════════════════════════════════════════════════
+# STATUS — Xem trạng thái hệ thống
+# ══════════════════════════════════════════════════════════════
+
+do_status() {
+  if [ ! -d "$INSTALL_DIR" ]; then
+    echo "Chưa cài đặt ($INSTALL_DIR không tồn tại)."
+    exit 0
+  fi
+
+  cd "$INSTALL_DIR"
+  echo ""
+
+  # Trạng thái containers
+  docker compose ps
+  echo ""
+
+  # Health check
+  HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/up 2>/dev/null || echo "000")
+  if [ "$HEALTH" = "200" ]; then
+    echo "Health check: OK"
+  else
+    echo "Health check: LỖI ($HEALTH)"
+  fi
+  echo ""
+
+  # Sao lưu tự động
+  CRON=$(crontab -l 2>/dev/null | grep "run-backup" || echo "")
+  if [ -n "$CRON" ]; then
+    echo "Sao lưu tự động: đã thiết lập"
+  else
+    echo "Sao lưu tự động: CHƯA (chạy: sudo ./deploy/production/server backup)"
+  fi
+}
+
+# ══════════════════════════════════════════════════════════════
+# VERIFY — Kiểm tra hệ thống hoạt động đúng
+# ══════════════════════════════════════════════════════════════
+# Chạy tự động sau install/update, hoặc chạy riêng:
+#   sudo ./deploy/production/server verify
+
+do_verify() {
+  echo ""
+  echo "=== Kiểm tra hệ thống ==="
+  ERRORS=0
+
+  # 1. Thư mục cài đặt
+  if [ -d "$INSTALL_DIR" ]; then
+    echo "✓ Thư mục $INSTALL_DIR tồn tại"
+  else
+    echo "✗ Thư mục $INSTALL_DIR không tồn tại"
+    ERRORS=$((ERRORS + 1))
+    echo "Kết quả: $ERRORS LỖI"
+    return $ERRORS
+  fi
+
+  cd "$INSTALL_DIR"
+
+  # 2. File .env tồn tại
+  if [ -f .env ]; then
+    echo "✓ File .env tồn tại"
+  else
+    echo "✗ File .env không tồn tại"
+    ERRORS=$((ERRORS + 1))
+  fi
+
+  # 3. Ba containers đang chạy
+  for SVC in postgres app nginx; do
+    STATUS=$(docker compose ps --format "{{.State}}" $SVC 2>/dev/null || echo "missing")
+    if echo "$STATUS" | grep -qi "running"; then
+      echo "✓ Container $SVC đang chạy"
+    else
+      echo "✗ Container $SVC không chạy ($STATUS)"
+      ERRORS=$((ERRORS + 1))
+    fi
+  done
+
+  # 4. PostgreSQL healthy
+  PG_HEALTH=$(docker compose ps --format "{{.Health}}" postgres 2>/dev/null || echo "unknown")
+  if echo "$PG_HEALTH" | grep -qi "healthy"; then
+    echo "✓ PostgreSQL healthy"
+  else
+    echo "✗ PostgreSQL không healthy ($PG_HEALTH)"
+    ERRORS=$((ERRORS + 1))
+  fi
+
+  # 5. Health check /up
+  HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/up 2>/dev/null || echo "000")
+  if [ "$HEALTH" = "200" ]; then
+    echo "✓ Health check /up trả 200"
+  else
+    echo "✗ Health check /up trả $HEALTH"
+    ERRORS=$((ERRORS + 1))
+  fi
+
+  # 6. Trang đăng nhập hiển thị đúng
+  LOGIN=$(curl -s http://localhost/users/sign_in 2>/dev/null)
+  if echo "$LOGIN" | grep -q "Hệ thống quản lý điện nội bộ Sư đoàn"; then
+    echo "✓ Trang đăng nhập hiển thị tiếng Việt"
+  else
+    echo "✗ Trang đăng nhập không hiển thị đúng"
+    ERRORS=$((ERRORS + 1))
+  fi
+
+  # 7. Seed data (2 tài khoản mặc định)
+  USER_COUNT=$(docker compose exec -T app bundle exec rails runner "puts User.count" 2>/dev/null || echo "0")
+  if [ "$USER_COUNT" -ge 2 ] 2>/dev/null; then
+    echo "✓ Database có $USER_COUNT tài khoản"
+  else
+    echo "✗ Database thiếu tài khoản mặc định ($USER_COUNT)"
+    ERRORS=$((ERRORS + 1))
+  fi
+
+  # 8. Sao lưu tự động
+  CRON=$(crontab -l 2>/dev/null | grep "run-backup" || echo "")
+  if [ -n "$CRON" ]; then
+    echo "✓ Sao lưu tự động đã thiết lập"
+  else
+    echo "⚠ Sao lưu tự động chưa thiết lập (chạy: sudo ./deploy/production/server backup)"
+  fi
+
+  echo ""
+  if [ "$ERRORS" = "0" ]; then
+    echo "Kết quả: TẤT CẢ PASS"
+  else
+    echo "Kết quả: $ERRORS LỖI"
+  fi
+  return $ERRORS
+}
+
+# ══════════════════════════════════════════════════════════════
+# AUTO — Tự phát hiện cần làm gì
+# ══════════════════════════════════════════════════════════════
+
+do_auto() {
+  if [ ! -d "$INSTALL_DIR" ]; then
+    # Chưa cài → cài mới
+    do_install
+
+    # Sau cài mới, hỏi thiết lập sao lưu
+    echo ""
+    echo "Thiết lập sao lưu tự động? (y/n)"
+    read -p "> " SETUP_BACKUP
+    if [ "$SETUP_BACKUP" = "y" ] || [ "$SETUP_BACKUP" = "Y" ]; then
+      do_backup
+    else
+      echo "Bỏ qua. Chạy sau: sudo ./deploy/production/server backup"
+    fi
+  else
+    # Đã cài → hiện menu
+    echo ""
+    echo "Hệ thống đã cài tại $INSTALL_DIR."
+    echo ""
+    echo "Chọn thao tác:"
+    echo "  1. Cập nhật phiên bản"
+    echo "  2. Thiết lập sao lưu tự động"
+    echo "  3. Xem trạng thái"
+    echo "  4. Thoát"
+    read -p "> " CHOICE
+    case "$CHOICE" in
+      1)
+        echo "Nhập đường dẫn thư mục delivery mới:"
+        read -p "> " UPDATE_PATH
+        do_update "$UPDATE_PATH"
+        ;;
+      2) do_backup ;;
+      3) do_status ;;
+      *) echo "Thoát." ;;
+    esac
+  fi
+}
+
+# ══════════════════════════════════════════════════════════════
+# MAIN — Điểm bắt đầu
+# ══════════════════════════════════════════════════════════════
+
+check_docker
+
+case "$COMMAND" in
+  auto)     do_auto ;;
+  install)  do_install ;;
+  update)   shift; do_update "$@" ;;
+  backup)   do_backup ;;
+  status)   do_status ;;
+  verify)   do_verify ;;
+  *)
+    echo "Cách dùng:"
+    echo "  sudo ./deploy/production/server                 # Auto-detect"
+    echo "  sudo ./deploy/production/server install          # Cài mới"
+    echo "  sudo ./deploy/production/server update <path>    # Cập nhật"
+    echo "  sudo ./deploy/production/server backup           # Sao lưu tự động"
+    echo "  sudo ./deploy/production/server status           # Xem trạng thái"
+    echo "  sudo ./deploy/production/server verify           # Kiểm tra hệ thống"
+    ;;
+esac

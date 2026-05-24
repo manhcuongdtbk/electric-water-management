@@ -1,0 +1,220 @@
+#!/usr/bin/env bash
+#
+# TEST — Chạy end-to-end test cho deploy production trên máy dev.
+#
+# Giả lập toàn bộ flow: build → install → verify → update → verify → cleanup.
+# Dùng thư mục tạm thay vì /opt/ewm (không cần sudo).
+#
+# Cách dùng:
+#   deploy/production/test                    # Test bình thường
+#   deploy/production/test --platform amd64   # Test cross-platform build
+#   deploy/production/test --keep             # Không dọn sau khi test (debug)
+#   deploy/production/test --help             # Hiện hướng dẫn
+#
+# Yêu cầu: Docker Desktop đang chạy, port 80 trống.
+
+set -e
+
+PLATFORM_ARG=""
+KEEP=false
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --platform) PLATFORM_ARG="--platform $2"; shift 2 ;;
+    --keep)     KEEP=true; shift ;;
+    --help|-h)
+      echo "TEST — End-to-end test cho deploy production."
+      echo ""
+      echo "Cách dùng:"
+      echo "  deploy/production/test                    # Test bình thường"
+      echo "  deploy/production/test --platform amd64   # Test cross-platform"
+      echo "  deploy/production/test --keep             # Giữ kết quả sau test"
+      exit 0
+      ;;
+    *) echo "Tham số không hợp lệ: $1"; exit 1 ;;
+  esac
+done
+
+TEST_DIR="/tmp/ewm-deploy-test"
+REPO_DIR="$(pwd)"
+DELIVERY_DIR="$REPO_DIR/../electric-water-management-delivery"
+ERRORS=0
+START_TIME=$(date +%s)
+
+elapsed() {
+  NOW=$(date +%s)
+  DIFF=$((NOW - START_TIME))
+  printf "%dm%02ds" $((DIFF / 60)) $((DIFF % 60))
+}
+
+# Dọn dẹp khi script kết thúc (trừ --keep)
+cleanup() {
+  if [ "$KEEP" = true ]; then
+    echo ""
+    echo "Giữ kết quả tại: $TEST_DIR"
+    echo "Dọn thủ công: cd $TEST_DIR && docker compose down -v && rm -rf $TEST_DIR $DELIVERY_DIR"
+    return
+  fi
+  echo ""
+  echo "Dọn dẹp..."
+  if [ -d "$TEST_DIR" ]; then
+    cd "$TEST_DIR" && docker compose down -v 2>/dev/null || true
+  fi
+  rm -rf "$TEST_DIR" "$DELIVERY_DIR"
+  docker rmi ewm-app 2>/dev/null || true
+}
+trap cleanup EXIT
+
+echo ""
+echo "════════════════════════════════════════"
+echo "  END-TO-END TEST — Deploy Production"
+echo "════════════════════════════════════════"
+
+# ── Test 1: Build ─────────────────────────────────────────────
+
+echo ""
+echo "▶ Test 1/5: deploy/production/build"
+deploy/production/build $PLATFORM_ARG 2>&1 | tail -15
+
+if [ ! -f "$DELIVERY_DIR/ewm-images.tar.gz" ]; then
+  echo "✗ Build thất bại: thiếu ewm-images.tar.gz"
+  ERRORS=$((ERRORS + 1))
+else
+  echo "✓ Build thành công ($(elapsed))"
+fi
+
+# ── Test 2: Install (giả lập server) ─────────────────────────
+
+echo ""
+echo "▶ Test 2/5: Giả lập install"
+
+rm -rf "$TEST_DIR"
+cp -r "$DELIVERY_DIR" "$TEST_DIR"
+cd "$TEST_DIR"
+
+# Tạo .env không interactive (thay cho password prompt)
+cat > .env << EOF
+POSTGRES_USER=electric_water_management
+POSTGRES_PASSWORD=TestDeploy2026!
+POSTGRES_DB=electric_water_management_production
+SECRET_KEY_BASE=$(cat SECRET_KEY_BASE.txt)
+EOF
+
+# Load images + start
+docker load < ewm-images.tar.gz 2>&1 | grep "Loaded"
+docker compose up -d 2>&1 | tail -5
+
+echo "Chờ health check..."
+for i in $(seq 1 60); do
+  STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/up 2>/dev/null || echo "000")
+  if [ "$STATUS" = "200" ]; then break; fi
+  sleep 2
+done
+
+if [ "$STATUS" = "200" ]; then
+  echo "✓ Install thành công — health check 200 ($(elapsed))"
+else
+  echo "✗ Install thất bại — health check $STATUS"
+  ERRORS=$((ERRORS + 1))
+fi
+
+# ── Test 3: Verify ────────────────────────────────────────────
+
+echo ""
+echo "▶ Test 3/5: Verify hệ thống"
+V_ERRORS=0
+
+# Containers
+for SVC in postgres app nginx; do
+  SVC_STATUS=$(docker compose ps --format "{{.State}}" $SVC 2>/dev/null || echo "missing")
+  if echo "$SVC_STATUS" | grep -qi "running"; then
+    echo "  ✓ Container $SVC đang chạy"
+  else
+    echo "  ✗ Container $SVC không chạy ($SVC_STATUS)"
+    V_ERRORS=$((V_ERRORS + 1))
+  fi
+done
+
+# Login page
+LOGIN=$(curl -s http://localhost/users/sign_in 2>/dev/null)
+if echo "$LOGIN" | grep -q "Hệ thống quản lý điện nội bộ Sư đoàn"; then
+  echo "  ✓ Trang đăng nhập tiếng Việt"
+else
+  echo "  ✗ Trang đăng nhập sai"
+  V_ERRORS=$((V_ERRORS + 1))
+fi
+
+# Seed data
+USER_COUNT=$(docker compose exec -T app bundle exec rails runner "puts User.count" 2>/dev/null | tr -d '[:space:]')
+if [ "$USER_COUNT" -ge 2 ] 2>/dev/null; then
+  echo "  ✓ Database có $USER_COUNT tài khoản"
+else
+  echo "  ✗ Database thiếu tài khoản ($USER_COUNT)"
+  V_ERRORS=$((V_ERRORS + 1))
+fi
+
+if [ "$V_ERRORS" = "0" ]; then
+  echo "✓ Verify pass ($(elapsed))"
+else
+  echo "✗ Verify: $V_ERRORS lỗi"
+  ERRORS=$((ERRORS + V_ERRORS))
+fi
+
+# ── Test 4: Update ────────────────────────────────────────────
+
+echo ""
+echo "▶ Test 4/5: Giả lập update"
+
+# Backup .env
+cp "$TEST_DIR/.env" /tmp/ewm-env-backup-test
+
+# Down + swap + up
+docker compose down 2>&1 | tail -3
+rm -rf "$TEST_DIR"
+cp -r "$DELIVERY_DIR" "$TEST_DIR"
+cd "$TEST_DIR"
+cp /tmp/ewm-env-backup-test .env
+docker load < ewm-images.tar.gz 2>&1 | grep "Loaded"
+docker compose up -d 2>&1 | tail -5
+
+echo "Chờ health check..."
+for i in $(seq 1 60); do
+  STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/up 2>/dev/null || echo "000")
+  if [ "$STATUS" = "200" ]; then break; fi
+  sleep 2
+done
+
+if [ "$STATUS" = "200" ]; then
+  echo "✓ Update thành công — health check 200 ($(elapsed))"
+else
+  echo "✗ Update thất bại — health check $STATUS"
+  ERRORS=$((ERRORS + 1))
+fi
+
+# ── Test 5: Login ─────────────────────────────────────────────
+
+echo ""
+echo "▶ Test 5/5: Test đăng nhập"
+
+CSRF=$(curl -s -c /tmp/ewm-cookies http://localhost/users/sign_in | grep -o 'authenticity_token.*value="[^"]*"' | head -1 | grep -o 'value="[^"]*"' | cut -d'"' -f2)
+LOGIN_STATUS=$(curl -s -c /tmp/ewm-cookies -b /tmp/ewm-cookies -X POST http://localhost/users/sign_in -d "user[username]=quanTri&user[password]=Abc@1234&authenticity_token=$CSRF" -o /dev/null -w "%{http_code}")
+rm -f /tmp/ewm-cookies /tmp/ewm-env-backup-test
+
+if [ "$LOGIN_STATUS" = "303" ]; then
+  echo "✓ Đăng nhập quanTri thành công (redirect 303) ($(elapsed))"
+else
+  echo "✗ Đăng nhập thất bại (HTTP $LOGIN_STATUS)"
+  ERRORS=$((ERRORS + 1))
+fi
+
+# ── Kết quả ───────────────────────────────────────────────────
+
+echo ""
+echo "════════════════════════════════════════"
+if [ "$ERRORS" = "0" ]; then
+  echo "  KẾT QUẢ: TẤT CẢ PASS ($(elapsed))"
+else
+  echo "  KẾT QUẢ: $ERRORS LỖI ($(elapsed))"
+fi
+echo "════════════════════════════════════════"
+exit $ERRORS
