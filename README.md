@@ -89,7 +89,7 @@ bin/docker prspec:setup                 # Tạo databases cho test song song (ch
 
 ## Staging
 
-Railway auto-deploy khi push branch v2. Cấu hình trong `railway.json`.
+Railway auto-deploy khi push branch main. Cấu hình trong `railway.json`.
 
 ## Production
 

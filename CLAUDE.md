@@ -30,7 +30,7 @@ Rails 8, PostgreSQL, Tailwind, Hotwire (Turbo + Stimulus), Devise, CanCanCan, Pa
 | Web server | nginx container | Railway edge proxy | nginx container |
 | Database | PostgreSQL container | Railway PostgreSQL | PostgreSQL container |
 | Config | compose.dev.yml | railway.json | compose.yml + .env |
-| Deploy | `bin/docker up` | Auto-deploy khi push v2 | `docker compose up -d` |
+| Deploy | `bin/docker up` | Auto-deploy khi push main | `docker compose up -d` |
 
 ## Development environment
 
