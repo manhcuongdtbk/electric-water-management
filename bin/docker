@@ -24,6 +24,11 @@ set -e
 
 COMPOSE="docker compose -f compose.dev.yml"
 
+# Forward RAILS_ENV vào container nếu được set trên host.
+# Không set → container dùng RAILS_ENV từ compose.dev.yml (development).
+ENV_ARGS=()
+[ -n "${RAILS_ENV:-}" ] && ENV_ARGS=(-e "RAILS_ENV=$RAILS_ENV")
+
 case "${1}" in
   logs)
     shift
@@ -48,34 +53,34 @@ case "${1}" in
     ;;
   rspec)
     shift
-    $COMPOSE exec app bundle exec rspec "$@"
+    $COMPOSE exec "${ENV_ARGS[@]}" app bundle exec rspec "$@"
     ;;
   prspec)
     shift
     if echo "$@" | grep -q -- "-n"; then
-      $COMPOSE exec app bundle exec parallel_rspec spec/ "$@"
+      $COMPOSE exec "${ENV_ARGS[@]}" app bundle exec parallel_rspec spec/ "$@"
     else
       NCPU=$($COMPOSE exec -T app nproc)
       N=$(( NCPU / 2 ))
       [ "$N" -lt 2 ] && N=2
-      $COMPOSE exec app bundle exec parallel_rspec spec/ -n "$N" "$@"
+      $COMPOSE exec "${ENV_ARGS[@]}" app bundle exec parallel_rspec spec/ -n "$N" "$@"
     fi
     ;;
   prspec:setup)
-    $COMPOSE exec app bundle exec rails parallel:setup
+    $COMPOSE exec "${ENV_ARGS[@]}" app bundle exec rails parallel:setup
     ;;
   console)
-    $COMPOSE exec app bundle exec rails console
+    $COMPOSE exec "${ENV_ARGS[@]}" app bundle exec rails console
     ;;
   bash)
     shift
-    $COMPOSE exec "${1:-app}" bash
+    $COMPOSE exec "${ENV_ARGS[@]}" "${1:-app}" bash
     ;;
   exec)
     shift
-    $COMPOSE exec "$@"
+    $COMPOSE exec "${ENV_ARGS[@]}" "$@"
     ;;
   *)
-    $COMPOSE exec app "$@"
+    $COMPOSE exec "${ENV_ARGS[@]}" app "$@"
     ;;
 esac
