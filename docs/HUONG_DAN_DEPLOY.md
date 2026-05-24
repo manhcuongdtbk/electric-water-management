@@ -1,6 +1,6 @@
 # Hướng dẫn deploy — Hệ thống quản lý điện nội bộ Sư đoàn
 
-> **Phiên bản:** 1.1.0
+> **Phiên bản:** 1.2.0
 > **Ngày:** 24/05/2026
 > **Đối tượng:** Người thực hiện deploy (kỹ thuật viên, cố vấn IT, hoặc developer).
 > **Server:** Ubuntu 24.04, Docker, LAN nội bộ, không có internet.
@@ -139,25 +139,7 @@ docker images
 
 Phải thấy 3 images: `ewm-app`, `postgres`, `nginx`.
 
-### B3. Sửa compose.yml để dùng image có sẵn
-
-Mở file `compose.yml`, tìm dòng:
-
-```yaml
-  app:
-    build: .
-```
-
-Đổi thành:
-
-```yaml
-  app:
-    image: ewm-app
-```
-
-Lưu file.
-
-### B4. Tạo file cấu hình
+### B3. Tạo file cấu hình
 
 ```bash
 cp .env.example .env
@@ -172,7 +154,7 @@ SECRET_KEY_BASE=<chuỗi 128 ký tự từ bước A5>
 
 Hai dòng còn lại (`POSTGRES_USER`, `POSTGRES_DB`) giữ nguyên mặc định.
 
-### B5. Khởi động
+### B4. Khởi động
 
 ```bash
 docker compose up -d
@@ -197,7 +179,7 @@ docker compose logs <tên-container>
 # Ví dụ: docker compose logs app
 ```
 
-### B6. Kiểm tra hoạt động
+### B5. Kiểm tra hoạt động
 
 Từ trình duyệt trên máy tính khác trong LAN, truy cập:
 
@@ -207,7 +189,7 @@ http://<IP-server>
 
 Phải thấy trang đăng nhập tiếng Việt "Hệ thống quản lý điện nội bộ Sư đoàn".
 
-### B7. Đăng nhập lần đầu
+### B6. Đăng nhập lần đầu
 
 Đăng nhập bằng tài khoản kỹ thuật viên mặc định:
 
@@ -223,7 +205,7 @@ Sau đó đăng nhập tài khoản quản trị viên hệ thống:
 
 Cũng phải đổi mật khẩu.
 
-### B8. Xác nhận hoàn tất
+### B7. Xác nhận hoàn tất
 
 Checklist sau khi deploy:
 
@@ -476,6 +458,11 @@ docker --version
 ---
 
 ## Lịch sử thay đổi
+
+### v1.2.0 (24/05/2026)
+
+- compose.yml thêm `image: ewm-app` cùng `build: .` — Docker Compose tự dùng image có sẵn, không cần sửa tay file.
+- Xóa bước B3 (sửa compose.yml thủ công). Đánh lại số B4-B7.
 
 ### v1.1.0 (24/05/2026)
 
