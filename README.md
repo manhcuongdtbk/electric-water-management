@@ -6,6 +6,17 @@ Hệ thống web quản lý sử dụng điện, tính toán tiêu chuẩn, tổ
 
 Rails 8, PostgreSQL 16, Tailwind CSS, Hotwire (Turbo + Stimulus).
 
+## Environments
+
+| | Development | Staging | Production |
+|---|---|---|---|
+| Hạ tầng | Docker Desktop (Mac) | Railway | Ubuntu Mini PC (LAN offline) |
+| Dockerfile | Dockerfile.dev | Dockerfile | Dockerfile |
+| Web server | nginx container | Railway edge proxy | nginx container |
+| Database | PostgreSQL container | Railway PostgreSQL | PostgreSQL container |
+| Config | compose.dev.yml | railway.json | compose.yml + .env |
+| URL | http://localhost | https://electric-water-management-v2.up.railway.app | http://\<IP server\> |
+
 ## Development
 
 Yêu cầu: [Docker Desktop](https://www.docker.com/products/docker-desktop/).
@@ -27,11 +38,22 @@ bin/docker rspec spec/models  # Chạy test 1 thư mục
 bin/docker console            # Rails console
 bin/docker bash               # Shell trong container app
 bin/docker bash postgres      # Shell trong container postgres
-bin/docker logs               # Xem logs
+bin/docker logs               # Xem logs container app
+bin/docker logs postgres      # Xem logs container postgres
 bin/docker ps                 # Trạng thái containers
 bin/docker stop               # Dừng
 bin/docker start              # Chạy lại
 ```
+
+### Workflow hàng ngày
+
+```bash
+bin/docker start              # Sáng: chạy lại containers đã dừng
+# Code bình thường, Rails tự reload khi sửa file
+bin/docker stop               # Chiều: dừng containers
+```
+
+Ngoại lệ: dùng `bin/docker up` thay `start` khi lần đầu hoặc sau khi sửa compose.dev.yml / Dockerfile.dev.
 
 ### Chạy không dùng Docker
 
@@ -50,7 +72,6 @@ bin/docker rspec                        # Toàn bộ
 bin/docker rspec spec/models            # Model specs
 bin/docker rspec spec/requests          # Request specs
 bin/docker rspec spec/system            # System specs (headless Chrome)
-bundle exec parallel_rspec spec/        # Song song (chạy local)
 ```
 
 ## Tài liệu
@@ -63,9 +84,13 @@ bundle exec parallel_rspec spec/        # Song song (chạy local)
 | `docs/V2_CHIEU_TEST.md` | 12 chiều kiểm thử |
 | `CLAUDE.md` | Quy tắc code, convention |
 
+## Staging
+
+Railway auto-deploy khi push branch v2. Cấu hình trong `railway.json`.
+
 ## Production
 
-3 containers: PostgreSQL + Rails + nginx. Deploy trên máy Ubuntu LAN nội bộ (offline).
+3 containers (PostgreSQL + Rails + nginx). Deploy trên máy Ubuntu LAN nội bộ (offline).
 
 ```bash
 cp .env.example .env
