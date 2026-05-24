@@ -1,6 +1,6 @@
 # Xác nhận nghiệp vụ — Hệ thống quản lý điện nội bộ Sư đoàn (Hệ thống v2)
 
-> **Phiên bản:** 2.12.0
+> **Phiên bản:** 2.13.0
 > **Ngày:** 21/05/2026
 > **Tính chất:** Tài liệu nội bộ giữa chủ dự án và đội phát triển. Là nguồn sự thật duy nhất cho thiết kế và triển khai.
 > **Ngôn ngữ hệ thống:** Toàn bộ hệ thống phải được Việt hóa 100% (giao diện, thông báo, cảnh báo, xuất file) vì hệ thống dùng trong Sư đoàn Quân đội nhân dân Việt Nam.
@@ -460,7 +460,7 @@ graph TD
 - Quản lý mọi tài khoản trong hệ thống.
 - Ngoại lệ của quy tắc không xem dữ liệu nghiệp vụ: ở form tạo tài khoản, kỹ thuật viên hệ thống thấy danh sách đơn vị (chỉ đọc) để gán đơn vị cho tài khoản quản trị viên đơn vị hoặc chỉ huy đơn vị.
 - Xem nhật ký hệ thống.
-- Tạo backup toàn bộ data, restore hệ thống về bản backup đã tạo (tối đa 3 bản backup).
+- Tạo backup toàn bộ data (tối đa 3 bản backup). ~~Restore qua giao diện~~ (restore thực hiện qua dòng lệnh trên server — ghi đè toàn bộ database nên quá rủi ro để đặt nút trên giao diện).
 
 ### 11.2. Quản trị viên hệ thống
 
@@ -629,7 +629,7 @@ Trang tổng quan tách riêng với bảng tính tiền, là trang đầu tiên
 ## 21. Sao lưu và phục hồi
 
 - Kỹ thuật viên hệ thống có thể tạo backup toàn bộ data.
-- Kỹ thuật viên hệ thống có thể restore hệ thống về 1 bản backup đã tạo.
+- ~~Kỹ thuật viên hệ thống có thể restore qua giao diện~~ (restore thực hiện qua dòng lệnh trên server — ghi đè toàn bộ database nên quá rủi ro để đặt nút trên giao diện).
 - Tối đa lưu được 3 bản backup.
 
 ---
@@ -823,6 +823,10 @@ Người dùng chỉ cần sửa chỗ có thay đổi. Mọi thao tác ở kỳ
 ---
 
 ## 29. Lịch sử thay đổi
+
+### v2.13.0 (24/05/2026)
+
+- Sao lưu và phục hồi (mục 11.1, 21): đánh dấu restore qua giao diện không cần — restore thực hiện qua dòng lệnh trên server vì ghi đè toàn bộ database quá rủi ro để đặt nút trên giao diện.
 
 ### v2.12.0 (24/05/2026)
 
