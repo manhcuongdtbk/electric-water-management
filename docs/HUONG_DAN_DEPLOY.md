@@ -33,7 +33,7 @@ Server không cần internet. Toàn bộ phần mềm được chuẩn bị trư
 | Mạng | LAN, IP cố định | — |
 | Hệ điều hành | Ubuntu 24.04 | — |
 
-Ổ cứng phụ dùng để sao lưu tự động (mục Sao lưu tự động). Không bắt buộc nhưng khuyến nghị mạnh — nếu ổ chính hỏng, dữ liệu vẫn còn trên ổ phụ.
+Ổ cứng phụ dùng để sao lưu tự động (mục Sao lưu tự động). Bắt buộc — nếu ổ chính hỏng, dữ liệu vẫn còn trên ổ phụ.
 
 ---
 
@@ -64,7 +64,7 @@ cd ../electric-water-management-delivery
 
 Từ bước này trở đi, tất cả thao tác đều trong thư mục `electric-water-management-delivery`.
 
-### A4. Build Docker images cho server
+### A3. Build Docker images cho server
 
 Server dùng CPU Intel/AMD (x86_64). Nếu máy chuẩn bị cũng là x86_64:
 
@@ -81,7 +81,7 @@ docker pull --platform linux/amd64 postgres:16-alpine
 docker pull --platform linux/amd64 nginx:alpine
 ```
 
-### A5. Lưu images ra file
+### A4. Lưu images ra file
 
 ```bash
 docker save ewm-app postgres:16-alpine nginx:alpine | gzip > ewm-images.tar.gz
@@ -89,7 +89,7 @@ docker save ewm-app postgres:16-alpine nginx:alpine | gzip > ewm-images.tar.gz
 
 File này khoảng 500 MB - 1 GB.
 
-### A6. Tạo SECRET_KEY_BASE
+### A5. Tạo SECRET_KEY_BASE
 
 ```bash
 docker run --rm ewm-app bin/rails secret
@@ -97,14 +97,14 @@ docker run --rm ewm-app bin/rails secret
 
 Lưu chuỗi 128 ký tự hex này lại — cần ở bước B4.
 
-### A7. Copy sang USB
+### A6. Copy sang USB
 
 Copy 3 thứ vào USB:
 
 ```
 USB/
-├── electric-water-management/    # Thư mục source code (hoặc delivery)
-└── ewm-images.tar.gz             # Docker images đã build
+├── electric-water-management-delivery/    # Thư mục source code đã dọn sạch
+└── ewm-images.tar.gz                      # Docker images đã build
 ```
 
 ---
@@ -117,7 +117,7 @@ USB/
 
 ```bash
 # Cắm USB, mount (Ubuntu thường tự mount vào /media/<user>/<tên USB>)
-cp -r /media/$USER/<tên-USB>/electric-water-management /opt/ewm
+cp -r /media/$USER/<tên-USB>/electric-water-management-delivery /opt/ewm
 cp /media/$USER/<tên-USB>/ewm-images.tar.gz /opt/ewm/
 cd /opt/ewm
 ```
@@ -164,7 +164,7 @@ Mở file `.env`, điền giá trị:
 
 ```
 POSTGRES_PASSWORD=<đặt mật khẩu mạnh, ví dụ: MatKhau$Manh2026>
-SECRET_KEY_BASE=<chuỗi 128 ký tự từ bước A6>
+SECRET_KEY_BASE=<chuỗi 128 ký tự từ bước A5>
 ```
 
 Hai dòng còn lại (`POSTGRES_USER`, `POSTGRES_DB`) giữ nguyên mặc định.
@@ -338,29 +338,22 @@ Script tự động:
 
 Khi có phiên bản mới từ nhà phát triển:
 
-### Nếu server có internet tạm thời
-
-```bash
-cd /opt/ewm
-git pull
-docker compose build
-docker compose down
-docker compose up -d
-```
-
-### Nếu server hoàn toàn offline
-
-1. Trên máy có internet: build image mới + lưu ra file (lặp lại bước A4-A7)
-2. Copy file sang server qua USB
+1. Trên máy có internet: lặp lại Phần A (tạo bản delivery mới + build images mới)
+2. Copy sang USB
 3. Trên server:
 
 ```bash
+cd /opt
+docker compose -f /opt/ewm/compose.yml down
+rm -rf /opt/ewm
+cp -r /media/$USER/<tên-USB>/electric-water-management-delivery /opt/ewm
+cp /media/$USER/<tên-USB>/ewm-images.tar.gz /opt/ewm/
 cd /opt/ewm
-docker compose down
 docker load < ewm-images.tar.gz
-# Copy source code mới vào /opt/ewm (ghi đè)
 docker compose up -d
 ```
+
+File `.env` cần tạo lại (copy từ bản cũ hoặc tạo mới từ `.env.example`).
 
 ---
 
