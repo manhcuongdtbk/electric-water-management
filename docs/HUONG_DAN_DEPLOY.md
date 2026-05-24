@@ -1,8 +1,11 @@
 # Hướng dẫn deploy — Hệ thống quản lý điện nội bộ Sư đoàn
 
+> **Phiên bản:** 1.0.0
+> **Ngày:** 24/05/2026
 > **Đối tượng:** Người thực hiện deploy (kỹ thuật viên, cố vấn IT, hoặc developer).
 > **Server:** Ubuntu 24.04, Docker, LAN nội bộ, không có internet.
 > **Thời gian ước tính:** 1-2 giờ (lần đầu).
+> **Tham khảo:** Để hiểu chi tiết Docker và cách hệ thống hoạt động, xem `docs/KIEN_THUC_DOCKER.md`.
 
 ---
 
@@ -462,3 +465,13 @@ docker --version
 | Backup | pg_dump (custom format), tối đa 3 bản qua giao diện |
 | Tài khoản mặc định | kyThuat / Abc@1234, quanTri / Abc@1234 |
 | Health check | http://\<IP\>/up (trả 200 nếu app chạy) |
+
+---
+
+## Lịch sử thay đổi
+
+### v1.0.0 (24/05/2026)
+
+- Tài liệu ban đầu. Cover: chuẩn bị offline (build images, save file, copy USB), cài đặt trên server (load images, cấu hình, khởi động), vận hành hàng ngày, 3 lớp sao lưu (giao diện, terminal restore, cron tự động sang ổ phụ), cập nhật phiên bản, xử lý sự cố, cài Docker offline.
+- Bắt buộc chạy `bin/prepare-delivery` trước khi ship (bước A2).
+- Script `setup-auto-backup` thiết lập cron tự động.
