@@ -237,6 +237,7 @@ Checklist sau khi deploy:
 - [ ] Trang Tổng quan hiện "Không có kỳ đang mở"
 - [ ] Sidebar hiện đủ các mục menu
 - [ ] Tạo thử 1 bản sao lưu trên trang Sao lưu dữ liệu — thành công
+- [ ] Thiết lập sao lưu tự động sang ổ cứng phụ (mục Sao lưu tự động)
 
 ---
 
@@ -281,7 +282,9 @@ docker compose ps
 
 ## Sao lưu dữ liệu
 
-### Sao lưu qua giao diện web (hàng ngày)
+### Sao lưu qua giao diện web (khi cần)
+
+Dùng khi cần tạo bản sao lưu trước thao tác quan trọng (ví dụ: trước khi cập nhật phiên bản, trước khi khôi phục dữ liệu cũ).
 
 1. Đăng nhập tài khoản kỹ thuật viên
 2. Vào trang **Sao lưu dữ liệu** trên sidebar
@@ -306,24 +309,35 @@ docker compose exec app bundle exec rails "backups:restore[<tên-file>]"
 
 Hệ thống hỏi xác nhận trước khi khôi phục. Gõ `YES` (chữ hoa) để xác nhận.
 
-### Sao lưu tự động sang ổ cứng phụ (khuyến nghị)
+### Sao lưu tự động sang ổ cứng phụ (bắt buộc)
 
-Nếu server có ổ cứng phụ (ví dụ mount tại `/mnt/backup`), thiết lập sao chép tự động:
+Server phải có ổ cứng phụ để sao lưu tự động. Nếu ổ chính hỏng, dữ liệu vẫn còn trên ổ phụ.
+
+1. Mount ổ cứng phụ (ví dụ `/mnt/backup`):
 
 ```bash
-# Tạo script sao lưu
-cat > /opt/ewm/backup-to-disk.sh << 'EOF'
-#!/bin/bash
-rsync -a /var/lib/docker/volumes/ /mnt/backup/docker-volumes/
-echo "$(date): Backup completed" >> /mnt/backup/backup.log
-EOF
-chmod +x /opt/ewm/backup-to-disk.sh
+# Xem tên ổ
+lsblk
 
-# Chạy tự động mỗi ngày lúc 2 giờ sáng
-crontab -e
-# Thêm dòng:
-# 0 2 * * * /opt/ewm/backup-to-disk.sh
+# Mount (thay sdb1 bằng tên thực)
+sudo mkdir -p /mnt/backup
+sudo mount /dev/sdb1 /mnt/backup
+
+# Tự mount khi khởi động lại
+echo "/dev/sdb1 /mnt/backup ext4 defaults 0 2" | sudo tee -a /etc/fstab
 ```
+
+2. Chạy script thiết lập có sẵn:
+
+```bash
+cd /opt/ewm
+sudo ./script/setup-auto-backup /mnt/backup
+```
+
+Script tự động:
+- Sao lưu database (pg_dump) + file sao lưu trong app mỗi ngày lúc 2:00 sáng
+- Giữ tối đa 7 bản, xóa bản cũ nhất tự động
+- Ghi log tại `/mnt/backup/ewm-backup/backup.log`
 
 ---
 
