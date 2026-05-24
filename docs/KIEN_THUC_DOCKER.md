@@ -130,14 +130,14 @@ Docker đóng gói tất cả vào 1 "image" (ảnh). Image giống file ISO cà
 |---|---|---|
 | `db/seeds.rb` | Tạo 2 tài khoản mặc định (kyThuat, quanTri) khi database mới | db:prepare |
 | `lib/tasks/backups.rake` | Lệnh restore database từ bản sao lưu | Kỹ thuật viên (terminal) |
-| `script/setup-auto-backup` | Thiết lập sao lưu tự động sang ổ cứng phụ | Người deploy (1 lần) |
+| `deploy/production/server backup` | Thiết lập sao lưu tự động sang ổ cứng phụ | Người deploy (1 lần) |
 
 ### Files cho delivery
 
 | File | Làm gì | Ai dùng |
 |---|---|---|
-| `bin/prepare-delivery` | Tạo bản sạch để ship cho khách (xóa dấu vết phát triển) | Developer |
-| `docs/HUONG_DAN_DEPLOY.md` | Hướng dẫn deploy chi tiết từng bước | Người thực hiện deploy |
+| `deploy/production/build` | Tạo bản sạch để ship cho khách (xóa dấu vết phát triển) | Developer |
+| `deploy/production/HUONG_DAN.md` | Hướng dẫn deploy chi tiết từng bước | Người thực hiện deploy |
 | `docs/KIEN_THUC_DOCKER.md` | Kiến thức Docker, 4 môi trường (tài liệu này) | Developer, người deploy |
 
 ---
@@ -289,12 +289,12 @@ docker compose exec app bundle exec rails "backups:restore[tên-file.dump]"
 
 Hỏi xác nhận `YES` trước khi chạy.
 
-### script/setup-auto-backup
+### deploy/production/server backup
 
 Thiết lập sao lưu tự động sang ổ cứng phụ. Chạy 1 lần khi deploy:
 
 ```bash
-sudo ./script/setup-auto-backup /mnt/backup
+sudo ./deploy/production/server backup /mnt/backup
 ```
 
 Script tạo cron job chạy mỗi ngày 2:00 sáng:
@@ -302,7 +302,7 @@ Script tạo cron job chạy mỗi ngày 2:00 sáng:
 - Giữ tối đa 7 bản, xóa bản cũ nhất tự động
 - Log tại `/mnt/backup/ewm-backup/backup.log`
 
-### bin/prepare-delivery
+### deploy/production/build
 
 Tạo bản sạch để ship cho khách. Source code gốc chứa file phát triển (CLAUDE.md, .claude/) và dấu vết AI trong git history. Script:
 1. Clone repo
@@ -627,9 +627,9 @@ Railway là platform cloud (giống Heroku). Dùng cho:
 
 Server Ubuntu trong mạng LAN nội bộ Sư đoàn, không có internet.
 
-**Cách deploy:** Build image trên máy có internet → save file → copy USB → load trên server. Hướng dẫn chi tiết: `docs/HUONG_DAN_DEPLOY.md`.
+**Cách deploy:** Build image trên máy có internet → save file → copy USB → load trên server. Hướng dẫn chi tiết: `deploy/production/HUONG_DAN.md`.
 
-**Delivery:** Không ship source code gốc. Chạy `bin/prepare-delivery` tạo bản sạch (xóa dấu vết phát triển, dọn git history).
+**Delivery:** Không ship source code gốc. Chạy `deploy/production/build` tạo bản sạch (xóa dấu vết phát triển, dọn git history).
 
 **Cấu trúc Docker production:**
 

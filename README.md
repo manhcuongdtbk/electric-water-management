@@ -86,7 +86,7 @@ bin/docker prspec:setup                 # Tạo databases cho test song song (ch
 | `docs/V2_HANH_VI_HE_THONG.md` | Hành vi runtime, 6 vai trò, 3 trạng thái kỳ |
 | `docs/V2_CHIEU_TEST.md` | 12 chiều kiểm thử |
 | `docs/KIEN_THUC_DOCKER.md` | Kiến thức Docker, 4 môi trường, deploy |
-| `docs/HUONG_DAN_DEPLOY.md` | Hướng dẫn deploy production (cho kỹ thuật viên) |
+| `deploy/production/HUONG_DAN.md` | Hướng dẫn deploy production (cho kỹ thuật viên) |
 | `CLAUDE.md` | Quy tắc code, convention |
 
 ## Staging
@@ -97,6 +97,6 @@ Railway auto-deploy khi push branch main. Cấu hình trong `railway.json`.
 
 3 containers (PostgreSQL + Rails + nginx). Deploy trên máy Ubuntu LAN nội bộ (offline).
 
-**Hướng dẫn chi tiết:** `docs/HUONG_DAN_DEPLOY.md`
+**Hướng dẫn chi tiết:** `deploy/production/HUONG_DAN.md`
 
-**Quan trọng:** Phải chạy `bin/prepare-delivery` để tạo bản sạch trước khi ship cho khách. Không ship source code trực tiếp từ repo này.
+**Quan trọng:** Phải chạy `deploy/production/build` để tạo bản sạch trước khi ship cho khách. Không ship source code trực tiếp từ repo này.

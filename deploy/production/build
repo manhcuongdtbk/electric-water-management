@@ -1,0 +1,328 @@
+#!/usr/bin/env bash
+#
+# BUILD — Chuẩn bị bản production trên máy có internet.
+#
+# Script này làm 5 việc:
+#   1. Tạo bản source code sạch (xóa dấu vết phát triển)
+#   2. Build Docker image cho ứng dụng Rails
+#   3. Tải Docker images cho PostgreSQL và nginx
+#   4. Đóng gói tất cả images thành 1 file .tar.gz
+#   5. Tạo khóa bảo mật (SECRET_KEY_BASE)
+#
+# Kết quả: thư mục ../electric-water-management-delivery/
+#   Chứa mọi thứ cần thiết để deploy — copy vào USB là đủ.
+#
+# Cách dùng:
+#   deploy/production/build                      # Build + tự verify
+#   deploy/production/build --platform amd64     # Build cho server Intel/AMD
+#   deploy/production/build --step 2             # Chỉ chạy bước 2
+#   deploy/production/build verify               # Chỉ kiểm tra kết quả (không build)
+#   deploy/production/build --help               # Hiện hướng dẫn
+#
+# Yêu cầu: Docker Desktop đang chạy, git, internet.
+
+set -e  # Dừng ngay nếu bất kỳ lệnh nào lỗi
+
+# ── Helpers ──────────────────────────────────────────────────
+
+# sed -i hoạt động khác nhau trên macOS và Linux:
+#   macOS: sed -i '' 'pattern' file
+#   Linux: sed -i 'pattern' file
+# Hàm này tự phát hiện hệ điều hành và chạy đúng.
+portable_sed() {
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    sed -i '' "$@"
+  else
+    sed -i "$@"
+  fi
+}
+
+# Hiện thời gian đã trôi qua từ khi bắt đầu script.
+START_TIME=$(date +%s)
+elapsed() {
+  NOW=$(date +%s)
+  DIFF=$((NOW - START_TIME))
+  printf "%dm%02ds" $((DIFF / 60)) $((DIFF % 60))
+}
+
+show_help() {
+  echo "BUILD — Chuẩn bị bản production trên máy có internet."
+  echo ""
+  echo "Cách dùng:"
+  echo "  deploy/production/build                      # Build tất cả + verify"
+  echo "  deploy/production/build --platform amd64     # Build cho server Intel/AMD"
+  echo "  deploy/production/build --step N             # Chỉ chạy bước N (1-5)"
+  echo "  deploy/production/build verify               # Chỉ kiểm tra kết quả"
+  echo "  deploy/production/build --help               # Hiện hướng dẫn này"
+  echo ""
+  echo "5 bước:"
+  echo "  1. Tạo bản source code sạch"
+  echo "  2. Build Docker image ứng dụng"
+  echo "  3. Tải images PostgreSQL + nginx"
+  echo "  4. Đóng gói images thành file"
+  echo "  5. Tạo khóa bảo mật"
+}
+
+# ── Đọc tham số từ người dùng ────────────────────────────────
+
+PLATFORM=""       # Mặc định: build cho cùng CPU với máy đang dùng
+STEP=""           # Mặc định: chạy tất cả bước
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --platform)
+      PLATFORM="--platform linux/$2"  # Ví dụ: --platform linux/amd64
+      shift 2
+      ;;
+    --step)
+      STEP="$2"
+      shift 2
+      ;;
+    --help|-h)
+      show_help
+      exit 0
+      ;;
+    verify)
+      STEP="verify"
+      shift
+      ;;
+    *)
+      echo "Tham số không hợp lệ: $1"
+      echo "Chạy deploy/production/build --help để xem hướng dẫn."
+      exit 1
+      ;;
+  esac
+done
+
+DELIVERY_DIR="../electric-water-management-delivery"
+
+# ── Kiểm tra Docker ──────────────────────────────────────────
+
+check_docker() {
+  if ! command -v docker &>/dev/null; then
+    echo "Lỗi: Docker chưa cài. Tải tại https://docs.docker.com/get-docker/"
+    exit 1
+  fi
+  if ! docker info &>/dev/null; then
+    echo "Lỗi: Docker không chạy. Mở Docker Desktop trước."
+    exit 1
+  fi
+}
+
+# ── Bước 1: Tạo bản source code sạch ────────────────────────
+# Xóa dấu vết phát triển (file CLAUDE.md, thư mục .claude,
+# dòng "Co-Authored-By: Claude" trong git history).
+# Kết quả: thư mục delivery chỉ chứa code production.
+
+run_step_1() {
+  echo ""
+  echo "=== Bước 1/5: Tạo bản source code sạch ==="
+
+  # Cài git-filter-repo nếu chưa có (công cụ dọn git history)
+  if ! command -v git-filter-repo &>/dev/null; then
+    echo "Cài git-filter-repo..."
+    if command -v pip3 &>/dev/null; then
+      pip3 install git-filter-repo
+    elif command -v pip &>/dev/null; then
+      pip install git-filter-repo
+    elif command -v brew &>/dev/null; then
+      brew install git-filter-repo
+    else
+      echo "Lỗi: cần pip3, pip, hoặc brew để cài git-filter-repo."
+      exit 1
+    fi
+  fi
+
+  # Clone repo thành bản mới, xóa bản cũ nếu có
+  rm -rf "$DELIVERY_DIR"
+  git clone . "$DELIVERY_DIR"
+  cd "$DELIVERY_DIR"
+
+  # Dọn git history: xóa co-author lines, gộp merge commits
+  git filter-repo \
+    --message-callback '
+import re
+msg = message.decode("utf-8")
+lines = msg.split("\n")
+lines = [l for l in lines if "co-authored-by: claude" not in l.lower()]
+msg = "\n".join(lines).rstrip() + "\n"
+m = re.match(r"Merge pull request #\d+ from [^/]+/(.+)", msg)
+if m:
+    msg = m.group(1).strip() + "\n"
+m2 = re.match(r"Merge branch .(.+?).( into .+)?$", msg)
+if m2:
+    msg = m2.group(1).strip() + "\n"
+msg = re.sub(r"(?i)claude[-\s]*", "", msg)
+return msg.encode("utf-8")
+' \
+    --commit-callback '
+if len(commit.parents) > 1:
+    commit.parents = [commit.parents[0]]
+' \
+    --force --quiet
+
+  # Xóa file và thư mục phát triển
+  rm -rf .claude CLAUDE.md
+  portable_sed '/[Cc]laude/d' .gitignore
+  portable_sed '/CLAUDE\.md/d' README.md
+  portable_sed 's/ Giải quyết: convention ghi rõ trong CLAUDE\.md\.//' docs/V2_THIET_KE_HE_THONG.md
+  git add -A && git commit -m "Remove development tooling files" --quiet
+
+  echo "Xong: $(git rev-list --count HEAD) commits, 0 dấu vết phát triển ($(elapsed))"
+}
+
+# ── Bước 2: Build Docker image ứng dụng ──────────────────────
+# Tạo image chứa Ruby, gems, source code đã compile.
+# Image tên "ewm-app", dùng trên server production.
+
+run_step_2() {
+  echo ""
+  echo "=== Bước 2/5: Build Docker image ứng dụng ==="
+  cd "$DELIVERY_DIR"
+  docker build $PLATFORM -t ewm-app .
+  echo "Xong ($(elapsed))"
+}
+
+# ── Bước 3: Tải images PostgreSQL + nginx ─────────────────────
+# 2 images có sẵn trên Docker Hub, chỉ cần tải về.
+
+run_step_3() {
+  echo ""
+  echo "=== Bước 3/5: Tải images PostgreSQL + nginx ==="
+  docker pull $PLATFORM postgres:16-alpine
+  docker pull $PLATFORM nginx:alpine
+  echo "Xong ($(elapsed))"
+}
+
+# ── Bước 4: Đóng gói images thành file ───────────────────────
+# Gộp 3 images thành 1 file .tar.gz (~400MB).
+# File này sẽ copy sang server qua USB.
+
+run_step_4() {
+  echo ""
+  echo "=== Bước 4/5: Đóng gói images ==="
+  cd "$DELIVERY_DIR"
+  docker save ewm-app postgres:16-alpine nginx:alpine | gzip > ewm-images.tar.gz
+  SIZE=$(du -h ewm-images.tar.gz | cut -f1)
+  echo "Đã tạo ewm-images.tar.gz ($SIZE) ($(elapsed))"
+}
+
+# ── Bước 5: Tạo khóa bảo mật ─────────────────────────────────
+# SECRET_KEY_BASE dùng để mã hóa session/cookie.
+# Mỗi lần deploy cần 1 khóa riêng, không dùng chung.
+
+run_step_5() {
+  echo ""
+  echo "=== Bước 5/5: Tạo khóa bảo mật ==="
+  cd "$DELIVERY_DIR"
+  docker run --rm ewm-app bin/rails secret > SECRET_KEY_BASE.txt
+  echo "Đã tạo SECRET_KEY_BASE.txt ($(elapsed))"
+}
+
+# ── Verify: kiểm tra kết quả build ────────────────────────────
+# Chạy tự động sau build, hoặc chạy riêng: deploy/production/build verify
+
+run_verify() {
+  echo ""
+  echo "=== Kiểm tra kết quả build ==="
+  ERRORS=0
+
+  # 1. Thư mục delivery tồn tại
+  if [ -d "$DELIVERY_DIR" ]; then
+    echo "✓ Thư mục delivery tồn tại"
+  else
+    echo "✗ Thư mục delivery không tồn tại: $DELIVERY_DIR"
+    ERRORS=$((ERRORS + 1))
+  fi
+
+  # 2. Không có dấu vết Claude
+  CLAUDE_FILES=$(find "$DELIVERY_DIR" -name "CLAUDE.md" -o -name ".claude" 2>/dev/null | head -1)
+  CLAUDE_GIT=$(cd "$DELIVERY_DIR" 2>/dev/null && git log --all --grep="Claude" --oneline 2>/dev/null | wc -l | tr -d ' ')
+  if [ -z "$CLAUDE_FILES" ] && [ "$CLAUDE_GIT" = "0" ]; then
+    echo "✓ Không có dấu vết phát triển"
+  else
+    echo "✗ Còn dấu vết phát triển (files: $CLAUDE_FILES, git: $CLAUDE_GIT refs)"
+    ERRORS=$((ERRORS + 1))
+  fi
+
+  # 3. Docker images tồn tại
+  for IMG in ewm-app postgres:16-alpine nginx:alpine; do
+    if docker image inspect "$IMG" &>/dev/null; then
+      echo "✓ Image $IMG tồn tại"
+    else
+      echo "✗ Image $IMG không tồn tại"
+      ERRORS=$((ERRORS + 1))
+    fi
+  done
+
+  # 4. File images tar.gz
+  if [ -f "$DELIVERY_DIR/ewm-images.tar.gz" ]; then
+    SIZE=$(du -h "$DELIVERY_DIR/ewm-images.tar.gz" | cut -f1)
+    echo "✓ ewm-images.tar.gz tồn tại ($SIZE)"
+  else
+    echo "✗ ewm-images.tar.gz không tồn tại"
+    ERRORS=$((ERRORS + 1))
+  fi
+
+  # 5. SECRET_KEY_BASE.txt
+  if [ -f "$DELIVERY_DIR/SECRET_KEY_BASE.txt" ]; then
+    LEN=$(wc -c < "$DELIVERY_DIR/SECRET_KEY_BASE.txt" | tr -d ' ')
+    if [ "$LEN" -ge 64 ]; then
+      echo "✓ SECRET_KEY_BASE.txt tồn tại ($LEN ký tự)"
+    else
+      echo "✗ SECRET_KEY_BASE.txt quá ngắn ($LEN ký tự, cần >= 64)"
+      ERRORS=$((ERRORS + 1))
+    fi
+  else
+    echo "✗ SECRET_KEY_BASE.txt không tồn tại"
+    ERRORS=$((ERRORS + 1))
+  fi
+
+  # 6. compose.yml có image: ewm-app
+  if grep -q "image: ewm-app" "$DELIVERY_DIR/compose.yml" 2>/dev/null; then
+    echo "✓ compose.yml có image: ewm-app"
+  else
+    echo "✗ compose.yml thiếu image: ewm-app"
+    ERRORS=$((ERRORS + 1))
+  fi
+
+  # 7. deploy/production/server tồn tại và executable
+  if [ -x "$DELIVERY_DIR/deploy/production/server" ]; then
+    echo "✓ deploy/production/server executable"
+  else
+    echo "✗ deploy/production/server không tồn tại hoặc không executable"
+    ERRORS=$((ERRORS + 1))
+  fi
+
+  echo ""
+  if [ "$ERRORS" = "0" ]; then
+    echo "Kết quả: TẤT CẢ PASS — sẵn sàng copy sang USB. ($(elapsed))"
+  else
+    echo "Kết quả: $ERRORS LỖI — cần sửa trước khi deploy."
+  fi
+  return $ERRORS
+}
+
+# ── Chạy ─────────────────────────────────────────────────────
+
+check_docker
+
+if [ "$STEP" = "verify" ]; then
+  run_verify
+elif [ -n "$STEP" ]; then
+  case "$STEP" in
+    1) run_step_1 ;;
+    2) run_step_2 ;;
+    3) run_step_3 ;;
+    4) run_step_4 ;;
+    5) run_step_5 ;;
+    *) echo "Bước không hợp lệ: $STEP (chọn 1-5 hoặc verify)"; exit 1 ;;
+  esac
+else
+  run_step_1
+  run_step_2
+  run_step_3
+  run_step_4
+  run_step_5
+  run_verify
+fi

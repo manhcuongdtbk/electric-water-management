@@ -1,6 +1,6 @@
 # Hướng dẫn deploy — Hệ thống quản lý điện nội bộ Sư đoàn
 
-> **Phiên bản:** 1.2.0
+> **Phiên bản:** 2.1.0
 > **Ngày:** 24/05/2026
 > **Đối tượng:** Người thực hiện deploy (kỹ thuật viên, cố vấn IT, hoặc developer).
 > **Server:** Ubuntu 24.04, Docker, LAN nội bộ, không có internet.
@@ -55,59 +55,33 @@ docker --version
 docker compose version
 ```
 
-### A2. Tạo bản delivery
+### A2. Build bản production
 
 ```bash
 git clone <repo-url> electric-water-management
 cd electric-water-management
-bin/prepare-delivery
-cd ../electric-water-management-delivery
+deploy/production/build
 ```
 
-Từ bước này trở đi, tất cả thao tác đều trong thư mục `electric-water-management-delivery`.
-
-### A3. Build Docker images cho server
-
-Build image app và pull images postgres + nginx:
+Nếu server dùng CPU Intel/AMD (x86_64) mà máy chuẩn bị là Mac Apple Silicon:
 
 ```bash
-docker build -t ewm-app .
-docker pull postgres:16-alpine
-docker pull nginx:alpine
+deploy/production/build --platform amd64
 ```
 
-Nếu máy chuẩn bị là Mac Apple Silicon (ARM) mà server là Intel/AMD (x86_64), thêm `--platform linux/amd64`:
+Script tự động: tạo bản delivery sạch → build Docker images → save ra file → tạo SECRET_KEY_BASE. Mất 3-5 phút.
 
-```bash
-docker build --platform linux/amd64 -t ewm-app .
-docker pull --platform linux/amd64 postgres:16-alpine
-docker pull --platform linux/amd64 nginx:alpine
-```
+Kết quả nằm trong thư mục `../electric-water-management-delivery/`.
 
-### A4. Lưu images ra file
+### A3. Copy sang USB
 
-```bash
-docker save ewm-app postgres:16-alpine nginx:alpine | gzip > ewm-images.tar.gz
-```
-
-File này khoảng 500 MB - 1 GB.
-
-### A5. Tạo SECRET_KEY_BASE
-
-```bash
-docker run --rm ewm-app bin/rails secret
-```
-
-Lưu chuỗi 128 ký tự hex này lại — cần ở bước B4.
-
-### A6. Copy sang USB
-
-Copy 3 thứ vào USB:
+Copy toàn bộ thư mục `electric-water-management-delivery/` vào USB. Bên trong đã có:
 
 ```
-USB/
-├── electric-water-management-delivery/    # Thư mục source code đã dọn sạch
-└── ewm-images.tar.gz                      # Docker images đã build
+electric-water-management-delivery/
+├── (source code đã dọn sạch)
+├── ewm-images.tar.gz              # Docker images (~400MB)
+└── SECRET_KEY_BASE.txt             # Khóa mã hóa (cần ở bước B3)
 ```
 
 ---
@@ -116,80 +90,21 @@ USB/
 
 > Thực hiện trên server Ubuntu. Server cần có Docker đã cài sẵn (xem Phụ lục 1 nếu chưa cài).
 
-### B1. Copy file từ USB
+### B1. Cài đặt
+
+Cắm USB, chạy 1 lệnh:
 
 ```bash
-# Cắm USB, mount (Ubuntu thường tự mount vào /media/<user>/<tên USB>)
-cp -r /media/$USER/<tên-USB>/electric-water-management-delivery /opt/ewm
-cp /media/$USER/<tên-USB>/ewm-images.tar.gz /opt/ewm/
-cd /opt/ewm
+sudo /media/$USER/<tên-USB>/electric-water-management-delivery/deploy/production/server
 ```
 
-### B2. Load Docker images
+Script tự phát hiện cài mới hay cập nhật, và thực hiện:
+- Cài mới: copy source code vào `/opt/ewm` → load images → hỏi mật khẩu database → tạo .env → khởi động → hỏi thiết lập sao lưu tự động
+- Cập nhật: backup .env → thay code → load images → khởi động
 
-```bash
-docker load < ewm-images.tar.gz
-```
+Mất 1-2 phút. Khi xong, script hiện IP server và tài khoản đăng nhập.
 
-Mất 1-2 phút. Xác nhận:
-
-```bash
-docker images
-```
-
-Phải thấy 3 images: `ewm-app`, `postgres`, `nginx`.
-
-### B3. Tạo file cấu hình
-
-```bash
-cp .env.example .env
-```
-
-Mở file `.env`, điền giá trị:
-
-```
-POSTGRES_PASSWORD=<đặt mật khẩu mạnh, ví dụ: MatKhau$Manh2026>
-SECRET_KEY_BASE=<chuỗi 128 ký tự từ bước A5>
-```
-
-Hai dòng còn lại (`POSTGRES_USER`, `POSTGRES_DB`) giữ nguyên mặc định.
-
-### B4. Khởi động
-
-```bash
-docker compose up -d
-```
-
-Chờ 30-60 giây. Kiểm tra:
-
-```bash
-# Xem trạng thái 3 containers
-docker compose ps
-
-# Phải thấy cả 3 ở trạng thái "Up":
-# postgres  Up (healthy)
-# app       Up
-# nginx     Up
-```
-
-Nếu container nào không Up, xem lỗi:
-
-```bash
-docker compose logs <tên-container>
-# Ví dụ: docker compose logs app
-```
-
-### B5. Kiểm tra hoạt động
-
-Từ trình duyệt trên máy tính khác trong LAN, truy cập:
-
-```
-http://<IP-server>
-```
-
-Phải thấy trang đăng nhập tiếng Việt "Hệ thống quản lý điện nội bộ Sư đoàn".
-
-### B6. Đăng nhập lần đầu
+### B2. Đăng nhập lần đầu
 
 Đăng nhập bằng tài khoản kỹ thuật viên mặc định:
 
@@ -205,7 +120,7 @@ Sau đó đăng nhập tài khoản quản trị viên hệ thống:
 
 Cũng phải đổi mật khẩu.
 
-### B7. Xác nhận hoàn tất
+### B3. Xác nhận hoàn tất
 
 Checklist sau khi deploy:
 
@@ -305,12 +220,14 @@ sudo mount /dev/sdb1 /mnt/backup
 echo "/dev/sdb1 /mnt/backup ext4 defaults 0 2" | sudo tee -a /etc/fstab
 ```
 
-2. Chạy script thiết lập có sẵn:
+2. Chạy script thiết lập:
 
 ```bash
 cd /opt/ewm
-sudo ./script/setup-auto-backup /mnt/backup
+sudo ./deploy/production/server backup
 ```
+
+Script hỏi đường dẫn ổ cứng phụ rồi thiết lập tự động.
 
 Script tự động:
 - Sao lưu database (pg_dump) + file sao lưu trong app mỗi ngày lúc 2:00 sáng
@@ -323,29 +240,39 @@ Script tự động:
 
 Khi có phiên bản mới từ nhà phát triển:
 
-1. Trên máy có internet: lặp lại Phần A (tạo bản delivery mới + build images mới)
+1. Trên máy có internet: lặp lại Phần A
 2. Copy sang USB
 3. Trên server:
 
 ```bash
-cd /opt/ewm
-
-# Backup file cấu hình cũ
-cp .env /tmp/ewm-env-backup
-
-# Thay code mới
-docker compose down
-cd /opt
-rm -rf /opt/ewm
-cp -r /media/$USER/<tên-USB>/electric-water-management-delivery /opt/ewm
-cp /media/$USER/<tên-USB>/ewm-images.tar.gz /opt/ewm/
-cd /opt/ewm
-
-# Khôi phục cấu hình + load images mới
-cp /tmp/ewm-env-backup .env
-docker load < ewm-images.tar.gz
-docker compose up -d
+sudo /media/$USER/<tên-USB>/electric-water-management-delivery/deploy/production/server update /media/$USER/<tên-USB>/electric-water-management-delivery
 ```
+
+Hoặc nếu đã copy vào máy:
+
+```bash
+cd /opt/ewm
+sudo ./deploy/production/server update /đường-dẫn-thư-mục-mới
+```
+
+---
+
+## Kiểm tra trước khi deploy
+
+Trước khi copy sang USB hoặc sau khi deploy, chạy test tự động để đảm bảo mọi thứ hoạt động:
+
+```bash
+# Trên máy build (trước khi copy USB) — test toàn bộ flow: build → install → verify → update → login
+deploy/production/test
+
+# Test cross-platform (Mac ARM → server Intel/AMD)
+deploy/production/test --platform amd64
+
+# Trên server (sau khi deploy) — kiểm tra hệ thống đang chạy
+sudo ./deploy/production/server verify
+```
+
+Test tự động mất khoảng 2 phút. Nếu TẤT CẢ PASS thì sẵn sàng deploy.
 
 ---
 
@@ -458,6 +385,35 @@ docker --version
 ---
 
 ## Lịch sử thay đổi
+
+### v2.1.0 (24/05/2026)
+
+- Thêm section "Kiểm tra trước khi deploy" — hướng dẫn dùng `deploy/production/test` và `server verify`.
+
+### v2.0.0 (24/05/2026)
+
+- Gộp 6 scripts thành 2: `deploy/production/build` (Phần A) + `deploy/production/server` (Phần B).
+- `deploy/production/build` inline prepare-delivery — không còn file riêng.
+- `deploy/production/server` gộp install + update + backup + status. Auto-detect cài mới/cập nhật. Chọn bước riêng hoặc chạy tất cả.
+- Xóa: `bin/prepare-delivery`, `script/install.sh`, `script/setup-server`, `script/update-server`, `script/setup-auto-backup`.
+
+### v1.5.0 (24/05/2026)
+
+- Thêm `script/install.sh` — cài đặt 1 lệnh từ USB (copy + setup).
+- Phần B giảm từ 4 bước xuống 3 (B1 chạy install, B2 đăng nhập, B3 checklist).
+
+### v1.4.0 (24/05/2026)
+
+- Thêm `script/setup-server` — gộp B2-B5 thành 1 lệnh (load images, hỏi mật khẩu, tạo .env, khởi động, health check).
+- Thêm `script/update-server` — gộp cập nhật phiên bản thành 1 lệnh (backup .env, thay code, load images, khởi động).
+- Phần B giảm từ 7 bước xuống 4 (B1 copy USB, B2 chạy script, B3 đăng nhập, B4 checklist).
+- Cập nhật phiên bản giảm từ nhiều lệnh xuống 1 lệnh.
+
+### v1.3.0 (24/05/2026)
+
+- Thêm `deploy/production/build` — gộp A2-A5 thành 1 lệnh duy nhất.
+- Phần A giảm từ 6 bước xuống 3 (A1 cài Docker, A2 build, A3 copy USB).
+- SECRET_KEY_BASE tự tạo ra file `SECRET_KEY_BASE.txt` trong thư mục delivery.
 
 ### v1.2.0 (24/05/2026)
 
