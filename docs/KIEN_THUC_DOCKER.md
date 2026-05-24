@@ -1,6 +1,6 @@
 # Kiến thức Docker — Hệ thống quản lý điện nội bộ Sư đoàn
 
-> **Phiên bản:** 1.1.0
+> **Phiên bản:** 1.2.0
 > **Ngày:** 24/05/2026
 > **Đối tượng:** Developer hoặc người muốn hiểu hệ thống chạy thế nào ở mọi môi trường.
 > **Tiền đề:** Bạn biết code Rails nhưng chưa biết Docker và chưa từng deploy.
@@ -769,6 +769,12 @@ docker compose up -d      # Tạo lại (database trống, 2 tài khoản mặc 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.2.0 (24/05/2026)
+
+- Mục 1: thêm ghi chú "mục 1-10 mô tả production, mục 11 mô tả 4 môi trường".
+- Mục 11: sửa staging URL (bỏ "v2" sau khi đổi tên branch).
+- Mục 11 Test: sửa ví dụ RAILS_ENV sai.
 
 ### v1.1.0 (24/05/2026)
 

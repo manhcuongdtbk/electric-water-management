@@ -1,6 +1,6 @@
 # Hướng dẫn deploy — Hệ thống quản lý điện nội bộ Sư đoàn
 
-> **Phiên bản:** 1.0.0
+> **Phiên bản:** 1.1.0
 > **Ngày:** 24/05/2026
 > **Đối tượng:** Người thực hiện deploy (kỹ thuật viên, cố vấn IT, hoặc developer).
 > **Server:** Ubuntu 24.04, Docker, LAN nội bộ, không có internet.
@@ -476,6 +476,13 @@ docker --version
 ---
 
 ## Lịch sử thay đổi
+
+### v1.1.0 (24/05/2026)
+
+- A2: bỏ `pip3 install git-filter-repo` (script tự cài).
+- A3: sửa dùng `docker build -t ewm-app` thay `docker compose build` (tên image khớp docker save).
+- Yêu cầu phần cứng: ổ cứng phụ chuyển từ khuyến nghị sang bắt buộc.
+- Cập nhật phiên bản: thêm bước backup `.env` trước khi xóa code cũ.
 
 ### v1.0.0 (24/05/2026)
 
