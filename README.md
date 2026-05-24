@@ -72,6 +72,7 @@ bin/docker rspec                        # Toàn bộ
 bin/docker rspec spec/models            # Model specs
 bin/docker rspec spec/requests          # Request specs
 bin/docker rspec spec/system            # System specs (headless Chrome)
+bundle exec parallel_rspec spec/        # Song song (chạy local, không qua Docker)
 ```
 
 ## Tài liệu
