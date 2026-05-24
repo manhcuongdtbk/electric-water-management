@@ -95,8 +95,6 @@ Railway auto-deploy khi push branch main. Cấu hình trong `railway.json`.
 
 3 containers (PostgreSQL + Rails + nginx). Deploy trên máy Ubuntu LAN nội bộ (offline).
 
-```bash
-cp .env.example .env
-# Điền POSTGRES_PASSWORD, SECRET_KEY_BASE, RAILS_MASTER_KEY
-docker compose up -d
-```
+**Hướng dẫn chi tiết:** `docs/HUONG_DAN_DEPLOY.md`
+
+**Quan trọng:** Phải chạy `bin/prepare-delivery` để tạo bản sạch trước khi ship cho khách. Không ship source code trực tiếp từ repo này.
