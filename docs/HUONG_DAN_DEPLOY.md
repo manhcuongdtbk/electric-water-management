@@ -52,24 +52,17 @@ docker --version
 docker compose version
 ```
 
-### A2. Lấy source code
+### A2. Tạo bản delivery
 
 ```bash
 git clone <repo-url> electric-water-management
 cd electric-water-management
-```
-
-Hoặc nếu chưa có git: tải file zip source code rồi giải nén.
-
-### A3. Chuẩn bị bản delivery (nếu có dấu vết phát triển)
-
-```bash
 pip3 install git-filter-repo
 bin/prepare-delivery
 cd ../electric-water-management-delivery
 ```
 
-Nếu source code đã sạch (không có thư mục `.claude` hay file `CLAUDE.md`), bỏ qua bước này.
+Từ bước này trở đi, tất cả thao tác đều trong thư mục `electric-water-management-delivery`.
 
 ### A4. Build Docker images cho server
 
