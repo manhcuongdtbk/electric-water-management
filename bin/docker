@@ -53,21 +53,21 @@ case "${1}" in
     ;;
   rspec)
     shift
-    $COMPOSE exec "${ENV_ARGS[@]}" app bundle exec rspec "$@"
+    $COMPOSE exec -e RAILS_ENV=test app bundle exec rspec "$@"
     ;;
   prspec)
     shift
     if echo "$@" | grep -q -- "-n"; then
-      $COMPOSE exec "${ENV_ARGS[@]}" app bundle exec parallel_rspec spec/ "$@"
+      $COMPOSE exec -e RAILS_ENV=test app bundle exec parallel_rspec spec/ "$@"
     else
       NCPU=$($COMPOSE exec -T app nproc)
       N=$(( NCPU / 2 ))
       [ "$N" -lt 2 ] && N=2
-      $COMPOSE exec "${ENV_ARGS[@]}" app bundle exec parallel_rspec spec/ -n "$N" "$@"
+      $COMPOSE exec -e RAILS_ENV=test app bundle exec parallel_rspec spec/ -n "$N" "$@"
     fi
     ;;
   prspec:setup)
-    $COMPOSE exec "${ENV_ARGS[@]}" app bundle exec rails parallel:setup
+    $COMPOSE exec -e RAILS_ENV=test app bundle exec rails parallel:setup
     ;;
   console)
     $COMPOSE exec "${ENV_ARGS[@]}" app bundle exec rails console
