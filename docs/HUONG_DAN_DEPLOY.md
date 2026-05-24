@@ -32,7 +32,7 @@ Server không cần internet. Toàn bộ phần mềm được chuẩn bị trư
 | CPU | 2 cores | 4 cores |
 | RAM | 4 GB | 8-16 GB |
 | Ổ cứng chính | 50 GB SSD | 512 GB SSD |
-| Ổ cứng phụ | — | 512 GB SSD (sao lưu) |
+| Ổ cứng phụ | 512 GB SSD (sao lưu) | — |
 | Mạng | LAN, IP cố định | — |
 | Hệ điều hành | Ubuntu 24.04 | — |
 
@@ -60,7 +60,6 @@ docker compose version
 ```bash
 git clone <repo-url> electric-water-management
 cd electric-water-management
-pip3 install git-filter-repo
 bin/prepare-delivery
 cd ../electric-water-management-delivery
 ```
@@ -69,14 +68,15 @@ Từ bước này trở đi, tất cả thao tác đều trong thư mục `elect
 
 ### A3. Build Docker images cho server
 
-Server dùng CPU Intel/AMD (x86_64). Nếu máy chuẩn bị cũng là x86_64:
+Build image app và pull images postgres + nginx:
 
 ```bash
-docker compose build
-docker compose pull
+docker build -t ewm-app .
+docker pull postgres:16-alpine
+docker pull nginx:alpine
 ```
 
-Nếu máy chuẩn bị là Mac Apple Silicon (ARM), phải build cho x86_64:
+Nếu máy chuẩn bị là Mac Apple Silicon (ARM) mà server là Intel/AMD (x86_64), thêm `--platform linux/amd64`:
 
 ```bash
 docker build --platform linux/amd64 -t ewm-app .
@@ -346,17 +346,24 @@ Khi có phiên bản mới từ nhà phát triển:
 3. Trên server:
 
 ```bash
+cd /opt/ewm
+
+# Backup file cấu hình cũ
+cp .env /tmp/ewm-env-backup
+
+# Thay code mới
+docker compose down
 cd /opt
-docker compose -f /opt/ewm/compose.yml down
 rm -rf /opt/ewm
 cp -r /media/$USER/<tên-USB>/electric-water-management-delivery /opt/ewm
 cp /media/$USER/<tên-USB>/ewm-images.tar.gz /opt/ewm/
 cd /opt/ewm
+
+# Khôi phục cấu hình + load images mới
+cp /tmp/ewm-env-backup .env
 docker load < ewm-images.tar.gz
 docker compose up -d
 ```
-
-File `.env` cần tạo lại (copy từ bản cũ hoặc tạo mới từ `.env.example`).
 
 ---
 
