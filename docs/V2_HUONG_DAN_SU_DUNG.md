@@ -389,16 +389,16 @@ Vào trang **Đơn giá điện**, bấm **Mở kỳ mới**. Hệ thống tự 
 - Khai báo thêm đầu mối thuộc khu vực nếu cần (xem mục F1).
 
 **Bước 4 — Hệ thống: Tính toán.**
-Vào trang **Bảng tính tiền** hoặc **Tổng quan**. Lần đầu mở trang, hệ thống tự tính toán. Bấm nút **Tính toán lại** khi có thay đổi dữ liệu (sửa chỉ số, cập nhật quân số, thay đổi cấu hình). Nếu chưa có đủ dữ liệu, hệ thống vẫn tính với dữ liệu hiện có và hiển thị cảnh báo (đơn vị nào chưa nhập, khu vực nào thiếu công tơ tổng, trạm bơm chưa có số liệu). Kết quả chỉ chính xác khi tất cả đơn vị đã nhập xong.
+Vào trang **Bảng tính tiền** hoặc **Tổng quan**. Lần đầu mở trang, hệ thống tự tính toán. Bấm nút **Tính toán lại** khi có thay đổi dữ liệu (sửa chỉ số, cập nhật quân số, thay đổi cấu hình). Nếu chưa có đủ dữ liệu, hệ thống vẫn tính với dữ liệu hiện có và hiển thị cảnh báo (đơn vị nào chưa nhập, khu vực nào thiếu công tơ tổng, trạm bơm chưa có số liệu). Kết quả chỉ chính xác khi tất cả đơn vị đã nhập xong (xem mục E2 — bảng tính tiền).
 
 **Bước 5 — Kiểm tra kết quả.**
 
-- Quản trị viên đơn vị: xem bảng tính tiền đơn vị mình, đi thu tiền.
-- Chỉ huy đơn vị: xem theo dõi.
-- Quản trị viên hệ thống: xem bảng gộp tất cả đơn vị, tổng quan, so sánh kỳ.
+- Quản trị viên đơn vị: xem bảng tính tiền đơn vị mình, đi thu tiền (xem mục E2).
+- Chỉ huy đơn vị: xem theo dõi (xem mục E1).
+- Quản trị viên hệ thống: xem bảng gộp tất cả đơn vị, tổng quan, so sánh kỳ (xem mục E1, E2, E3).
 
 **Bước 6 — Quản trị viên hệ thống: Đóng kỳ.**
-Vào trang **Đơn giá điện**, bấm **Đóng kỳ hiện tại**. Sau khi đóng, không ai sửa được số liệu kỳ đó nữa.
+Vào trang **Đơn giá điện**, bấm **Đóng kỳ hiện tại**. Sau khi đóng, không ai sửa được số liệu kỳ đó nữa (xem mục F7).
 
 ### D1. Chi tiết trang Chỉ số đầu mối
 
