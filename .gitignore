@@ -47,3 +47,6 @@
 # macOS Finder metadata (apply globally — covers root, docs/, and any subdir)
 .DS_Store
 /chromedriver/
+node_modules/
+tmp/capture.mjs
+tmp/screenshot_seed.rb
