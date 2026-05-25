@@ -563,6 +563,10 @@ Trang **Khối** và **Nhóm** quản lý cấu trúc hiển thị trên bảng 
 
 Khối và nhóm không ảnh hưởng tính toán. Xóa khối hoặc nhóm không mất dữ liệu — đầu mối bên trong chuyển thành trực tiếp thuộc đơn vị.
 
+![Khối](images/14_khoi_danh_sach.png)
+
+![Nhóm](images/15_nhom_danh_sach.png)
+
 ### F3. Cấu hình đơn vị
 
 Trang **Cấu hình đơn vị** cho phép thiết lập cấu hình công cộng và khoản trừ của đơn vị. Quản trị viên hệ thống sửa được mọi đơn vị. Quản trị viên đơn vị sửa đơn vị mình (nếu là đơn vị quản lý khu vực thì thêm cột Khác cho đầu mối sinh hoạt thuộc khu vực). Chỉ huy đơn vị xem ở chế độ chỉ đọc. Các thông tin thiết lập:
