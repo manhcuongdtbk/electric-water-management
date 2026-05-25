@@ -1,6 +1,6 @@
 # Hướng dẫn sử dụng — Hệ thống quản lý điện nội bộ Sư đoàn
 
-> **Phiên bản:** 1.2.0
+> **Phiên bản:** 1.3.0
 > **Ngày:** 25/05/2026
 > **Đối tượng:** Tất cả người dùng hệ thống (kỹ thuật viên, quản trị viên hệ thống, quản trị viên đơn vị, chỉ huy đơn vị)
 > **Ghi chú:** Tài liệu sẽ được cập nhật theo phản hồi thực tế.
@@ -21,8 +21,11 @@
   - [B2. Đổi mật khẩu lần đầu](#b2-đổi-mật-khẩu-lần-đầu)
   - [B3. Tự đổi mật khẩu](#b3-tự-đổi-mật-khẩu)
   - [B4. Giao diện chung](#b4-giao-diện-chung)
+  - [B5. Bắt đầu nhanh theo vai trò](#b5-bắt-đầu-nhanh-theo-vai-trò)
 - [C. Thiết lập ban đầu](#c-thiết-lập-ban-đầu)
 - [D. Thao tác hàng tháng](#d-thao-tác-hàng-tháng)
+  - [D1. Chi tiết trang Chỉ số đầu mối](#d1-chi-tiết-trang-chỉ-số-đầu-mối)
+  - [D2. Chi tiết trang Chỉ số bơm nước](#d2-chi-tiết-trang-chỉ-số-bơm-nước)
 - [E. Xem kết quả](#e-xem-kết-quả)
   - [E1. Tổng quan](#e1-tổng-quan)
   - [E2. Bảng tính tiền](#e2-bảng-tính-tiền)
@@ -253,6 +256,49 @@ Mọi trang danh sách đều có: tìm kiếm, sắp xếp theo cột, phân tr
 
 **Khi gặp vấn đề:** Liên hệ kỹ thuật viên (vấn đề kỹ thuật, quên mật khẩu, sao lưu/phục hồi) hoặc quản trị viên hệ thống (vấn đề nghiệp vụ, cấu hình, mở/đóng kỳ).
 
+### B5. Bắt đầu nhanh theo vai trò
+
+Tùy vai trò, bạn chỉ cần đọc một số mục. Dưới đây là hướng dẫn nhanh cho từng vai trò.
+
+**Nếu bạn là chỉ huy đơn vị:**
+
+Bạn chỉ xem, không thao tác. Mọi ô nhập trên hệ thống đều bị khóa, các nút tạo/sửa/xóa/lưu bị ẩn. Bạn cần đọc:
+
+- Mục B (đăng nhập, đổi mật khẩu).
+- Mục E1 (tổng quan đơn vị mình — xem tình hình chung: ai thiếu, ai thừa, tổng tiền).
+- Mục E2 (bảng tính tiền — xem chi tiết từng đầu mối trong đơn vị).
+- Mục E3 (tra cứu lịch sử — so sánh tháng này với tháng trước).
+
+Nếu đơn vị bạn là đơn vị quản lý khu vực, bạn thấy thêm một số trang về khu vực (nhập số điện lực, chỉ số bơm nước, khu vực, phân bổ bơm nước) — tất cả ở chế độ chỉ xem.
+
+**Nếu bạn là quản trị viên đơn vị:**
+
+Bạn quản lý đơn vị mình. Việc chính hàng tháng:
+
+1. Nhập chỉ số công tơ cho đơn vị mình (mục D bước 2, chi tiết tại D1).
+2. Cập nhật quân số nếu có thay đổi (mục F1).
+3. Xem bảng tính tiền, đi thu tiền (mục E2).
+
+Lần đầu tiên, đọc thêm mục C bước 9 (khai báo đầu mối, công tơ, khối, nhóm, cấu hình đơn vị). Nếu đơn vị bạn là đơn vị quản lý khu vực, đọc thêm mục C bước 8, D bước 3, D2, F4, F6.
+
+**Nếu bạn là quản trị viên hệ thống:**
+
+Bạn quản lý toàn hệ thống. Đọc toàn bộ tài liệu, đặc biệt:
+
+- Mục C (thiết lập ban đầu — 9 bước).
+- Mục D (quy trình hàng tháng — mở kỳ, đóng kỳ).
+- Mục F7 (đơn giá điện, mở/đóng/mở lại kỳ).
+- Mục G1 (tạo tài khoản cho mọi người).
+
+**Nếu bạn là kỹ thuật viên:**
+
+Bạn chỉ làm việc kỹ thuật, không xem dữ liệu nghiệp vụ. Đọc:
+
+- Mục B (đăng nhập, đổi mật khẩu).
+- Mục G1 (quản lý tài khoản — tạo, xóa, đặt lại mật khẩu).
+- Mục G2 (nhật ký hoạt động).
+- Mục G3 (sao lưu dữ liệu — tạo, xóa bản sao lưu, phục hồi qua dòng lệnh).
+
 ---
 
 ## C. Thiết lập ban đầu
@@ -335,6 +381,44 @@ Vào trang **Bảng tính tiền** hoặc **Tổng quan**. Lần đầu mở tra
 
 **Bước 6 — Quản trị viên hệ thống: Đóng kỳ.**
 Vào trang **Đơn giá điện**, bấm **Đóng kỳ hiện tại**. Sau khi đóng, không ai sửa được số liệu kỳ đó nữa.
+
+### D1. Chi tiết trang Chỉ số đầu mối
+
+Trang **Chỉ số đầu mối** dùng để nhập chỉ số công tơ đầu mối sinh hoạt và công cộng. Trang hiển thị dưới dạng bảng — mỗi dòng là 1 công tơ, mỗi cột là 1 ô nhập.
+
+**Cách nhập:**
+
+- **Số đầu kỳ:** Hệ thống tự điền sẵn từ số cuối kỳ tháng trước. Có thể sửa nếu cần (ví dụ: phát hiện sai sót tháng trước).
+- **Số cuối kỳ:** Nhập số mới đọc được trên công tơ.
+- **Sử dụng:** Hệ thống tự tính = cuối kỳ − đầu kỳ. Không cần nhập.
+- Bấm **Lưu** để lưu toàn bộ trang 1 lần (không cần lưu từng dòng).
+
+**Tìm kiếm:** Gõ tên đầu mối vào ô tìm kiếm để tìm nhanh.
+
+**Ai thấy gì:**
+
+| Vai trò | Thấy công tơ nào | Sửa được không |
+|---|---|---|
+| Quản trị viên hệ thống | Tất cả (có ô lọc khu vực và đơn vị, có cột Khu vực và Đơn vị) | Có |
+| Quản trị viên đơn vị | Công tơ đơn vị mình | Có |
+| Quản trị viên đơn vị quản lý khu vực | Công tơ đơn vị mình + đầu mối thuộc khu vực | Có |
+| Chỉ huy đơn vị | Như quản trị viên đơn vị cùng loại | Không (chỉ xem) |
+| Kỹ thuật viên | Không thấy trang này | — |
+
+### D2. Chi tiết trang Chỉ số bơm nước
+
+Trang **Chỉ số bơm nước** dùng để nhập chỉ số công tơ bơm nước (trạm bơm). Giao diện giống trang Chỉ số đầu mối — bảng, tìm kiếm, lưu toàn bộ 1 lần.
+
+**Ai thấy gì:**
+
+| Vai trò | Thấy công tơ nào | Sửa được không |
+|---|---|---|
+| Quản trị viên hệ thống | Tất cả (có ô lọc khu vực, có cột Khu vực) | Có |
+| Quản trị viên đơn vị quản lý khu vực | Công tơ bơm nước khu vực mình | Có |
+| Chỉ huy đơn vị quản lý khu vực | Công tơ bơm nước khu vực mình | Không (chỉ xem) |
+| Quản trị viên đơn vị (không quản lý khu vực) | Không có công tơ bơm nước | — |
+| Chỉ huy đơn vị (không quản lý khu vực) | Không có công tơ bơm nước | — |
+| Kỹ thuật viên | Không thấy trang này | — |
 
 ---
 
@@ -550,7 +634,23 @@ Trang **Sao lưu dữ liệu** (chỉ kỹ thuật viên) cho phép:
 - **Tạo bản sao lưu:** Sao lưu toàn bộ dữ liệu hệ thống. Tối đa lưu 3 bản — phải xóa bản cũ trước khi tạo bản mới.
 - **Xóa bản sao lưu:** Xóa bản sao lưu không cần thiết.
 
-Phục hồi dữ liệu từ bản sao lưu thực hiện qua dòng lệnh trên máy chủ (không qua giao diện) vì phục hồi ghi đè toàn bộ dữ liệu hiện tại — quá rủi ro để đặt nút trên giao diện. Liên hệ kỹ thuật viên khi cần phục hồi.
+**Phục hồi dữ liệu** thực hiện qua dòng lệnh trên máy chủ (không qua giao diện) vì phục hồi ghi đè toàn bộ dữ liệu hiện tại — quá rủi ro để đặt nút trên giao diện.
+
+Khi cần phục hồi, kỹ thuật viên đăng nhập vào máy chủ và chạy lệnh (thay tên file bản sao lưu vào chỗ ngoặc vuông):
+
+```
+docker compose exec app bin/rails "backups:restore[tên_file_bản_sao_lưu.dump]"
+```
+
+Ví dụ: nếu bản sao lưu tên `backup_20260525_143000.dump`, chạy:
+
+```
+docker compose exec app bin/rails "backups:restore[backup_20260525_143000.dump]"
+```
+
+Hệ thống hiện thông tin bản sao lưu (tên, kích thước, ngày tạo, người tạo) và yêu cầu gõ `YES` (chữ hoa) để xác nhận. Gõ khác thì hủy.
+
+**Lưu ý:** phục hồi sẽ ghi đè toàn bộ dữ liệu hiện tại — không thể hoàn tác. Nên tạo 1 bản sao lưu mới trước khi phục hồi để phòng trường hợp cần quay lại. Tên file bản sao lưu xem trên trang Sao lưu dữ liệu trong hệ thống.
 
 ---
 
@@ -630,6 +730,13 @@ Phục hồi dữ liệu từ bản sao lưu thực hiện qua dòng lệnh trê
 ---
 
 ## Lịch sử thay đổi
+
+### v1.3.0 (25/05/2026)
+
+- Thêm mục B5 "Bắt đầu nhanh theo vai trò": hướng dẫn riêng cho từng vai trò (chỉ huy đơn vị, quản trị viên đơn vị, quản trị viên hệ thống, kỹ thuật viên) — đọc mục nào, bỏ qua mục nào, quy trình hàng tháng.
+- Thêm mục D1 "Chi tiết trang Chỉ số đầu mối": cách nhập, tìm kiếm, bảng quyền theo vai trò (ai thấy gì, sửa được không).
+- Thêm mục D2 "Chi tiết trang Chỉ số bơm nước": tương tự D1, bảng quyền theo vai trò.
+- Mục G3: bổ sung lệnh phục hồi cụ thể trên máy chủ (kèm ví dụ), mô tả quy trình xác nhận, lưu ý nên tạo bản sao lưu mới trước khi phục hồi.
 
 ### v1.2.0 (25/05/2026)
 
