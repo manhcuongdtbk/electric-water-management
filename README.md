@@ -81,6 +81,7 @@ bin/docker prspec:setup                 # Tạo databases cho test song song (ch
 
 | File | Nội dung |
 |---|---|
+| `docs/hdsd/V2_HUONG_DAN_SU_DUNG.md` | Hướng dẫn sử dụng (cho tất cả người dùng, có ảnh chụp màn hình) |
 | `docs/V2_XAC_NHAN_NGHIEP_VU.md` | Nghiệp vụ (nguồn sự thật duy nhất) |
 | `docs/V2_THIET_KE_HE_THONG.md` | Thiết kế hệ thống |
 | `docs/V2_HANH_VI_HE_THONG.md` | Hành vi runtime, 6 vai trò, 3 trạng thái kỳ |
@@ -88,6 +89,14 @@ bin/docker prspec:setup                 # Tạo databases cho test song song (ch
 | `docs/KIEN_THUC_DOCKER.md` | Kiến thức Docker, 4 môi trường, deploy |
 | `docs/HUONG_DAN_DEPLOY.md` | Hướng dẫn deploy production (cho kỹ thuật viên) |
 | `CLAUDE.md` | Quy tắc code, convention |
+
+**Cập nhật ảnh hướng dẫn sử dụng** khi giao diện thay đổi:
+
+```bash
+docs/hdsd/capture-screenshots
+```
+
+Script tự reset database, tạo dữ liệu mẫu, chụp lại toàn bộ ảnh. Thêm/sửa trang chụp: sửa mảng `PAGES` trong `docs/hdsd/capture.mjs`.
 
 ## Staging
 
