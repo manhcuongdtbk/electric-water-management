@@ -373,13 +373,20 @@ Vào trang **Đơn giá điện**, bấm **Mở kỳ mới**. Hệ thống tự 
 **Bước 3 — Đơn vị quản lý khu vực (hoặc quản trị viên hệ thống): Nhập liệu phần khu vực.**
 
 - Vào trang **Nhập số điện lực**, nhập số sử dụng công tơ tổng.
+
+![Nhập số điện lực — Quản trị viên đơn vị quản lý khu vực](images/31_nhap_so_dien_luc_ua_zm.png)
+
 - Vào trang **Chỉ số bơm nước**, nhập số cuối kỳ công tơ bơm nước.
+
+![Chỉ số bơm nước — Quản trị viên đơn vị quản lý khu vực](images/30_chi_so_bom_nuoc_ua_zm.png)
+
 - Vào trang **Chỉ số đầu mối**, nhập số cuối kỳ công tơ đầu mối thuộc khu vực (nếu có).
+
+![Chỉ số đầu mối — Quản trị viên đơn vị quản lý khu vực](images/29_chi_so_dau_moi_ua_zm.png)
+
 - Cập nhật quân số đầu mối thuộc khu vực nếu có thay đổi.
 - Cập nhật phân bổ bơm nước nếu cần.
 - Khai báo thêm đầu mối thuộc khu vực nếu cần.
-
-![Nhập số điện lực — Quản trị viên đơn vị quản lý khu vực](images/31_nhap_so_dien_luc_ua_zm.png)
 
 **Bước 4 — Hệ thống: Tính toán.**
 Vào trang **Bảng tính tiền** hoặc **Tổng quan**. Lần đầu mở trang, hệ thống tự tính toán. Bấm nút **Tính toán lại** khi có thay đổi dữ liệu (sửa chỉ số, cập nhật quân số, thay đổi cấu hình). Nếu chưa có đủ dữ liệu, hệ thống vẫn tính với dữ liệu hiện có và hiển thị cảnh báo (đơn vị nào chưa nhập, khu vực nào thiếu công tơ tổng, trạm bơm chưa có số liệu). Kết quả chỉ chính xác khi tất cả đơn vị đã nhập xong.
