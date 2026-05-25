@@ -384,9 +384,9 @@ Vào trang **Đơn giá điện**, bấm **Mở kỳ mới**. Hệ thống tự 
 
 ![Chỉ số đầu mối — Quản trị viên đơn vị quản lý khu vực](images/29_chi_so_dau_moi_ua_zm.png)
 
-- Cập nhật quân số đầu mối thuộc khu vực nếu có thay đổi.
-- Cập nhật phân bổ bơm nước nếu cần.
-- Khai báo thêm đầu mối thuộc khu vực nếu cần.
+- Cập nhật quân số đầu mối thuộc khu vực nếu có thay đổi (xem mục F1).
+- Cập nhật phân bổ bơm nước nếu cần (xem mục F6).
+- Khai báo thêm đầu mối thuộc khu vực nếu cần (xem mục F1).
 
 **Bước 4 — Hệ thống: Tính toán.**
 Vào trang **Bảng tính tiền** hoặc **Tổng quan**. Lần đầu mở trang, hệ thống tự tính toán. Bấm nút **Tính toán lại** khi có thay đổi dữ liệu (sửa chỉ số, cập nhật quân số, thay đổi cấu hình). Nếu chưa có đủ dữ liệu, hệ thống vẫn tính với dữ liệu hiện có và hiển thị cảnh báo (đơn vị nào chưa nhập, khu vực nào thiếu công tơ tổng, trạm bơm chưa có số liệu). Kết quả chỉ chính xác khi tất cả đơn vị đã nhập xong.
