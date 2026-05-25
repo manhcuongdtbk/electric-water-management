@@ -360,9 +360,13 @@ Sau khi thiết lập ban đầu, hàng tháng lặp lại 6 bước. Bước 2 
 **Bước 1 — Quản trị viên hệ thống: Mở kỳ mới.**
 Vào trang **Đơn giá điện**, bấm **Mở kỳ mới**. Hệ thống tự tính tháng/năm (kỳ trước + 1 tháng). Số đầu kỳ công tơ, quân số, cấu hình đơn vị, phân bổ bơm nước, v.v. được kế thừa tự động từ kỳ trước. Cập nhật đơn giá nếu có thay đổi.
 
+![Đơn giá điện — nơi mở kỳ mới](images/22_don_gia_dien.png)
+
 **Bước 2 — Quản trị viên đơn vị: Nhập liệu đơn vị.**
 
 - Vào trang **Chỉ số đầu mối**. Trang hiển thị tất cả công tơ sinh hoạt và công cộng của đơn vị mình dưới dạng bảng. Số đầu kỳ đã có sẵn (kế thừa từ kỳ trước, có thể sửa nếu cần). Nhập số cuối kỳ cho từng công tơ. Bấm **Lưu** để lưu toàn bộ trang 1 lần.
+
+![Chỉ số đầu mối — Quản trị viên đơn vị](images/38_chi_so_dau_moi_ua.png)
 - Nếu quân số có thay đổi: vào trang **Đầu mối**, bấm sửa đầu mối sinh hoạt cần cập nhật, sửa quân số theo nhóm cấp bậc.
 - Nếu cấu hình đơn vị cần cập nhật: vào trang **Cấu hình đơn vị**, sửa tỷ lệ hoặc giá trị cột Khác.
 
