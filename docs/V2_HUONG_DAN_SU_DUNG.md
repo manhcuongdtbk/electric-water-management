@@ -559,13 +559,14 @@ Bấm vào tên đầu mối hoặc bấm **Sửa**. Có thể sửa tên, quân
 Trang **Khối** và **Nhóm** quản lý cấu trúc hiển thị trên bảng tính tiền. Khối và nhóm chỉ áp dụng cho đầu mối sinh hoạt.
 
 - **Khối:** Thuộc 1 đơn vị. Ví dụ: "Phòng Tham mưu", "Phòng Chính trị".
-- **Nhóm:** Thuộc 1 khối (nhóm trong khối) hoặc thuộc đơn vị trực tiếp (nhóm không gộp vào khối). Ví dụ: "Ban Tác huấn".
-
-Khối và nhóm không ảnh hưởng tính toán. Xóa khối hoặc nhóm không mất dữ liệu — đầu mối bên trong chuyển thành trực tiếp thuộc đơn vị.
 
 ![Khối](images/14_khoi_danh_sach.png)
 
+- **Nhóm:** Thuộc 1 khối (nhóm trong khối) hoặc thuộc đơn vị trực tiếp (nhóm không gộp vào khối). Ví dụ: "Ban Tác huấn".
+
 ![Nhóm](images/15_nhom_danh_sach.png)
+
+Khối và nhóm không ảnh hưởng tính toán. Xóa khối hoặc nhóm không mất dữ liệu — đầu mối bên trong chuyển thành trực tiếp thuộc đơn vị.
 
 ### F3. Cấu hình đơn vị
 
