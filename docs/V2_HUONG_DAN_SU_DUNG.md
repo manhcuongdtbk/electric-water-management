@@ -501,7 +501,9 @@ Trang **Tra cứu lịch sử** cho phép:
 
 - **Xem kỳ cũ:** Chọn 1 kỳ bất kỳ để xem bảng tính tiền hoặc tổng quan của kỳ đó.
 - **So sánh 2 kỳ:** Chọn kỳ A và kỳ B, hệ thống hiển thị cạnh nhau cùng đầu mối với 2 cột số liệu và cột chênh lệch. Nếu đầu mối chỉ có ở 1 kỳ (đã xóa hoặc mới tạo), dòng vẫn hiển thị với cột kỳ thiếu để trống, kèm ghi chú.
-- **Xem theo khoảng thời gian:** Chọn tháng, quý, năm, hoặc tùy chọn ngày bắt đầu đến ngày kết thúc.
+- **Xem theo khoảng thời gian:** Chọn kỳ bắt đầu và kỳ kết thúc, hệ thống liệt kê các kỳ trong khoảng đó kèm tổng thâm điện và thành tiền.
+
+![Tra cứu lịch sử — Theo khoảng thời gian](images/75_tra_cuu_theo_khoang_thoi_gian.png)
 
 Quản trị viên đơn vị và chỉ huy đơn vị chỉ xem lịch sử đơn vị mình. Quản trị viên hệ thống xem tất cả.
 
