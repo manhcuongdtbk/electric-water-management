@@ -1,7 +1,7 @@
 # Hướng dẫn sử dụng — Hệ thống quản lý điện nội bộ Sư đoàn
 
-> **Phiên bản:** 1.6.0
-> **Ngày:** 25/05/2026
+> **Phiên bản:** 1.7.0
+> **Ngày:** 26/05/2026
 > **Đối tượng:** Tất cả người dùng hệ thống (kỹ thuật viên, quản trị viên hệ thống, quản trị viên đơn vị, chỉ huy đơn vị)
 > **Ghi chú:** Tài liệu sẽ được cập nhật theo phản hồi thực tế.
 
@@ -201,6 +201,7 @@ Lần đầu đăng nhập, hệ thống bắt buộc đổi mật khẩu. Nhậ
 Bấm tên tài khoản ở góc trên bên phải, chọn **Đổi mật khẩu**. Nhập mật khẩu hiện tại, nhập mật khẩu mới (theo yêu cầu như trên), bấm **Lưu**.
 
 ![Tự đổi mật khẩu](images/49_doi_mat_khau.png)
+
 Nếu quên mật khẩu: liên hệ kỹ thuật viên hoặc quản trị viên hệ thống để được đặt lại mật khẩu. Hệ thống không có tính năng quên mật khẩu qua thư điện tử.
 
 ### B4. Giao diện chung
@@ -326,7 +327,7 @@ Vào trang **Khu vực** (xem mục F4), bấm **Tạo mới**. Nhập tên khu 
 Vào trang **Đơn vị** (xem mục F5), bấm **Tạo mới**. Nhập tên đơn vị, chọn khu vực thuộc về (không đổi được sau khi tạo). Lặp lại cho tất cả đơn vị. Lưu ý: khi tạo đơn vị đầu tiên trong khu vực, hệ thống tự gán đơn vị đó làm đơn vị quản lý khu vực.
 
 **Bước 6 — Quản trị viên hệ thống: Chỉ định đơn vị quản lý khu vực.**
-Nếu cần đổi đơn vị quản lý khu vực (khác đơn vị được gán tự động ở bước 5): vào trang **Khu vực**, bấm sửa khu vực, chọn đơn vị quản lý mới từ ô chọn (chỉ hiện đơn vị thuộc khu vực đó).
+Nếu cần đổi đơn vị quản lý khu vực (khác đơn vị được gán tự động ở bước 5): vào trang **Khu vực** (xem mục F4), bấm sửa khu vực, chọn đơn vị quản lý mới từ ô chọn (chỉ hiện đơn vị thuộc khu vực đó).
 
 **Bước 7 — Quản trị viên hệ thống: Tạo tài khoản.**
 Vào trang **Tài khoản** (xem mục G1), tạo tài khoản cho quản trị viên đơn vị và chỉ huy đơn vị. Mỗi tài khoản cần: tên đăng nhập, mật khẩu, tên hiển thị, vai trò, đơn vị (bắt buộc cho quản trị viên đơn vị và chỉ huy đơn vị).
@@ -338,7 +339,7 @@ Quản trị viên đơn vị quản lý khu vực đăng nhập (đổi mật k
 - Tạo đầu mối sinh hoạt thuộc khu vực (nếu có) + công tơ + quân số.
 - Tạo đầu mối công cộng thuộc khu vực (nếu có) + công tơ.
 - Tạo đầu mối ngoài biên chế (nếu có) + quân số.
-- Vào trang **Phân bổ bơm nước**, cấu hình phân bổ cho từng đối tượng trong khu vực.
+- Vào trang **Phân bổ bơm nước** (xem mục F6), cấu hình phân bổ cho từng đối tượng trong khu vực.
 
 **Bước 9 — Quản trị viên đơn vị: Khai báo đơn vị.**
 Mỗi quản trị viên đơn vị đăng nhập (đổi mật khẩu lần đầu), sau đó khai báo cho đơn vị mình:
@@ -427,6 +428,7 @@ Quản trị viên hệ thống thấy thêm ô lọc khu vực/đơn vị và c
 Trang **Chỉ số bơm nước** dùng để nhập chỉ số công tơ bơm nước (trạm bơm). Giao diện giống trang Chỉ số đầu mối — bảng, tìm kiếm, lưu toàn bộ 1 lần.
 
 ![Chỉ số bơm nước — Quản trị viên đơn vị quản lý khu vực](images/30_chi_so_bom_nuoc_ua_zm.png)
+
 **Ai thấy gì:**
 
 | Vai trò | Thấy công tơ nào | Sửa được không |
@@ -549,6 +551,7 @@ Bấm **Tạo mới**, chọn loại đầu mối. Biểu mẫu hiển thị cá
 **Sửa đầu mối:**
 
 Bấm vào tên đầu mối hoặc bấm **Sửa**. Có thể sửa tên, quân số, thêm/xóa công tơ, đổi khối/nhóm. Không thể đổi loại đầu mối (phải xóa rồi tạo lại).
+
 **Lưu ý quan trọng:** Cập nhật quân số theo nhóm cấp bậc khi có thay đổi nhân sự. Quân số ảnh hưởng trực tiếp đến tiêu chuẩn điện và kết quả tính toán.
 
 ### F2. Khối và nhóm
@@ -692,6 +695,7 @@ Trang **Tài khoản** quản lý người dùng hệ thống.
 **Tạo tài khoản:** Nhập tên đăng nhập, mật khẩu, tên hiển thị, vai trò. Nếu vai trò là quản trị viên đơn vị hoặc chỉ huy đơn vị: bắt buộc chọn đơn vị.
 
 **Xóa tài khoản:** Không cho phép xóa 2 tài khoản mặc định (kyThuat và quanTri) và không cho phép tự xóa chính mình.
+
 **Đặt lại mật khẩu:** Khi đặt lại mật khẩu cho người dùng khác, người đó phải đổi mật khẩu lần tiếp theo đăng nhập.
 
 ### G2. Nhật ký hoạt động
@@ -701,6 +705,7 @@ Trang **Nhật ký hoạt động** (quản trị viên hệ thống và kỹ th
 ![Nhật ký hoạt động — Quản trị viên hệ thống](images/77_nhat_ky_hoat_dong.png)
 
 ### G3. Sao lưu dữ liệu
+
 ![Sao lưu dữ liệu — Kỹ thuật viên](images/47_sao_luu_tech.png)
 
 Trang **Sao lưu dữ liệu** (chỉ kỹ thuật viên) cho phép:
@@ -804,6 +809,15 @@ Hệ thống hiện thông tin bản sao lưu (tên, kích thước, ngày tạo
 ---
 
 ## Lịch sử thay đổi
+
+### v1.7.0 (26/05/2026)
+
+- Chụp lại tất cả ảnh vừa khít nội dung (bỏ khoảng trống thừa), sidebar hiện đầy đủ item và highlight đúng.
+- Bảng tính tiền chụp ở viewport 1440px (desktop thường) — chiều dọc thấy hết bảng, chiều ngang cắt tự nhiên thể hiện cần cuộn ngang, scrollbar hiện rõ.
+- Thêm ảnh: nhật ký hoạt động (G2), tạo đơn vị (F5), tạo khu vực (F4), sửa khu vực (F4), tra cứu lịch sử theo khoảng thời gian (E3).
+- Thêm 4 ảnh form tạo đầu mối theo từng loại (F1): sinh hoạt, công cộng (chọn khu vực), bơm nước, ngoài biên chế.
+- Thêm tham chiếu cho mọi text nhắc trang trong C và D (F4, F5, F6, F7, G1, F1, F2, F3).
+- Sửa format: thêm dòng trống giữa ảnh và text ở B3, D2, F1, G1, G3.
 
 ### v1.6.0 (25/05/2026)
 
