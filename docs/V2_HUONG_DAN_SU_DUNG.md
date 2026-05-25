@@ -360,13 +360,11 @@ Sau khi thiết lập ban đầu, hàng tháng lặp lại 6 bước. Bước 2 
 **Bước 1 — Quản trị viên hệ thống: Mở kỳ mới.**
 Vào trang **Đơn giá điện**, bấm **Mở kỳ mới**. Hệ thống tự tính tháng/năm (kỳ trước + 1 tháng). Số đầu kỳ công tơ, quân số, cấu hình đơn vị, phân bổ bơm nước, v.v. được kế thừa tự động từ kỳ trước. Cập nhật đơn giá nếu có thay đổi.
 
-![Đơn giá điện — nơi mở kỳ mới](images/22_don_gia_dien.png)
+Trang Đơn giá điện có nút **Mở kỳ mới** (xem mục F7).
 
 **Bước 2 — Quản trị viên đơn vị: Nhập liệu đơn vị.**
 
-- Vào trang **Chỉ số đầu mối**. Trang hiển thị tất cả công tơ sinh hoạt và công cộng của đơn vị mình dưới dạng bảng. Số đầu kỳ đã có sẵn (kế thừa từ kỳ trước, có thể sửa nếu cần). Nhập số cuối kỳ cho từng công tơ. Bấm **Lưu** để lưu toàn bộ trang 1 lần.
-
-![Chỉ số đầu mối — Quản trị viên đơn vị](images/38_chi_so_dau_moi_ua.png)
+- Vào trang **Chỉ số đầu mối** (xem chi tiết tại D1). Trang hiển thị tất cả công tơ sinh hoạt và công cộng của đơn vị mình dưới dạng bảng. Số đầu kỳ đã có sẵn (kế thừa từ kỳ trước, có thể sửa nếu cần). Nhập số cuối kỳ cho từng công tơ. Bấm **Lưu** để lưu toàn bộ trang 1 lần.
 - Nếu quân số có thay đổi: vào trang **Đầu mối**, bấm sửa đầu mối sinh hoạt cần cập nhật, sửa quân số theo nhóm cấp bậc.
 - Nếu cấu hình đơn vị cần cập nhật: vào trang **Cấu hình đơn vị**, sửa tỷ lệ hoặc giá trị cột Khác.
 
@@ -376,13 +374,8 @@ Vào trang **Đơn giá điện**, bấm **Mở kỳ mới**. Hệ thống tự 
 
 ![Nhập số điện lực — Quản trị viên đơn vị quản lý khu vực](images/31_nhap_so_dien_luc_ua_zm.png)
 
-- Vào trang **Chỉ số bơm nước**, nhập số cuối kỳ công tơ bơm nước.
-
-![Chỉ số bơm nước — Quản trị viên đơn vị quản lý khu vực](images/30_chi_so_bom_nuoc_ua_zm.png)
-
-- Vào trang **Chỉ số đầu mối**, nhập số cuối kỳ công tơ đầu mối thuộc khu vực (nếu có).
-
-![Chỉ số đầu mối — Quản trị viên đơn vị quản lý khu vực](images/29_chi_so_dau_moi_ua_zm.png)
+- Vào trang **Chỉ số bơm nước**, nhập số cuối kỳ công tơ bơm nước (xem chi tiết tại D2).
+- Vào trang **Chỉ số đầu mối**, nhập số cuối kỳ công tơ đầu mối thuộc khu vực nếu có (xem chi tiết tại D1).
 
 - Cập nhật quân số đầu mối thuộc khu vực nếu có thay đổi (xem mục F1).
 - Cập nhật phân bổ bơm nước nếu cần (xem mục F6).
