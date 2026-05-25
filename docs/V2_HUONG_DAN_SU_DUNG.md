@@ -495,12 +495,14 @@ Khi xem gộp (tất cả khu vực hoặc nhiều đơn vị), bảng thêm 2 c
 
 ### E3. Tra cứu lịch sử
 
-![Tra cứu lịch sử](images/04_tra_cuu_lich_su_sa.png)
-
 Trang **Tra cứu lịch sử** cho phép:
 
-- **Xem kỳ cũ:** Chọn 1 kỳ bất kỳ để xem bảng tính tiền hoặc tổng quan của kỳ đó.
+- **Xem kỳ cũ:** Chọn 1 kỳ bất kỳ để xem bảng tính tiền hoặc tổng quan của kỳ đó (xem mục E2).
+
 - **So sánh 2 kỳ:** Chọn kỳ A và kỳ B, hệ thống hiển thị cạnh nhau cùng đầu mối với 2 cột số liệu và cột chênh lệch. Nếu đầu mối chỉ có ở 1 kỳ (đã xóa hoặc mới tạo), dòng vẫn hiển thị với cột kỳ thiếu để trống, kèm ghi chú.
+
+![Tra cứu lịch sử — So sánh 2 kỳ](images/04_tra_cuu_lich_su_sa.png)
+
 - **Xem theo khoảng thời gian:** Chọn kỳ bắt đầu và kỳ kết thúc, hệ thống liệt kê các kỳ trong khoảng đó kèm tổng thâm điện và thành tiền.
 
 ![Tra cứu lịch sử — Theo khoảng thời gian](images/75_tra_cuu_theo_khoang_thoi_gian.png)
