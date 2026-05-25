@@ -1,13 +1,15 @@
 #!/bin/bash
 # Chụp lại toàn bộ ảnh cho hướng dẫn sử dụng.
-# Chạy: bin/capture-screenshots
+# Chạy: docs/scripts/capture-screenshots
 #
 # Yêu cầu: Docker dev đang chạy (bin/docker up), Node.js + puppeteer đã cài.
 # Script tự reset database, tạo dữ liệu mẫu, chụp ảnh, lưu vào docs/images/.
 
 set -e
 
-cd "$(dirname "$0")/.."
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+cd "$PROJECT_ROOT"
 
 echo "=== 1/4: Kiểm tra Docker ==="
 if ! docker compose -f compose.dev.yml ps --format json 2>/dev/null | grep -q '"app"'; then
@@ -25,11 +27,11 @@ for i in $(seq 1 30); do
   sleep 2
 done
 
-docker compose -f compose.dev.yml exec app bin/rails runner scripts/screenshot_seed.rb 2>&1 | tail -5
+docker compose -f compose.dev.yml exec app bin/rails runner docs/scripts/seed.rb 2>&1 | tail -5
 
 echo ""
 echo "=== 3/4: Chụp ảnh ==="
-node scripts/capture_screenshots.mjs 2>&1
+node docs/scripts/capture.mjs 2>&1
 
 echo ""
 echo "=== 4/4: Kết quả ==="
