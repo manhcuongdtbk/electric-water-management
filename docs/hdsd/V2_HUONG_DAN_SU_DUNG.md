@@ -693,7 +693,19 @@ Trang **Tài khoản** quản lý người dùng hệ thống.
 - **Kỹ thuật viên** quản lý tài khoản mọi vai trò.
 - **Quản trị viên hệ thống** quản lý tài khoản quản trị viên hệ thống, quản trị viên đơn vị, và chỉ huy đơn vị (không quản lý tài khoản kỹ thuật viên).
 
-**Tạo tài khoản:** Nhập tên đăng nhập, mật khẩu, tên hiển thị, vai trò. Nếu vai trò là quản trị viên đơn vị hoặc chỉ huy đơn vị: bắt buộc chọn đơn vị.
+**Tạo tài khoản:** Bấm **Thêm tài khoản**, nhập các thông tin sau:
+
+- **Tên đăng nhập:** Tên dùng để đăng nhập hệ thống.
+- **Tên hiển thị:** Tên hiện trên giao diện (góc trên bên phải).
+- **Vai trò:** Chọn 1 trong 4 vai trò:
+  - **Kỹ thuật viên** — quản lý kỹ thuật, không xem dữ liệu nghiệp vụ.
+  - **Quản trị viên hệ thống** — quản lý toàn bộ hệ thống.
+  - **Quản trị viên đơn vị** — quản lý đơn vị được gán. Phải chọn đơn vị.
+  - **Chỉ huy đơn vị** — chỉ xem đơn vị được gán. Phải chọn đơn vị.
+- **Đơn vị:** Bắt buộc chọn khi vai trò là quản trị viên đơn vị hoặc chỉ huy đơn vị. Tài khoản chỉ thấy dữ liệu của đơn vị này. Nếu đơn vị được chỉ định làm đơn vị quản lý khu vực, tài khoản sẽ tự động có thêm quyền khu vực (xem mục A6).
+- **Mật khẩu:** Phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số, và ký tự đặc biệt (ví dụ: @, #, $, !). Người dùng bắt buộc đổi mật khẩu lần đầu đăng nhập.
+
+![Tạo tài khoản](images/78_tai_khoan_tao_moi.png)
 
 **Xóa tài khoản:** Không cho phép xóa 2 tài khoản mặc định (kyThuat và quanTri) và không cho phép tự xóa chính mình.
 
