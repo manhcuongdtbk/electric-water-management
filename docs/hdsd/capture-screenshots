@@ -1,9 +1,9 @@
 #!/bin/bash
 # Chụp lại toàn bộ ảnh cho hướng dẫn sử dụng.
-# Chạy: docs/scripts/capture-screenshots
+# Chạy: docs/hdsd/capture-screenshots
 #
 # Yêu cầu: Docker dev đang chạy (bin/docker up), Node.js + puppeteer đã cài.
-# Script tự reset database, tạo dữ liệu mẫu, chụp ảnh, lưu vào docs/images/.
+# Script tự reset database, tạo dữ liệu mẫu, chụp ảnh, lưu vào docs/hdsd/images/.
 
 set -e
 
@@ -27,15 +27,15 @@ for i in $(seq 1 30); do
   sleep 2
 done
 
-docker compose -f compose.dev.yml exec app bin/rails runner docs/scripts/seed.rb 2>&1 | tail -5
+docker compose -f compose.dev.yml exec app bin/rails runner docs/hdsd/seed.rb 2>&1 | tail -5
 
 echo ""
 echo "=== 3/4: Chụp ảnh ==="
-node docs/scripts/capture.mjs 2>&1
+node docs/hdsd/capture.mjs 2>&1
 
 echo ""
 echo "=== 4/4: Kết quả ==="
-count=$(ls docs/images/*.png 2>/dev/null | wc -l | tr -d ' ')
+count=$(ls docs/hdsd/images/*.png 2>/dev/null | wc -l | tr -d ' ')
 referenced=$(grep -c '^\!' docs/V2_HUONG_DAN_SU_DUNG.md 2>/dev/null || echo 0)
 echo "  Ảnh trong thư mục: $count"
 echo "  Ảnh reference trong HDSD: $referenced"

@@ -1,5 +1,5 @@
 // Chụp toàn bộ ảnh cho hướng dẫn sử dụng.
-// Không chạy trực tiếp — dùng bin/capture-screenshots.
+// Không chạy trực tiếp — dùng docs/hdsd/capture-screenshots.
 //
 // Thêm/sửa trang: thêm entry vào mảng PAGES bên dưới.
 // Thêm/sửa role: thêm entry vào mảng ROLES bên dưới.
@@ -9,7 +9,7 @@ import path from 'path';
 import { mkdir } from 'fs/promises';
 
 const BASE = 'http://localhost';
-const OUTPUT = 'docs/images';
+const OUTPUT = 'docs/hdsd/images';
 const PW = 'Abc@1234';
 
 await mkdir(OUTPUT, { recursive: true });
