@@ -31,6 +31,20 @@ module SampleData
     ct_bn1:    { start: 600,   finish: 900,   no_loss: false }
   }.freeze
 
+  SAMPLE_PERSONNEL_KV2 = {
+    quan_y:            { chi_huy_dai_doi: 1, ha_si_quan: 4 },   # 5 người
+    trinh_sat:         { tieu_doan_dai_doi: 2, ha_si_quan: 6 }, # 8 người
+    chi_huy_khu_vuc_2: { chi_huy_trung_doan: 1 }                # 1 người
+  }.freeze
+
+  SAMPLE_METER_READINGS_KV2 = {
+    ct_qy:    { start: 0,     finish: 150,   no_loss: false },
+    ct_ts:    { start: 1_000, finish: 1_300, no_loss: false },
+    ct_chkv2: { start: 200,   finish: 550,   no_loss: false },
+    ct_cc_c:  { start: 0,     finish: 120,   no_loss: false },
+    ct_bn2:   { start: 0,     finish: 150,   no_loss: false }
+  }.freeze
+
   # Tạo toàn bộ dữ liệu mẫu mục 1 của V2_KICH_BAN_TEST.md cho kỳ tháng 5/2026.
   # Trả về OpenStruct chứa mọi entity cần cho assertions.
   def setup_zone_one_full_sample(open_period: true)
@@ -134,6 +148,82 @@ module SampleData
     )
   end
 
+  # Build Khu vực 2 vào period đã mở (do setup_zone_one_full_sample tạo).
+  # Bổ sung cho dữ liệu mẫu KV1, chỉ thêm các lỗ hổng KV1 chưa có.
+  # `period:` BẮT BUỘC là kỳ đang mở (Period.current): các callback per-kỳ
+  # (unit_config, meter_reading, snapshot) tạo bản ghi theo Period.current, rồi
+  # helper find_by! theo period truyền vào. Truyền kỳ đã đóng sẽ gây RecordNotFound.
+  def setup_zone_two_full_sample(period:)
+    zone = create(:zone, name: "Khu vực 2")
+    main_meter = create(:main_meter, name: "CT-Tổng-KV2", zone: zone)
+
+    unit_c = create(:unit, name: "Đơn vị C", zone: zone)
+    unit_d = create(:unit, name: "Đơn vị D", zone: zone)
+    zone.update!(manager_unit: unit_c)
+
+    ranks = build_sample_ranks_lookup(period)
+
+    group_quan_y = create(:group, name: "Tổ Quân y", unit: unit_c, block: nil)
+
+    contact_points = {
+      quan_y: create_residential_with_personnel_kv2(
+        name: "Quân y", unit: unit_c, group: group_quan_y,
+        ranks: ranks, counts_key: :quan_y
+      ),
+      trinh_sat: create_residential_with_personnel_kv2(
+        name: "Trinh sát", unit: unit_d,
+        ranks: ranks, counts_key: :trinh_sat
+      ),
+      chi_huy_khu_vuc_2: create_zone_residential_with_personnel_kv2(
+        name: "Chỉ huy khu vực 2", zone: zone,
+        ranks: ranks, counts_key: :chi_huy_khu_vuc_2
+      ),
+      nha_an_2:   create(:contact_point, :public_type, name: "Nhà ăn 2", unit: unit_c),
+      tram_bom_2: create(:contact_point, :water_pump, name: "Trạm bơm 2", zone: zone)
+    }
+
+    meters = {
+      ct_qy:    create(:meter, name: "CT-QY",    contact_point: contact_points[:quan_y],            no_loss: false),
+      ct_ts:    create(:meter, name: "CT-TS",    contact_point: contact_points[:trinh_sat],         no_loss: false),
+      ct_chkv2: create(:meter, name: "CT-CHKV2", contact_point: contact_points[:chi_huy_khu_vuc_2], no_loss: false),
+      ct_cc_c:  create(:meter, name: "CT-CC-C",  contact_point: contact_points[:nha_an_2],           no_loss: false),
+      ct_bn2:   create(:meter, name: "CT-BN2",   contact_point: contact_points[:tram_bom_2],         no_loss: false)
+    }
+
+    SAMPLE_METER_READINGS_KV2.each do |meter_key, attrs|
+      reading = meters[meter_key].meter_readings.find_by!(period: period)
+      reading.update!(reading_start: BigDecimal(attrs[:start].to_s),
+                      reading_end: BigDecimal(attrs[:finish].to_s),
+                      no_loss: attrs[:no_loss])
+    end
+
+    main_meter_reading = main_meter.main_meter_readings.create!(period: period, usage: BigDecimal("1100"))
+
+    unit_c.unit_configs.find_by!(period: period).update!(unit_public_rate: BigDecimal("5"))
+    unit_d.unit_configs.find_by!(period: period).update!(unit_public_rate: BigDecimal("0"))
+
+    apply_other_deduction(contact_points[:quan_y],            period, type: "fixed", value: BigDecimal("0"))
+    apply_other_deduction(contact_points[:trinh_sat],         period, type: "fixed", value: BigDecimal("0"))
+    apply_other_deduction(contact_points[:chi_huy_khu_vuc_2], period, type: "fixed", value: BigDecimal("0"))
+
+    pump_allocations = {
+      unit_c: create(:pump_allocation, zone: zone, period: period, unit: unit_c, contact_point: nil,
+                     fixed_percentage: nil, coefficient: BigDecimal("1")),
+      unit_d: create(:pump_allocation, zone: zone, period: period, unit: unit_d, contact_point: nil,
+                     fixed_percentage: nil, coefficient: BigDecimal("1")),
+      chi_huy_khu_vuc_2: create(:pump_allocation, zone: zone, period: period, unit: nil,
+                                contact_point: contact_points[:chi_huy_khu_vuc_2],
+                                fixed_percentage: nil, coefficient: BigDecimal("1"))
+    }
+
+    OpenStruct.new(
+      zone: zone, main_meter: main_meter, main_meter_reading: main_meter_reading,
+      unit_c: unit_c, unit_d: unit_d,
+      period: period, contact_points: contact_points, meters: meters,
+      pump_allocations: pump_allocations
+    )
+  end
+
   private
 
   def build_sample_ranks_lookup(period)
@@ -152,6 +242,22 @@ module SampleData
 
   def create_zone_residential_with_personnel(name:, zone:, ranks:, counts_key:)
     counts = SAMPLE_PERSONNEL.fetch(counts_key)
+    initial = counts.transform_keys { |rank_key| ranks.fetch(rank_key).id }
+    create(:contact_point, :zone_residential,
+           name: name, zone: zone,
+           initial_personnel_counts: initial)
+  end
+
+  def create_residential_with_personnel_kv2(name:, unit:, ranks:, counts_key:, block: nil, group: nil)
+    counts = SAMPLE_PERSONNEL_KV2.fetch(counts_key)
+    initial = counts.transform_keys { |rank_key| ranks.fetch(rank_key).id }
+    create(:contact_point, :residential,
+           name: name, unit: unit, block: block, group: group,
+           initial_personnel_counts: initial)
+  end
+
+  def create_zone_residential_with_personnel_kv2(name:, zone:, ranks:, counts_key:)
+    counts = SAMPLE_PERSONNEL_KV2.fetch(counts_key)
     initial = counts.transform_keys { |rank_key| ranks.fetch(rank_key).id }
     create(:contact_point, :zone_residential,
            name: name, zone: zone,
