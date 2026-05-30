@@ -1060,3 +1060,353 @@ Suite này instance hóa Nhóm 6 (giao điểm chiều 11 × 1 × 5). Kiểm ba 
   - Cột Sử dụng của CT-Tổxe = `reading_end − reading_start` = 200 − 0 = **200,00 kW** (công thức một bước). Vì reading_start = 0 (công tơ tạo giữa kỳ, không kế thừa số đầu kỳ), sử dụng bằng nguyên reading_end — có thể rất lớn nếu công tơ không mới lắp mà nhập chỉ số tích lũy. Đây là điểm nguy hiểm chiều 11: đầu mối tạo giữa kỳ luôn có reading_start = 0, dễ gây sử dụng phình to nếu nhập reading_end là chỉ số tích lũy thực tế.
   - Các cột còn lại của dòng "Tổ xe" (tổn hao, bơm nước, thừa/thiếu, thành tiền) là kết quả nhiều bước → tính lại bằng engine, không trích dẫn.
 - **Chiều liên quan:** chiều 11 (reading_start = 0 khi tạo giữa kỳ → sử dụng = reading_end), chiều 1, chiều 5; Nhóm 6.
+
+---
+
+## Phần 4 — Walkthrough theo trang × vai trò
+
+Phần này instance hóa **ma trận 18 trang × 6 vai trò** của `V2_CHIEU_TEST.md` chiều 3 (cùng phần kiểm soát truy cập) và danh mục "Expected output hiển thị" (cột, nội dung ô, gộp ô, hàng tổng, nút, trạng thái ô nhập, dropdown, cảnh báo, sidebar, trạng thái rỗng, thông tin kỳ, phân trang, di chuột) bằng dữ liệu thật của Phần 1 và golden numbers của Phần 2. Đây là tài liệu kiểm thử thủ công cho QA: với mỗi trang, đăng nhập lần lượt 6 vai trò và đối chiếu đầu ra hiển thị cụ thể.
+
+Tài liệu này **không chép lại** ma trận chiều 3; mỗi trang ghi phần giới thiệu ngắn (route + lớp bảo vệ + trỏ tới chiều 3) rồi đầu ra cụ thể per vai trò. Mã kịch bản: `TR-<trang>-<vaitro>` (ví dụ TR-billing-SA, TR-meter_entries-UAZM, TR-users-TECH).
+
+Quy ước Phần 4:
+
+- Mọi con số tính toán trích dẫn đều **trỏ về Phần 2** (golden numbers engine-verified), nêu rõ mã EN-* nguồn. Phần 4 không tính lại; với trang không mang số liệu, chỉ mô tả đầu ra hiển thị mong đợi.
+- Cả hai khu vực dùng cùng kỳ tháng 5 năm 2026 đang mở (trạng thái B), đã tính toán (golden numbers Phần 2 hiển thị đúng) trừ khi kịch bản ghi khác.
+- **Số mục sidebar (toàn tài liệu):** SA 17 mục, UA 8 mục, UA-ZM 12 mục, CMD 8 mục (khớp UA), CMD-ZM 12 mục (khớp UA-ZM), TECH 3 mục. Nguồn: `V2_THIET_KE_HE_THONG.md` mục "Sidebar per role" + `V2_CHIEU_TEST.md` danh mục Sidebar.
+- **Phạm vi billing của UA-ZM (dùng nhất quán toàn Phần 4):** đầu mối đơn vị mình **cộng** đầu mối sinh hoạt **thuộc khu vực trực tiếp** (`unit_id` null, `zone_id` có giá trị) — **KHÔNG** bao gồm đầu mối của các đơn vị khác trong cùng khu vực. Cụ thể (theo GD3-05 và Phần 2):
+  - adminA (UA-ZM Khu vực 1) thấy 4 hàng billing: Ban Tác huấn, Văn thư, Kho vật tư (Đơn vị A) cộng Chỉ huy khu vực (thuộc khu vực trực tiếp). KHÔNG thấy Đại đội 1 (Đơn vị B).
+  - adminB (UA Khu vực 1) thấy 1 hàng: Đại đội 1 (Đơn vị B).
+  - adminC (UA-ZM Khu vực 2) thấy 2 hàng: Quân y (Đơn vị C) cộng Chỉ huy khu vực 2 (thuộc khu vực trực tiếp). KHÔNG thấy Trinh sát (Đơn vị D).
+  - adminD (UA Khu vực 2) thấy 1 hàng: Trinh sát (Đơn vị D).
+  - SA xem gộp toàn bộ 8 đầu mối sinh hoạt (Khu vực 1: 5 hàng; Khu vực 2: 3 hàng).
+- **CMD/CMD-ZM:** thấy **cùng trang và cùng phạm vi dữ liệu** như UA/UA-ZM tương ứng, nhưng chỉ xem — ô nhập bị vô hiệu hóa, các nút Sửa/Xóa/Lưu/Tính toán lại bị ẩn.
+- **TECH:** bị chặn (redirect về `/users`) khỏi mọi trang nghiệp vụ; chỉ dùng `/users`, `/audit_logs`, `/backups`.
+- Thẻ loại kiểm thử ghi per kịch bản theo mục 0.2.2.
+
+### 4.0. Tổng quan sidebar theo vai trò `[CẢ HAI]`
+
+Trước khi đi vào từng trang, bảng này chốt số mục sidebar và danh mục mục hiển thị per vai trò (nguồn: `V2_THIET_KE_HE_THONG.md` mục "Sidebar per role"). Mọi trang phía dưới giả định sidebar đã đúng theo bảng này.
+
+| Vai trò | Số mục | Mục hiển thị |
+|---|---|---|
+| SA (quanTri) | 17 | XEM KẾT QUẢ (3): Tổng quan, Bảng tính tiền, Tra cứu lịch sử. NHẬP LIỆU (3): Nhập số điện lực, Chỉ số đầu mối, Chỉ số bơm nước. KHAI BÁO (4): Đầu mối, Khối, Nhóm, Cấu hình đơn vị. THIẾT LẬP (5): Khu vực, Đơn vị, Phân bổ bơm nước, Đơn giá điện, Nhóm cấp bậc. HỆ THỐNG (2): Tài khoản, Nhật ký hoạt động. (Không có Sao lưu.) |
+| UA-ZM (adminA, adminC) | 12 | XEM KẾT QUẢ (3) + NHẬP LIỆU (3: cả điện lực và bơm nước) + KHAI BÁO (4) + THIẾT LẬP (2): Khu vực, Phân bổ bơm nước. (Không Đơn vị, Đơn giá, Nhóm cấp bậc, Hệ thống.) |
+| UA (adminB, adminD) | 8 | XEM KẾT QUẢ (3) + NHẬP LIỆU (1: chỉ Chỉ số đầu mối) + KHAI BÁO (4). (Không điện lực, không bơm nước, không Thiết lập, không Hệ thống.) |
+| CMD-ZM (chiHuyA, chiHuyC) | 12 | Khớp UA-ZM (cùng mục), nhưng mọi trang chỉ xem. |
+| CMD (chiHuyB, chiHuyD) | 8 | Khớp UA (cùng mục), nhưng mọi trang chỉ xem. |
+| TECH (kyThuat) | 3 | HỆ THỐNG (3): Tài khoản, Nhật ký hoạt động, Sao lưu dữ liệu. |
+
+- **Chiều liên quan:** chiều 3 (ma trận quyền), danh mục Sidebar; `V2_HANH_VI_HE_THONG.md` mục 1.
+
+---
+
+## 4A. Nhóm XEM KẾT QUẢ
+
+### TR-dashboard — Tổng quan (/dashboard)
+
+**Route:** `/dashboard` (dashboard#show). **Lớp bảo vệ:** BusinessRoleRequired (xem `V2_CHIEU_TEST.md` chiều 3, hàng Tổng quan). 5 vai trò nghiệp vụ đều xem được; TECH bị chặn. Trang mang số liệu — trích từ Phần 2.
+
+- **TR-dashboard-SA `[CẢ HAI]`:** quanTri thấy tổng quan toàn hệ thống — bảng đơn vị (thâm điện, thành tiền, trạng thái nhập liệu của Đơn vị A, B, C, D) cộng bảng khu vực (tổng điện công cộng và bơm nước per Khu vực 1, Khu vực 2) cộng vùng cảnh báo. Số liệu khớp Phần 2: tổng thiếu Khu vực 1 = 177,42 kW, tổng thừa 33,34 kW, tổng thành tiền thiếu 414.517 đồng, tổng thành tiền thừa 77.891 đồng (EN-KV1-TOTALS); Khu vực 2 tổng thiếu 22,87 kW, tổng thừa 20,53 kW, tổng thành tiền thiếu 53.430 đồng, tổng thành tiền thừa 47.956 đồng (EN-KV2-TOTALS). Cảnh báo phạm vi toàn hệ thống; kỳ tháng 5 năm 2026 đã tính đủ → không cảnh báo thiếu dữ liệu. Sidebar 17 mục.
+- **TR-dashboard-UAZM `[CẢ HAI]`:** adminA thấy tổng quan Đơn vị A cộng Khu vực 1 (phạm vi quản lý khu vực). Cảnh báo chỉ giới hạn Khu vực 1. adminC: Đơn vị C cộng Khu vực 2 (tổng Khu vực 2 theo EN-KV2-TOTALS). Sidebar 12 mục.
+- **TR-dashboard-UA `[CẢ HAI]`:** adminB thấy tổng quan **chỉ Đơn vị B** (đầu mối Đại đội 1: thiếu 106,86 kW, thành tiền 249.659 đồng — EN-KV1-SUMMARY-04). Không thấy số liệu khu vực, không thấy đơn vị khác. adminD: chỉ Đơn vị D (Trinh sát thiếu 22,87 kW, thành tiền 53.430 đồng — EN-KV2-SUMMARY-02). Sidebar 8 mục.
+- **TR-dashboard-CMDZM `[CẢ HAI]`:** chiHuyA hiển thị giống adminA (Đơn vị A + Khu vực 1), chiHuyC giống adminC, chỉ xem. Dashboard không có ô nhập hay nút thao tác nên khác biệt CMD/UA ở đây không đáng kể; sidebar 12 mục.
+- **TR-dashboard-CMD `[CẢ HAI]`:** chiHuyB giống adminB (chỉ Đơn vị B), chiHuyD giống adminD, chỉ xem. Sidebar 8 mục.
+- **TR-dashboard-TECH `[TỰ ĐỘNG]`:** kyThuat bị chặn — vào `/dashboard` redirect về `/users`. Dashboard không xuất hiện trên sidebar TECH (3 mục).
+
+**Trạng thái rỗng/đặc biệt:** nếu kỳ chưa tính (xem GD4-01), dashboard hiển thị thâm điện và số dư bằng 0, không lỗi 500.
+
+- **Chiều liên quan:** chiều 2 (6 vai trò), chiều 3 (Tổng quan), chiều 8 (trạng thái tính toán), chiều 9 (cảnh báo per phạm vi).
+
+### TR-billing — Bảng tính tiền (/billing)
+
+**Route:** `/billing` (billing#show). **Lớp bảo vệ:** BusinessRoleRequired + authorize! (chiều 3, hàng Bảng tính tiền). Thao tác: Xem, Tính toán lại (SA/UA/UA-ZM), Xuất Excel (mọi vai trò nghiệp vụ). Đây là trang mang số liệu trọng tâm — mọi số trích từ Phần 2. Bảng chỉ hiển thị đầu mối **sinh hoạt**.
+
+- **TR-billing-SA `[CẢ HAI]`:** quanTri xem gộp toàn bộ 8 đầu mối sinh hoạt khi không lọc — Khu vực 1: Ban Tác huấn thiếu 37,24; Văn thư thừa 5,72; Kho vật tư thừa 27,62; Đại đội 1 thiếu 106,86; Chỉ huy khu vực thiếu 33,32 (EN-KV1-SUMMARY-01..05). Khu vực 2: Quân y thừa 9,32; Trinh sát thiếu 22,87; Chỉ huy khu vực 2 thừa 11,20 (EN-KV2-SUMMARY-01..03). **30 cột** (có cả Khu vực + Đơn vị). Có dropdown kỳ + dropdown khu vực + dropdown đơn vị (cascade). Nút Tính toán lại + Xuất Excel hiện. Hàng tổng: EN-KV1-TOTALS khi lọc Khu vực 1 (tổng thiếu 177,42; tổng thành tiền thiếu 414.517). SA chọn Khu vực 1 → cột Khu vực ẩn → còn 29 cột; chọn thêm Đơn vị A → cột Đơn vị ẩn → còn 28 cột, hiện 3 hàng (Ban Tác huấn, Văn thư, Kho vật tư). Sidebar 17 mục.
+- **TR-billing-UAZM `[CẢ HAI]`:** adminA thấy **4 hàng**: Ban Tác huấn thiếu 37,24; Văn thư thừa 5,72; Kho vật tư thừa 27,62; Chỉ huy khu vực thiếu 33,32 (đầu mối Đơn vị A cộng đầu mối thuộc khu vực trực tiếp). KHÔNG thấy Đại đội 1. **29 cột** (có Đơn vị, ẩn Khu vực). Cột Đơn vị của hàng "Chỉ huy khu vực" **trống** (đầu mối thuộc khu vực trực tiếp — chiều 6). Không có dropdown khu vực/đơn vị (chỉ SA có); có dropdown kỳ. Nút Tính toán lại + Xuất Excel hiện. adminC (Khu vực 2): **2 hàng** — Quân y thừa 9,32; Chỉ huy khu vực 2 thừa 11,20; KHÔNG thấy Trinh sát; 29 cột; cột Đơn vị hàng Chỉ huy khu vực 2 trống. Sidebar 12 mục.
+- **TR-billing-UA `[CẢ HAI]`:** adminB thấy **1 hàng** — Đại đội 1 thiếu 106,86, thành tiền 249.659 (EN-KV1-SUMMARY-04). **28 cột** (ẩn cả Khu vực + Đơn vị). Không thấy đầu mối Đơn vị A, không thấy Chỉ huy khu vực. Nút Tính toán lại + Xuất Excel hiện (UA được tính toán lại). adminD: 1 hàng — Trinh sát thiếu 22,87, thành tiền 53.430 (EN-KV2-SUMMARY-02). Sidebar 8 mục.
+- **TR-billing-CMDZM `[CẢ HAI]`:** chiHuyA phạm vi giống adminA (4 hàng, 29 cột, cột Đơn vị Chỉ huy khu vực trống) nhưng **nút Tính toán lại bị ẩn**; nút Xuất Excel vẫn hiện (CMD được xuất Excel theo chiều 3). chiHuyC giống adminC (2 hàng). Sidebar 12 mục.
+- **TR-billing-CMD `[CẢ HAI]`:** chiHuyB phạm vi giống adminB (1 hàng Đại đội 1, 28 cột), nút Tính toán lại ẩn, Xuất Excel hiện. chiHuyD giống adminD. Sidebar 8 mục.
+- **TR-billing-TECH `[TỰ ĐỘNG]`:** kyThuat vào `/billing` bị redirect về `/users`. Không có mục Bảng tính tiền trên sidebar TECH.
+
+**Trạng thái rỗng:** kỳ mới mở chưa bấm tính → bảng trống (không hàng dữ liệu), không lỗi 500, nút Tính toán lại bật cho SA/UA/UA-ZM (xem GD4-01). **Stale:** sửa chỉ số chưa tính lại → bảng hiện số cũ (GD4-02); Xuất Excel khi stale → file chứa số cũ (GD4-03).
+
+- **Chiều liên quan:** chiều 2, chiều 3 (Bảng tính tiền), chiều 6 (cột Đơn vị trống), chiều 7 (dropdown kỳ + dropdown zone/unit SA), chiều 8 (stale/chưa tính), chiều 12 (số cột + Excel). Tham chiếu GD3 (phạm vi), GD4 (tính toán), GD5 (số cột + gộp ô).
+
+### TR-history — Tra cứu lịch sử (/history)
+
+**Route:** `/history` (history#show). **Lớp bảo vệ:** BusinessRoleRequired (chiều 3, hàng Tra cứu lịch sử). Thao tác: Xem kỳ cũ, so sánh 2 kỳ, xem theo khoảng. 5 vai trò nghiệp vụ xem được; TECH chặn. Phạm vi dữ liệu per vai trò **giống billing** (SA toàn bộ, UA-ZM đơn vị + khu vực trực tiếp, UA đơn vị mình). Khác biệt với billing: trang so sánh **luôn hiện cả hai cột Khu vực và Đơn vị** (so sánh kỳ cần đủ ngữ cảnh — theo CLAUDE.md); dropdown khu vực/đơn vị khi xem kỳ cũ dùng `with_discarded` để hiện entity đã xóa.
+
+| Vai trò | Truy cập | Dữ liệu so sánh | Sửa được | Ghi chú |
+|---|---|---|---|---|
+| TR-history-SA `[CẢ HAI]` | Xem | Toàn bộ 8 đầu mối sinh hoạt, lọc theo dropdown | Không (chỉ xem lịch sử) | Chọn kỳ A + kỳ B → bảng so sánh 2 cột + cột chênh lệch; đầu mối chỉ có ở 1 kỳ → cột kỳ thiếu trống + ghi chú. Dropdown zone/unit dùng `with_discarded`. Sidebar 17. |
+| TR-history-UAZM `[CẢ HAI]` | Xem | adminA: 4 đầu mối (Đơn vị A + Chỉ huy khu vực); adminC: 2 (Quân y + Chỉ huy khu vực 2) | Không | Phạm vi như billing UA-ZM. Cả hai cột Khu vực + Đơn vị hiện. Sidebar 12. |
+| TR-history-UA `[CẢ HAI]` | Xem | adminB: Đại đội 1; adminD: Trinh sát | Không | Phạm vi 1 đơn vị. Sidebar 8. |
+| TR-history-CMDZM `[CẢ HAI]` | Xem | Như UA-ZM tương ứng | Không | Trang chỉ xem; không có ô nhập nên không khác CMD. Sidebar 12. |
+| TR-history-CMD `[CẢ HAI]` | Xem | Như UA tương ứng | Không | Sidebar 8. |
+| TR-history-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | Không có mục trên sidebar. |
+
+- **Chiều liên quan:** chiều 2, chiều 3 (Tra cứu lịch sử), chiều 4 (`with_discarded` xem entity đã xóa), chiều 7 (chọn kỳ A/B, khoảng). Tham chiếu GD1 (entity đã xóa hiện ở kỳ cũ).
+
+---
+
+## 4B. Nhóm NHẬP LIỆU
+
+### TR-electricity_supply — Nhập số điện lực (/electricity_supply)
+
+**Route:** `/electricity_supply` (electricity_supply#show). **Lớp bảo vệ:** BusinessRoleRequired + PeriodGuard + authorize! (chiều 3). Nhập số sử dụng công tơ tổng (main_meter_readings). Điểm mấu chốt: **chỉ vai trò gắn với khu vực (có main_meter) mới vào được** — UA và CMD (đơn vị không quản lý khu vực, không có công tơ tổng) bị redirect.
+
+| Vai trò | Truy cập | Dữ liệu | Sửa được | Ghi chú |
+|---|---|---|---|---|
+| TR-electricity_supply-SA `[CẢ HAI]` | Vào được | Tất cả công tơ tổng (CT-Tổng-KV1 = 2.100; CT-Tổng-KV2 = 1.100) | Sửa | Ô nhập số sử dụng; nút Lưu hiện. Sidebar 17. |
+| TR-electricity_supply-UAZM `[CẢ HAI]` | Vào được | Công tơ tổng khu vực mình (adminA: CT-Tổng-KV1; adminC: CT-Tổng-KV2) | Sửa | Sidebar 12. |
+| TR-electricity_supply-UA `[TỰ ĐỘNG]` | **Redirect** | — | — | `authorize_or_redirect` chặn (đơn vị B/D không có main_meter). Không có mục trên sidebar UA (8 mục). |
+| TR-electricity_supply-CMDZM `[CẢ HAI]` | Vào được (xem) | Công tơ tổng khu vực mình | Không (disabled) | Ô nhập disabled, nút Lưu ẩn. chiHuyA: CT-Tổng-KV1; chiHuyC: CT-Tổng-KV2. Sidebar 12. |
+| TR-electricity_supply-CMD `[TỰ ĐỘNG]` | **Redirect** | — | — | Như UA. Không có mục trên sidebar CMD (8 mục). |
+| TR-electricity_supply-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | — |
+
+**Đặc biệt:** main_meter_readings không kế thừa giữa kỳ — mỗi kỳ mới, trang hiện "Chưa nhập" cho mọi công tơ tổng (xem GD6-03). Khi không có kỳ mở: hiện "Không có kỳ đang mở", ô nhập disabled.
+
+- **Chiều liên quan:** chiều 2, chiều 3 (Nhập số điện lực), chiều 11 (main_meter không kế thừa). Tham chiếu GD6-03.
+
+### TR-meter_entries — Chỉ số đầu mối (/meter_entries)
+
+**Route:** `/meter_entries` (meter_entries#show). **Lớp bảo vệ:** BusinessRoleRequired + PeriodGuard (qua MeterReadingEntry) (chiều 3). Hiển thị công tơ **sinh hoạt + công cộng** (loại bỏ bơm nước). Có tìm kiếm theo tên đầu mối; **filter khu vực/đơn vị và cột Khu vực/Đơn vị chỉ SA** thấy. Số đầu kỳ editable mọi kỳ.
+
+| Vai trò | Truy cập | Dữ liệu/Cột | Sửa được | Ghi chú |
+|---|---|---|---|---|
+| TR-meter_entries-SA `[CẢ HAI]` | Vào được | Tất cả công tơ sinh hoạt + công cộng cả 2 khu vực; có cột Khu vực + Đơn vị; có filter zone/unit cascade + search | Sửa | Nút Lưu hiện. Sidebar 17. |
+| TR-meter_entries-UAZM `[CẢ HAI]` | Vào được | adminA: CT-A1, CT-A2, CT-A3, CT-CC-A (Đơn vị A) + CT-KV1, CT-CC-KV (khu vực trực tiếp). adminC: CT-QY, CT-CC-C + CT-CHKV2. Không cột Khu vực/Đơn vị, không filter | Sửa | Có search theo tên. Số đầu kỳ editable. Sidebar 12. |
+| TR-meter_entries-UA `[CẢ HAI]` | Vào được | adminB: CT-B1 (Đại đội 1) + CT-CC-B (Trạm gác). adminD: CT-TS (Trinh sát). Chỉ công tơ đơn vị mình; không cột Khu vực/Đơn vị | Sửa | Sidebar 8. |
+| TR-meter_entries-CMDZM `[CẢ HAI]` | Vào được (xem) | Như adminA/adminC tương ứng | Không (disabled) | Mọi ô nhập disabled, nút Lưu ẩn. Sidebar 12. |
+| TR-meter_entries-CMD `[CẢ HAI]` | Vào được (xem) | Như adminB/adminD tương ứng | Không (disabled) | Sidebar 8. |
+| TR-meter_entries-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | — |
+
+**Đầu vào danh sách (chỉ SA):** filter zone → unit cascade; đổi zone reset unit về "Tất cả"; search giữ nguyên khi đổi filter. Chỉ số cuối < chỉ số đầu → hiện thêm ô nhập thủ công số sử dụng + ghi chú (conditional, theo chiều R). Số đầu kỳ kế thừa pre-fill từ reading_end kỳ trước nhưng sửa được (GD6-03); đầu mối tạo giữa kỳ có reading_start = 0 (GD6-01, GD6-04).
+
+- **Chiều liên quan:** chiều 2, chiều 3 (Chỉ số đầu mối), chiều 6 (đầu mối thuộc đơn vị vs khu vực), chiều 11 (kế thừa/tạo giữa kỳ). Tham chiếu GD3 (phạm vi), GD6 (nhận dữ liệu).
+
+### TR-pump_entries — Chỉ số bơm nước (/pump_entries)
+
+**Route:** `/pump_entries` (pump_entries#show). **Lớp bảo vệ:** BusinessRoleRequired + PeriodGuard (chiều 3). Hiển thị riêng công tơ **bơm nước**. Bơm nước luôn thuộc khu vực trực tiếp → chỉ vai trò khu vực thấy; UA và CMD **trống** (không có công tơ bơm nước trong phạm vi).
+
+| Vai trò | Truy cập | Dữ liệu | Sửa được | Ghi chú |
+|---|---|---|---|---|
+| TR-pump_entries-SA `[CẢ HAI]` | Vào được | Tất cả công tơ bơm nước (CT-BN1 Khu vực 1; CT-BN2 Khu vực 2); có cột zone/unit + filter + search | Sửa | Sidebar 17. |
+| TR-pump_entries-UAZM `[CẢ HAI]` | Vào được | adminA: CT-BN1 (Trạm bơm 1). adminC: CT-BN2 (Trạm bơm 2) | Sửa | Sidebar 12. |
+| TR-pump_entries-UA `[CẢ HAI]` | Vào được | **Trống** (Đơn vị B/D không có công tơ bơm nước) | — | Hiển thị trạng thái rỗng "Không có bản ghi". Mục **không hiện** trên sidebar UA (8 mục) — UA không có trang này. |
+| TR-pump_entries-CMDZM `[CẢ HAI]` | Vào được (xem) | Như UA-ZM tương ứng | Không (disabled) | Ô nhập disabled, nút Lưu ẩn. Sidebar 12. |
+| TR-pump_entries-CMD `[CẢ HAI]` | — | **Trống** | — | Mục không hiện trên sidebar CMD (8 mục) — CMD không có data bơm nước. |
+| TR-pump_entries-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | — |
+
+- **Chiều liên quan:** chiều 2, chiều 3 (Chỉ số bơm nước), chiều 5 (loại bơm nước), chiều 6. Tham chiếu GD3.
+
+---
+
+## 4C. Nhóm KHAI BÁO
+
+### TR-contact_points — Đầu mối (/contact_points)
+
+**Route:** `/contact_points` (CRUD). **Lớp bảo vệ:** BusinessRoleRequired + PeriodGuard + StructureChangeGuard (chiều 3). CRUD 4 loại đầu mối + công tơ. Danh sách có filter theo loại; **dropdown loại hiển thị đúng per vai trò** (UA: 2 loại sinh hoạt + công cộng; UA-ZM/SA: 4 loại). Cột Khu vực + Đơn vị chỉ SA thấy (`show_zone_unit = current_user.system_admin?`).
+
+| Vai trò | Truy cập | Dữ liệu/Cột | Tạo/Sửa/Xóa | Ghi chú |
+|---|---|---|---|---|
+| TR-contact_points-SA `[CẢ HAI]` | CRUD | Tất cả đầu mối cả 2 khu vực; cột Khu vực + Đơn vị; filter loại 4 giá trị + filter zone/unit | Có | Form tạo có radio "Đơn vị/Khu vực" (assignment_mode). Sidebar 17. |
+| TR-contact_points-UAZM `[CẢ HAI]` | CRUD | adminA: đầu mối Đơn vị A + đầu mối thuộc Khu vực 1 (Chỉ huy khu vực, Đèn đường, Trạm bơm 1, Thợ xây). adminC: đầu mối Đơn vị C + thuộc Khu vực 2. Không cột Khu vực/Đơn vị. Dropdown loại 4 giá trị | Có (4 loại khu vực mình) | Có radio "Đơn vị/Khu vực". Sidebar 12. |
+| TR-contact_points-UA `[CẢ HAI]` | CRUD | adminB: chỉ đầu mối Đơn vị B (Đại đội 1, Trạm gác). adminD: Đơn vị D (Trinh sát). Dropdown loại **2 giá trị** (sinh hoạt, công cộng) | Có (sinh hoạt + công cộng đơn vị mình) | Không có radio "Đơn vị/Khu vực" (mặc định đơn vị). Không thấy loại bơm nước/ngoài biên chế. Sidebar 8. |
+| TR-contact_points-CMDZM `[CẢ HAI]` | Xem | Như adminA/adminC | Không | Nút Thêm/Sửa/Xóa ẩn. Sidebar 12. |
+| TR-contact_points-CMD `[CẢ HAI]` | Xem | Như adminB/adminD (đầu mối đơn vị) | Không | Nút Thêm/Sửa/Xóa ẩn. Sidebar 8. |
+| TR-contact_points-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | — |
+
+**Vị trí phân cấp hiển thị (chiều 10):** danh sách hiện cột Khối/Nhóm theo vị trí — Ban Tác huấn (khối + nhóm), Văn thư (khối), Kho vật tư (trực tiếp đơn vị), Quân y (nhóm không khối — Khu vực 2), Chỉ huy khu vực (thuộc khu vực, cột Đơn vị trống). Trạng thái kỳ cũ mở lại (C): StructureChangeGuard chặn tạo/xóa/đổi tên, chỉ sửa số liệu per kỳ.
+
+- **Chiều liên quan:** chiều 2, chiều 3 (Đầu mối), chiều 5 (4 loại), chiều 6, chiều 10 (vị trí phân cấp). Tham chiếu GD2 (cleanup khi xóa), GD6 (tạo giữa kỳ), GD5 (vị trí phân cấp).
+
+### TR-blocks — Khối (/blocks)
+
+**Route:** `/blocks` (CRUD). **Lớp bảo vệ:** BusinessRoleRequired + PeriodGuard + StructureChangeGuard (chiều 3). CRUD khối, phạm vi đơn vị. Cột Khu vực + Đơn vị chỉ SA.
+
+| Vai trò | Truy cập | Dữ liệu/Cột | Tạo/Sửa/Xóa | Ghi chú |
+|---|---|---|---|---|
+| TR-blocks-SA `[CẢ HAI]` | CRUD | Tất cả khối (Khu vực 1: "Phòng Tham mưu" của Đơn vị A); cột Khu vực + Đơn vị; filter zone/unit | Có | Sidebar 17. |
+| TR-blocks-UAZM `[CẢ HAI]` | CRUD | adminA: khối Đơn vị A ("Phòng Tham mưu"). adminC: khối Đơn vị C (Khu vực 2 không có khối → trống). Không cột Khu vực/Đơn vị | Có (đơn vị) | Khối thuộc đơn vị, không có khối "thuộc khu vực". Sidebar 12. |
+| TR-blocks-UA `[CẢ HAI]` | CRUD | adminB/adminD: khối đơn vị mình (Đơn vị B/D không có khối → trạng thái rỗng "Không có bản ghi") | Có (đơn vị) | Sidebar 8. |
+| TR-blocks-CMDZM `[CẢ HAI]` | Xem | Như adminA/adminC | Không | Nút ẩn. Sidebar 12. |
+| TR-blocks-CMD `[CẢ HAI]` | Xem | Như adminB/adminD | Không | Nút ẩn. Sidebar 8. |
+| TR-blocks-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | — |
+
+**Xóa cascade:** xóa khối "Phòng Tham mưu" → nhóm "Ban Tác huấn".block_id = null, đầu mối Văn thư.block_id = null (lên đơn vị) — theo chiều D (Delete).
+
+- **Chiều liên quan:** chiều 2, chiều 3 (Khối), chiều 10 (cascade khi xóa khối).
+
+### TR-groups — Nhóm (/groups)
+
+**Route:** `/groups` (CRUD). **Lớp bảo vệ:** BusinessRoleRequired + PeriodGuard + StructureChangeGuard (chiều 3). CRUD nhóm, phạm vi đơn vị. Cột Khu vực + Đơn vị chỉ SA. Form SA có cascade Đơn vị → Khối (`scoped_block_select`).
+
+| Vai trò | Truy cập | Dữ liệu/Cột | Tạo/Sửa/Xóa | Ghi chú |
+|---|---|---|---|---|
+| TR-groups-SA `[CẢ HAI]` | CRUD | Tất cả nhóm (Khu vực 1: "Ban Tác huấn" trong khối; Khu vực 2: "Tổ Quân y" không khối); cột Khu vực + Đơn vị; filter zone/unit | Có | Form cascade Đơn vị → Khối. Sidebar 17. |
+| TR-groups-UAZM `[CẢ HAI]` | CRUD | adminA: nhóm Đơn vị A ("Ban Tác huấn"). adminC: nhóm Đơn vị C ("Tổ Quân y"). Không cột Khu vực/Đơn vị | Có (đơn vị) | "Tổ Quân y" là nhóm trực tiếp dưới đơn vị, không khối (vị trí phân cấp thứ 3). Sidebar 12. |
+| TR-groups-UA `[CẢ HAI]` | CRUD | adminB/adminD: nhóm đơn vị mình (Đơn vị B/D không có nhóm → trạng thái rỗng) | Có (đơn vị) | Sidebar 8. |
+| TR-groups-CMDZM `[CẢ HAI]` | Xem | Như adminA/adminC | Không | Nút ẩn. Sidebar 12. |
+| TR-groups-CMD `[CẢ HAI]` | Xem | Như adminB/adminD | Không | Nút ẩn. Sidebar 8. |
+| TR-groups-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | — |
+
+**Xóa cascade:** xóa nhóm "Ban Tác huấn" → đầu mối Ban Tác huấn.group_id = null (lên khối "Phòng Tham mưu" nếu có, hoặc lên đơn vị).
+
+- **Chiều liên quan:** chiều 2, chiều 3 (Nhóm), chiều 10 (nhóm không khối + cascade).
+
+### TR-unit_config — Cấu hình đơn vị (/unit_config)
+
+**Route:** `/unit_config` (unit_config#show). **Lớp bảo vệ:** BusinessRoleRequired + PeriodGuard (chiều 3). Cấu hình tỷ lệ công cộng đơn vị (unit_public_rate) + cột "Khác" (other_deductions) per đầu mối **sinh hoạt**.
+
+| Vai trò | Truy cập | Dữ liệu | Sửa được | Ghi chú |
+|---|---|---|---|---|
+| TR-unit_config-SA `[CẢ HAI]` | Vào được | Chọn đơn vị bất kỳ; cột Khác đầu mối đơn vị đó (cộng đầu mối khu vực nếu đơn vị là quản lý khu vực) | Sửa | Đơn vị A 3%, Đơn vị B 0%, Đơn vị C 5%, Đơn vị D 0%. Sidebar 17. |
+| TR-unit_config-UAZM `[CẢ HAI]` | Vào được | adminA: Đơn vị A (3%) + cột Khác đầu mối Đơn vị A (Ban Tác huấn cố định 5; Văn thư hệ số −2,5; Kho vật tư cố định 0) + cột Khác đầu mối khu vực (Chỉ huy khu vực cố định 0). adminC: Đơn vị C (5%) + Quân y + Chỉ huy khu vực 2 | Sửa | Sidebar 12. |
+| TR-unit_config-UA `[CẢ HAI]` | Vào được | adminB: Đơn vị B (0%) + cột Khác Đại đội 1 (hệ số 3). adminD: Đơn vị D (0%) + Trinh sát. Không thấy đầu mối khu vực | Sửa | Sidebar 8. |
+| TR-unit_config-CMDZM `[CẢ HAI]` | Vào được (xem) | Như adminA/adminC | Không (disabled) | Ô nhập disabled, nút Lưu ẩn. Sidebar 12. |
+| TR-unit_config-CMD `[CẢ HAI]` | Vào được (xem) | Như adminB/adminD | Không (disabled) | Sidebar 8. |
+| TR-unit_config-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | — |
+
+**Conditional:** other_deduction loại "cố định" → giá trị là kW tuyệt đối (Ban Tác huấn +5); loại "hệ số" → giá trị nhân quân số đầu mối (Văn thư −2,5 × 2 người = −5,00; Đại đội 1: 3 × 11 = 33,00 — khớp cột Khác trong EN-KV1-SUMMARY-02 và -04).
+
+- **Chiều liên quan:** chiều 2, chiều 3 (Cấu hình đơn vị), chiều 6, conditional field (cố định/hệ số). Tham chiếu EN-KV1-SUMMARY (cột Khác).
+
+---
+
+## 4D. Nhóm THIẾT LẬP
+
+### TR-zones — Khu vực (/zones)
+
+**Route:** `/zones` (CRUD). **Lớp bảo vệ:** BusinessRoleRequired + PeriodGuard + StructureChangeGuard (chiều 3). CRUD khu vực + công tơ tổng (nested). Chỉ SA toàn quyền; vai trò quản lý khu vực chỉ **xem khu vực mình**; UA/CMD không quản lý khu vực **ẩn mục trên sidebar**.
+
+| Vai trò | Truy cập | Dữ liệu | Tạo/Sửa/Xóa | Ghi chú |
+|---|---|---|---|---|
+| TR-zones-SA `[CẢ HAI]` | CRUD | Khu vực 1, Khu vực 2 (kèm công tơ tổng CT-Tổng-KV1, CT-Tổng-KV2) | Có | Sidebar 17. |
+| TR-zones-UAZM `[CẢ HAI]` | Xem (khu vực mình) | adminA: Khu vực 1; adminC: Khu vực 2 | Không | Mục **hiện** trên sidebar (12 mục) nhưng chỉ xem; nút Thêm/Sửa/Xóa ẩn. |
+| TR-zones-UA `[TỰ ĐỘNG]` | Sidebar ẩn | — | — | adminB/adminD không thấy mục Khu vực (8 mục). Lưu ý design issue CLAUDE.md: truy cập trực tiếp `/zones` có thể lọt do thừa quyền `can :read, Zone` — cần kiểm và báo nếu xảy ra. |
+| TR-zones-CMDZM `[CẢ HAI]` | Xem (khu vực mình) | Như adminA/adminC | Không | Mục hiện trên sidebar (12). |
+| TR-zones-CMD `[TỰ ĐỘNG]` | Sidebar ẩn | — | — | Như UA (8 mục). |
+| TR-zones-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | — |
+
+- **Chiều liên quan:** chiều 2, chiều 3 (Khu vực). Lưu ý design issue truy cập trực tiếp URL (CLAUDE.md).
+
+### TR-units — Đơn vị (/units)
+
+**Route:** `/units` (CRUD). **Lớp bảo vệ:** BusinessRoleRequired + PeriodGuard + StructureChangeGuard (chiều 3). Chỉ SA toàn quyền; **mọi non-SA ẩn mục trên sidebar** (kể cả vai trò khu vực — Đơn vị là cấu trúc cấp Sư đoàn).
+
+| Vai trò | Truy cập | Dữ liệu | Tạo/Sửa/Xóa | Ghi chú |
+|---|---|---|---|---|
+| TR-units-SA `[CẢ HAI]` | CRUD | Đơn vị A, B (Khu vực 1), C, D (Khu vực 2); cột Khu vực | Có | Sidebar 17. |
+| TR-units-UAZM `[TỰ ĐỘNG]` | Sidebar ẩn | (Nếu vào trực tiếp: chỉ xem đơn vị mình) | Không | Mục không trên sidebar (12 mục không gồm Đơn vị). Lưu ý design issue truy cập trực tiếp URL. |
+| TR-units-UA `[TỰ ĐỘNG]` | Sidebar ẩn | — | Không | Như trên (8 mục). |
+| TR-units-CMDZM `[TỰ ĐỘNG]` | Sidebar ẩn | (Xem đơn vị mình nếu vào trực tiếp) | Không | (12 mục). |
+| TR-units-CMD `[TỰ ĐỘNG]` | Sidebar ẩn | — | Không | (8 mục). |
+| TR-units-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | — |
+
+- **Chiều liên quan:** chiều 2, chiều 3 (Đơn vị). Lưu ý design issue truy cập trực tiếp URL (CLAUDE.md).
+
+### TR-pump_allocations — Phân bổ bơm nước (/pump_allocations)
+
+**Route:** `/pump_allocations` (CRUD). **Lớp bảo vệ:** BusinessRoleRequired + PeriodGuard (chiều 3). Cấu hình phân bổ per khu vực. SA + UA-ZM CRUD; CMD-ZM xem; UA + CMD **không thấy** (sidebar ẩn). Đối tượng nhận phân bổ: đơn vị, đầu mối sinh hoạt thuộc khu vực, đầu mối ngoài biên chế thuộc khu vực.
+
+| Vai trò | Truy cập | Dữ liệu | Tạo/Sửa/Xóa | Ghi chú |
+|---|---|---|---|---|
+| TR-pump_allocations-SA `[CẢ HAI]` | CRUD | Tất cả phân bổ (Khu vực 1: Trạm bơm 1 → Chỉ huy khu vực 20% + Đơn vị A/B hệ số 1 + Thợ xây hệ số 0,5; Khu vực 2: Trạm bơm 2 thuần hệ số) | Có | Cho sửa cả khi kỳ cũ mở lại. Form có toggle target (đơn vị/đầu mối) + toggle allocation (% cố định/hệ số). Sidebar 17. |
+| TR-pump_allocations-UAZM `[CẢ HAI]` | CRUD | adminA: phân bổ Khu vực 1. adminC: phân bổ Khu vực 2 (thuần hệ số) | Có (khu vực mình) | Sidebar 12. |
+| TR-pump_allocations-UA `[CẢ HAI]` | **Trống / sidebar ẩn** | — | — | adminB/adminD không thấy mục (8 mục). Nếu vào trực tiếp: trống. |
+| TR-pump_allocations-CMDZM `[CẢ HAI]` | Xem | Như adminA/adminC | Không (chỉ đọc) | Nút Thêm/Sửa/Xóa ẩn. Sidebar 12. |
+| TR-pump_allocations-CMD `[CẢ HAI]` | **Trống / sidebar ẩn** | — | — | Như UA (8 mục). |
+| TR-pump_allocations-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | — |
+
+- **Chiều liên quan:** chiều 2, chiều 3 (Phân bổ bơm nước), toggle target/allocation. Tham chiếu EN-KV1-PUMP, EN-KV2-PUMP.
+
+### TR-pricing — Đơn giá điện (/pricing)
+
+**Route:** `/pricing` (pricing#show). **Lớp bảo vệ:** BusinessRoleRequired + authorize! (chiều 3). Đơn giá per kỳ + mở/đóng/mở lại kỳ. **Chỉ SA toàn quyền**; non-SA **ẩn mục trên sidebar**.
+
+| Vai trò | Truy cập | Dữ liệu | Thao tác | Ghi chú |
+|---|---|---|---|---|
+| TR-pricing-SA `[CẢ HAI]` | Toàn quyền | Đơn giá kỳ tháng 5 năm 2026 = 2.336,4 đồng/kW; danh sách kỳ | Mở kỳ mới, đóng kỳ, mở lại kỳ cũ | Sidebar 17. Tham chiếu Phần 5 (vòng đời kỳ). |
+| TR-pricing-UAZM `[TỰ ĐỘNG]` | Sidebar ẩn | (Xem nếu vào trực tiếp) | Không | Không có mục (12 mục không gồm Đơn giá). |
+| TR-pricing-UA `[TỰ ĐỘNG]` | Sidebar ẩn | — | Không | (8 mục). |
+| TR-pricing-CMDZM `[TỰ ĐỘNG]` | Sidebar ẩn | (Xem nếu vào trực tiếp) | Không | (12 mục). |
+| TR-pricing-CMD `[TỰ ĐỘNG]` | Sidebar ẩn | — | Không | (8 mục). |
+| TR-pricing-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | — |
+
+- **Chiều liên quan:** chiều 1 (vòng đời kỳ), chiều 2, chiều 3 (Đơn giá điện). Tham chiếu Phần 5 (mở/đóng/mở lại kỳ).
+
+### TR-ranks — Nhóm cấp bậc (/ranks)
+
+**Route:** `/ranks` (CRUD). **Lớp bảo vệ:** BusinessRoleRequired + PeriodGuard + StructureChangeGuard (chiều 3). 7 nhóm cấp bậc + định mức (cấu hình chung toàn hệ thống). SA CRUD; mọi non-SA **chỉ xem** (mục vẫn ẩn trên sidebar non-SA theo bảng "Sidebar per role").
+
+| Vai trò | Truy cập | Dữ liệu | Tạo/Sửa/Xóa | Ghi chú |
+|---|---|---|---|---|
+| TR-ranks-SA `[CẢ HAI]` | CRUD | 7 nhóm với định mức 570, 440, 305, 130, 210, 110, 24 | Có | Sidebar 17. Thêm rank giữa kỳ → personnel_entries count 0 cho mọi đầu mối sinh hoạt (GD6-02). |
+| TR-ranks-UAZM `[TỰ ĐỘNG]` | Sidebar ẩn (xem nếu vào trực tiếp) | 7 nhóm | Không | Mục không trên sidebar (12 mục). |
+| TR-ranks-UA `[TỰ ĐỘNG]` | Sidebar ẩn (xem) | 7 nhóm | Không | (8 mục). |
+| TR-ranks-CMDZM `[TỰ ĐỘNG]` | Sidebar ẩn (xem) | 7 nhóm | Không | (12 mục). |
+| TR-ranks-CMD `[TỰ ĐỘNG]` | Sidebar ẩn (xem) | 7 nhóm | Không | (8 mục). |
+| TR-ranks-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | — |
+
+> **Lưu ý nguồn:** Chiều 3 ghi non-SA "Xem" trang `/ranks`, nhưng bảng "Sidebar per role" (`V2_THIET_KE_HE_THONG.md`) đánh dấu Nhóm cấp bậc ✗ cho unit_admin/commander/technician. Theo quy tắc ưu tiên (CHIEU_TEST chiều 3 + THIET_KE sidebar table), kết luận: SA CRUD; non-SA mục ẩn trên sidebar, nếu vào trực tiếp thì chỉ xem (không có nút thao tác). Đây là điểm cần xác nhận khi triển khai (mục ẩn sidebar nhưng route vẫn cho xem).
+
+- **Chiều liên quan:** chiều 2, chiều 3 (Nhóm cấp bậc), chiều 11 (thêm rank giữa kỳ). Tham chiếu GD6-02.
+
+---
+
+## 4E. Nhóm HỆ THỐNG
+
+### TR-users — Tài khoản (/users)
+
+**Route:** `/users` (CRUD). **Lớp bảo vệ:** authorize! (CanCanCan) (chiều 3). **SA CRUD tất cả trừ tài khoản TECH; TECH CRUD tất cả tài khoản; non-SA-non-TECH ẩn mục trên sidebar.** Đây là trang đích redirect của mọi vai trò bị chặn.
+
+| Vai trò | Truy cập | Dữ liệu | Tạo/Sửa/Xóa | Ghi chú |
+|---|---|---|---|---|
+| TR-users-SA `[CẢ HAI]` | CRUD (trừ TECH) | Tất cả tài khoản trừ tài khoản technician | Có (không quản lý kyThuat) | Form có toggle Role → Unit (`role_unit_toggle`). Reset mật khẩu. Sidebar 17. |
+| TR-users-TECH `[CẢ HAI]` | CRUD (tất cả) | Tất cả tài khoản (gồm cả SA và TECH khác) | Có | TECH là vai trò duy nhất quản lý được mọi tài khoản. Sidebar 3 mục. |
+| TR-users-UAZM `[TỰ ĐỘNG]` | Sidebar ẩn (trống nếu vào trực tiếp) | — | Không | Mục không trên sidebar (12 mục). Lưu ý design issue truy cập trực tiếp URL. |
+| TR-users-UA `[TỰ ĐỘNG]` | Sidebar ẩn | — | Không | (8 mục). |
+| TR-users-CMDZM `[TỰ ĐỘNG]` | Sidebar ẩn | — | Không | (12 mục). |
+| TR-users-CMD `[TỰ ĐỘNG]` | Sidebar ẩn | — | Không | (8 mục). |
+
+**Validation:** tạo/sửa tài khoản — mật khẩu phải đủ phức tạp (1 chữ hoa, 1 chữ thường, 1 số, 1 ký tự đặc biệt); không tự xóa mình; không xóa tài khoản mặc định (chi tiết Phần 5). Toggle Role → Unit: chọn role unit_admin/commander → hiện field Đơn vị; chọn system_admin/technician → ẩn field Đơn vị.
+
+- **Chiều liên quan:** chiều 2, chiều 3 (Tài khoản), toggle Role → Unit. Tham chiếu Phần 5 (validation, reset mật khẩu).
+
+### TR-audit_logs — Nhật ký hoạt động (/audit_logs)
+
+**Route:** `/audit_logs` (audit_logs#index). **Lớp bảo vệ:** authorize!(:read, PaperTrail::Version) (chiều 3). **Chỉ SA + TECH xem; UA/UA-ZM/CMD/CMD-ZM bị chặn.**
+
+| Vai trò | Truy cập | Dữ liệu | Ghi chú |
+|---|---|---|---|
+| TR-audit_logs-SA `[CẢ HAI]` | Xem | Toàn bộ log PaperTrail; filter loại thao tác (tạo/sửa/xóa) + đối tượng (model) + người thao tác + khoảng thời gian | Sidebar 17. |
+| TR-audit_logs-TECH `[CẢ HAI]` | Xem | Như SA | Sidebar 3 mục. |
+| TR-audit_logs-UAZM `[TỰ ĐỘNG]` | **Chặn** | — | Bị chặn (không phải redirect /users — authorize! từ chối). Mục không trên sidebar (12). |
+| TR-audit_logs-UA `[TỰ ĐỘNG]` | **Chặn** | — | (8 mục). |
+| TR-audit_logs-CMDZM `[TỰ ĐỘNG]` | **Chặn** | — | (12 mục). |
+| TR-audit_logs-CMD `[TỰ ĐỘNG]` | **Chặn** | — | (8 mục). |
+
+**Filter kết hợp:** chọn nhiều filter (event + item_type + whodunnit + date range) → kết quả chỉ chứa record match tất cả điều kiện (theo chiều R, input đặc thù audit_logs).
+
+- **Chiều liên quan:** chiều 2, chiều 3 (Nhật ký hoạt động), chiều R (filter kết hợp).
+
+### TR-backups — Sao lưu dữ liệu (/backups)
+
+**Route:** `/backups` (backups). **Lớp bảo vệ:** authorize!(:manage, Backup) (chiều 3). **Chỉ TECH** — mọi vai trò khác kể cả SA bị chặn.
+
+| Vai trò | Truy cập | Thao tác | Ghi chú |
+|---|---|---|---|
+| TR-backups-TECH `[CẢ HAI]` | CRUD | Tạo backup (tối đa 3 bản), xóa backup. Restore **qua dòng lệnh** (không qua giao diện) | Backup khi đã 3 bản → flash "đã đạt tối đa". Sidebar 3 mục. |
+| TR-backups-SA `[TỰ ĐỘNG]` | **Chặn** | — | SA cũng không quản lý sao lưu. Mục không trên sidebar SA (17 mục không gồm Sao lưu). |
+| TR-backups-UAZM `[TỰ ĐỘNG]` | **Chặn** | — | Mục không trên sidebar (12). |
+| TR-backups-UA `[TỰ ĐỘNG]` | **Chặn** | — | (8 mục). |
+| TR-backups-CMDZM `[TỰ ĐỘNG]` | **Chặn** | — | (12 mục). |
+| TR-backups-CMD `[TỰ ĐỘNG]` | **Chặn** | — | (8 mục). |
+
+- **Chiều liên quan:** chiều 2, chiều 3 (Sao lưu dữ liệu). Tham chiếu Phần 5 (backup tối đa 3, restore qua dòng lệnh).
+
+---
+
+> **Tổng kết Phần 4:** 18 trang × 6 vai trò được instance hóa cụ thể bằng dữ liệu Phần 1 và golden numbers Phần 2. Phạm vi billing/history của UA-ZM nhất quán là **đầu mối đơn vị mình cộng đầu mối sinh hoạt thuộc khu vực trực tiếp** (KHÔNG gồm đầu mối các đơn vị khác cùng khu vực): adminA 4 hàng, adminC 2 hàng, adminB/adminD 1 hàng, SA gộp 8 hàng. CMD/CMD-ZM khớp UA/UA-ZM về phạm vi nhưng chỉ xem. TECH chặn khỏi mọi trang nghiệp vụ. Hai điểm cần xác nhận khi triển khai đã ghi chú: (1) design issue truy cập trực tiếp URL `/zones`, `/units`, `/pricing`, `/users`, `/pump_allocations` qua thừa quyền `can :read, Zone/Unit` (CLAUDE.md); (2) `/ranks` cho non-SA — chiều 3 ghi "Xem" nhưng sidebar table đánh dấu ẩn mục.
