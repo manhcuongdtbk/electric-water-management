@@ -1,8 +1,8 @@
 # Thiết kế bản viết lại V2_KICH_BAN_TEST.md
 
 > **Ngày:** 31/05/2026
-> **Tính chất:** Spec thiết kế (planning artifact) cho việc viết lại toàn bộ `docs/V2_KICH_BAN_TEST.md`. Không phải tài liệu nghiệp vụ — là kế hoạch cấu trúc + quy ước trước khi viết nội dung.
-> **Nguồn quyết định:** Phiên brainstorming 31/05/2026 (5 quyết định đã chốt, ghi ở mục 2).
+> **Tính chất:** Spec thiết kế (planning artifact) cho việc viết lại toàn bộ `docs/V2_KICH_BAN_TEST.md`. Không phải tài liệu nghiệp vụ — là kế hoạch cấu trúc + quy ước trước khi viết nội dung. Có thể giữ làm dấu vết hoặc bỏ sau khi merge.
+> **Nguồn quyết định:** Phiên brainstorming 31/05/2026 (5 quyết định chính + 3 tinh chỉnh, ghi ở mục 2).
 
 ---
 
@@ -30,11 +30,19 @@ Phần golden numbers engine (T01–T04) vẫn đúng và khớp `spec/support/s
 
 ## 2. Các quyết định đã chốt (brainstorming 31/05/2026)
 
+**5 quyết định chính:**
+
 1. **Mục đích = Hybrid.** Vừa là kịch bản giao điểm nguy hiểm có số liệu, vừa giữ phần test thủ công theo trang cho QA.
 2. **Dữ liệu mẫu = mở rộng thêm Khu vực 2.** Giữ Khu vực 1 (khớp `setup_zone_one_full_sample`) làm nền, thêm Khu vực 2 để cover SA filter, cách ly cross-zone, phân biệt UA-ZM/CMD-ZM giữa 2 khu vực, CP thuộc khu vực trực tiếp.
 3. **Golden numbers = verify bằng engine thật.** Setup dữ liệu KV1 + KV2 trong Docker (rails console / spec tạm), chạy `CalculationOrchestrator` lấy số chính xác đến decimal, ghi vào doc. Không tính tay cho số mới.
 4. **Cấu trúc = Lựa chọn 1** (6 phần theo tầng dữ liệu — xem mục 4).
 5. **ID = theo nhóm + truy vết RSpec.** ID có tiền tố nhóm; Phần 6 quét `spec/` map mỗi kịch bản → file RSpec.
+
+**3 tinh chỉnh:**
+
+6. **KV2 = tối thiểu, lấp đúng lỗ hổng KV1 chưa có** (shape cụ thể ở Phần 1B). Bỏ qua ngoài biên chế + công tơ không tổn hao (KV1 đã cover).
+7. **Helper = thêm `setup_zone_two_full_sample(period:)`** — additive, nhận period do KV1 tạo (cùng 1 kỳ mở, do ràng buộc partial unique index chỉ 1 kỳ mở). Không sửa `setup_zone_one_full_sample`.
+8. **Vị trí spec = `docs/specs/`** (đổi từ `docs/superpowers/specs/`) — tên trung tính, tách khỏi doc nghiệp vụ `docs/V2_*`.
 
 ---
 
@@ -81,11 +89,23 @@ Mục đích; quan hệ với 3 doc kia (bảng ở mục 1); quy ước (mục 
   - 7 nhóm cấp bậc mặc định (570, 440, 305, 130, 210, 110, 24).
   - Cấu trúc: Đơn vị A (manager, công cộng 3%), Đơn vị B (0%); khối "Phòng Tham mưu", nhóm "Ban Tác huấn"; 5 CP sinh hoạt (Ban Tác huấn, Văn thư, Kho vật tư, Đại đội 1, Chỉ huy khu vực), 3 công cộng (Nhà ăn, Trạm gác, Đèn đường), bơm nước (Trạm bơm 1), ngoài biên chế (Thợ xây, 5 người).
   - Quân số, chỉ số công tơ (9 công tơ + CT-Tổng 2.100), cột Khác, phân bổ bơm nước — đúng `sample_data.rb`.
-- **1B. Khu vực 2 (mới)** — thiết kế tối thiểu nhưng đủ cover các giao điểm cần multi-zone. Shape đề xuất (số cụ thể chốt sau khi chạy engine):
-  - Main meter CT-Tổng-KV2.
-  - **Đơn vị C** (manager KV2), **Đơn vị D** (non-manager).
-  - CP sinh hoạt Đơn vị C có khối "Phòng Chính trị" + nhóm (cho merge); CP sinh hoạt Đơn vị D trực tiếp (không khối/nhóm); CP sinh hoạt thuộc khu vực trực tiếp; 1 công cộng; 1 bơm nước. (Cân nhắc 1 ngoài biên chế nếu cần cho GD2.)
-  - Mục tiêu cover: SA zone/unit filter (2 khu vực, nhiều đơn vị); cách ly cross-zone; UA-ZM (adminC) vs UA (adminD); CMD-ZM (chiHuyC) vs CMD (chiHuyD); CP thuộc khu vực trực tiếp; vị trí phân cấp khác KV1.
+  - KV1 đã cover: 4 loại đầu mối, công tơ không tổn hao (CT-A3), 4/5 vị trí phân cấp (trực tiếp đơn vị, trong khối không nhóm, trong nhóm trong khối, thuộc khu vực trực tiếp), phân bổ bơm nước có % cố định + hệ số.
+- **1B. Khu vực 2 (mới)** — tối thiểu, chỉ lấp lỗ hổng KV1 chưa có. Số liệu input cụ thể chốt khi setup; golden numbers từ engine:
+
+  | Entity KV2 | Lý do (lỗ hổng) |
+  |---|---|
+  | CT-Tổng-KV2 | Công tơ tổng KV2 |
+  | Đơn vị C (manager KV2, công cộng đơn vị 5%) | Cross-zone; UA-ZM/CMD-ZM khu vực khác |
+  | Đơn vị D (công cộng đơn vị 0%) | 2nd zone nhiều đơn vị (cascade filter); UA/CMD non-manager khu vực khác |
+  | Residential "Quân y" — nhóm "Tổ Quân y" **không khối** (Đơn vị C) | **Vị trí phân cấp thứ 3** (group trực tiếp dưới đơn vị, block null) — vị trí duy nhất KV1 thiếu (GD5) |
+  | Residential "Trinh sát" (Đơn vị D, trực tiếp) | CP đơn vị non-manager trong KV2 |
+  | Residential "Chỉ huy khu vực 2" (thuộc KV2 trực tiếp) | Cột Đơn vị trống ở khu vực thứ 2; merge cột Khu vực khi SA xem gộp 2 khu vực |
+  | Công cộng "Nhà ăn 2" (Đơn vị C) | Mẫu số B tổn hao có ý nghĩa cho KV2 |
+  | Bơm nước "Trạm bơm 2" (thuộc KV2) | Engine bơm nước chạy được cho KV2 |
+  | Phân bổ bơm nước KV2: **thuần hệ số** (C, D, Chỉ huy KV2; không % cố định) | KV1 cover nhánh có % cố định; KV2 cover nhánh **tổng % cố định = 0** (khác code path) |
+
+  - Bỏ qua ở KV2 (KV1 đã cover, ghi chú để người đọc biết): đầu mối ngoài biên chế, công tơ không tổn hao.
+  - KV2 gọn: 3 residential + 1 công cộng + 1 bơm nước.
 - **1C. Tài khoản (6 vai trò × 2 khu vực).** Bổ sung CMD/CMD-ZM (file cũ thiếu):
 
   | Tài khoản | role | Đơn vị | Vai trò thực tế |
@@ -146,7 +166,7 @@ Bảng: mỗi kịch bản → chiều CHIEU_TEST + nhóm giao điểm + file RS
 ## 5. Workflow thực hiện (golden numbers verify bằng engine)
 
 1. **Đọc engine code** (`app/services/` — LossCalculator, PumpAllocationCalculator, SummaryCalculator, CalculationOrchestrator) + factories (`spec/factories/`) để hiểu cách drive engine.
-2. **Thiết kế KV2 cụ thể** (entities + số liệu input) — bổ sung helper vào `sample_data.rb` hoặc script tạm.
+2. **Thiết kế + thêm helper KV2** vào `sample_data.rb`: `setup_zone_two_full_sample(period:)` (additive, nhận period từ `setup_zone_one_full_sample` để dùng chung 1 kỳ mở).
 3. **Chạy engine trong Docker** (`bin/docker console` hoặc spec tạm) cho KV1 + KV2 → lấy calculations chính xác đến decimal.
 4. **Ghi golden numbers** vào Phần 2.
 5. **Viết Phần 0, 1, 3, 4, 5, 6** trỏ về golden numbers Phần 2.
@@ -158,7 +178,7 @@ Lưu ý: lệnh chạy lâu (>2 phút) phải hỏi trước hoặc chia nhỏ (
 
 ## 6. Phạm vi và ranh giới
 
-- **Trong phạm vi:** viết lại toàn bộ nội dung `docs/V2_KICH_BAN_TEST.md`. Có thể bổ sung helper `setup_zone_two_*` vào `spec/support/sample_data.rb` nếu cần để verify KV2 (chỉ thêm, không sửa `setup_zone_one_full_sample`).
+- **Trong phạm vi:** viết lại toàn bộ nội dung `docs/V2_KICH_BAN_TEST.md`. Thêm helper `setup_zone_two_full_sample(period:)` vào `spec/support/sample_data.rb` để verify KV2 (chỉ thêm, không sửa `setup_zone_one_full_sample`).
 - **Ngoài phạm vi:** không sửa code nghiệp vụ, không sửa 3 doc nguồn kia, không viết test RSpec mới (chỉ tham chiếu test đã có). Nếu phát hiện code/thiết kế mâu thuẫn nghiệp vụ → báo, không tự sửa.
 - **Không tự mở rộng scope** ngoài việc viết lại doc + helper verify.
 
@@ -166,8 +186,8 @@ Lưu ý: lệnh chạy lâu (>2 phút) phải hỏi trước hoặc chia nhỏ (
 
 ## 7. Tự kiểm (spec self-review)
 
-- [ ] Không còn placeholder/TBD trong cấu trúc.
-- [ ] Các phần không mâu thuẫn nhau; ID scheme nhất quán.
-- [ ] Đủ tập trung cho 1 kế hoạch triển khai (1 file doc + helper verify).
-- [ ] Không mơ hồ: golden numbers verify bằng engine (không tính tay cho số mới); KV1 khớp `sample_data.rb`; KV2 shape rõ, số chốt sau khi chạy engine.
-- [ ] Cập nhật version nguồn lên v2.13.0 / v1.2.0.
+- [x] Không còn placeholder/TBD trong cấu trúc.
+- [x] Các phần không mâu thuẫn nhau; ID scheme nhất quán.
+- [x] Đủ tập trung cho 1 kế hoạch triển khai (1 file doc + helper verify).
+- [x] Không mơ hồ: golden numbers verify bằng engine (không tính tay cho số mới); KV1 khớp `sample_data.rb`; KV2 shape cụ thể, số chốt sau khi chạy engine.
+- [x] Cập nhật version nguồn lên v2.13.0 / v1.2.0.
