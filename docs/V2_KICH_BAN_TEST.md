@@ -695,3 +695,368 @@ Hàng tổng cộng trên các đầu mối sinh hoạt của Khu vực 2.
 | Tổng thành tiền thiếu (đồng) | 53.430 |
 
 Tổng quân số 14 = 1 (Chỉ huy khu vực 2) + 5 (Quân y) + 8 (Trinh sát). Tổng thừa và tổng thiếu là tổng cột theo các đầu mối sinh hoạt.
+
+---
+
+## Phần 3 — Kịch bản giao điểm nguy hiểm (6 nhóm)
+
+Phần này instance hóa **6 nhóm giao điểm nguy hiểm** của `V2_CHIEU_TEST.md` (mục "Giao điểm nguy hiểm") bằng dữ liệu thật của Phần 1 và golden numbers của Phần 2. Mỗi suite ứng với một nhóm. Mỗi kịch bản trình bày theo cấu trúc: **Điều kiện tiên quyết → Các bước → Kết quả mong đợi** (kiểm cả phía sau lẫn hiển thị khi liên quan), kết thúc bằng dòng **Chiều liên quan** trỏ tới chiều và nhóm trong `V2_CHIEU_TEST.md`.
+
+Quy ước số liệu của Phần 3:
+
+- Mọi con số tính toán trích dẫn đều **trỏ về Phần 2** (golden numbers engine-verified) hoặc là **công thức một bước** (quân số × định mức cấp bậc). Phần 3 không tính lại.
+- Khi một thao tác sửa cấu trúc hoặc dữ liệu làm engine phải tính lại nhiều bước (xóa đầu mối, thay đổi quân số tổng, phân bổ lại bơm nước), Phần 3 chỉ mô tả **hướng và cấu trúc** thay đổi (tăng/giảm, biến mất, chia lại), kèm ghi chú "(tính lại bằng engine)" — không bịa số thập phân không có trong Phần 2.
+
+### GD1 — Kỳ × Vai trò × Trạng thái entity
+
+Suite này instance hóa Nhóm 1 (giao điểm chiều 1 × 2 × 4 của `V2_CHIEU_TEST.md`). Dùng Khu vực 1.
+
+**Bối cảnh chung của suite (dựng một lần, dùng cho mọi kịch bản GD1):**
+
+```
+Kỳ N-1 (tháng 5 năm 2026): toàn bộ dữ liệu mẫu Khu vực 1 (Phần 1A).
+                           Tạo thêm đầu mối sinh hoạt "Lái xe" thuộc Đơn vị A
+                           (trực tiếp dưới đơn vị, không khối không nhóm).
+                           Nhập liệu → tính toán → đóng kỳ N-1.
+Kỳ N   (tháng 6 năm 2026): mở kỳ mới (kế thừa toàn bộ entity .kept, gồm "Lái xe").
+                           Xóa đầu mối "Lái xe" ở kỳ N.
+                           Nhập liệu các đầu mối còn lại → tính toán → đóng kỳ N.
+Mở lại kỳ N-1            : kỳ N-1 mở lại (trạng thái C — kỳ cũ mở lại).
+```
+
+Sau bước này, "Lái xe" ở trạng thái discarded (`discarded_at` có giá trị), nhưng dữ liệu per kỳ của nó ở kỳ N-1 vẫn còn (không bị cleanup vì lúc xóa ở kỳ N, chỉ dữ liệu kỳ N bị hard delete). Đây là kịch bản xuyên kỳ quan trọng nhất theo `V2_CHIEU_TEST.md` chiều 4.
+
+#### GD1-01 — Quản trị viên hệ thống xem bảng tính tiền kỳ N-1 (đầu mối đã xóa vẫn hiện) `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** bối cảnh chung GD1; đăng nhập quanTri (SA); kỳ N-1 đang mở lại.
+- **Các bước:**
+  1. Vào `/billing`, dropdown kỳ chọn kỳ N-1, dropdown khu vực chọn Khu vực 1.
+- **Kết quả mong đợi:**
+  - Phía sau: `Calculation.where(period: kỳ_N_1)` còn record của "Lái xe" (dữ liệu kỳ N-1 không bị cleanup) → "Lái xe" có dòng trên bảng. Năm đầu mối gốc giữ nguyên golden numbers Phần 2: Ban Tác huấn thiếu 37,24 (EN-KV1-SUMMARY-01), Văn thư thừa 5,72 (EN-KV1-SUMMARY-02), Kho vật tư thừa 27,62, Đại đội 1 thiếu 106,86, Chỉ huy khu vực thiếu 33,32 — vì việc tạo "Lái xe" ở kỳ N-1 không làm thay đổi tiêu chuẩn, sử dụng hay tổn hao của năm đầu mối đã có (engine tính trên dữ liệu đã chốt của kỳ N-1).
+  - Hiển thị: bảng hiện 6 dòng đầu mối sinh hoạt (5 gốc + "Lái xe"). SA chọn Khu vực 1 → cột Khu vực ẩn (thừa), cột Đơn vị hiện; "Lái xe" hiện ở Đơn vị A, cột Khối/Nhóm trống (vị trí trực tiếp đơn vị).
+  - Số chính xác dòng "Lái xe" không trích dẫn (không có trong Phần 2) — đây là kịch bản kiểm "đầu mối đã xóa vẫn hiện ở kỳ cũ", không phải kiểm số.
+- **Chiều liên quan:** `V2_CHIEU_TEST.md` chiều 1 (trạng thái C), chiều 2 (SA), chiều 4 (discarded vẫn hiện ở kỳ cũ); Nhóm 1.
+
+#### GD1-02 — Quản trị viên hệ thống xem bảng tính tiền kỳ N (đầu mối đã xóa không hiện) `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** bối cảnh chung GD1; đăng nhập quanTri (SA).
+- **Các bước:**
+  1. Vào `/billing`, dropdown kỳ chọn kỳ N, dropdown khu vực chọn Khu vực 1.
+- **Kết quả mong đợi:**
+  - Phía sau: `Calculation.where(period: kỳ_N)` KHÔNG có record "Lái xe" (đã cleanup khi xóa ở kỳ N) → không có dòng.
+  - Hiển thị: bảng hiện 5 dòng đầu mối sinh hoạt gốc, không có "Lái xe". Không có placeholder hay dòng trống cho đầu mối đã xóa.
+- **Chiều liên quan:** chiều 1 (trạng thái B/đóng), chiều 4 (discarded + cleanup → không hiện ở kỳ xóa); Nhóm 1.
+
+#### GD1-03 — Dropdown khu vực/đơn vị của SA khi xem kỳ N-1 dùng `with_discarded` `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** bối cảnh chung GD1, có biến thể: thay vì xóa đầu mối, dựng thêm kịch bản đã xóa **Đơn vị B** ở kỳ N (sau khi đã xóa hết đầu mối của Đơn vị B theo ràng buộc 23.1) để kiểm dropdown đơn vị; đăng nhập quanTri (SA); xem kỳ N-1.
+- **Các bước:**
+  1. Vào `/billing`, dropdown kỳ chọn kỳ N-1.
+  2. Mở dropdown khu vực và dropdown đơn vị.
+- **Kết quả mong đợi:**
+  - Hiển thị: dropdown đơn vị của SA vẫn liệt kê Đơn vị B (đã xóa) vì dropdown dùng `.with_discarded` (theo `V2_HANH_VI_HE_THONG.md` mục 7) — SA cần chọn được entity đã xóa để xem dữ liệu kỳ cũ. Chọn Đơn vị B → bảng hiện đầu mối Đơn vị B của kỳ N-1 với golden numbers Phần 2 (Đại đội 1 thiếu 106,86).
+  - Đối chiếu: trang quản lý/khai báo (`/contact_points`, `/units`) dùng `.kept` nên KHÔNG hiện entity đã xóa trong dropdown tạo mới — chỉ trang xem dữ liệu lịch sử (billing, history) dùng `.with_discarded`.
+- **Chiều liên quan:** chiều 7 (dropdown zone/unit SA only, `with_discarded`), chiều 4; Nhóm 1.
+
+#### GD1-04 — Năm vai trò nghiệp vụ thấy gì trên billing kỳ N-1 vs kỳ N `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** bối cảnh chung GD1; lần lượt đăng nhập 5 vai trò có quyền xem nghiệp vụ.
+- **Các bước:** mỗi vai trò vào `/billing`, xem kỳ N-1 rồi xem kỳ N.
+- **Kết quả mong đợi (đầu mối "Lái xe" thuộc Đơn vị A):**
+
+  | Vai trò | Kỳ N-1 | Kỳ N |
+  |---|---|---|
+  | SA (quanTri) | Thấy "Lái xe" (chọn Khu vực 1 + Đơn vị A) | Không thấy "Lái xe" |
+  | UA-ZM (adminA) | Thấy "Lái xe" (đầu mối Đơn vị A nằm trong phạm vi) | Không thấy "Lái xe" |
+  | UA (adminB) | Không thấy "Lái xe" (thuộc Đơn vị A, ngoài phạm vi Đơn vị B) | Không thấy |
+  | CMD-ZM (chiHuyA) | Thấy "Lái xe" như adminA, nhưng nút Tính toán lại bị ẩn | Không thấy "Lái xe" |
+  | CMD (chiHuyB) | Không thấy "Lái xe" như adminB | Không thấy |
+
+  - TECH (kyThuat) bị chặn khỏi `/billing` (redirect `/users`) ở mọi kỳ — không nằm trong bảng vì không thấy dữ liệu nghiệp vụ.
+  - Năm đầu mối gốc: với adminA/chiHuyA hiện đủ đầu mối Đơn vị A + đầu mối sinh hoạt thuộc khu vực (Chỉ huy khu vực thiếu 33,32); adminB/chiHuyB chỉ thấy Đại đội 1 thiếu 106,86.
+- **Chiều liên quan:** chiều 1 × 2 × 4 đầy đủ; Nhóm 1.
+
+#### GD1-05 — Nút Tính toán lại theo kỳ đang mở và vai trò `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** bối cảnh chung GD1, kỳ N-1 đang mở lại (trạng thái C).
+- **Các bước:** mỗi vai trò vào `/billing` xem kỳ N-1, kiểm nút Tính toán lại; sau đó SA xem kỳ N (đã đóng).
+- **Kết quả mong đợi:**
+  - Kỳ N-1 đang mở lại + kỳ đang xem = kỳ N-1: nút Tính toán lại **bật** cho SA, UA-ZM (adminA), UA (adminB). Ẩn cho CMD-ZM (chiHuyA), CMD (chiHuyB).
+  - SA xem kỳ N (đã đóng) trong khi kỳ N-1 đang mở: nút Tính toán lại **tắt** vì kỳ đang xem đã đóng (theo chiều 7 — recalculate gắn với kỳ đang xem, không phải kỳ đang mở).
+- **Chiều liên quan:** chiều 1 (trạng thái C), chiều 2, chiều 7 (kỳ đang xem ≠ kỳ đang mở), chiều 8; Nhóm 1.
+
+### GD2 — Kỳ × Loại đầu mối × Cleanup
+
+Suite này instance hóa Nhóm 2 (giao điểm chiều 1 × 5). Mỗi kịch bản xóa một loại đầu mối **ở kỳ đang mở (kỳ mới nhất, trạng thái B)** và kiểm cleanup theo bảng `V2_HANH_VI_HE_THONG.md` mục 5, đồng thời kiểm dữ liệu kỳ đã đóng giữ nguyên. Dùng Khu vực 1.
+
+**Bối cảnh chung của suite:** kỳ tháng 5 năm 2026 đã đóng với golden numbers Phần 2 (kỳ cũ). Mở kỳ mới tháng 6 năm 2026 (trạng thái B), kế thừa toàn bộ entity. Thao tác xóa diễn ra ở kỳ tháng 6 này; "kỳ cũ" = tháng 5.
+
+#### GD2-01 — Xóa đầu mối sinh hoạt "Kho vật tư" `[TỰ ĐỘNG]`
+
+- **Điều kiện tiên quyết:** bối cảnh chung GD2; đăng nhập adminA (UA-ZM) hoặc quanTri (SA).
+- **Các bước:**
+  1. Vào `/contact_points`, xóa đầu mối sinh hoạt "Kho vật tư" ở kỳ tháng 6.
+  2. Vào `/billing` xem kỳ tháng 6, bấm Tính toán lại.
+- **Kết quả mong đợi:**
+  - Phía sau (cleanup kỳ đang mở, loại residential): hard delete `meter_readings` (của CT-A3) + `personnel_entries` + `other_deductions` + `pump_allocations` của "Kho vật tư" trong kỳ tháng 6; công tơ CT-A3 bị discard. "Kho vật tư" chuyển trạng thái discarded.
+  - Engine tính lại kỳ tháng 6 (hướng và cấu trúc):
+    - CT-A3 là công tơ **không tổn hao**: khi biến mất, 110 kW của nó không còn bị trừ khỏi A (A của kỳ tháng 6 tăng so với khi còn CT-A3), và CT-A3 vốn không nằm trong mẫu số B nên B không đổi vì CT-A3 — nhưng tổng tổn hao C và tỷ lệ tổn hao thay đổi (tính lại bằng engine).
+    - Tổng quân số Đơn vị A giảm 3 người (Kho vật tư 3 người) → trọng số phân bổ bơm nước của Đơn vị A giảm → Đơn vị A nhận ít hơn, phần còn lại chia lại cho Đơn vị B và Thợ xây theo trọng số mới (tính lại bằng engine). Phần 20% cố định của Chỉ huy khu vực không đổi (cố định theo D, không theo quân số) nhưng D thay đổi do tổn hao thay đổi (tính lại bằng engine).
+    - "Kho vật tư" không còn dòng trên bảng tính tiền kỳ tháng 6.
+  - Dữ liệu kỳ tháng 5 (đã đóng) giữ nguyên: dòng "Kho vật tư" vẫn thừa 27,62, thành tiền 64.523 (EN-KV1-SUMMARY-03); tổn hao CT-A3 = 0,00; A = 1.990,00, B = 1.930,00, C = 60,00 (EN-KV1-LOSS) không đổi.
+- **Chiều liên quan:** chiều 1 (B), chiều 5 (residential cleanup); Nhóm 2.
+
+#### GD2-02 — Xóa đầu mối công cộng "Nhà ăn" `[TỰ ĐỘNG]`
+
+- **Điều kiện tiên quyết:** bối cảnh chung GD2; đăng nhập adminA (UA-ZM) hoặc SA.
+- **Các bước:**
+  1. Vào `/contact_points`, xóa đầu mối công cộng "Nhà ăn" ở kỳ tháng 6.
+  2. Tính toán lại kỳ tháng 6.
+- **Kết quả mong đợi:**
+  - Phía sau (cleanup loại public): hard delete `meter_readings` (của CT-CC-A) trong kỳ tháng 6 + discard công tơ CT-CC-A. Public không có `personnel_entries`, `other_deductions`, `pump_allocations` nên không có gì khác để xóa.
+  - Engine tính lại kỳ tháng 6: CT-CC-A (220 kW) thuộc mẫu số B → B giảm khi CT-CC-A biến mất → C = A − B tăng, tỷ lệ tổn hao tăng, tổn hao phân bổ lại cho các công tơ còn lại (gồm công tơ sinh hoạt và bơm nước) tăng (tính lại bằng engine). Khoản trừ công cộng Sư đoàn và công cộng đơn vị của các đầu mối sinh hoạt thay đổi theo (tính lại bằng engine). "Nhà ăn" vốn không có dòng trên bảng tính tiền (public), nên bảng vẫn 5 dòng — thay đổi nằm ở các con số khoản trừ/tổn hao của các đầu mối sinh hoạt.
+  - Dữ liệu kỳ tháng 5 (đã đóng) giữ nguyên: tổn hao CT-CC-A = 6,84 (EN-KV1-LOSS); A/B/C tháng 5 không đổi.
+- **Chiều liên quan:** chiều 1 (B), chiều 5 (public cleanup); Nhóm 2.
+
+#### GD2-03 — Xóa đầu mối bơm nước "Trạm bơm 1" `[TỰ ĐỘNG]`
+
+- **Điều kiện tiên quyết:** bối cảnh chung GD2; đăng nhập adminA (UA-ZM) hoặc SA (chỉ hai vai trò này thấy đầu mối bơm nước).
+- **Các bước:**
+  1. Vào `/contact_points`, xóa đầu mối bơm nước "Trạm bơm 1" ở kỳ tháng 6.
+  2. Tính toán lại kỳ tháng 6.
+- **Kết quả mong đợi:**
+  - Phía sau (cleanup loại water_pump): hard delete `meter_readings` (của CT-BN1) trong kỳ tháng 6 + discard công tơ CT-BN1.
+  - Engine tính lại kỳ tháng 6: CT-BN1 (300 kW) thuộc mẫu số B → B giảm, tỷ lệ tổn hao thay đổi (tính lại bằng engine). Quan trọng hơn: nguồn điện bơm nước D = sử dụng thô công tơ bơm nước + tổn hao công tơ bơm nước → mất CT-BN1, khu vực không còn công tơ bơm nước → D = 0 → toàn bộ Tiêu chuẩn bơm nước nhận về của các đối tượng (Đơn vị A, Đơn vị B, Chỉ huy khu vực, Thợ xây) về 0 (cấu hình phân bổ vẫn còn nhưng không có nguồn để chia). Cột Sử dụng bơm nước của mọi đầu mối sinh hoạt = 0 (tính lại bằng engine). Không có cảnh báo (theo chiều 9: khu vực không có trạm bơm là hợp lệ).
+  - Dữ liệu kỳ tháng 5 (đã đóng) giữ nguyên: D = 309,33 (EN-KV1-PUMP); phân bổ Chỉ huy khu vực 61,87, Đơn vị A 105,30, Đơn vị B 115,83, Thợ xây 26,33.
+- **Chiều liên quan:** chiều 1 (B), chiều 5 (water_pump cleanup + nguồn bơm nước); Nhóm 2.
+
+#### GD2-04 — Xóa đầu mối ngoài biên chế "Thợ xây" `[TỰ ĐỘNG]`
+
+- **Điều kiện tiên quyết:** bối cảnh chung GD2; đăng nhập adminA (UA-ZM) hoặc SA.
+- **Các bước:**
+  1. Vào `/contact_points`, xóa đầu mối ngoài biên chế "Thợ xây" ở kỳ tháng 6.
+  2. Tính toán lại kỳ tháng 6.
+- **Kết quả mong đợi:**
+  - Phía sau (cleanup loại non_establishment): hard delete `non_establishment_snapshots` + `pump_allocations` của "Thợ xây" trong kỳ tháng 6. Non_establishment không có công tơ nên không có `meter_readings`.
+  - Engine tính lại kỳ tháng 6: "Thợ xây" là một đối tượng nhận phân bổ bơm nước theo hệ số (hệ số 0,5 × 5 người). Khi biến mất khỏi phân bổ, phần D còn lại sau 20% cố định của Chỉ huy khu vực được chia lại chỉ cho Đơn vị A và Đơn vị B theo trọng số quân số × hệ số → Đơn vị A và Đơn vị B nhận **nhiều hơn** so với khi còn Thợ xây (tính lại bằng engine). "Thợ xây" không có dòng trên bảng tính tiền (non_establishment), bảng vẫn 5 dòng. Tổng sử dụng bơm nước phân về các đầu mối sinh hoạt tăng.
+  - Dữ liệu kỳ tháng 5 (đã đóng) giữ nguyên: Thợ xây nhận 26,33 kW bơm nước (EN-KV1-PUMP); Đơn vị A 105,30, Đơn vị B 115,83.
+- **Chiều liên quan:** chiều 1 (B), chiều 5 (non_establishment cleanup); Nhóm 2.
+
+#### GD2-05 — Bao quát: dữ liệu kỳ cũ giữ nguyên sau mọi loại xóa `[TỰ ĐỘNG]`
+
+- **Điều kiện tiên quyết:** đã chạy lần lượt GD2-01..04 (trên các nhánh dữ liệu độc lập); kỳ tháng 5 đã đóng.
+- **Các bước:** với mỗi loại xóa, vào `/billing` xem kỳ tháng 5 (đã đóng), so sánh với Phần 2.
+- **Kết quả mong đợi:** Hàng tổng kỳ tháng 5 luôn khớp EN-KV1-TOTALS: tổng quân số 22, tổng tiêu chuẩn 1.851,90, tổng trừ 372,98, tổng thừa 33,34, tổng thiếu 177,42, tổng thành tiền thừa 77.891, tổng thành tiền thiếu 414.517 — bất kể loại đầu mối nào bị xóa ở kỳ tháng 6. Đây là kiểm chứng "dữ liệu kỳ cũ giữ nguyên" của nghiệp vụ mục 23.1.
+- **Chiều liên quan:** chiều 1 (kỳ đóng không bị ảnh hưởng), chiều 5; Nhóm 2.
+
+### GD3 — Vai trò × Thuộc về × Trang
+
+Suite này instance hóa Nhóm 3 (giao điểm chiều 2 × 6 × 3). Kiểm vai trò nào thấy đầu mối nào trên ba trang billing / meter_entries / unit_config, phân biệt đầu mối thuộc đơn vị và đầu mối thuộc khu vực trực tiếp. Dùng Khu vực 1 (đầu mối thuộc đơn vị: Ban Tác huấn, Văn thư, Kho vật tư thuộc Đơn vị A; Đại đội 1 thuộc Đơn vị B; đầu mối thuộc khu vực trực tiếp: Chỉ huy khu vực) và Khu vực 2 (kiểm cách ly cross-zone). Kỳ tháng 5 năm 2026 đang mở.
+
+#### GD3-01 — UA (adminB) chỉ thấy đầu mối Đơn vị B `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** kỳ tháng 5 đang mở; đăng nhập adminB (UA).
+- **Các bước:** vào `/billing`, `/meter_entries`, `/unit_config`.
+- **Kết quả mong đợi:**
+  - `/billing`: chỉ 1 dòng đầu mối sinh hoạt là Đại đội 1 (thiếu 106,86, thành tiền 249.659 — EN-KV1-SUMMARY-04). Không thấy đầu mối Đơn vị A, không thấy Chỉ huy khu vực (đầu mối thuộc khu vực trực tiếp, ngoài phạm vi UA). Billing 28 cột (ẩn cả Khu vực + Đơn vị).
+  - `/meter_entries`: thấy công tơ sinh hoạt + công cộng của Đơn vị B (CT-B1 Đại đội 1, CT-CC-B Trạm gác). Không thấy bơm nước. Không có cột Khu vực/Đơn vị (non-SA), không có dropdown filter.
+  - `/unit_config`: cấu hình Đơn vị B (tỷ lệ công cộng đơn vị 0%) + cột Khác của đầu mối sinh hoạt Đơn vị B (Đại đội 1, hệ số 3). Không thấy cấu hình đầu mối khu vực.
+- **Chiều liên quan:** chiều 2 (UA), chiều 6 (thuộc đơn vị), chiều 3 (3 trang); Nhóm 3.
+
+#### GD3-02 — UA-ZM (adminA) thấy Đơn vị A + đầu mối sinh hoạt thuộc khu vực `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** kỳ tháng 5 đang mở; đăng nhập adminA (UA-ZM, Đơn vị A quản lý Khu vực 1).
+- **Các bước:** vào `/billing`, `/meter_entries`, `/unit_config`.
+- **Kết quả mong đợi:**
+  - `/billing`: thấy đầu mối sinh hoạt Đơn vị A (Ban Tác huấn thiếu 37,24; Văn thư thừa 5,72; Kho vật tư thừa 27,62) **cộng** đầu mối sinh hoạt thuộc khu vực trực tiếp (Chỉ huy khu vực thiếu 33,32). KHÔNG thấy Đại đội 1 (thuộc Đơn vị B). Billing 29 cột (có Đơn vị, ẩn Khu vực). Cột Đơn vị của dòng "Chỉ huy khu vực" **trống** (đầu mối thuộc khu vực trực tiếp — chiều 6).
+  - `/meter_entries`: thấy công tơ sinh hoạt + công cộng Đơn vị A (CT-A1, CT-A2, CT-A3, CT-CC-A) + công tơ thuộc khu vực (CT-KV1 Chỉ huy khu vực, CT-CC-KV Đèn đường). Trên `/pump_entries` thấy CT-BN1 (bơm nước khu vực).
+  - `/unit_config`: cấu hình Đơn vị A (tỷ lệ công cộng đơn vị 3%) + cột Khác đầu mối sinh hoạt Đơn vị A + cột Khác đầu mối sinh hoạt thuộc khu vực (Chỉ huy khu vực, cố định 0).
+- **Chiều liên quan:** chiều 2 (UA-ZM), chiều 6 (thuộc đơn vị + thuộc khu vực), chiều 3; Nhóm 3.
+
+#### GD3-03 — SA (quanTri) thấy tất cả + filter `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** kỳ tháng 5 đang mở; đăng nhập quanTri (SA).
+- **Các bước:** vào `/billing` không filter, rồi filter Khu vực 1, rồi filter Khu vực 1 + Đơn vị A.
+- **Kết quả mong đợi:**
+  - Không filter: thấy toàn bộ đầu mối sinh hoạt cả hai khu vực (5 của Khu vực 1 + 3 của Khu vực 2 = 8 dòng). Billing 30 cột (có Khu vực + Đơn vị).
+  - Filter Khu vực 1: 5 dòng Khu vực 1; cột Khu vực ẩn (thừa khi đã chọn 1 zone), cột Đơn vị hiện; dòng "Chỉ huy khu vực" cột Đơn vị trống.
+  - Filter Khu vực 1 + Đơn vị A: 3 dòng (Ban Tác huấn, Văn thư, Kho vật tư); cột Khu vực + Đơn vị đều ẩn. Dropdown đơn vị cascade theo khu vực đã chọn.
+- **Chiều liên quan:** chiều 2 (SA), chiều 6, chiều 3; Nhóm 3.
+
+#### GD3-04 — CMD và CMD-ZM thấy như UA/UA-ZM nhưng input bị vô hiệu hóa `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** kỳ tháng 5 đang mở; đăng nhập lần lượt chiHuyB (CMD), chiHuyA (CMD-ZM).
+- **Các bước:** mỗi vai trò vào `/billing`, `/meter_entries`, `/unit_config`.
+- **Kết quả mong đợi:**
+  - chiHuyB (CMD): phạm vi dữ liệu **giống adminB** (chỉ Đại đội 1 trên billing, 28 cột) nhưng nút Tính toán lại bị ẩn; ô nhập `/meter_entries` và `/unit_config` bị vô hiệu hóa (disabled), nút Lưu bị ẩn.
+  - chiHuyA (CMD-ZM): phạm vi dữ liệu **giống adminA** (đầu mối Đơn vị A + đầu mối khu vực, 29 cột, cột Đơn vị của Chỉ huy khu vực trống) nhưng chỉ xem; nút Tính toán lại ẩn; mọi ô nhập disabled.
+- **Chiều liên quan:** chiều 2 (CMD/CMD-ZM chỉ xem), chiều 6, chiều 3 (input state); Nhóm 3.
+
+#### GD3-05 — Cách ly cross-zone: adminC (Khu vực 2) không thấy Khu vực 1 `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** kỳ tháng 5 đang mở; đăng nhập adminC (UA-ZM, Đơn vị C quản lý Khu vực 2).
+- **Các bước:** vào `/billing`, `/meter_entries`, `/unit_config`.
+- **Kết quả mong đợi:**
+  - `/billing`: thấy đúng **2 đầu mối sinh hoạt** mà adminC quản lý — Quân y (Đơn vị C) thừa 9,32 (EN-KV2-SUMMARY-01) và Chỉ huy khu vực 2 (thuộc khu vực trực tiếp) thừa 11,20 (EN-KV2-SUMMARY-03). **KHÔNG thấy Trinh sát**: đầu mối này thuộc Đơn vị D — một đơn vị khác trong cùng khu vực — nên nằm ngoài phạm vi của adminC (xem ghi chú phạm vi bên dưới). 29 cột (có Đơn vị, ẩn Khu vực vì cố định 1 khu vực); cột Đơn vị của hàng Chỉ huy khu vực 2 để trống.
+  - Tuyệt đối không thấy bất kỳ đầu mối nào của Khu vực 1 (Ban Tác huấn, Đại đội 1, Chỉ huy khu vực...). Đây là kiểm cách ly cross-zone.
+  - `/meter_entries`, `/unit_config`: chỉ entity Khu vực 2.
+- **Ghi chú phạm vi (UA-ZM trên billing):** Phạm vi billing của UA-ZM = đầu mối đơn vị mình + đầu mối sinh hoạt **thuộc khu vực trực tiếp** (`unit_id` null, `zone_id` có giá trị) — KHÔNG bao gồm đầu mối của các đơn vị khác trong cùng khu vực. Nguồn: `V2_THIET_KE_HE_THONG.md` mục "Bảng tính tiền → Mapping filter theo vai trò" ("Đầu mối đơn vị mình + đầu mối sinh hoạt thuộc khu vực"), khớp với `accessible_by(current_ability)` (Ability: `contact_point.unit_id` = đơn vị mình HOẶC `contact_point.zone_id` thuộc khu vực mình quản lý). Vì ràng buộc XOR `unit_id`/`zone_id`, đầu mối thuộc Đơn vị D (Trinh sát) có `zone_id` null nên không lọt vào phạm vi này. Vậy adminC thấy đúng 2 đầu mối Khu vực 2 (Quân y + Chỉ huy khu vực 2), không thấy Trinh sát. Cụm "đầu mối sinh hoạt khu vực" trong `V2_HANH_VI_HE_THONG.md` mục 1 nghĩa là đầu mối thuộc khu vực trực tiếp, không phải mọi đầu mối trong khu vực. Điều cốt lõi của kịch bản: KHÔNG thấy bất kỳ đầu mối nào của Khu vực 1.
+- **Chiều liên quan:** chiều 2 (UA-ZM ở khu vực khác), chiều 6, chiều 3, bối cảnh cross-zone (DATA-KV2); Nhóm 3.
+
+### GD4 — Kỳ đang xem × Trạng thái tính toán × Vai trò
+
+Suite này instance hóa Nhóm 4 (giao điểm chiều 7 × 8 × 2). Kiểm hành vi khi chưa tính, khi dữ liệu cũ (stale), và khi kỳ đang xem khác kỳ đang mở.
+
+#### GD4-01 — Kỳ mới mở chưa bấm tính: bảng trống, không lỗi `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** mở kỳ mới tháng 6 năm 2026 (kế thừa entity), chưa ai bấm Tính toán lại; đăng nhập adminA (UA-ZM).
+- **Các bước:**
+  1. Vào `/billing` xem kỳ tháng 6.
+  2. Vào `/dashboard`.
+- **Kết quả mong đợi:**
+  - Phía sau: `Calculation.where(period: kỳ_tháng_6)` rỗng (chưa tính).
+  - `/billing`: bảng hiện trạng thái rỗng (không có hàng dữ liệu), KHÔNG lỗi 500. Nút Tính toán lại bật (kỳ đang mở + adminA có quyền).
+  - `/dashboard`: thâm điện / số dư hiển thị 0, không lỗi.
+- **Chiều liên quan:** chiều 7 (kỳ đang xem = kỳ đang mở), chiều 8 (chưa tính lần nào), chiều 2; Nhóm 4.
+
+#### GD4-02 — Sửa chỉ số rồi chưa tính lại: billing hiện số cache cũ (stale) `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** kỳ tháng 5 đang mở, đã tính một lần (golden numbers Phần 2 hiển thị đúng); đăng nhập adminA (UA-ZM).
+- **Các bước:**
+  1. Vào `/meter_entries`, sửa chỉ số cuối kỳ CT-A1 (Ban Tác huấn) từ 1.250 lên 1.400 (sử dụng tăng từ 250 lên 400). Lưu.
+  2. KHÔNG bấm Tính toán lại. Quay lại `/billing`.
+- **Kết quả mong đợi:**
+  - Phía sau: `meter_readings` của CT-A1 đã cập nhật, nhưng `calculations` chưa đổi (chỉ thay đổi khi recalculate).
+  - `/billing`: dòng Ban Tác huấn vẫn hiện số cũ — thiếu 37,24, thành tiền 87.004 (EN-KV1-SUMMARY-01) — KHÔNG phản ánh chỉ số mới. Đây là trạng thái stale: UA-ZM dễ tưởng chưa nhập hoặc tưởng số đã đúng. Cần bấm Tính toán lại để engine cập nhật (sau khi tính lại, số sẽ khác — không trích dẫn vì là kết quả nhiều bước, tính lại bằng engine).
+  - Hiển thị nên kèm chỉ báo cần tính lại nếu thiết kế có (kiểm theo trang).
+- **Chiều liên quan:** chiều 7, chiều 8 (stale), chiều 2; Nhóm 4.
+
+#### GD4-03 — Xuất Excel khi stale: file chứa số cũ `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** trạng thái stale của GD4-02 (đã sửa CT-A1, chưa tính lại); đăng nhập quanTri (SA) hoặc adminA.
+- **Các bước:**
+  1. Trên `/billing` (đang stale), bấm Xuất Excel.
+- **Kết quả mong đợi:**
+  - File Excel chứa **số cũ** (Ban Tác huấn thiếu 37,24, thành tiền 87.004 — EN-KV1-SUMMARY-01), giống hệt HTML đang hiển thị, vì cả hai render từ bảng `calculations` chưa được tính lại. Đây là rủi ro nghiệp vụ: file xuất ra không phản ánh chỉ số mới nhập.
+  - Kiểm chứng: Excel khớp HTML stale (không phải khớp dữ liệu thô mới) — cùng nguồn `calculations`.
+- **Chiều liên quan:** chiều 7, chiều 8 (stale), chiều 12 (Excel cùng nguồn calculations); Nhóm 4.
+
+#### GD4-04 — SA mở lại kỳ N-2 nhưng xem kỳ N-1 (đã đóng): Tính toán lại bị tắt `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** có ít nhất ba kỳ: N-2, N-1, N đều đã đóng. SA mở lại kỳ N-2 (trạng thái C — kỳ cũ mở lại; `current_period` = N-2). Đăng nhập quanTri (SA).
+- **Các bước:**
+  1. Vào `/billing`, dropdown kỳ chọn xem kỳ N-1 (đã đóng), trong khi kỳ đang mở là N-2.
+- **Kết quả mong đợi:**
+  - Hiển thị dữ liệu kỳ N-1 (kỳ đang xem), nhưng nút Tính toán lại **tắt** vì kỳ N-1 đã đóng — recalculate gắn với kỳ đang xem, không phải kỳ đang mở (chiều 7).
+  - Đối chiếu: nếu SA đổi dropdown kỳ về N-2 (kỳ đang mở lại), nút Tính toán lại **bật** (sửa được dữ liệu per kỳ ở trạng thái C). Đây là phân biệt cốt lõi: recalculate của kỳ đang mở (N-2) hoạt động, kỳ đóng (N-1) thì không.
+- **Chiều liên quan:** chiều 7 (kỳ đang xem ≠ kỳ đang mở, hàng "N-2 mở lại / xem N-1"), chiều 8, chiều 2 (SA); Nhóm 4.
+
+### GD5 — Vị trí phân cấp × Định dạng output
+
+Suite này instance hóa Nhóm 5 (giao điểm chiều 10 × 12). Kiểm gộp ô (rowspan HTML / merge Excel) cho 5 vị trí phân cấp và số cột theo vai trò. Dùng cả 5 vị trí phân cấp: Khu vực 1 có 4 vị trí (1, 2, 4, 5 theo bảng chiều 10), Khu vực 2 bổ sung vị trí 3 (nhóm trực tiếp dưới đơn vị, không khối) qua "Quân y" trong nhóm "Tổ Quân y".
+
+Năm vị trí phân cấp (theo `V2_CHIEU_TEST.md` chiều 10):
+
+| Vị trí | Đầu mối ví dụ | Khu vực | Cột Khối | Cột Nhóm | Cột Đơn vị |
+|---|---|---|---|---|---|
+| 1. Trực tiếp đơn vị | Kho vật tư (Đơn vị A), Đại đội 1 (Đơn vị B) | KV1 | Trống | Trống | Có |
+| 2. Trong khối, không nhóm | Văn thư (khối Phòng Tham mưu) | KV1 | Merge | Trống | Có |
+| 3. Trong nhóm trực tiếp, không khối | Quân y (nhóm Tổ Quân y, Đơn vị C) | KV2 | Trống | Merge | Có |
+| 4. Trong nhóm trong khối | Ban Tác huấn (khối Phòng Tham mưu, nhóm Ban Tác huấn) | KV1 | Merge | Merge | Có |
+| 5. Thuộc khu vực trực tiếp | Chỉ huy khu vực (KV1), Chỉ huy khu vực 2 (KV2) | KV1/KV2 | Trống | Trống | Trống |
+
+#### GD5-01 — Rowspan/merge HTML cho 5 vị trí phân cấp `[THỦ CÔNG]`
+
+- **Điều kiện tiên quyết:** kỳ tháng 5 đang mở, đã tính; đăng nhập quanTri (SA), không filter (xem gộp cả hai khu vực).
+- **Các bước:** vào `/billing`, quan sát gộp ô bốn cột Khu vực / Đơn vị / Khối / Nhóm.
+- **Kết quả mong đợi:**
+  - Vị trí 1 (Kho vật tư, Đại đội 1): cột Khối và Nhóm trống; cột Đơn vị có giá trị.
+  - Vị trí 2 (Văn thư): cột Khối "Phòng Tham mưu" gộp (cùng khối với Ban Tác huấn); cột Nhóm trống.
+  - Vị trí 3 (Quân y): cột Nhóm "Tổ Quân y" gộp; cột Khối **trống** (nhóm trực tiếp dưới đơn vị, không khối) — đây là vị trí duy nhất Khu vực 1 không có.
+  - Vị trí 4 (Ban Tác huấn): cột Khối "Phòng Tham mưu" gộp **và** cột Nhóm "Ban Tác huấn" gộp.
+  - Vị trí 5 (Chỉ huy khu vực, Chỉ huy khu vực 2): cột Đơn vị **trống** (không hiện "—" hay placeholder); cột Khối và Nhóm trống.
+  - Cột Khu vực: các dòng cùng Khu vực 1 gộp thành một ô, các dòng Khu vực 2 gộp thành một ô (SA xem gộp hai khu vực).
+- **Chiều liên quan:** chiều 10 (5 vị trí), chiều 12 (HTML rowspan); Nhóm 5.
+
+#### GD5-02 — Excel merge phản chiếu HTML rowspan `[THỦ CÔNG]`
+
+- **Điều kiện tiên quyết:** như GD5-01; SA bấm Xuất Excel.
+- **Các bước:** mở tập tin Excel, đối chiếu merge bốn cột Khu vực / Đơn vị / Khối / Nhóm với HTML.
+- **Kết quả mong đợi:**
+  - Mỗi merge dọc của HTML (`rowspan`) có một `merge_cells` tương ứng trong Excel: khối "Phòng Tham mưu" merge qua Ban Tác huấn + Văn thư; nhóm "Tổ Quân y" merge qua các dòng Quân y; ô Đơn vị của dòng Chỉ huy khu vực để trống (không merge với đơn vị nào).
+  - Sai merge → layout Excel vỡ (đây là điểm nguy hiểm của chiều 12). Kiểm trực quan từng cột.
+- **Chiều liên quan:** chiều 10, chiều 12 (Excel merge_cells); Nhóm 5.
+
+#### GD5-03 — Số cột theo vai trò: SA 30, UA-ZM 29, UA 28 `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** kỳ tháng 5 đang mở, đã tính.
+- **Các bước:** lần lượt đăng nhập quanTri (SA), adminA (UA-ZM), adminB (UA), vào `/billing`, đếm cột.
+- **Kết quả mong đợi:**
+  - SA: 30 cột (có cả Khu vực + Đơn vị).
+  - UA-ZM (adminA): 29 cột (có Đơn vị, ẩn Khu vực).
+  - UA (adminB): 28 cột (ẩn cả Khu vực + Đơn vị).
+  - SA khi đã chọn một khu vực trong dropdown: cột Khu vực ẩn → còn 29 cột (giống UA-ZM về số cột nhưng vẫn là phiên SA).
+- **Chiều liên quan:** chiều 12 (số cột dynamic theo vai trò + filter), chiều 2; Nhóm 5.
+
+#### GD5-04 — Chỉ số cột công thức Excel dịch theo số cột `[THỦ CÔNG]`
+
+- **Điều kiện tiên quyết:** như GD5-03; xuất Excel cho từng vai trò SA / UA-ZM / UA.
+- **Các bước:** mở từng tập tin Excel, kiểm các ô công thức (hàng tổng `=SUM(...)`, tổng tiêu chuẩn `=residential + water_pump`, thành tiền `=kW × đơn giá`).
+- **Kết quả mong đợi:**
+  - File SA (30 cột) và file UA (28 cột) có cùng giá trị tính toán nhưng **chỉ số cột trong công thức dịch** theo số cột bị ẩn (ẩn Khu vực dịch 1 cột, ẩn cả Khu vực + Đơn vị dịch 2 cột). Công thức phải trỏ đúng ô — nếu trỏ sai ô thì Excel sai trong khi HTML đúng (điểm nguy hiểm chiều 12).
+  - Đối chiếu hàng tổng Excel với EN-KV1-TOTALS (ví dụ tổng thành tiền thiếu 414.517 cho phiên SA xem Khu vực 1) — giá trị phải khớp dù chỉ số cột khác nhau giữa các vai trò.
+- **Chiều liên quan:** chiều 12 (Excel formula column index dịch theo số cột); Nhóm 5.
+
+### GD6 — Cách nhận dữ liệu × Kỳ × Loại đầu mối
+
+Suite này instance hóa Nhóm 6 (giao điểm chiều 11 × 1 × 5). Kiểm ba đường nhận dữ liệu per kỳ (kế thừa khi mở kỳ mới, tạo giữa kỳ qua after_create, kỳ đầu tiên) theo `V2_HANH_VI_HE_THONG.md` mục 6. Dùng Khu vực 1.
+
+#### GD6-01 — Tạo đầu mối sinh hoạt "Tổ xe" giữa kỳ đang mở `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** kỳ tháng 5 đang mở (trạng thái B); đăng nhập adminA (UA-ZM). Tạo "Tổ xe" thuộc Đơn vị A với quân số: 1 người nhóm "Chỉ huy Đại đội, Trung đội; cấp Úy" (định mức 130) + 4 người nhóm "Hạ sĩ quan, binh sĩ" (định mức 24), một công tơ CT-Tổxe với chỉ số cuối kỳ 200.
+- **Các bước:**
+  1. Vào `/contact_points`, tạo đầu mối sinh hoạt "Tổ xe" với cấu hình trên.
+- **Kết quả mong đợi:**
+  - Phía sau (after_create loại residential, theo chiều 11):
+    - `meter_readings` của CT-Tổxe: `reading_start = 0` (tạo giữa kỳ), `reading_end` do user nhập (200), `no_loss` = giá trị no_loss của công tơ.
+    - `personnel_entries`: tạo cho **mọi** nhóm cấp bậc hiện có (7 nhóm), count theo form (1 cho cấp Úy 130, 4 cho Hạ sĩ quan binh sĩ 24, 0 cho 5 nhóm còn lại).
+    - `other_deductions`: tạo với type = fixed, value = 0.
+  - Công thức một bước (chỉ tính tiêu chuẩn sinh hoạt = Σ quân số × định mức): **Tiêu chuẩn sinh hoạt = 1 × 130 + 4 × 24 = 130 + 96 = 226,00 kW.** (Chỉ tính tiêu chuẩn sinh hoạt vì là công thức một bước; các cột còn lại của dòng "Tổ xe" — tổn hao, bơm nước, khoản trừ, thừa/thiếu, thành tiền — là kết quả nhiều bước, tính lại bằng engine, không trích dẫn.)
+  - Hiển thị: "Tổ xe" xuất hiện trên `/meter_entries` (CT-Tổxe, reading_start 0) và trên `/billing` sau khi Tính toán lại.
+- **Chiều liên quan:** chiều 11 (tạo giữa kỳ), chiều 1 (B), chiều 5 (residential); Nhóm 6.
+
+#### GD6-02 — Thêm nhóm cấp bậc mới giữa kỳ: personnel_entries count = 0 cho mọi đầu mối sinh hoạt `[TỰ ĐỘNG]`
+
+- **Điều kiện tiên quyết:** kỳ tháng 5 đang mở (trạng thái B); đăng nhập quanTri (SA) — nhóm cấp bậc là cấu hình chung, SA quản lý.
+- **Các bước:**
+  1. Vào `/ranks`, thêm một nhóm cấp bậc mới (ví dụ "Thử nghiệm", định mức 50).
+- **Kết quả mong đợi:**
+  - Phía sau (after_create Rank, theo chiều 11): tạo `personnel_entries` với count = 0 cho **mọi đầu mối sinh hoạt hiện có** của kỳ đang mở (Khu vực 1: Ban Tác huấn, Văn thư, Kho vật tư, Đại đội 1, Chỉ huy khu vực; Khu vực 2: Quân y, Trinh sát, Chỉ huy khu vực 2). Đầu mối ngoài biên chế (Thợ xây) KHÔNG bị ảnh hưởng (quân số tổng, không theo nhóm cấp bậc).
+  - Engine: vì count = 0, tiêu chuẩn sinh hoạt của mọi đầu mối **không đổi** → mọi golden numbers Phần 2 giữ nguyên (Ban Tác huấn thiếu 37,24, ...). Nhóm cấp bậc mới chỉ có tác dụng khi user nhập quân số > 0 và tính lại.
+  - Hiển thị: trên `/meter_entries` không đổi (rank không có công tơ); trên form sửa quân số đầu mối sinh hoạt xuất hiện thêm hàng nhóm "Thử nghiệm" với count 0.
+- **Chiều liên quan:** chiều 11 (thêm rank giữa kỳ), chiều 1 (B), chiều 5; Nhóm 6.
+
+#### GD6-03 — Mở kỳ mới: kế thừa dữ liệu, main_meter_readings KHÔNG kế thừa `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** kỳ tháng 5 đã đóng với golden numbers Phần 2; đăng nhập quanTri (SA).
+- **Các bước:**
+  1. Vào `/pricing`, mở kỳ mới tháng 6 năm 2026.
+  2. Vào `/meter_entries`, `/unit_config`, `/electricity_supply` xem kỳ tháng 6.
+- **Kết quả mong đợi (kế thừa, theo chiều 11 và `V2_HANH_VI_HE_THONG.md` mục 6):**
+  - `meter_readings`: `reading_start` kỳ tháng 6 = `reading_end` kỳ tháng 5 (CT-A1: start = 1.250; CT-A2: start = 680; CT-B1: start = 2.350; ...) — editable, user sửa nếu cần. `reading_end` để trống chờ nhập.
+  - `personnel_entries`: copy count từ kỳ tháng 5 (match theo position nhóm cấp bậc). `unit_configs`: copy unit_public_rate (Đơn vị A 3%, Đơn vị B 0%). `other_deductions`: copy type + value (Ban Tác huấn cố định 5, Văn thư hệ số −2,5, ...). `pump_allocations`: copy coefficient + fixed_percentage (Chỉ huy khu vực 20% cố định + hệ số 1; Đơn vị A/B hệ số 1; Thợ xây hệ số 0,5). `ranks`: copy name + quota + position (7 nhóm).
+  - `main_meter_readings`: **KHÔNG kế thừa** — `/electricity_supply` kỳ tháng 6 hiện "Chưa nhập" cho CT-Tổng-KV1 (và CT-Tổng-KV2). Phải nhập lại số sử dụng mỗi kỳ.
+  - Chỉ copy entity `.kept` — đầu mối/công tơ đã xóa không được copy sang kỳ tháng 6.
+  - (Mô tả kế thừa theo cấu trúc; không trích dẫn số tính toán kỳ tháng 6 vì chưa nhập reading_end và chưa tính.)
+- **Chiều liên quan:** chiều 11 (kế thừa khi mở kỳ mới + main_meter không kế thừa), chiều 1 (chuyển A→B); Nhóm 6.
+
+#### GD6-04 — Đầu mối tạo giữa kỳ có reading_start = 0: sử dụng = reading_end `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** "Tổ xe" tạo giữa kỳ ở GD6-01 (CT-Tổxe reading_start = 0); kỳ tháng 5 đang mở; đăng nhập adminA.
+- **Các bước:**
+  1. Vào `/meter_entries`, nhập `reading_end` của CT-Tổxe = 200.
+  2. Tính toán lại.
+- **Kết quả mong đợi:**
+  - Cột Sử dụng của CT-Tổxe = `reading_end − reading_start` = 200 − 0 = **200,00 kW** (công thức một bước). Vì reading_start = 0 (công tơ tạo giữa kỳ, không kế thừa số đầu kỳ), sử dụng bằng nguyên reading_end — có thể rất lớn nếu công tơ không mới lắp mà nhập chỉ số tích lũy. Đây là điểm nguy hiểm chiều 11: đầu mối tạo giữa kỳ luôn có reading_start = 0, dễ gây sử dụng phình to nếu nhập reading_end là chỉ số tích lũy thực tế.
+  - Các cột còn lại của dòng "Tổ xe" (tổn hao, bơm nước, thừa/thiếu, thành tiền) là kết quả nhiều bước → tính lại bằng engine, không trích dẫn.
+- **Chiều liên quan:** chiều 11 (reading_start = 0 khi tạo giữa kỳ → sử dụng = reading_end), chiều 1, chiều 5; Nhóm 6.
