@@ -1410,3 +1410,399 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 ---
 
 > **Tổng kết Phần 4:** 18 trang × 6 vai trò được instance hóa cụ thể bằng dữ liệu Phần 1 và golden numbers Phần 2. Phạm vi billing/history của UA-ZM nhất quán là **đầu mối đơn vị mình cộng đầu mối sinh hoạt thuộc khu vực trực tiếp** (KHÔNG gồm đầu mối các đơn vị khác cùng khu vực): adminA 4 hàng, adminC 2 hàng, adminB/adminD 1 hàng, SA gộp 8 hàng. CMD/CMD-ZM khớp UA/UA-ZM về phạm vi nhưng chỉ xem. TECH chặn khỏi mọi trang nghiệp vụ. Hai điểm cần xác nhận khi triển khai đã ghi chú: (1) design issue truy cập trực tiếp URL `/zones`, `/units`, `/pricing`, `/users`, `/pump_allocations` qua thừa quyền `can :read, Zone/Unit` (CLAUDE.md); (2) `/ranks` cho non-SA — chiều 3 ghi "Xem" nhưng sidebar table đánh dấu ẩn mục.
+
+---
+
+## Phần 5 — Vận hành
+
+Phần này kiểm thử các thao tác vận hành nằm ngoài bảng tính tiền: vòng đời kỳ tính toán, ràng buộc CRUD và validation, xác thực, sao lưu và nhật ký. Mỗi kịch bản trình bày theo cấu trúc: **Điều kiện tiên quyết → Các bước → Kết quả mong đợi** rồi dòng **Tham chiếu** trỏ tới `V2_CHIEU_TEST.md` và mục nghiệp vụ. Mã kịch bản `VH-<nhóm>-<số>`.
+
+Quy ước Phần 5:
+
+- Mọi con số tính toán trích dẫn đều **trỏ về Phần 2** hoặc là **công thức một bước**. Phần 5 không tính lại; với thao tác làm engine tính lại nhiều bước, chỉ mô tả hướng và cấu trúc thay đổi kèm ghi chú "(tính lại bằng engine)".
+- Số kế thừa cụ thể duy nhất được trích dẫn là `reading_start` kỳ kế tiếp = `reading_end` kỳ trước (golden numbers Phần 1A.5: ví dụ CT-A1 = 1.250).
+- Phần 5 không chép lại đặc tả "Thao tác đặc biệt", "C/U/D" hay "Conditional field" của `V2_CHIEU_TEST.md` — chỉ trỏ tới và instance hóa bằng dữ liệu thật.
+
+### 5A. Vòng đời kỳ (VH-period-*)
+
+Suite này instance hóa "Thao tác đặc biệt" (mở/đóng/mở lại kỳ) của `V2_CHIEU_TEST.md` cùng 3 trạng thái kỳ của `V2_HANH_VI_HE_THONG.md` mục 3. Trừ khi ghi khác, mọi thao tác kỳ do SA (quanTri) thực hiện trên `/pricing`. Nghiệp vụ nguồn: `V2_XAC_NHAN_NGHIEP_VU.md` mục 12, 25, 27.6.
+
+#### VH-period-01 — Mở kỳ đầu tiên `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** hệ thống chưa có kỳ nào (trạng thái A — không có kỳ mở); đăng nhập quanTri (SA).
+- **Các bước:**
+  1. Vào `/pricing`, chọn năm và tháng (kỳ đầu tiên SA tự chọn năm/tháng, không kế thừa), nhập đơn giá điện. Bấm Mở kỳ.
+- **Kết quả mong đợi:**
+  - Phía sau (theo `V2_HANH_VI_HE_THONG.md` mục 6, cột "Mặc định nếu không có kỳ trước"): tạo `period` với `closed = false`, năm/tháng SA chọn, đơn giá SA nhập. Tạo **7 nhóm cấp bậc mặc định** (định mức 570, 440, 305, 130, 210, 110, 24 — Phần 1A.2). Tỷ lệ mặc định: tiết kiệm của Bộ 5%, công cộng Sư đoàn 10%, tiêu chuẩn bơm nước 9,45 kW/người/tháng, công cộng đơn vị 0%, cột Khác 0.
+  - Vì kỳ đầu chưa có entity nghiệp vụ nào: chưa có `meter_readings`, `personnel_entries`, `unit_configs`, `other_deductions` — chúng chỉ được tạo qua after_create khi SA/UA khai báo zone/unit/đầu mối sau đó (chiều 11). `meter_readings.reading_start` của công tơ tạo trong kỳ đầu phải nhập thủ công cả đầu kỳ lẫn cuối kỳ (không có kỳ trước để kế thừa — mục 27.2).
+  - Đơn giá bắt buộc nhập trước khi mở (không có giá trị mặc định — mục 25), và phải > 0 (mục 27.6, VH-validation-02).
+  - Sau khi mở: chuyển sang trạng thái B (kỳ mới nhất đang mở), mọi thao tác nghiệp vụ được phép.
+- **Tham chiếu:** `V2_CHIEU_TEST.md` Thao tác đặc biệt (Mở kỳ mới), chiều 1 (A→B), chiều 11 (kỳ đầu/defaults); nghiệp vụ mục 12, 13, 25.
+
+#### VH-period-02 — Mở kỳ mới khi đã có kỳ trước: kế thừa đầy đủ `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** kỳ tháng 5 năm 2026 (Khu vực 1, Phần 1) đã nhập liệu, đã tính (golden numbers Phần 2), đã **đóng**; trạng thái A; đăng nhập quanTri (SA).
+- **Các bước:**
+  1. Vào `/pricing`, bấm Mở kỳ mới (SA không nhập năm/tháng — hệ thống tự tính kỳ trước + 1 tháng = tháng 6 năm 2026).
+  2. Vào `/meter_entries`, `/unit_config`, `/pump_allocations`, `/ranks`, `/electricity_supply` xem kỳ tháng 6.
+- **Kết quả mong đợi (kế thừa, theo `V2_HANH_VI_HE_THONG.md` mục 6 + nghiệp vụ mục 25):**
+  - Năm/tháng tự xác định: tháng 6 năm 2026. SA chỉ bấm nút, không nhập.
+  - `meter_readings`: `reading_start` kỳ tháng 6 = `reading_end` kỳ tháng 5 — **CT-A1 reading_start = 1.250** (= reading_end kỳ tháng 5, Phần 1A.5); tương tự CT-A2 = 680, CT-A3 = 310, CT-B1 = 2.350, CT-KV1 = 1.250. Editable, user sửa nếu cần. `reading_end` để trống chờ nhập mới.
+  - `personnel_entries`: copy count theo nhóm cấp bậc từ kỳ tháng 5. `unit_configs`: copy unit_public_rate (Đơn vị A 3%, Đơn vị B 0%). `other_deductions`: copy cả dạng nhập lẫn giá trị (Ban Tác huấn cố định 5; Văn thư hệ số −2,5; Kho vật tư cố định 0; Đại đội 1 hệ số 3; Chỉ huy khu vực cố định 0 — Phần 1A.6). `pump_allocations`: copy coefficient + fixed_percentage (Chỉ huy khu vực 20% cố định + hệ số 1; Đơn vị A/B hệ số 1; Thợ xây hệ số 0,5 — Phần 1A.7). `ranks`: copy tên + định mức + position (7 nhóm).
+  - **Đơn giá 2.336,4 kế thừa** tự động từ kỳ tháng 5 (mục 27.6); cùng tỷ lệ tiết kiệm 5%, công cộng Sư đoàn 10%, tiêu chuẩn bơm nước 9,45.
+  - **`main_meter_readings` KHÔNG kế thừa:** `/electricity_supply` kỳ tháng 6 hiện "Chưa nhập" cho CT-Tổng-KV1 (và CT-Tổng-KV2). Phải nhập lại số sử dụng mỗi kỳ.
+  - Chỉ copy entity `.kept` — đầu mối/công tơ đã xóa không được copy sang kỳ tháng 6.
+  - `calculations` kỳ tháng 6 chưa có (chưa nhập reading_end và chưa bấm Tính toán lại) → bảng billing tháng 6 trống cho tới khi tính (xem GD4-01). Không trích dẫn số tính toán tháng 6 vì là kết quả nhiều bước (tính lại bằng engine).
+  - Kỳ tháng 5 (đã đóng) giữ nguyên golden numbers Phần 2 — thao tác mở kỳ mới không ảnh hưởng kỳ cũ (mục 27.6).
+- **Tham chiếu:** `V2_CHIEU_TEST.md` Thao tác đặc biệt (Mở kỳ mới), chiều 11 (kế thừa + main_meter không kế thừa), chiều 1; nghiệp vụ mục 12, 25. Trùng nội dung với GD6-03 (cùng cơ chế kế thừa).
+
+#### VH-period-03 — Chặn mở kỳ mới khi đang có kỳ mở `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** kỳ tháng 5 năm 2026 **đang mở** (trạng thái B); đăng nhập quanTri (SA).
+- **Các bước:**
+  1. Vào `/pricing`, thử Mở kỳ mới (hoặc Mở lại kỳ cũ).
+- **Kết quả mong đợi:**
+  - Bị chặn: flash cảnh báo "phải đóng kỳ hiện tại trước". Không tạo kỳ mới. Ràng buộc chỉ 1 kỳ mở tại 1 thời điểm (database partial unique index — `V2_HANH_VI_HE_THONG.md` mục 3, nghiệp vụ mục 12, 27.6).
+- **Tham chiếu:** `V2_CHIEU_TEST.md` Thao tác đặc biệt (Mở kỳ mới khi có kỳ đang mở; Mở lại kỳ cũ khi có kỳ đang mở); nghiệp vụ mục 12, 27.6.
+
+#### VH-period-04 — Đóng kỳ chặn nhập liệu (PeriodGuard) `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** kỳ tháng 5 năm 2026 đang mở; SA đóng kỳ → chuyển sang trạng thái A (không có kỳ mở).
+- **Các bước:**
+  1. SA đóng kỳ tháng 5 trên `/pricing`.
+  2. Đăng nhập adminA (UA-ZM), vào `/meter_entries`, `/unit_config`, `/pump_entries`, thử sửa và lưu.
+  3. Vào `/billing` xem kỳ tháng 5.
+- **Kết quả mong đợi:**
+  - Sau khi đóng: `period.closed = true`. Trạng thái A — dữ liệu nghiệp vụ chỉ đọc.
+  - PeriodGuard: trên trang nhập liệu các ô nhập bị vô hiệu hóa (disabled), hiển thị thông báo "Không có kỳ đang mở". Thử POST trực tiếp bị chặn (redirect + thông báo).
+  - **Trang xem vẫn truy cập:** `/billing`, `/history`, `/dashboard` xem kỳ tháng 5 bình thường với golden numbers Phần 2 — đóng kỳ chỉ chặn sửa, không chặn xem.
+  - Quản trị hệ thống (tài khoản, sao lưu, nhật ký) vẫn hoạt động ở trạng thái A.
+- **Tham chiếu:** `V2_CHIEU_TEST.md` chiều 1 (trạng thái A), Thao tác đặc biệt (Đóng kỳ); `V2_HANH_VI_HE_THONG.md` mục 3 (trạng thái A, PeriodGuard); nghiệp vụ mục 12.
+
+#### VH-period-05 — Mở lại kỳ cũ: StructureChangeGuard chặn thay đổi cấu trúc `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** có ít nhất hai kỳ đều đã đóng (tháng 5 và tháng 6 năm 2026); trạng thái A. SA mở lại kỳ tháng 5 (kỳ cũ, không phải kỳ mới nhất) → trạng thái C. Đăng nhập quanTri (SA).
+- **Các bước:**
+  1. Nếu đang có kỳ mở: SA phải đóng trước (theo VH-period-03). Sau đó SA mở lại kỳ tháng 5 trên `/pricing`.
+  2. Thử thay đổi **cấu trúc**: tạo/xóa/sửa zone, unit, đầu mối, công tơ, khối, nhóm, nhóm cấp bậc (ví dụ `/contact_points/new`, `/zones/new`, `/ranks` tạo mới).
+  3. Thử sửa **số liệu per kỳ**: chỉ số công tơ (`/meter_entries`), quân số, cấu hình đơn vị (`/unit_config`), phân bổ bơm nước (`/pump_allocations`).
+- **Kết quả mong đợi:**
+  - Mở lại thành công: `period` tháng 5 `closed = false`, StructureChangeGuard active.
+  - Thay đổi cấu trúc bị chặn: StructureChangeGuard chặn + flash "đang mở kỳ cũ, chỉ cho phép sửa số liệu". Lý do: thực thể cấu trúc không có bản sao riêng per kỳ, thay đổi sẽ ảnh hưởng mọi kỳ (nghiệp vụ mục 12).
+  - Sửa số liệu per kỳ **được phép**: cập nhật reading_end, quân số, unit_public_rate, phân bổ bơm nước của kỳ tháng 5 — chỉ ảnh hưởng kỳ tháng 5, không ảnh hưởng kỳ khác. Bấm Tính toán lại được (recalculate hoạt động ở trạng thái C).
+- **Tham chiếu:** `V2_CHIEU_TEST.md` chiều 1 (trạng thái C), U-update (kỳ cũ mở lại: sửa data per kỳ được, sửa cấu trúc bị chặn), Thao tác đặc biệt (Mở lại kỳ cũ); `V2_HANH_VI_HE_THONG.md` mục 3 (trạng thái C); nghiệp vụ mục 12.
+
+#### VH-period-06 — Đóng lại kỳ đã mở lại: cảnh báo lệch reading_end `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** kỳ tháng 5 đang mở lại (trạng thái C, từ VH-period-05); kỳ tháng 6 đã đóng và `reading_start` kỳ tháng 6 đã kế thừa từ `reading_end` kỳ tháng 5 lúc mở (ví dụ CT-A1 = 1.250). Đăng nhập quanTri (SA).
+- **Các bước:**
+  1. Ở kỳ tháng 5, sửa `reading_end` CT-A1 từ 1.250 thành 1.300 (lệch so với reading_start tháng 6 = 1.250). Lưu.
+  2. SA đóng lại kỳ tháng 5.
+- **Kết quả mong đợi:**
+  - Khi đóng, hệ thống kiểm tra `reading_end` kỳ tháng 5 (1.300) so với `reading_start` kỳ tháng 6 (1.250) → lệch → **hiển thị cảnh báo** liệt kê công tơ lệch. Đóng kỳ vẫn thành công (`period.closed = true`).
+  - Hệ thống **không tự sửa** kỳ tháng 6 (đúng nguyên tắc kỳ này không ảnh hưởng kỳ khác). User phải mở từng kỳ kế tiếp sửa thủ công nếu muốn đồng bộ.
+- **Tham chiếu:** `V2_CHIEU_TEST.md` Thao tác đặc biệt (Đóng kỳ — cảnh báo mismatch reading_end); `V2_HANH_VI_HE_THONG.md` mục 6 (đóng kỳ cũ sau khi sửa); nghiệp vụ mục 12.
+
+#### VH-period-07 — Mở kỳ mới qua mốc năm: tháng 12 → tháng 1 năm sau `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** kỳ tháng 12 năm 2026 đã đóng; trạng thái A; đăng nhập quanTri (SA).
+- **Các bước:**
+  1. Vào `/pricing`, bấm Mở kỳ mới.
+- **Kết quả mong đợi:**
+  - Hệ thống tự tính kỳ trước + 1 tháng: tháng 12 năm 2026 → **tháng 1 năm 2027** (year + 1, month về 1). SA không nhập năm/tháng. Kế thừa số liệu như VH-period-02.
+- **Tham chiếu:** `V2_CHIEU_TEST.md` Thao tác đặc biệt (Mở kỳ mới — auto year/month); nghiệp vụ mục 12 (tháng 12 → tháng 1 năm sau).
+
+#### VH-period-08 — Ba trạng thái kỳ: tổng hợp hành vi `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** dữ liệu Khu vực 1 + Khu vực 2 (Phần 1); SA lần lượt đưa hệ thống về 3 trạng thái.
+- **Các bước:** với mỗi trạng thái, kiểm khả năng thay đổi cấu trúc, sửa số liệu, tính toán lại.
+- **Kết quả mong đợi (theo `V2_HANH_VI_HE_THONG.md` mục 3):**
+
+  | Trạng thái | Cách đạt | Cấu trúc | Số liệu per kỳ | Tính toán lại |
+  |---|---|---|---|---|
+  | A — không có kỳ mở | Mọi kỳ đã đóng | Chặn (PeriodGuard) | Chặn (chỉ đọc) | Chặn (không kỳ mở) |
+  | B — kỳ mới nhất mở | Mở kỳ mới hoặc kỳ mới nhất chưa đóng | Cho phép | Cho phép | Cho phép |
+  | C — kỳ cũ mở lại | Mở lại kỳ không phải kỳ mới nhất | Chặn (StructureChangeGuard) | Cho phép | Cho phép |
+
+  - Trạng thái A: trang nghiệp vụ chỉ đọc; chỉ tài khoản/sao lưu/nhật ký hoạt động.
+  - Không có trạng thái "gap": PeriodGuard chặn mọi thay đổi nghiệp vụ khi không có kỳ mở.
+- **Tham chiếu:** `V2_CHIEU_TEST.md` chiều 1; `V2_HANH_VI_HE_THONG.md` mục 3; nghiệp vụ mục 12.
+
+### 5B. CRUD và validation (VH-validation-*)
+
+Suite này instance hóa các bảng "C/U/D" và "Conditional field" của `V2_CHIEU_TEST.md` cùng ràng buộc cụ thể của nghiệp vụ mục 23, 24, 27. Trừ khi ghi khác, kỳ tháng 5 năm 2026 đang mở (trạng thái B); thao tác do SA hoặc UA-ZM trong phạm vi quyền. Mọi thông báo lỗi tiếng Việt; validation realtime (Stimulus) + server-side (model), không dùng HTML5 validation.
+
+#### VH-validation-01 — Ràng buộc giá trị số khi nhập liệu `[TỰ ĐỘNG]`
+
+- **Điều kiện tiên quyết:** kỳ tháng 5 đang mở; đăng nhập theo phạm vi quyền.
+- **Các bước:** nhập từng giá trị biên rồi lưu.
+- **Kết quả mong đợi (theo nghiệp vụ mục 24):**
+
+  | Trường | Nhập | Kết quả |
+  |---|---|---|
+  | Chỉ số công tơ (đầu/cuối kỳ) | −5 | Lỗi: phải ≥ 0. Không lưu. |
+  | Số sử dụng công tơ tổng | −1 | Lỗi: phải ≥ 0. |
+  | Đơn giá | 0 | Lỗi: phải > 0. |
+  | Định mức cấp bậc | 0 | Lỗi: phải > 0. |
+  | Tiêu chuẩn bơm nước | 0 | Lỗi: phải > 0. |
+  | Tỷ lệ % (tiết kiệm, công cộng) | 105 | Lỗi: phải ≥ 0 và ≤ 100. |
+  | Quân số một nhóm cấp bậc | −1 | Lỗi: phải ≥ 0. |
+  | Tổng quân số đầu mối sinh hoạt | 0 (mọi nhóm = 0) | Lỗi: tổng quân số phải ≥ 1. |
+
+  - Giá trị hợp lệ ở biên: chỉ số = 0 hợp lệ; tỷ lệ = 0% hợp lệ (khoản trừ tương ứng = 0 — mục 27.7); tỷ lệ = 100% hợp lệ.
+  - Đầu mối sinh hoạt phải có ≥ 1 công tơ (mục 22, 27.2): tạo đầu mối không kèm công tơ → lỗi "phải có ít nhất 1 công tơ".
+- **Tham chiếu:** `V2_CHIEU_TEST.md` C-create (Giá trị biên; Personnel tổng = 0; Không có meter), Expected output hiển thị (Validation error); nghiệp vụ mục 24, 27.2, 27.3, 27.7.
+
+#### VH-validation-02 — Cột Khác cho phép âm `[TỰ ĐỘNG]`
+
+- **Điều kiện tiên quyết:** kỳ tháng 5 đang mở; đăng nhập adminA (UA-ZM); `/unit_config` Đơn vị A.
+- **Các bước:** nhập cột Khác của một đầu mối sinh hoạt dạng hệ số = −2,5 (như Văn thư, Phần 1A.6) và dạng cố định = −5; lưu.
+- **Kết quả mong đợi:**
+  - Cho phép âm (mục 24, 27.7): cột Khác âm = cộng ngược vào tiêu chuẩn → tổng trừ giảm → tiêu chuẩn còn lại tăng. Đây là cơ chế golden number Văn thư thừa 5,72 (EN-KV1-SUMMARY-02: Khác = −5,00 từ hệ số −2,5 × quân số 2). Không báo lỗi.
+- **Tham chiếu:** `V2_CHIEU_TEST.md` C-create (Giá trị biên — cho phép âm cho other_deduction); nghiệp vụ mục 24, 27.7. Trỏ golden number EN-KV1-SUMMARY-02.
+
+#### VH-validation-03 — Phân bổ bơm nước: bốn ràng buộc tổng phần trăm và hệ số `[TỰ ĐỘNG]`
+
+- **Điều kiện tiên quyết:** kỳ tháng 5 đang mở; đăng nhập adminA (UA-ZM) hoặc adminC; `/pump_allocations`.
+- **Các bước:** nhập từng cấu hình phân bổ rồi lưu.
+- **Kết quả mong đợi (theo nghiệp vụ mục 24, 27.5):**
+
+  | Cấu hình | Kết quả |
+  |---|---|
+  | Tổng phần trăm cố định = 110 | Lỗi: tổng phần trăm cố định ≤ 100. Không lưu. |
+  | Tổng phần trăm cố định = 100 | Hợp lệ. Toàn bộ điện bơm nước phân theo phần trăm, **bỏ qua** phân bổ theo hệ số. |
+  | Tổng phần trăm cố định < 100 nhưng không có đối tượng nào nhận theo hệ số | Lỗi: phải có ≥ 1 đối tượng nhận theo hệ số (tránh mất phần điện bơm nước). |
+  | Mọi đối tượng hệ số có tổng (quân số × hệ số) = 0 | Lỗi: tổng (quân số × hệ số) phải > 0 (tránh chia cho 0). |
+  | Một đối tượng hệ số = 0 riêng lẻ (các đối tượng khác > 0) | Hợp lệ: đối tượng đó tạm không nhận bơm nước. |
+  | Hệ số = −0,5 | Lỗi: hệ số phải ≥ 0. |
+
+  - Khu vực 1 (Phần 1A.7) là nhánh **có phần trăm cố định** (Chỉ huy khu vực 20%); Khu vực 2 (Phần 1B.5) là nhánh **thuần hệ số** (tổng phần trăm cố định = 0) — cả hai hợp lệ, kiểm hai code path khác nhau.
+- **Tham chiếu:** `V2_CHIEU_TEST.md` C-create (Giá trị biên); nghiệp vụ mục 24, 27.5. Trỏ DATA-KV1 (1A.7), DATA-KV2 (1B.5).
+
+#### VH-validation-04 — Trùng tên trong cùng phạm vi `[TỰ ĐỘNG]`
+
+- **Điều kiện tiên quyết:** kỳ tháng 5 đang mở; đăng nhập adminA (UA-ZM).
+- **Các bước:** tạo các đầu mối/đơn vị/khu vực với tên trùng và khác loại.
+- **Kết quả mong đợi (theo nghiệp vụ mục 24, 27.3):**
+  - Trùng tên **cùng loại** trong cùng phạm vi → lỗi "đã tồn tại". Ví dụ: tạo thêm đầu mối sinh hoạt "Văn thư" thứ hai trong Đơn vị A → lỗi.
+  - Trùng tên **khác loại** cùng phạm vi → **cho phép**. Ví dụ: đầu mối sinh hoạt "Nhà ăn" và đầu mối công cộng "Nhà ăn" trong cùng đơn vị → hợp lệ (chỉ cấm trùng giữa các đầu mối cùng loại).
+  - Áp dụng tương tự cho tên công tơ, đơn vị, khu vực, khối, nhóm trong cùng phạm vi.
+- **Tham chiếu:** `V2_CHIEU_TEST.md` C-create (Tên trùng trong cùng phạm vi); nghiệp vụ mục 24, 27.3.
+
+#### VH-validation-05 — Ràng buộc xóa entity `[TỰ ĐỘNG]`
+
+- **Điều kiện tiên quyết:** kỳ tháng 5 đang mở (trạng thái B — chỉ trạng thái này cho xóa cấu trúc); đăng nhập theo phạm vi quyền.
+- **Các bước:** thử xóa từng entity theo bảng dưới.
+- **Kết quả mong đợi (theo nghiệp vụ mục 23.1, 27.2, 27.4):**
+
+  | Thao tác xóa | Kết quả |
+  |---|---|
+  | Công tơ cuối cùng của đầu mối (ví dụ CT-B1 của Đại đội 1 khi chỉ có 1 công tơ) | Chặn: "phải có ít nhất 1 công tơ". |
+  | Đơn vị đang có đầu mối (Đơn vị A) | Chặn: "phải xóa hết đầu mối trước". |
+  | Đơn vị đang có tài khoản (Đơn vị A có adminA) | Chặn: "phải xóa hết tài khoản trước". |
+  | Khu vực đang có đơn vị (Khu vực 1) | Chặn: "phải xóa hết đơn vị trước". |
+  | Nhóm cấp bậc đang có quân số > 0 (Hạ sĩ quan, binh sĩ) | Chặn: "phải chuyển hết quân số trước". |
+  | Tài khoản mặc định (kyThuat, quanTri ban đầu) | Chặn. |
+  | Tự xóa chính mình | Chặn. |
+  | Khối "Phòng Tham mưu" (có nhóm + đầu mối) | Cho phép: khối discarded; nhóm/đầu mối bên trong chuyển lên trực tiếp đơn vị (block_id = null). |
+  | Nhóm "Ban Tác huấn" (có đầu mối) | Cho phép: nhóm discarded; đầu mối lên khối nếu nhóm thuộc khối, lên đơn vị nếu nhóm trực tiếp dưới đơn vị (group_id = null). |
+  | Đơn vị quản lý khu vực (Đơn vị A, sau khi đã xóa hết đầu mối + tài khoản) | Cho phép + **cảnh báo**: `zones.manager_unit_id = null`; SA tự quản lý phần khu vực cho đến khi chỉ định đơn vị khác. |
+
+  - Xóa đầu mối/công tơ có dữ liệu kỳ cũ: cho phép; cleanup dữ liệu kỳ đang mở (hard delete), dữ liệu kỳ cũ giữ nguyên (xem GD2 chi tiết per loại đầu mối).
+- **Tham chiếu:** `V2_CHIEU_TEST.md` D-delete; nghiệp vụ mục 23.1, 27.2, 27.4. Trùng cơ chế cleanup với GD2.
+
+#### VH-validation-06 — Ràng buộc sửa entity `[TỰ ĐỘNG]`
+
+- **Điều kiện tiên quyết:** kỳ tháng 5 đang mở (trạng thái B); đăng nhập theo phạm vi quyền.
+- **Các bước:** thử sửa từng thuộc tính theo bảng.
+- **Kết quả mong đợi (theo nghiệp vụ mục 23.2, 27.2, 27.3):**
+
+  | Thao tác sửa | Kết quả |
+  |---|---|
+  | Sửa loại đầu mối (sinh hoạt → công cộng) | Chặn: phải xóa tạo lại (mỗi loại cấu trúc khác nhau). Server bỏ qua field immutable `contact_point_type`. |
+  | Chuyển đơn vị sang khu vực khác | Chặn: `unit.zone_id` immutable, server bỏ qua. |
+  | Sửa tên khu vực/đơn vị/đầu mối/công tơ/khối/nhóm | Cho phép (tên chỉ là nhãn). |
+  | Sửa thuộc tính không tổn hao của công tơ | Cho phép; chỉ ảnh hưởng kỳ đang mở (cập nhật `meter_readings.no_loss`). |
+  | Di chuyển đầu mối giữa các khối/nhóm | Cho phép; chỉ thay đổi hiển thị, không ảnh hưởng tính toán. |
+  | Đổi đơn vị quản lý khu vực sang đơn vị khác cùng khu vực | Cho phép; chuyển quyền khai báo/nhập liệu khu vực. |
+
+- **Tham chiếu:** `V2_CHIEU_TEST.md` U-update (Field immutable); nghiệp vụ mục 23.2, 27.3.
+
+#### VH-validation-07 — Chỉ số cuối kỳ < đầu kỳ: nhập thủ công số sử dụng + ghi chú `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** kỳ tháng 5 đang mở; đăng nhập adminA (UA-ZM); `/meter_entries`.
+- **Các bước:**
+  1. Nhập `reading_end` CT-A1 = 900 trong khi `reading_start` = 1.000 (cuối < đầu — công tơ bị thay mới/reset).
+- **Kết quả mong đợi (theo nghiệp vụ mục 27.2, 28 + conditional field):**
+  - View hiện thêm 2 trường: **manual_usage** (bắt buộc) và **ghi chú** (tùy chọn, ví dụ "thay công tơ mới"). Engine dùng `manual_usage` thay vì `reading_end − reading_start`.
+  - Khi `reading_end ≥ reading_start`: hai trường này ẩn, engine dùng `end − start`.
+- **Tham chiếu:** `V2_CHIEU_TEST.md` Conditional field (reading_end < reading_start → manual_usage + note); nghiệp vụ mục 27.2, 28.
+
+### 5C. Xác thực, sao lưu, nhật ký (VH-auth-*, VH-backup-*)
+
+Suite này instance hóa "Thao tác đặc biệt" (mật khẩu, backup) và yêu cầu kỹ thuật của nghiệp vụ mục 28, 20, 21. Nhiều kịch bản nhóm này **chỉ kiểm thủ công** (session 2 giờ, đa thiết bị, xung đột hai trình duyệt, restore dòng lệnh).
+
+#### VH-auth-01 — Phiên tự thoát sau 2 giờ và đăng nhập đa thiết bị `[THỦ CÔNG]`
+
+- **Điều kiện tiên quyết:** một tài khoản (ví dụ adminA) đã đăng nhập.
+- **Các bước:**
+  1. Đăng nhập adminA trên thiết bị 1 và thiết bị 2 cùng lúc.
+  2. Để thiết bị 1 không hoạt động > 2 giờ.
+- **Kết quả mong đợi (theo nghiệp vụ mục 28):**
+  - Một tài khoản đăng nhập **nhiều thiết bị cùng lúc** được — cả hai phiên hoạt động bình thường.
+  - Sau 2 giờ không hoạt động, phiên tự thoát (timeout) — thao tác tiếp theo redirect về trang đăng nhập.
+- **Tham chiếu:** nghiệp vụ mục 28 (tự thoát sau 2 giờ; đa thiết bị).
+
+#### VH-auth-02 — Đổi mật khẩu: ràng buộc độ phức tạp `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** đăng nhập bất kỳ tài khoản nào (người dùng tự đổi mật khẩu mình được).
+- **Các bước:** vào form đổi mật khẩu, nhập mật khẩu mới.
+- **Kết quả mong đợi (theo nghiệp vụ mục 28):**
+  - Mật khẩu hợp lệ (≥ 8 ký tự, có ≥ 1 chữ hoa, 1 chữ thường, 1 số, 1 ký tự đặc biệt) → đổi thành công, `force_password_change = false`, redirect.
+  - Mật khẩu thiếu độ phức tạp (ví dụ "abcdefgh" thiếu hoa/số/đặc biệt, hoặc < 8 ký tự) → re-render form + lỗi tiếng Việt "phải có ít nhất 1 chữ hoa, 1 chữ thường, 1 số, 1 ký tự đặc biệt".
+- **Tham chiếu:** `V2_CHIEU_TEST.md` Thao tác đặc biệt (Đổi mật khẩu hợp lệ; Đổi mật khẩu không đủ phức tạp); nghiệp vụ mục 28.
+
+#### VH-auth-03 — Reset mật khẩu (SA/TECH) đặt force_password_change `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** đăng nhập quanTri (SA) hoặc kyThuat (TECH); một tài khoản đích (ví dụ adminB).
+- **Các bước:** SA/TECH reset mật khẩu cho adminB trên `/users`.
+- **Kết quả mong đợi (theo nghiệp vụ mục 28):**
+  - Mật khẩu mới được đặt; `force_password_change = true`. Lần đăng nhập tiếp theo của adminB bị buộc đổi mật khẩu.
+  - Không có tính năng quên mật khẩu qua email (hệ thống offline — chỉ SA/TECH reset).
+- **Tham chiếu:** `V2_CHIEU_TEST.md` Thao tác đặc biệt (Reset mật khẩu — force_password_change = true); nghiệp vụ mục 28.
+
+#### VH-auth-04 — Thông báo "Kỳ tháng X đã mở" khi đăng nhập `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** SA vừa mở kỳ tháng 6 năm 2026; adminA chưa đăng nhập lại từ lúc đó.
+- **Các bước:** adminA đăng nhập.
+- **Kết quả mong đợi:**
+  - Hiển thị thông báo "Kỳ tháng 6 đã mở, vui lòng nhập liệu" (nghiệp vụ mục 28).
+- **Tham chiếu:** nghiệp vụ mục 28 (thông báo khi đăng nhập có kỳ mới).
+
+#### VH-auth-05 — Xung đột nhập liệu (optimistic locking) `[THỦ CÔNG]`
+
+- **Điều kiện tiên quyết:** kỳ tháng 5 đang mở; hai người (hoặc hai trình duyệt) cùng mở form sửa của cùng một đơn vị — ví dụ cùng sửa `/meter_entries` Đơn vị A, hoặc cùng `/unit_config`.
+- **Các bước:**
+  1. Người A và người B cùng tải form (cùng `lock_version`).
+  2. Người A sửa và lưu trước → thành công.
+  3. Người B sửa (dựa trên `lock_version` cũ) và lưu sau.
+- **Kết quả mong đợi (theo nghiệp vụ mục 28):**
+  - Người A lưu trước **thành công** bình thường.
+  - Người B lưu sau nhận cảnh báo "**dữ liệu đã bị thay đổi bởi người khác**"; hệ thống hiển thị **dữ liệu mới nhất** để người B xem lại rồi quyết định lưu lại hay không. Không ghi đè âm thầm.
+- **Tham chiếu:** `V2_CHIEU_TEST.md` U-update (lock_version cũ → flash "dữ liệu đã bị thay đổi bởi người khác" + hiện data mới nhất); nghiệp vụ mục 28. Bảng nhập liệu có cột `lock_version` (CLAUDE.md).
+
+#### VH-backup-01 — Backup: TECH tạo, tối đa 3 bản `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** đăng nhập kyThuat (TECH); `/backups`.
+- **Các bước:** tạo backup lần lượt.
+- **Kết quả mong đợi (theo nghiệp vụ mục 21 + chiều 3):**
+  - TECH tạo backup → file tạo + flash "đã tạo". Tạo được tối đa **3 bản**.
+  - Tạo bản thứ 4 (đã có 3 bản) → bị chặn + flash "đã đạt tối đa". Phải xóa bớt bản cũ trước.
+  - **SA KHÔNG có quyền backup:** vào `/backups` bị chặn (mục Sao lưu không trên sidebar SA — TR-backups-SA). Chỉ TECH quản lý sao lưu.
+- **Tham chiếu:** `V2_CHIEU_TEST.md` Thao tác đặc biệt (Backup TECH; Backup khi đã 3 bản), chiều 3 (Sao lưu — chỉ TECH); nghiệp vụ mục 11.1, 21. Trỏ TR-backups (Phần 4E).
+
+#### VH-backup-02 — Restore chỉ qua dòng lệnh (không có nút giao diện) `[THỦ CÔNG]`
+
+- **Điều kiện tiên quyết:** đăng nhập kyThuat (TECH); đã có bản backup.
+- **Các bước:** quan sát trang `/backups`.
+- **Kết quả mong đợi (theo nghiệp vụ mục 21, 11.1):**
+  - Trang `/backups` **không có nút Restore** — restore thực hiện qua dòng lệnh trên server (ghi đè toàn bộ database nên quá rủi ro để đặt nút giao diện). Đây là thay đổi v2.13.0 nghiệp vụ.
+  - Kiểm thủ công: dòng lệnh restore khôi phục database về bản backup đã chọn.
+- **Tham chiếu:** nghiệp vụ mục 21, 11.1 (restore qua dòng lệnh, không qua giao diện).
+
+#### VH-backup-03 — Nhật ký hoạt động: SA + TECH xem, ghi mọi thao tác `[CẢ HAI]`
+
+- **Điều kiện tiên quyết:** đã thực hiện nhiều thao tác (tạo/sửa/xóa entity, mở/đóng kỳ); đăng nhập quanTri (SA) hoặc kyThuat (TECH).
+- **Các bước:** vào `/audit_logs`, lọc theo loại thao tác/đối tượng/người thao tác/khoảng thời gian.
+- **Kết quả mong đợi (theo nghiệp vụ mục 20 + chiều 3):**
+  - Mọi thao tác được ghi lại (PaperTrail). Chỉ **SA và TECH** xem được nhật ký; UA/UA-ZM/CMD/CMD-ZM bị chặn (TR-audit_logs).
+  - Filter kết hợp (event + đối tượng + người + khoảng thời gian) → kết quả chỉ chứa record match tất cả điều kiện.
+- **Tham chiếu:** `V2_CHIEU_TEST.md` chiều 3 (Nhật ký — SA + TECH); nghiệp vụ mục 20. Trỏ TR-audit_logs (Phần 4E).
+
+> **Tổng kết Phần 5:** 3 nhóm, 23 kịch bản. 5A vòng đời kỳ (VH-period-01..08, 8 kịch bản) phủ mở kỳ đầu/mở kỳ mới kế thừa/chặn mở khi đang mở/đóng kỳ chặn nhập/mở lại kỳ cũ với StructureChangeGuard/cảnh báo lệch reading_end/mốc năm/3 trạng thái. 5B CRUD và validation (VH-validation-01..07, 7 kịch bản) phủ ràng buộc số, cột Khác âm, phân bổ bơm nước, trùng tên, xóa, sửa, cuối < đầu kỳ. 5C xác thực/sao lưu/nhật ký (VH-auth-01..05 + VH-backup-01..03, 8 kịch bản) phủ session/đa thiết bị/mật khẩu/reset/thông báo kỳ/xung đột/backup tối đa 3/restore dòng lệnh/nhật ký.
+
+---
+
+## Phần 6 — Bản đồ truy vết
+
+Phần này lập bản đồ từ mỗi **nhóm kịch bản** (không phải từng kịch bản 1:1) tới chiều kiểm thử liên quan của `V2_CHIEU_TEST.md`, nhóm giao điểm nguy hiểm (nếu có), và tập tin RSpec automation hiện có. Mọi tập tin RSpec liệt kê đều **tồn tại thật** trong `spec/` (đã xác minh bằng `grep -rln "RSpec.describe"`). Nhóm nào chưa có spec rõ ràng được đánh dấu "thủ công" hoặc "chưa có".
+
+### 6.1. Bảng truy vết
+
+| Nhóm kịch bản | Chiều `V2_CHIEU_TEST.md` | Nhóm giao điểm | Tập tin RSpec automation hiện có |
+|---|---|---|---|
+| DATA (dữ liệu mẫu, Phần 1) | — (nền cho mọi chiều) | — | `spec/support/sample_data.rb` (helper, không phải spec); dùng bởi mọi spec dưới |
+| EN — engine tổn hao (EN-KV1/KV2-LOSS) | chiều 5, 8 | — | `spec/services/loss_calculator_spec.rb`, `spec/services/calculation_orchestrator_spec.rb` |
+| EN — engine bơm nước (EN-KV1/KV2-PUMP) | chiều 5, 8 | — | `spec/services/pump_allocation_calculator_spec.rb`, `spec/services/calculation_orchestrator_spec.rb` |
+| EN — engine tổng hợp + hàng tổng (EN-*-SUMMARY/TOTALS) | chiều 8, 12 | — | `spec/services/summary_calculator_spec.rb`, `spec/services/calculation_orchestrator_spec.rb`, `spec/models/calculation_spec.rb` |
+| GD1 — Kỳ × Vai trò × Entity state | chiều 1, 2, 4, 7 | Nhóm 1 | `spec/requests/discarded_entity_visibility_spec.rb`, `spec/services/discarded_entity_visibility_spec.rb`, `spec/services/period_isolation_spec.rb`, `spec/requests/billing_spec.rb` |
+| GD2 — Kỳ × Loại đầu mối × Cleanup | chiều 1, 5 | Nhóm 2 | `spec/models/contact_point_spec.rb`, `spec/models/meter_spec.rb`, `spec/services/period_isolation_spec.rb`, `spec/requests/contact_points_spec.rb` |
+| GD3 — Vai trò × Thuộc về × Trang | chiều 2, 3, 6 | Nhóm 3 | `spec/requests/role_access_matrix_spec.rb`, `spec/requests/billing_spec.rb`, `spec/requests/meter_entries_spec.rb`, `spec/requests/unit_config_spec.rb`, `spec/services/zone_query_spec.rb`, `spec/requests/dimension_coverage_spec.rb` |
+| GD4 — Kỳ đang xem × Trạng thái tính toán × Vai trò | chiều 2, 7, 8, 12 | Nhóm 4 | `spec/requests/billing_spec.rb`, `spec/services/period_isolation_spec.rb`, `spec/services/period_comparison_spec.rb`, `spec/system/billing_spec.rb` |
+| GD5 — Vị trí phân cấp × Định dạng output | chiều 10, 12 | Nhóm 5 | `spec/requests/billing_spec.rb`, `spec/system/billing_spec.rb` (gộp ô + số cột); merge/Excel mở file: **thủ công** |
+| GD6 — Cách nhận data × Kỳ × Loại đầu mối | chiều 1, 5, 11 | Nhóm 6 | `spec/models/contact_point_spec.rb`, `spec/models/rank_spec.rb`, `spec/models/meter_reading_spec.rb`, `spec/services/period_service_spec.rb` |
+| TR — dashboard | chiều 2, 3, 8, 9 | — | `spec/requests/dashboard_spec.rb`, `spec/services/dashboard_summary_spec.rb`, `spec/services/zone_warning_collector_spec.rb` |
+| TR — billing | chiều 2, 3, 6, 7, 8, 12 | Nhóm 3, 4, 5 | `spec/requests/billing_spec.rb`, `spec/system/billing_spec.rb` |
+| TR — history | chiều 2, 3, 4, 7 | Nhóm 1 | `spec/requests/history_spec.rb`, `spec/services/period_comparison_spec.rb` |
+| TR — electricity_supply | chiều 2, 3, 11 | — | `spec/requests/electricity_supply_spec.rb`, `spec/models/main_meter_reading_spec.rb` |
+| TR — meter_entries | chiều 2, 3, 6, 11 | Nhóm 3, 6 | `spec/requests/meter_entries_spec.rb`, `spec/models/meter_reading_spec.rb` |
+| TR — pump_entries | chiều 2, 3, 5, 6 | — | `spec/requests/pump_entries_spec.rb` |
+| TR — contact_points | chiều 2, 3, 5, 6, 10, 11 | Nhóm 2, 3, 6 | `spec/requests/contact_points_spec.rb`, `spec/system/contact_points_spec.rb`, `spec/models/contact_point_spec.rb` |
+| TR — blocks / groups | chiều 2, 3, 10 | Nhóm 5 | `spec/requests/blocks_spec.rb`, `spec/system/blocks_spec.rb`, `spec/models/block_spec.rb`, `spec/requests/groups_spec.rb`, `spec/system/groups_spec.rb`, `spec/models/group_spec.rb` |
+| TR — unit_config | chiều 2, 3, 6 | Nhóm 3 | `spec/requests/unit_config_spec.rb`, `spec/system/unit_config_spec.rb`, `spec/models/unit_config_spec.rb`, `spec/models/other_deduction_spec.rb` |
+| TR — zones / units | chiều 2, 3 | — | `spec/requests/zones_spec.rb`, `spec/system/zones_spec.rb`, `spec/models/zone_spec.rb`, `spec/requests/units_spec.rb`, `spec/system/units_spec.rb`, `spec/models/unit_spec.rb` |
+| TR — pump_allocations | chiều 2, 3 | — | `spec/requests/pump_allocations_spec.rb`, `spec/system/pump_allocations_spec.rb`, `spec/models/pump_allocation_spec.rb` |
+| TR — pricing | chiều 2, 3 | — | `spec/requests/pricing_spec.rb`, `spec/system/pricing_spec.rb` |
+| TR — ranks | chiều 2, 3, 11 | Nhóm 6 | `spec/requests/ranks_spec.rb`, `spec/system/ranks_spec.rb`, `spec/models/rank_spec.rb` |
+| TR — users | chiều 2, 3 | — | `spec/requests/users_spec.rb`, `spec/system/users_spec.rb`, `spec/models/user_spec.rb` |
+| TR — audit_logs | chiều 2, 3 | — | `spec/requests/audit_logs_spec.rb`, `spec/requests/audit_pr_137_spec.rb`, `spec/system/audit_logs_spec.rb` |
+| TR — backups | chiều 2, 3 | — | `spec/requests/backups_spec.rb`, `spec/models/backup_spec.rb`, `spec/services/backup_service_spec.rb` |
+| Phân quyền chung (6 vai trò × mọi trang) | chiều 2, 3 | Nhóm 1, 3 | `spec/requests/role_access_matrix_spec.rb`, `spec/requests/business_role_required_integration_spec.rb`, `spec/requests/dimension_coverage_spec.rb` |
+| VH-period — vòng đời kỳ | chiều 1, 11 | — | `spec/services/period_service_spec.rb`, `spec/services/period_isolation_spec.rb`, `spec/models/period_spec.rb`, `spec/requests/pricing_spec.rb`, `spec/system/pricing_spec.rb`, `spec/requests/period_indicator_spec.rb` |
+| VH-period — mở lại kỳ cũ / StructureChangeGuard | chiều 1 (C) | — | `spec/requests/v230_structure_change_guard_integration_spec.rb`, `spec/requests/old_period_contact_point_edit_spec.rb` |
+| VH-validation — ràng buộc CRUD | chiều C/U/D | — | `spec/models/meter_reading_spec.rb`, `spec/models/pump_allocation_spec.rb`, `spec/models/unit_config_spec.rb`, `spec/models/personnel_entry_spec.rb`, `spec/models/other_deduction_spec.rb`, `spec/models/contact_point_spec.rb`, `spec/models/zone_spec.rb`, `spec/models/unit_spec.rb`, `spec/models/rank_spec.rb`, `spec/models/user_spec.rb`; ràng buộc xóa: `spec/requests/zones_spec.rb`, `spec/requests/units_spec.rb`, `spec/requests/contact_points_spec.rb` |
+| VH-validation — cuối kỳ < đầu kỳ (manual_usage) | Conditional field | — | `spec/models/meter_reading_spec.rb`, `spec/requests/meter_entries_spec.rb` |
+| VH-auth — đổi/reset mật khẩu | Thao tác đặc biệt (mật khẩu) | — | `spec/requests/password_changes_spec.rb`, `spec/requests/sessions_spec.rb`, `spec/models/user_spec.rb` |
+| VH-auth — session 2 giờ, đa thiết bị, thông báo kỳ | mục 28 nghiệp vụ | — | đăng nhập/đăng xuất: `spec/requests/sessions_spec.rb`; thông báo kỳ: `spec/requests/period_indicator_spec.rb`; timeout 2h + đa thiết bị: **thủ công** |
+| VH-auth — xung đột nhập liệu (lock_version) | U-update (lock_version) | — | `spec/requests/meter_entries_spec.rb`, `spec/requests/unit_config_spec.rb`, `spec/requests/pump_entries_spec.rb`, `spec/requests/electricity_supply_spec.rb` (logic optimistic locking); hai trình duyệt đồng thời: **thủ công** |
+| VH-backup — backup tối đa 3 | Thao tác đặc biệt (Backup) | — | `spec/requests/backups_spec.rb`, `spec/models/backup_spec.rb`, `spec/services/backup_service_spec.rb`; restore dòng lệnh: **thủ công** |
+| VH-backup — nhật ký | chiều 3 (Nhật ký) | — | `spec/requests/audit_logs_spec.rb`, `spec/requests/audit_pr_137_spec.rb`, `spec/system/audit_logs_spec.rb` |
+
+### 6.2. Ghi chú automation
+
+**Nhóm phù hợp viết RSpec `[TỰ ĐỘNG]` (ưu tiên cao nhất, là lõi đúng/sai của hệ thống):**
+
+- **Engine tính toán** (EN-*, GD2, GD4 phần số): golden numbers Phần 2 verify trực tiếp bằng `loss_calculator_spec`, `pump_allocation_calculator_spec`, `summary_calculator_spec`, `calculation_orchestrator_spec`. Đây là tầng phải tự động hóa trước nhất — số sai là sai nghiêm trọng nhất.
+- **Cách ly kỳ** (period isolation, GD1, GD2, GD4, VH-period): `period_isolation_spec`, `period_service_spec`, `period_comparison_spec`, `discarded_entity_visibility_spec` (cả request lẫn service) — kiểm dữ liệu kỳ cũ giữ nguyên, entity đã xóa hiện ở kỳ cũ, cleanup kỳ đang mở.
+- **Phân quyền** (GD3, TR-*, phân quyền chung): `role_access_matrix_spec`, `business_role_required_integration_spec`, `dimension_coverage_spec` + request spec per trang — kiểm 6 vai trò thấy/không thấy/bị chặn đúng.
+- **Validation** (VH-validation): model spec per model (`meter_reading_spec`, `pump_allocation_spec`, `unit_config_spec`, `personnel_entry_spec`, `other_deduction_spec`...) cho ràng buộc giá trị; request spec (`zones_spec`, `units_spec`, `contact_points_spec`) cho ràng buộc xóa cascade.
+- **Edge cases** (StructureChangeGuard, mở lại kỳ cũ, cuối < đầu kỳ, lock_version logic): `v230_structure_change_guard_integration_spec`, `old_period_contact_point_edit_spec`, `meter_entries_spec`, `unit_config_spec`.
+- **Vòng đời kỳ + mật khẩu + backup logic**: `pricing_spec` (request + system), `period_service_spec`, `password_changes_spec`, `sessions_spec`, `backups_spec`, `backup_service_spec`.
+
+**Nhóm chỉ kiểm thủ công `[THỦ CÔNG]` (không phù hợp hoặc khó automation):**
+
+- **Gộp ô / merge** dọc HTML rowspan và Excel merge_cells cho 5 vị trí phân cấp (GD5-01, GD5-02): kiểm trực quan layout.
+- **Xuất Excel mở tập tin** (GD5-02, GD5-04, GD4-03): mở file xlsx kiểm công thức, chỉ số cột dịch theo vai trò, merge — phải mở bằng phần mềm bảng tính.
+- **Di chuột highlight dòng** (yêu cầu giao diện chung): kiểm bằng mắt.
+- **Phiên tự thoát sau 2 giờ** (VH-auth-01): cần chờ thời gian thực, kiểm thủ công.
+- **Xung đột hai trình duyệt đồng thời** (VH-auth-05): logic optimistic locking đã có spec, nhưng mô phỏng hai trình duyệt thật là thủ công.
+- **Restore qua dòng lệnh** (VH-backup-02): không có nút giao diện — kiểm bằng lệnh trên server.
+- **Việt hóa 100%** (mọi trang): rà soát ngôn ngữ giao diện/thông báo/xuất file bằng mắt.
+
+**Thứ tự ưu tiên automation:** (1) engine golden numbers → (2) cách ly kỳ + cleanup → (3) phân quyền 6 vai trò → (4) validation + ràng buộc xóa → (5) edge cases (StructureChangeGuard, mở lại kỳ cũ, lock_version) → (6) vòng đời kỳ + auth + backup logic. Tầng giao diện/Excel/merge để kiểm thủ công sau cùng theo Phần 4 và GD5.
+
+---
+
+## Lịch sử thay đổi
+
+### v2.0.0 (31/05/2026)
+
+- **Viết lại toàn bộ** tài liệu theo cấu trúc 6 phần (Phần 0 Mở đầu → Phần 6 Bản đồ truy vết), thay cho cấu trúc T01–T113 cũ (v1.2.0, lỗi thời).
+- **Chuyển từ 4 vai trò sang 6 vai trò thực tế:** bổ sung phân biệt UA-ZM/UA và CMD-ZM/CMD; CMD/CMD-ZM thấy trang chỉ-xem (ô nhập vô hiệu hóa, nút ẩn) thay vì bị chặn hoàn toàn như mô tả 4 vai trò cũ.
+- **Thêm Khu vực 2 (đa khu vực):** dữ liệu mẫu mới lấp lỗ hổng Khu vực 1 chưa có — vị trí phân cấp thứ ba (nhóm trực tiếp dưới đơn vị, không khối), bối cảnh đa khu vực (lọc theo khu vực, cách ly cross-zone, phân biệt vai trò giữa hai khu vực), phân bổ bơm nước thuần hệ số.
+- **Golden numbers kiểm chứng bằng engine:** mọi con số tính toán (tổn hao, phân bổ bơm nước, tổng hợp, hàng tổng) của cả hai khu vực xuất ra từ `CalculationOrchestrator` chạy trên dữ liệu mẫu, không tính tay. Phần 2 là nguồn số duy nhất.
+- **6 nhóm giao điểm nguy hiểm (GD1–GD6):** instance hóa cụ thể bằng dữ liệu thật và golden numbers.
+- **Walkthrough 18 trang × 6 vai trò (Phần 4):** đầu ra hiển thị cụ thể per vai trò (số cột, số hàng dữ liệu, trạng thái ô nhập, nút, sidebar, cảnh báo, trạng thái rỗng).
+- **Phần 5 Vận hành:** vòng đời kỳ (VH-period), CRUD/validation (VH-validation), xác thực/sao lưu/nhật ký (VH-auth, VH-backup).
+- **Phần 6 Bản đồ truy vết:** map mỗi nhóm kịch bản → chiều `V2_CHIEU_TEST.md` + nhóm giao điểm + tập tin RSpec hiện có (đã xác minh tồn tại); ghi chú ưu tiên automation.
+- Cập nhật version nguồn: NGHIEP_VU v2.13.0, THIET_KE v2.13.0, HANH_VI v1.2.0, CHIEU_TEST v1.2.0.
