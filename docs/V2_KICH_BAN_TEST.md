@@ -60,6 +60,7 @@ Mỗi kịch bản (đặc biệt ở Phần 3 và Phần 4) ghi: chiều kiểm
 - **Phần 4 — Walkthrough theo trang × vai trò**
 - **Phần 5 — Vận hành**
 - **Phần 6 — Bản đồ truy vết**
+- **Lịch sử thay đổi**
 
 ---
 
@@ -1182,7 +1183,7 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 | TR-meter_entries-CMD `[CẢ HAI]` | Vào được (xem) | Như adminB/adminD tương ứng | Không (disabled) | Sidebar 8. |
 | TR-meter_entries-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | — |
 
-**Đầu vào danh sách (chỉ SA):** filter zone → unit cascade; đổi zone reset unit về "Tất cả"; search giữ nguyên khi đổi filter. Chỉ số cuối < chỉ số đầu → hiện thêm ô nhập thủ công số sử dụng + ghi chú (conditional, theo chiều R). Số đầu kỳ kế thừa pre-fill từ reading_end kỳ trước nhưng sửa được (GD6-03); đầu mối tạo giữa kỳ có reading_start = 0 (GD6-01, GD6-04).
+**Đầu vào danh sách (chỉ SA):** filter zone → unit cascade; đổi zone reset unit về "Tất cả"; search giữ nguyên khi đổi filter. Chỉ số cuối < chỉ số đầu → hiện thêm ô nhập thủ công số sử dụng + ghi chú (conditional, theo đặc tả đầu vào của V2_CHIEU_TEST). Số đầu kỳ kế thừa pre-fill từ reading_end kỳ trước nhưng sửa được (GD6-03); đầu mối tạo giữa kỳ có reading_start = 0 (GD6-01, GD6-04).
 
 - **Chiều liên quan:** chiều 2, chiều 3 (Chỉ số đầu mối), chiều 6 (đầu mối thuộc đơn vị vs khu vực), chiều 11 (kế thừa/tạo giữa kỳ). Tham chiếu GD3 (phạm vi), GD6 (nhận dữ liệu).
 
@@ -1388,9 +1389,9 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 | TR-audit_logs-CMDZM `[TỰ ĐỘNG]` | **Chặn** | — | (12 mục). |
 | TR-audit_logs-CMD `[TỰ ĐỘNG]` | **Chặn** | — | (8 mục). |
 
-**Filter kết hợp:** chọn nhiều filter (event + item_type + whodunnit + date range) → kết quả chỉ chứa record match tất cả điều kiện (theo chiều R, input đặc thù audit_logs).
+**Filter kết hợp:** chọn nhiều filter (event + item_type + whodunnit + date range) → kết quả chỉ chứa record match tất cả điều kiện (theo đặc tả mục R "trang danh sách" — input đặc thù audit_logs — của V2_CHIEU_TEST).
 
-- **Chiều liên quan:** chiều 2, chiều 3 (Nhật ký hoạt động), chiều R (filter kết hợp).
+- **Chiều liên quan:** chiều 2, chiều 3 (Nhật ký hoạt động), mục R "trang danh sách" của V2_CHIEU_TEST (filter kết hợp).
 
 ### TR-backups — Sao lưu dữ liệu (/backups)
 
@@ -1735,7 +1736,7 @@ Phần này lập bản đồ từ mỗi **nhóm kịch bản** (không phải t
 | EN — engine tổn hao (EN-KV1/KV2-LOSS) | chiều 5, 8 | — | `spec/services/loss_calculator_spec.rb`, `spec/services/calculation_orchestrator_spec.rb` |
 | EN — engine bơm nước (EN-KV1/KV2-PUMP) | chiều 5, 8 | — | `spec/services/pump_allocation_calculator_spec.rb`, `spec/services/calculation_orchestrator_spec.rb` |
 | EN — engine tổng hợp + hàng tổng (EN-*-SUMMARY/TOTALS) | chiều 8, 12 | — | `spec/services/summary_calculator_spec.rb`, `spec/services/calculation_orchestrator_spec.rb`, `spec/models/calculation_spec.rb` |
-| GD1 — Kỳ × Vai trò × Entity state | chiều 1, 2, 4, 7 | Nhóm 1 | `spec/requests/discarded_entity_visibility_spec.rb`, `spec/services/discarded_entity_visibility_spec.rb`, `spec/services/period_isolation_spec.rb`, `spec/requests/billing_spec.rb` |
+| GD1 — Kỳ × Vai trò × Trạng thái entity | chiều 1, 2, 4, 7 | Nhóm 1 | `spec/requests/discarded_entity_visibility_spec.rb`, `spec/services/discarded_entity_visibility_spec.rb`, `spec/services/period_isolation_spec.rb`, `spec/requests/billing_spec.rb` |
 | GD2 — Kỳ × Loại đầu mối × Cleanup | chiều 1, 5 | Nhóm 2 | `spec/models/contact_point_spec.rb`, `spec/models/meter_spec.rb`, `spec/services/period_isolation_spec.rb`, `spec/requests/contact_points_spec.rb` |
 | GD3 — Vai trò × Thuộc về × Trang | chiều 2, 3, 6 | Nhóm 3 | `spec/requests/role_access_matrix_spec.rb`, `spec/requests/billing_spec.rb`, `spec/requests/meter_entries_spec.rb`, `spec/requests/unit_config_spec.rb`, `spec/services/zone_query_spec.rb`, `spec/requests/dimension_coverage_spec.rb` |
 | GD4 — Kỳ đang xem × Trạng thái tính toán × Vai trò | chiều 2, 7, 8, 12 | Nhóm 4 | `spec/requests/billing_spec.rb`, `spec/services/period_isolation_spec.rb`, `spec/services/period_comparison_spec.rb`, `spec/system/billing_spec.rb` |
