@@ -59,6 +59,11 @@ services:
       - ./docker/dev/backups:/rails/storage/backups
     networks:
       - dev
+    # host.docker.internal trỏ về máy host. Docker Desktop (Mac) có sẵn; dòng này
+    # thêm nó cho cả Linux (host-gateway) — cần cho `bin/docker up --shared-db` để
+    # app nối tới postgres dùng chung trên host. Vô hại trên Mac.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     # app chỉ expose cổng 3000 trong mạng nội bộ Docker, KHÔNG publish ra host
     # (truy cập app qua nginx). Vì không bind cổng host nên không thể đụng nhau giữa
     # các worktree → không cần cổng riêng theo worktree như postgres/nginx.

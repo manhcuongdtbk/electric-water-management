@@ -1,6 +1,6 @@
 # Kiến thức Docker — Hệ thống quản lý điện nội bộ Sư đoàn
 
-> **Phiên bản:** 1.7.0
+> **Phiên bản:** 1.8.0
 > **Ngày:** 31/05/2026
 > **Đối tượng:** Developer hoặc người muốn hiểu hệ thống chạy thế nào ở mọi môi trường.
 > **Tiền đề:** Bạn biết code Rails nhưng chưa biết Docker và chưa từng deploy.
@@ -599,7 +599,7 @@ Muốn ép cổng cụ thể (vd để bookmark cố định): đặt `POSTGRES_
   ```bash
   bin/docker up --shared-db=<cổng host của postgres nguồn>   # bỏ trống = 5433
   ```
-  App nối tới `host.docker.internal:<cổng>` và KHÔNG bật postgres riêng của worktree (`--no-deps`). Thay đổi data thấy ngay **hai chiều** giữa các worktree dùng chung. Cần postgres nguồn đang chạy + Docker Desktop (để có `host.docker.internal`). Dùng khi thật sự cần live. (Bên dưới, cờ này chỉ đặt env `DATABASE_HOST`/`DATABASE_PORT` mà `compose.dev.yml` đã đọc — nên cũng có thể tự đặt hai env đó thủ công.)
+  App nối tới `host.docker.internal:<cổng>` và KHÔNG bật postgres riêng của worktree (`--no-deps`). Thay đổi data thấy ngay **hai chiều** giữa các worktree dùng chung. Cần postgres nguồn đang chạy. (`host.docker.internal` có sẵn trên Docker Desktop/Mac; `compose.dev.yml` đã thêm `extra_hosts: host.docker.internal:host-gateway` cho service `app` nên chạy được cả trên Linux.) Dùng khi thật sự cần live. (Bên dưới, cờ này chỉ đặt env `DATABASE_HOST`/`DATABASE_PORT` mà `compose.dev.yml` đã đọc — nên cũng có thể tự đặt hai env đó thủ công.)
 - **Lưu ý chung (cả A lẫn B):** file `.dump` mang theo **cả schema lẫn data**, và DB sống chung cũng vậy → chỉ chia sẻ giữa các worktree **cùng schema** (thường cùng off `main`). Khác schema thì cẩn thận: restore sẽ thay schema của worktree đích; còn migration trên DB sống chung sẽ ảnh hưởng các worktree khác.
 
 ### Test
@@ -831,6 +831,10 @@ docker compose up -d      # Tạo lại (database trống, 2 tài khoản mặc 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.8.0 (31/05/2026)
+
+- compose.dev.yml: thêm `extra_hosts: host.docker.internal:host-gateway` cho service `app` → `bin/docker up --shared-db` (Cách B) chạy được cả trên Linux, không chỉ Docker Desktop/Mac (vô hại trên Mac). Cập nhật mục 11 + comment bin/docker.
 
 ### v1.7.0 (31/05/2026)
 
