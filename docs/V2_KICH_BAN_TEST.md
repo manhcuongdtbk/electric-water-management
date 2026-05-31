@@ -1,11 +1,11 @@
 # V2 — Kịch bản kiểm thử (số liệu cụ thể)
 
-> **Phiên bản:** 2.0.1
+> **Phiên bản:** 2.0.2
 > **Ngày:** 31/05/2026
 > **Nguồn nghiệp vụ:** `docs/V2_XAC_NHAN_NGHIEP_VU.md` v2.13.0
 > **Nguồn thiết kế:** `docs/V2_THIET_KE_HE_THONG.md` v2.13.0
 > **Nguồn hành vi runtime:** `docs/V2_HANH_VI_HE_THONG.md` v1.2.1
-> **Nguồn không gian kiểm thử:** `docs/V2_CHIEU_TEST.md` v1.2.1
+> **Nguồn không gian kiểm thử:** `docs/V2_CHIEU_TEST.md` v1.2.2
 > **Tính chất:** Kịch bản số liệu cụ thể — instance hóa không gian kiểm thử của `V2_CHIEU_TEST.md` bằng dữ liệu thật cộng với golden numbers được kiểm chứng bằng engine. Tài liệu này KHÔNG lặp lại 12 chiều kiểm thử hay ma trận trang × vai trò của `V2_CHIEU_TEST.md`; nó chỉ trỏ tới các chiều đó và cung cấp số liệu cụ thể để kiểm chứng.
 
 ---
@@ -1280,78 +1280,78 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 
 ### TR-zones — Khu vực (/zones)
 
-**Route:** `/zones` (CRUD). **Lớp bảo vệ:** BusinessRoleRequired + PeriodGuard + StructureChangeGuard (chiều 3). CRUD khu vực + công tơ tổng (nested). Chỉ SA toàn quyền; vai trò quản lý khu vực chỉ **xem khu vực mình**; UA/CMD không quản lý khu vực **ẩn mục trên sidebar**.
+**Route:** `/zones` (CRUD). **Lớp bảo vệ:** SettingsAccessGuard (`require_system_admin_or_zone_manager!`) + PeriodGuard + StructureChangeGuard (chiều 3). CRUD khu vực + công tơ tổng (nested). Chỉ SA toàn quyền; vai trò quản lý khu vực chỉ **xem khu vực mình**; UA/CMD không quản lý khu vực bị **chặn** (page-level guard, sidebar cũng ẩn mục).
 
 | Vai trò | Truy cập | Dữ liệu | Tạo/Sửa/Xóa | Ghi chú |
 |---|---|---|---|---|
 | TR-zones-SA `[CẢ HAI]` | CRUD | Khu vực 1, Khu vực 2 (kèm công tơ tổng CT-Tổng-KV1, CT-Tổng-KV2) | Có | Sidebar 17. |
 | TR-zones-UAZM `[CẢ HAI]` | Xem (khu vực mình) | adminA: Khu vực 1; adminC: Khu vực 2 | Không | Mục **hiện** trên sidebar (12 mục) nhưng chỉ xem; nút Thêm/Sửa/Xóa ẩn. |
-| TR-zones-UA `[TỰ ĐỘNG]` | Sidebar ẩn | — | — | adminB/adminD không thấy mục Khu vực (8 mục). Lưu ý design issue CLAUDE.md: truy cập trực tiếp `/zones` có thể lọt do thừa quyền `can :read, Zone` — cần kiểm và báo nếu xảy ra. |
+| TR-zones-UA `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | — | adminB/adminD không thấy mục Khu vực (8 mục); truy cập trực tiếp `/zones` bị `require_system_admin_or_zone_manager!` chặn. |
 | TR-zones-CMDZM `[CẢ HAI]` | Xem (khu vực mình) | Như adminA/adminC | Không | Mục hiện trên sidebar (12). |
-| TR-zones-CMD `[TỰ ĐỘNG]` | Sidebar ẩn | — | — | Như UA (8 mục). |
-| TR-zones-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | — |
+| TR-zones-CMD `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | — | Như UA (8 mục); truy cập trực tiếp bị chặn. |
+| TR-zones-TECH `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | — | — |
 
-- **Chiều liên quan:** chiều 2, chiều 3 (Khu vực). Lưu ý design issue truy cập trực tiếp URL (CLAUDE.md).
+- **Chiều liên quan:** chiều 2, chiều 3 (Khu vực). Truy cập trực tiếp URL của UA/CMD đã được `SettingsAccessGuard` chặn (CLAUDE.md).
 
 ### TR-units — Đơn vị (/units)
 
-**Route:** `/units` (CRUD). **Lớp bảo vệ:** BusinessRoleRequired + PeriodGuard + StructureChangeGuard (chiều 3). Chỉ SA toàn quyền; **mọi non-SA ẩn mục trên sidebar** (kể cả vai trò khu vực — Đơn vị là cấu trúc cấp Sư đoàn).
+**Route:** `/units` (CRUD). **Lớp bảo vệ:** SettingsAccessGuard (`require_system_admin!`) + PeriodGuard + StructureChangeGuard (chiều 3). Chỉ SA toàn quyền; **mọi non-SA bị chặn** (page-level guard, sidebar cũng ẩn mục — Đơn vị là cấu trúc cấp Sư đoàn).
 
 | Vai trò | Truy cập | Dữ liệu | Tạo/Sửa/Xóa | Ghi chú |
 |---|---|---|---|---|
 | TR-units-SA `[CẢ HAI]` | CRUD | Đơn vị A, B (Khu vực 1), C, D (Khu vực 2); cột Khu vực | Có | Sidebar 17. |
-| TR-units-UAZM `[TỰ ĐỘNG]` | Sidebar ẩn | (Nếu vào trực tiếp: chỉ xem đơn vị mình) | Không | Mục không trên sidebar (12 mục không gồm Đơn vị). Lưu ý design issue truy cập trực tiếp URL. |
-| TR-units-UA `[TỰ ĐỘNG]` | Sidebar ẩn | — | Không | Như trên (8 mục). |
-| TR-units-CMDZM `[TỰ ĐỘNG]` | Sidebar ẩn | (Xem đơn vị mình nếu vào trực tiếp) | Không | (12 mục). |
-| TR-units-CMD `[TỰ ĐỘNG]` | Sidebar ẩn | — | Không | (8 mục). |
-| TR-units-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | — |
+| TR-units-UAZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | Mục không trên sidebar (12 mục không gồm Đơn vị); truy cập trực tiếp `/units` bị `require_system_admin!` chặn. |
+| TR-units-UA `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | Như trên (8 mục). |
+| TR-units-CMDZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (12 mục). |
+| TR-units-CMD `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (8 mục). |
+| TR-units-TECH `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | — | — |
 
-- **Chiều liên quan:** chiều 2, chiều 3 (Đơn vị). Lưu ý design issue truy cập trực tiếp URL (CLAUDE.md).
+- **Chiều liên quan:** chiều 2, chiều 3 (Đơn vị). Truy cập trực tiếp URL của non-SA đã được `SettingsAccessGuard` chặn (CLAUDE.md).
 
 ### TR-pump_allocations — Phân bổ bơm nước (/pump_allocations)
 
-**Route:** `/pump_allocations` (CRUD). **Lớp bảo vệ:** BusinessRoleRequired + PeriodGuard (chiều 3). Cấu hình phân bổ per khu vực. SA + UA-ZM CRUD; CMD-ZM xem; UA + CMD **không thấy** (sidebar ẩn). Đối tượng nhận phân bổ: đơn vị, đầu mối sinh hoạt thuộc khu vực, đầu mối ngoài biên chế thuộc khu vực.
+**Route:** `/pump_allocations` (CRUD). **Lớp bảo vệ:** SettingsAccessGuard (`require_system_admin_or_zone_manager!`) + PeriodGuard (chiều 3). Cấu hình phân bổ per khu vực. SA + UA-ZM CRUD; CMD-ZM xem; UA + CMD bị **chặn** (page-level guard, sidebar cũng ẩn mục). Đối tượng nhận phân bổ: đơn vị, đầu mối sinh hoạt thuộc khu vực, đầu mối ngoài biên chế thuộc khu vực.
 
 | Vai trò | Truy cập | Dữ liệu | Tạo/Sửa/Xóa | Ghi chú |
 |---|---|---|---|---|
 | TR-pump_allocations-SA `[CẢ HAI]` | CRUD | Tất cả phân bổ (Khu vực 1: Trạm bơm 1 → Chỉ huy khu vực 20% + Đơn vị A/B hệ số 1 + Thợ xây hệ số 0,5; Khu vực 2: Trạm bơm 2 thuần hệ số) | Có | Cho sửa cả khi kỳ cũ mở lại. Form có toggle target (đơn vị/đầu mối) + toggle allocation (% cố định/hệ số). Sidebar 17. |
 | TR-pump_allocations-UAZM `[CẢ HAI]` | CRUD | adminA: phân bổ Khu vực 1. adminC: phân bổ Khu vực 2 (thuần hệ số) | Có (khu vực mình) | Sidebar 12. |
-| TR-pump_allocations-UA `[CẢ HAI]` | **Trống / sidebar ẩn** | — | — | adminB/adminD không thấy mục (8 mục). Nếu vào trực tiếp: trống. |
+| TR-pump_allocations-UA `[CẢ HAI]` | Chặn (redirect, errors.access_denied) | — | — | adminB/adminD không thấy mục (8 mục); truy cập trực tiếp bị `require_system_admin_or_zone_manager!` chặn. |
 | TR-pump_allocations-CMDZM `[CẢ HAI]` | Xem | Như adminA/adminC | Không (chỉ đọc) | Nút Thêm/Sửa/Xóa ẩn. Sidebar 12. |
-| TR-pump_allocations-CMD `[CẢ HAI]` | **Trống / sidebar ẩn** | — | — | Như UA (8 mục). |
-| TR-pump_allocations-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | — |
+| TR-pump_allocations-CMD `[CẢ HAI]` | Chặn (redirect, errors.access_denied) | — | — | Như UA (8 mục); truy cập trực tiếp bị chặn. |
+| TR-pump_allocations-TECH `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | — | — |
 
 - **Chiều liên quan:** chiều 2, chiều 3 (Phân bổ bơm nước), toggle target/allocation. Tham chiếu EN-KV1-PUMP, EN-KV2-PUMP.
 
 ### TR-pricing — Đơn giá điện (/pricing)
 
-**Route:** `/pricing` (pricing#show). **Lớp bảo vệ:** BusinessRoleRequired + authorize! (chiều 3). Đơn giá per kỳ + mở/đóng/mở lại kỳ. **Chỉ SA toàn quyền**; non-SA **ẩn mục trên sidebar**.
+**Route:** `/pricing` (pricing#show). **Lớp bảo vệ:** SettingsAccessGuard (`require_system_admin!`) + authorize! (chiều 3). Đơn giá per kỳ + mở/đóng/mở lại kỳ. **Chỉ SA toàn quyền**; non-SA bị **chặn** (page-level guard, sidebar cũng ẩn mục).
 
 | Vai trò | Truy cập | Dữ liệu | Thao tác | Ghi chú |
 |---|---|---|---|---|
 | TR-pricing-SA `[CẢ HAI]` | Toàn quyền | Đơn giá kỳ tháng 5 năm 2026 = 2.336,4 đồng/kW; danh sách kỳ | Mở kỳ mới, đóng kỳ, mở lại kỳ cũ | Sidebar 17. Tham chiếu Phần 5 (vòng đời kỳ). |
-| TR-pricing-UAZM `[TỰ ĐỘNG]` | Sidebar ẩn | (Xem nếu vào trực tiếp) | Không | Không có mục (12 mục không gồm Đơn giá). |
-| TR-pricing-UA `[TỰ ĐỘNG]` | Sidebar ẩn | — | Không | (8 mục). |
-| TR-pricing-CMDZM `[TỰ ĐỘNG]` | Sidebar ẩn | (Xem nếu vào trực tiếp) | Không | (12 mục). |
-| TR-pricing-CMD `[TỰ ĐỘNG]` | Sidebar ẩn | — | Không | (8 mục). |
-| TR-pricing-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | — |
+| TR-pricing-UAZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | Không có mục (12 mục không gồm Đơn giá); truy cập trực tiếp bị `require_system_admin!` chặn. |
+| TR-pricing-UA `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (8 mục). |
+| TR-pricing-CMDZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (12 mục). |
+| TR-pricing-CMD `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (8 mục). |
+| TR-pricing-TECH `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | — | — |
 
 - **Chiều liên quan:** chiều 1 (vòng đời kỳ), chiều 2, chiều 3 (Đơn giá điện). Tham chiếu Phần 5 (mở/đóng/mở lại kỳ).
 
 ### TR-ranks — Nhóm cấp bậc (/ranks)
 
-**Route:** `/ranks` (CRUD). **Lớp bảo vệ:** BusinessRoleRequired + PeriodGuard + StructureChangeGuard (chiều 3). 7 nhóm cấp bậc + định mức (cấu hình chung toàn hệ thống). SA CRUD; mọi non-SA **chỉ xem** (mục vẫn ẩn trên sidebar non-SA theo bảng "Sidebar per role").
+**Route:** `/ranks` (CRUD). **Lớp bảo vệ:** SettingsAccessGuard (`require_system_admin!`) + PeriodGuard + StructureChangeGuard (chiều 3). 7 nhóm cấp bậc + định mức (cấu hình chung toàn hệ thống). SA CRUD; mọi non-SA bị **chặn** (page-level guard, sidebar cũng ẩn mục).
 
 | Vai trò | Truy cập | Dữ liệu | Tạo/Sửa/Xóa | Ghi chú |
 |---|---|---|---|---|
 | TR-ranks-SA `[CẢ HAI]` | CRUD | 7 nhóm với định mức 570, 440, 305, 130, 210, 110, 24 | Có | Sidebar 17. Thêm rank giữa kỳ → personnel_entries count 0 cho mọi đầu mối sinh hoạt (GD6-02). |
-| TR-ranks-UAZM `[TỰ ĐỘNG]` | Sidebar ẩn (xem nếu vào trực tiếp) | 7 nhóm | Không | Mục không trên sidebar (12 mục). |
-| TR-ranks-UA `[TỰ ĐỘNG]` | Sidebar ẩn (xem) | 7 nhóm | Không | (8 mục). |
-| TR-ranks-CMDZM `[TỰ ĐỘNG]` | Sidebar ẩn (xem) | 7 nhóm | Không | (12 mục). |
-| TR-ranks-CMD `[TỰ ĐỘNG]` | Sidebar ẩn (xem) | 7 nhóm | Không | (8 mục). |
-| TR-ranks-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | — |
+| TR-ranks-UAZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | Mục không trên sidebar (12 mục); truy cập trực tiếp bị `require_system_admin!` chặn. |
+| TR-ranks-UA `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (8 mục). |
+| TR-ranks-CMDZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (12 mục). |
+| TR-ranks-CMD `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (8 mục). |
+| TR-ranks-TECH `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | — | — |
 
-> **Phạm vi /ranks (đã đối chiếu code):** SA toàn quyền CRUD. Các vai trò nghiệp vụ non-SA (UA, UA-ZM, CMD, CMD-ZM) **xem được** /ranks qua URL trực tiếp (chỉ đọc, không nút thao tác): `Ability` cấp `can :read, Rank` cho unit_admin/commander, và `RanksController#index` chỉ gọi `authorize!(:read, Rank)`. Mục "Nhóm cấp bậc" **ẩn trên sidebar** cho non-SA (`sidebar_helper.rb` chỉ thêm `ranks` vào danh mục của `system_admin`). TECH bị chặn (`BusinessRoleRequired`). Vậy hai tài liệu nguồn KHÔNG mâu thuẫn: THIET_KE "Sidebar per role" ✗ mô tả việc **ẩn mục sidebar**, còn CHIEU_TEST chiều 3 "Xem" mô tả **quyền truy cập** — cả hai đều đúng và mô tả hai khía cạnh khác nhau. Việc non-SA xem được /ranks là **có chủ đích** (ranks là cấu hình dùng chung, chỉ đọc), không phải lỗi thừa quyền.
+> **Phạm vi /ranks (đã đối chiếu code):** trang /ranks giờ **chặn mọi non-SA** bằng `SettingsAccessGuard` (`require_system_admin!`) — UA, UA-ZM, CMD, CMD-ZM, TECH truy cập trực tiếp qua URL đều bị redirect (errors.access_denied). Quyền `can :read, Rank` **vẫn được giữ** trong `Ability` cho unit_admin/commander vì form khai báo nhân sự của đầu mối dùng `current_period.ranks` (không dùng trang /ranks) — chặn trang không làm hỏng form. Mục "Nhóm cấp bậc" cũng **ẩn trên sidebar** cho non-SA (`sidebar_helper.rb` chỉ thêm `ranks` vào danh mục của `system_admin`). Đây là đảo ngược so với mô tả cũ (non-SA xem được /ranks qua URL): việc thắt chặt này nhất quán với THIET_KE "Sidebar per role" và bảng quyền chiều 3 đã cập nhật.
 
 - **Chiều liên quan:** chiều 2, chiều 3 (Nhóm cấp bậc), chiều 11 (thêm rank giữa kỳ). Tham chiếu GD6-02.
 
@@ -1361,16 +1361,16 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 
 ### TR-users — Tài khoản (/users)
 
-**Route:** `/users` (CRUD). **Lớp bảo vệ:** authorize! (CanCanCan) (chiều 3). **SA CRUD tất cả trừ tài khoản TECH; TECH CRUD tất cả tài khoản; non-SA-non-TECH ẩn mục trên sidebar.** Đây là trang đích redirect của mọi vai trò bị chặn.
+**Route:** `/users` (CRUD). **Lớp bảo vệ:** SettingsAccessGuard (`require_account_manager!` — chỉ SA hoặc TECH) + authorize! (CanCanCan) (chiều 3). **SA CRUD tất cả trừ tài khoản TECH; TECH CRUD tất cả tài khoản; non-SA-non-TECH bị chặn** (page-level guard, sidebar cũng ẩn mục).
 
 | Vai trò | Truy cập | Dữ liệu | Tạo/Sửa/Xóa | Ghi chú |
 |---|---|---|---|---|
 | TR-users-SA `[CẢ HAI]` | CRUD (trừ TECH) | Tất cả tài khoản trừ tài khoản technician | Có (không quản lý kyThuat) | Form có toggle Role → Unit (`role_unit_toggle`). Reset mật khẩu. Sidebar 17. |
 | TR-users-TECH `[CẢ HAI]` | CRUD (tất cả) | Tất cả tài khoản (gồm cả SA và TECH khác) | Có | TECH là vai trò duy nhất quản lý được mọi tài khoản. Sidebar 3 mục. |
-| TR-users-UAZM `[TỰ ĐỘNG]` | Sidebar ẩn (trống nếu vào trực tiếp) | — | Không | Mục không trên sidebar (12 mục). Lưu ý design issue truy cập trực tiếp URL. |
-| TR-users-UA `[TỰ ĐỘNG]` | Sidebar ẩn | — | Không | (8 mục). |
-| TR-users-CMDZM `[TỰ ĐỘNG]` | Sidebar ẩn | — | Không | (12 mục). |
-| TR-users-CMD `[TỰ ĐỘNG]` | Sidebar ẩn | — | Không | (8 mục). |
+| TR-users-UAZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | Mục không trên sidebar (12 mục); truy cập trực tiếp `/users` bị `require_account_manager!` chặn. |
+| TR-users-UA `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (8 mục). |
+| TR-users-CMDZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (12 mục). |
+| TR-users-CMD `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (8 mục). |
 
 **Validation:** tạo/sửa tài khoản — mật khẩu phải đủ phức tạp (1 chữ hoa, 1 chữ thường, 1 số, 1 ký tự đặc biệt); không tự xóa mình; không xóa tài khoản mặc định (chi tiết Phần 5). Toggle Role → Unit: chọn role unit_admin/commander → hiện field Đơn vị; chọn system_admin/technician → ẩn field Đơn vị.
 
@@ -1410,7 +1410,7 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 
 ---
 
-> **Tổng kết Phần 4:** 18 trang × 6 vai trò được instance hóa cụ thể bằng dữ liệu Phần 1 và golden numbers Phần 2. Phạm vi billing/history của UA-ZM nhất quán là **đầu mối đơn vị mình cộng đầu mối sinh hoạt thuộc khu vực trực tiếp** (KHÔNG gồm đầu mối các đơn vị khác cùng khu vực): adminA 4 hàng, adminC 2 hàng, adminB/adminD 1 hàng, SA gộp 8 hàng. CMD/CMD-ZM khớp UA/UA-ZM về phạm vi nhưng chỉ xem. TECH chặn khỏi mọi trang nghiệp vụ. Một điểm cần xác nhận khi triển khai vẫn còn ghi chú: design issue truy cập trực tiếp URL `/zones`, `/units`, `/pricing`, `/users`, `/pump_allocations` qua thừa quyền `can :read, Zone/Unit` (CLAUDE.md). (Điểm `/ranks` đã đối chiếu code và xác nhận: non-SA ẩn mục sidebar nhưng xem được qua URL — hai tài liệu nguồn không mâu thuẫn, là có chủ đích; xem ghi chú tại TR-ranks.)
+> **Tổng kết Phần 4:** 18 trang × 6 vai trò được instance hóa cụ thể bằng dữ liệu Phần 1 và golden numbers Phần 2. Phạm vi billing/history của UA-ZM nhất quán là **đầu mối đơn vị mình cộng đầu mối sinh hoạt thuộc khu vực trực tiếp** (KHÔNG gồm đầu mối các đơn vị khác cùng khu vực): adminA 4 hàng, adminC 2 hàng, adminB/adminD 1 hàng, SA gộp 8 hàng. CMD/CMD-ZM khớp UA/UA-ZM về phạm vi nhưng chỉ xem. TECH chặn khỏi mọi trang nghiệp vụ. Design issue truy cập trực tiếp URL `/zones`, `/units`, `/pricing`, `/pump_allocations`, `/ranks`, `/users` qua thừa quyền `can :read, Zone/Unit` (CLAUDE.md) **đã được fix** bằng concern `SettingsAccessGuard` (page-level guard chặn theo vai trò) và việc thu hẹp `can :read, Zone` còn khu vực do đơn vị quản lý — không còn là điểm cần xác nhận khi triển khai. Sau khi fix, **không còn điểm mở nào cần xác nhận khi triển khai** trong Phần 4.
 
 ---
 
@@ -1795,6 +1795,13 @@ Phần này lập bản đồ từ mỗi **nhóm kịch bản** (không phải t
 ---
 
 ## Lịch sử thay đổi
+
+### v2.0.2 (31/05/2026)
+
+- **Thắt chặt truy cập các trang thiết lập/hệ thống theo vai trò:** concern `SettingsAccessGuard` thêm page-level guard chặn truy cập trực tiếp qua URL — `/zones` và `/pump_allocations` chỉ SA hoặc đơn vị quản lý khu vực (`require_system_admin_or_zone_manager!`); `/units`, `/pricing`, `/ranks` chỉ SA (`require_system_admin!`); `/users` chỉ SA hoặc TECH (`require_account_manager!`). Đồng thời `ability.rb` thu hẹp `can :read, Zone` còn khu vực do đơn vị quản lý.
+- Cập nhật các hàng TR Phần 4 của 6 trang trên: các vai trò non-SA giờ bị chặn ghi **"Chặn (redirect, errors.access_denied)"** thay cho "xem/trống/sidebar ẩn". Giữ nguyên SA toàn quyền; UA-ZM/CMD-ZM với /zones và /pump_allocations; TECH với /users.
+- **Đảo ngược ghi chú "Phạm vi /ranks":** trang /ranks giờ chặn mọi non-SA (`require_system_admin!`); quyền `can :read, Rank` vẫn giữ trong `Ability` vì form khai báo nhân sự của đầu mối dùng `current_period.ranks` (không dùng trang /ranks) — chặn trang không làm hỏng form.
+- **Ghi chú design issue đã được giải quyết:** truy cập trực tiếp URL qua thừa quyền `can :read, Zone/Unit` đã fix bằng `SettingsAccessGuard`; không còn điểm mở cần xác nhận khi triển khai trong Phần 4. Cập nhật version nguồn CHIEU_TEST v1.2.1 → v1.2.2.
 
 ### v2.0.1 (31/05/2026)
 
