@@ -30,6 +30,26 @@ bin/docker up
 
 Tài khoản mặc định: `quanTri` / `Abc@1234` (quản trị viên hệ thống), `kyThuat` / `Abc@1234` (kỹ thuật viên).
 
+### Cách làm việc khuyến nghị: Docker + git worktree
+
+**Quy tắc: luôn làm việc qua Docker, trong một git worktree riêng** — cho cả người (bất kỳ ai) lẫn AI (Claude Code, Cursor, Codex, Copilot, ...). Lý do: mỗi phiên / mỗi người / mỗi AI session cô lập hoàn toàn (code + database + container riêng), nhiều worktree chạy Docker song song không đụng nhau, và tái lập y hệt trên mọi máy.
+
+```bash
+git worktree add ../ewm-<việc> -b <nhánh>   # tách từ main
+cd ../ewm-<việc>
+bin/docker up                                # tự in cổng đã gán cho worktree này
+# → App (nginx): http://localhost:<cổng>
+# → PostgreSQL: localhost:<cổng>
+```
+
+`bin/docker` tự gán cổng host riêng và ổn định cho mỗi worktree (postgres + nginx) nên không đụng checkout gốc hay worktree khác. Checkout gốc (không phải worktree) giữ mặc định `5433` / `80`.
+
+- **Claude Code** tự tạo worktree cho mỗi session — không cần tự `git worktree add`.
+- **Preview riêng mỗi session** (Claude Desktop app): `preview_start docker-dev` tự trỏ đúng app của worktree đó (qua autoPort); nhiều session preview song song không đụng nhau.
+- **Dọn dẹp:** mỗi worktree là một full stack (postgres + app + nginx) tốn RAM/đĩa — xong việc chạy `bin/docker down` rồi `git worktree remove <đường-dẫn>`.
+- **Trùng cổng** (hiếm): nếu `bin/docker up` báo `port already allocated`, đặt `POSTGRES_HOST_PORT` / `NGINX_HOST_PORT` thủ công trước khi chạy.
+- **Máy hỗ trợ:** macOS Apple Silicon (M1/M2/M3...) — đã kiểm chứng đầy đủ (cả Docker lẫn host). macOS Intel và Linux: nên chạy được nhưng chưa kiểm chứng kỹ. Windows: dùng qua WSL2, chưa kiểm chứng. Gặp vấn đề trên máy khác → ưu tiên dùng Apple Silicon.
+
 ### Lệnh thường dùng
 
 ```bash
@@ -55,15 +75,17 @@ bin/docker stop               # Chiều: dừng containers
 
 Ngoại lệ: dùng `bin/docker up` thay `start` khi lần đầu hoặc sau khi sửa compose.dev.yml / Dockerfile.dev.
 
-### Chạy không dùng Docker
+### Chạy không dùng Docker (phương án dự phòng)
 
-Yêu cầu: Ruby 3.4.3, PostgreSQL 16.
+Chỉ dùng khi Docker trục trặc và cần debug nhanh trên host — không phải cách làm chính. Yêu cầu: Ruby 3.4.3, PostgreSQL 16, và Google Chrome nếu chạy system test.
 
 ```bash
 bin/setup
 bin/dev
 # Mở http://localhost:3000
 ```
+
+Chạy test trên host (kể cả xem trình duyệt thật khi debug): `HEADLESS=false bundle exec rspec spec/system/...` — chi tiết trong `docs/KIEN_THUC_DOCKER.md` (mục 11, Test).
 
 ## Test
 
