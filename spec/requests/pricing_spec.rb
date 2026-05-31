@@ -145,67 +145,44 @@ RSpec.describe "Pricing", type: :request do
       expect(response.body).to include("phải đóng hết các kỳ đang mở trước")
     end
 
-    it "không hiển thị cảnh báo đóng kỳ cho vai trò không có quyền" do
+    it "chặn vai trò không có quyền truy cập trang đơn giá" do
       zone = create(:zone)
       unit = create(:unit, zone: zone)
       unit_admin = create(:user, :unit_admin, unit: unit)
       sign_in unit_admin
       get pricing_path
+      expect(response).to redirect_to(root_path)
+      follow_redirect!
       expect(response.body).not_to include("Lưu ý khi đóng kỳ:")
     end
   end
 
-  describe "view permission guards" do
+  describe "access guards (chỉ system_admin)" do
     let!(:zone) { create(:zone) }
     let!(:unit) { create(:unit, zone: zone) }
     let!(:period) { create(:period, year: 2026, month: 5, closed: false, unit_price: 2336.4) }
-    let(:html) { Nokogiri::HTML(response.body) }
 
-    context "as unit_admin" do
+    context "as unit_admin (kể cả đơn vị quản lý khu vực)" do
       let(:admin) { create(:user, :unit_admin, unit: unit) }
       before { sign_in admin }
 
-      it "hiển thị giá trị chỉ đọc, không có form sửa đơn giá" do
+      it "chặn truy cập, redirect về trang chủ kèm cảnh báo" do
         get pricing_path
-        expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Đơn giá:")
-        expect(response.body).not_to include("Lưu cập nhật")
-      end
-
-      it "không hiển thị nút Đóng kỳ" do
-        get pricing_path
-        expect(response.body).not_to include("Đóng kỳ hiện tại")
-      end
-
-      it "không hiển thị form Mở kỳ mới khi không có kỳ đang mở" do
-        period.update!(closed: true)
-        get pricing_path
-        expect(html.css("form[action='#{open_period_pricing_path}']")).to be_empty
-      end
-
-      it "không hiển thị nút Mở lại" do
-        period.update!(closed: true)
-        get pricing_path
-        expect(response.body).not_to include("Mở lại")
+        expect(response).to redirect_to(root_path)
+        follow_redirect!
+        expect(flash[:alert]).to eq(I18n.t("errors.access_denied"))
       end
     end
 
-    context "as commander" do
+    context "as commander (kể cả đơn vị quản lý khu vực)" do
       let(:commander) { create(:user, :commander, unit: unit) }
       before { sign_in commander }
 
-      it "hiển thị giá trị chỉ đọc, không có nút sửa" do
+      it "chặn truy cập, redirect về trang chủ kèm cảnh báo" do
         get pricing_path
-        expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Đơn giá:")
-        expect(response.body).not_to include("Lưu cập nhật")
-        expect(response.body).not_to include("Đóng kỳ hiện tại")
-      end
-
-      it "không hiển thị nút Mở lại khi kỳ đã đóng" do
-        period.update!(closed: true)
-        get pricing_path
-        expect(response.body).not_to include("Mở lại")
+        expect(response).to redirect_to(root_path)
+        follow_redirect!
+        expect(flash[:alert]).to eq(I18n.t("errors.access_denied"))
       end
     end
   end

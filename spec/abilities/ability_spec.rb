@@ -119,8 +119,8 @@ RSpec.describe Ability do
       expect(ability).not_to be_able_to(:create, Zone.new)
     end
 
-    it "đọc zone (hiện tại — cần cho UI, xem design issue trong V2_TEST_COVERAGE_GAPS.md)" do
-      expect(ability).to be_able_to(:read, zone)
+    it "KHÔNG đọc được zone (không quản lý khu vực → không có quyền :read Zone)" do
+      expect(ability).not_to be_able_to(:read, zone)
     end
 
     it "đọc đơn vị mình" do

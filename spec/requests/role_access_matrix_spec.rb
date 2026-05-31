@@ -144,20 +144,20 @@ RSpec.describe "Role access matrix (chiều 2)", type: :request do
     describe "zones" do
       let(:path) { zones_path }
       it("SA → 200")      { expect_access(sa, path, :ok) }
-      it("UA-ZM → 200")   { expect_access(ua_zm, path, :ok) }
-      it("UA → 200 (read-only, sidebar ẩn)") { expect_access(ua, path, :ok) }
-      it("CMD-ZM → 200")  { expect_access(cmd_zm, path, :ok) }
-      it("CMD → 200 (read-only, sidebar ẩn)") { expect_access(cmd, path, :ok) }
+      it("UA-ZM → 200 (xem khu vực mình quản lý)") { expect_access(ua_zm, path, :ok) }
+      it("UA → redirect (không quản lý khu vực)") { expect_access(ua, path, :redirect) }
+      it("CMD-ZM → 200 (xem khu vực mình quản lý)") { expect_access(cmd_zm, path, :ok) }
+      it("CMD → redirect (không quản lý khu vực)") { expect_access(cmd, path, :redirect) }
       it("TECH → redirect") { expect_access(tech, path, :redirect) }
     end
 
     describe "units" do
       let(:path) { units_path }
       it("SA → 200")      { expect_access(sa, path, :ok) }
-      it("UA-ZM → 200 (chỉ thấy đơn vị mình)") { expect_access(ua_zm, path, :ok) }
-      it("UA → 200 (chỉ thấy đơn vị mình)")     { expect_access(ua, path, :ok) }
-      it("CMD-ZM → 200 (chỉ thấy đơn vị mình)") { expect_access(cmd_zm, path, :ok) }
-      it("CMD → 200 (chỉ thấy đơn vị mình)")     { expect_access(cmd, path, :ok) }
+      it("UA-ZM → redirect") { expect_access(ua_zm, path, :redirect) }
+      it("UA → redirect")     { expect_access(ua, path, :redirect) }
+      it("CMD-ZM → redirect") { expect_access(cmd_zm, path, :redirect) }
+      it("CMD → redirect")     { expect_access(cmd, path, :redirect) }
       it("TECH → redirect") { expect_access(tech, path, :redirect) }
     end
 
@@ -165,29 +165,29 @@ RSpec.describe "Role access matrix (chiều 2)", type: :request do
       let(:path) { pump_allocations_path }
       it("SA → 200")      { expect_access(sa, path, :ok) }
       it("UA-ZM → 200")   { expect_access(ua_zm, path, :ok) }
-      it("UA → 200 (trống — không có quyền pump_allocation)") { expect_access(ua, path, :ok) }
+      it("UA → redirect (không quản lý khu vực)") { expect_access(ua, path, :redirect) }
       it("CMD-ZM → 200")  { expect_access(cmd_zm, path, :ok) }
-      it("CMD → 200 (trống)") { expect_access(cmd, path, :ok) }
+      it("CMD → redirect (không quản lý khu vực)") { expect_access(cmd, path, :redirect) }
       it("TECH → redirect") { expect_access(tech, path, :redirect) }
     end
 
     describe "pricing" do
       let(:path) { pricing_path }
       it("SA → 200")      { expect_access(sa, path, :ok) }
-      it("UA-ZM → 200 (read-only)") { expect_access(ua_zm, path, :ok) }
-      it("UA → 200 (read-only)")     { expect_access(ua, path, :ok) }
-      it("CMD-ZM → 200 (read-only)") { expect_access(cmd_zm, path, :ok) }
-      it("CMD → 200 (read-only)")     { expect_access(cmd, path, :ok) }
+      it("UA-ZM → redirect") { expect_access(ua_zm, path, :redirect) }
+      it("UA → redirect")     { expect_access(ua, path, :redirect) }
+      it("CMD-ZM → redirect") { expect_access(cmd_zm, path, :redirect) }
+      it("CMD → redirect")     { expect_access(cmd, path, :redirect) }
       it("TECH → redirect") { expect_access(tech, path, :redirect) }
     end
 
     describe "ranks" do
       let(:path) { ranks_path }
       it("SA → 200")      { expect_access(sa, path, :ok) }
-      it("UA-ZM → 200")   { expect_access(ua_zm, path, :ok) }
-      it("UA → 200")      { expect_access(ua, path, :ok) }
-      it("CMD-ZM → 200")  { expect_access(cmd_zm, path, :ok) }
-      it("CMD → 200")     { expect_access(cmd, path, :ok) }
+      it("UA-ZM → redirect") { expect_access(ua_zm, path, :redirect) }
+      it("UA → redirect")      { expect_access(ua, path, :redirect) }
+      it("CMD-ZM → redirect")  { expect_access(cmd_zm, path, :redirect) }
+      it("CMD → redirect")     { expect_access(cmd, path, :redirect) }
       it("TECH → redirect") { expect_access(tech, path, :redirect) }
     end
   end
@@ -196,10 +196,10 @@ RSpec.describe "Role access matrix (chiều 2)", type: :request do
     describe "users" do
       let(:path) { users_path }
       it("SA → 200")      { expect_access(sa, path, :ok) }
-      it("UA-ZM → 200 (trống — không có quyền User)") { expect_access(ua_zm, path, :ok) }
-      it("UA → 200 (trống)")  { expect_access(ua, path, :ok) }
-      it("CMD-ZM → 200 (trống)") { expect_access(cmd_zm, path, :ok) }
-      it("CMD → 200 (trống)") { expect_access(cmd, path, :ok) }
+      it("UA-ZM → redirect") { expect_access(ua_zm, path, :redirect) }
+      it("UA → redirect")  { expect_access(ua, path, :redirect) }
+      it("CMD-ZM → redirect") { expect_access(cmd_zm, path, :redirect) }
+      it("CMD → redirect") { expect_access(cmd, path, :redirect) }
       it("TECH → 200")    { expect_access(tech, path, :ok) }
     end
 
