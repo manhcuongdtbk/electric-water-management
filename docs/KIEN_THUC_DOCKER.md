@@ -317,7 +317,7 @@ Công thức build image cho development. Khác Dockerfile production:
 - Không precompile assets — Tailwind watch realtime
 - Không copy source code — mount từ Mac vào container
 - Cài `foreman` để chạy nhiều process (Rails server + Tailwind watch)
-- Cài `chromium` + `chromium-driver` (gói Debian) để chạy system test (Capybara + Selenium). Dùng Chromium thay Google Chrome vì Google Chrome chỉ có bản amd64, còn development chạy trên Docker arm64 (Apple Silicon); hai gói Debian cùng phiên bản nên chromedriver luôn khớp Chromium và không cần tải driver lúc chạy
+- Cài `chromium` + `chromium-driver` (gói Debian) để chạy system test (Capybara + Selenium). Dùng Chromium thay Google Chrome để image dùng được trên **mọi kiến trúc CPU** (cả Intel/amd64 lẫn ARM/arm64 như Apple Silicon): apt repo của Google Chrome chỉ có bản amd64 nên không cài được trên máy arm64, còn gói `chromium` của Debian có cả hai. Hai gói Debian cùng phiên bản nên chromedriver luôn khớp Chromium và không cần tải driver lúc chạy
 
 ### compose.dev.yml
 
@@ -595,23 +595,33 @@ RAILS_ENV=test bin/docker exec app bundle exec rails db:drop
 
 **Parallel test:** `bin/docker prspec` chạy test song song. Auto-detect số processes = nproc / 2. Cần setup 1 lần: `bin/docker prspec:setup` (tạo databases test2, test3, ...).
 
-**System test (trình duyệt thật):** Các spec trong `spec/system` (`type: :system`) mở Chromium thật qua Selenium để kiểm thử hành vi cần JavaScript (auto-submit, cascade filter, modal xác nhận). Image development đã cài sẵn `chromium` + `chromium-driver`, chạy headless (không cửa sổ).
+**System test (trình duyệt thật):** Các spec trong `spec/system` (`type: :system`) mở Chromium thật qua Selenium để kiểm thử hành vi cần JavaScript (auto-submit, cascade filter, modal xác nhận, ...). Image development đã cài sẵn `chromium` + `chromium-driver`, mặc định chạy headless (không cửa sổ).
 
 ```bash
 bin/docker rspec spec/system                 # Toàn bộ system test
 bin/docker rspec spec/system/zones_spec.rb   # Một file
 ```
 
-Cấu hình driver ở `spec/support/system_test_config.rb`: trong Docker trỏ thẳng tới Chromium + chromedriver cài sẵn (không tải gì lúc chạy); trên host (`bin/dev`) để Selenium Manager tự tìm Chrome.
+Cấu hình driver ở `spec/support/system_test_config.rb`: trong Docker trỏ thẳng tới Chromium + chromedriver cài sẵn (không tải gì lúc chạy); chạy ngoài Docker thì để Selenium Manager tự tìm Chrome và tải chromedriver khớp. Chỉnh được qua biến môi trường — `HEADLESS`, `WINDOW_SIZE`, `CHROMIUM_BINARY`, `CHROMEDRIVER_BINARY` (xem chú thích trong file).
 
-**Chạy headful (nhìn trình duyệt chạy, để debug):** Container Docker không có màn hình nên không hiện được cửa sổ. Muốn NHÌN test chạy, chạy trên máy host bằng `bin/dev` (cần cài Google Chrome trên Mac) với biến `HEADLESS=false`:
+**Chạy headful (hiện cửa sổ trình duyệt thật):** Dùng khi cần quan sát trực tiếp những gì trình duyệt làm — ví dụ debug, xem từng bước, dựng lại flow lỗi, v.v. Container Docker KHÔNG có màn hình nên không hiện cửa sổ được; phải chạy system test **ngoài Docker, ngay trên máy host** (cần đã cài Ruby + gems + một trình duyệt Chrome/Chromium trên máy), với `HEADLESS=false`:
 
 ```bash
-# Trên host, KHÔNG trong Docker
+# Chạy trên máy host, KHÔNG qua Docker.
+# (Không liên quan `bin/dev` — đó là lệnh chạy server dev, không phải lệnh chạy test.)
 HEADLESS=false bundle exec rspec spec/system/zones_spec.rb
 ```
 
-Mặc định (không set `HEADLESS`, hoặc trong Docker) luôn chạy headless. Muốn xem trực tiếp trong Docker thì phải thêm hạ tầng hiển thị (Xvfb + VNC) — hiện chưa cấu hình.
+Mặc định (không set `HEADLESS`, hoặc trong Docker) luôn chạy headless. Muốn xem trực tiếp ngay trong Docker thì phải thêm hạ tầng hiển thị (Xvfb + VNC) — hiện chưa cấu hình.
+
+**Lỗi version Chrome ≠ chromedriver khi chạy trên host:** Triệu chứng là lỗi kiểu `session not created: This version of ChromeDriver only supports Chrome version XX (current browser version is YY)`. Nguyên nhân thường gặp: trên máy có một `chromedriver` cài tay (vd qua Homebrew) chen vào `PATH`, trong khi Chrome đã tự cập nhật lên version khác. Config này KHÔNG ghim đường dẫn chromedriver khi chạy ngoài Docker, nên Selenium Manager (đi kèm `selenium-webdriver` ≥ 4.11, repo đang dùng 4.44) sẽ tự tải đúng bản khớp Chrome — chỉ cần dẹp cái chromedriver cài tay đi:
+
+```bash
+brew uninstall --force chromedriver   # Gỡ chromedriver cài tay (nếu có) để khỏi chen PATH
+rm -rf ~/.cache/selenium              # Xóa cache để Selenium Manager tải lại bản khớp
+```
+
+Chạy lại, Selenium Manager sẽ tải chromedriver khớp đúng Chrome hiện tại. (Trong Docker không gặp lỗi này vì `chromium` + `chromium-driver` cùng version do Debian phát hành.)
 
 ### Staging (Railway)
 
@@ -791,8 +801,8 @@ docker compose up -d      # Tạo lại (database trống, 2 tài khoản mặc 
 
 ### v1.3.0 (31/05/2026)
 
-- Mục 7 (Dockerfile.dev): thêm Chromium + chromium-driver cho system test (lý do dùng Chromium thay Google Chrome trên Docker arm64).
-- Mục 11 (Test): thêm phần "System test (trình duyệt thật)" — cách chạy `bin/docker rspec spec/system` và cách chạy headful (`HEADLESS=false` trên host) để debug.
+- Mục 7 (Dockerfile.dev): thêm Chromium + chromium-driver cho system test (dùng Chromium thay Google Chrome để image chạy được trên mọi kiến trúc CPU).
+- Mục 11 (Test): thêm phần "System test (trình duyệt thật)" — cách chạy `bin/docker rspec spec/system`, chạy headful để quan sát trình duyệt (`HEADLESS=false`, chạy ngoài Docker), các biến môi trường cấu hình driver, và cách xử lý lỗi version Chrome ≠ chromedriver trên host.
 
 ### v1.2.0 (24/05/2026)
 

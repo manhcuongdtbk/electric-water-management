@@ -23,11 +23,13 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 # Chromium + chromedriver cho system test (Capybara + Selenium).
-# Dùng gói Debian thay vì Google Chrome: Google Chrome chỉ có bản amd64, còn
-# development chạy bằng Docker trên arm64 (Apple Silicon). Hai gói chromium và
-# chromium-driver do Debian phát hành cùng một phiên bản nên chromedriver luôn
-# khớp Chromium, không cần Selenium Manager tải driver lúc chạy (chạy được cả khi
-# offline). fonts-liberation để Chromium render chữ đầy đủ.
+# Dùng gói Debian thay vì Google Chrome để image build/chạy được trên MỌI kiến trúc
+# CPU mà nhóm dùng (cả Intel/amd64 lẫn ARM/arm64 như Apple Silicon): apt repo của
+# Google Chrome chỉ có bản amd64 nên không cài được trên máy arm64, còn gói chromium
+# của Debian có cả hai. Hai gói chromium và chromium-driver do Debian phát hành cùng
+# một phiên bản nên chromedriver luôn khớp Chromium, không cần Selenium Manager tải
+# driver lúc chạy (chạy được cả khi offline). fonts-liberation để Chromium render
+# chữ đầy đủ.
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y \
       chromium chromium-driver fonts-liberation && \
