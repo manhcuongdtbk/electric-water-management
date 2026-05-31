@@ -48,7 +48,6 @@ class Ability
     managed_zone_ids = Zone.kept.where(manager_unit_id: uid).pluck(:id)
 
     can :read, Unit, id: uid
-    can :read, Zone, discarded_at: nil
     can [:create, :read, :update, :destroy], ContactPoint, unit_id: uid
     can [:create, :read, :update, :destroy], Meter, contact_point: { unit_id: uid }
     can [:create, :read, :update, :destroy], Block, unit_id: uid
@@ -64,6 +63,7 @@ class Ability
 
     return if managed_zone_ids.empty?
 
+    can :read, Zone, id: managed_zone_ids
     can :read, MainMeter, zone_id: managed_zone_ids
     can [:create, :read, :update, :destroy], MainMeterReading, main_meter: { zone_id: managed_zone_ids }
     can [:create, :read, :update, :destroy], ContactPoint, zone_id: managed_zone_ids
@@ -86,7 +86,6 @@ class Ability
     managed_zone_ids = Zone.kept.where(manager_unit_id: uid).pluck(:id)
 
     can :read, Unit, id: uid
-    can :read, Zone, discarded_at: nil
     can :read, ContactPoint, unit_id: uid
     can :read, Meter, contact_point: { unit_id: uid }
     can :read, Block, unit_id: uid
@@ -101,6 +100,7 @@ class Ability
 
     return if managed_zone_ids.empty?
 
+    can :read, Zone, id: managed_zone_ids
     can :read, MainMeter, zone_id: managed_zone_ids
     can :read, MainMeterReading, main_meter: { zone_id: managed_zone_ids }
     can :read, ContactPoint, zone_id: managed_zone_ids

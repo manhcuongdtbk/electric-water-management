@@ -3,7 +3,9 @@ class PumpAllocationsController < ApplicationController
   include AuthorizeResource
   include BusinessRoleRequired
   include ZoneUnitFilterable
+  include SettingsAccessGuard
 
+  before_action :require_system_admin_or_zone_manager!
   before_action :set_allocation, only: [:edit, :update, :destroy]
   before_action :require_open_period, only: [:create, :update, :destroy]
   before_action :ensure_allocation_belongs_to_open_period, only: [:edit, :update, :destroy]
