@@ -19,10 +19,24 @@
 #   bin/docker down               → dừng + xóa containers
 #   bin/docker exec app <lệnh>   → chạy lệnh trong container app
 #   bin/docker exec postgres <lệnh> → chạy lệnh trong container postgres
+#   bin/docker nuke               → xóa container + network + volume + image của worktree (dọn rác)
+#   bin/docker dump-dev [tên]     → lưu DB dev hiện tại thành snapshot DÙNG CHUNG (mặc định "dev")
+#   bin/docker load-dev [tên]     → nạp snapshot dùng chung vào DB dev của worktree này
 
 set -e
 
 COMPOSE="docker compose -f compose.dev.yml"
+
+# Thư mục snapshot DB dev DÙNG CHUNG giữa các worktree. Đặt ở repo gốc (ngoài các
+# worktree) nên không mất khi xóa worktree; /docker/dev/ đã được gitignore. Đổi bằng
+# biến môi trường EWM_DEV_SNAPSHOT_DIR nếu muốn nơi khác.
+dev_snapshot_dir() {
+  if [ -n "${EWM_DEV_SNAPSHOT_DIR:-}" ]; then
+    printf '%s' "$EWM_DEV_SNAPSHOT_DIR"
+  else
+    printf '%s' "$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")/docker/dev/shared-snapshots"
+  fi
+}
 
 # Tự gán cổng host RIÊNG khi chạy trong git worktree.
 #
@@ -107,6 +121,42 @@ case "${1}" in
   exec)
     shift
     $COMPOSE exec "${ENV_ARGS[@]}" "$@"
+    ;;
+  nuke)
+    # Dọn SẠCH Docker của worktree này: container + network + named volume (gems) +
+    # image tự build. KHÔNG xóa dữ liệu DB (bind mount docker/dev/pgdata) — dữ liệu
+    # chỉ mất khi xóa thư mục worktree. Luôn chạy `nuke` TRƯỚC `git worktree remove`
+    # để khỏi bỏ lại container/image/volume orphan. Lần `up` sau sẽ build + bundle lại.
+    $COMPOSE down -v --rmi local
+    ;;
+  dump-dev)
+    # Lưu DB dev hiện tại thành snapshot dùng chung cho các worktree khác load. Dùng
+    # pg_dump định dạng custom (như tính năng backup), nhưng KHÔNG tạo bản ghi Backup.
+    shift
+    name="${1:-dev}"
+    snap_dir="$(dev_snapshot_dir)"
+    mkdir -p "$snap_dir"
+    $COMPOSE exec -T app sh -c 'PGPASSWORD="$ELECTRIC_WATER_MANAGEMENT_DATABASE_PASSWORD" LANG=C PGCLIENTENCODING=UTF8 pg_dump --format=custom --no-owner --no-privileges --file=/tmp/dev_snapshot.dump --dbname="$DATABASE_NAME" --host="$DATABASE_HOST" --port="${DATABASE_PORT:-5432}" --username="$DATABASE_USERNAME"'
+    $COMPOSE cp app:/tmp/dev_snapshot.dump "$snap_dir/$name.dump"
+    $COMPOSE exec -T app rm -f /tmp/dev_snapshot.dump
+    echo "✓ Đã lưu snapshot DB dev → $snap_dir/$name.dump"
+    ;;
+  load-dev)
+    # Nạp snapshot dùng chung vào DB dev của worktree HIỆN TẠI (ghi đè bằng pg_restore).
+    shift
+    name="${1:-dev}"
+    snap_dir="$(dev_snapshot_dir)"
+    file="$snap_dir/$name.dump"
+    if [ ! -f "$file" ]; then
+      echo "Không thấy snapshot: $file" >&2
+      echo "Snapshot có sẵn trong $snap_dir:" >&2
+      ls -1 "$snap_dir"/*.dump 2>/dev/null | sed 's#.*/##; s#\.dump$##; s#^#  #' >&2 || echo "  (chưa có — tạo bằng: bin/docker dump-dev [tên])" >&2
+      exit 1
+    fi
+    $COMPOSE cp "$file" app:/tmp/dev_snapshot.dump
+    $COMPOSE exec -T app sh -c 'PGPASSWORD="$ELECTRIC_WATER_MANAGEMENT_DATABASE_PASSWORD" LANG=C PGCLIENTENCODING=UTF8 pg_restore --clean --if-exists --no-owner --no-privileges --dbname="$DATABASE_NAME" --host="$DATABASE_HOST" --port="${DATABASE_PORT:-5432}" --username="$DATABASE_USERNAME" /tmp/dev_snapshot.dump'
+    $COMPOSE exec -T app rm -f /tmp/dev_snapshot.dump
+    echo "✓ Đã nạp snapshot \"$name\" vào DB dev của worktree này (đã ghi đè dữ liệu cũ)."
     ;;
   *)
     $COMPOSE exec "${ENV_ARGS[@]}" app "$@"

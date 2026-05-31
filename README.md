@@ -49,7 +49,8 @@ bin/docker up                                # tự in cổng đã gán cho work
 `bin/docker` tự gán cổng host riêng và ổn định cho mỗi worktree (postgres + nginx) nên không đụng checkout gốc hay worktree khác. Checkout gốc (không phải worktree) giữ mặc định `5433` / `80`.
 
 - **Preview riêng mỗi session** (Claude Desktop app): `preview_start docker-dev` tự trỏ đúng app của worktree đó (qua autoPort); nhiều session preview song song không đụng nhau.
-- **Dọn dẹp:** mỗi worktree là một full stack (postgres + app + nginx) tốn RAM/đĩa — xong việc chạy `bin/docker down` rồi `git worktree remove <đường-dẫn>`.
+- **Dọn dẹp khi xong worktree:** chạy `bin/docker nuke` (xóa container + network + volume gems + image của worktree) **trước** `git worktree remove <đường-dẫn>` — làm ngược lại sẽ để rác orphan. `nuke` KHÔNG xóa dữ liệu DB (nằm trong thư mục worktree). Tạm nghỉ rồi quay lại thì chỉ cần `bin/docker stop`.
+- **Chia sẻ dữ liệu dev giữa các worktree** (khi cần): `bin/docker dump-dev [tên]` lưu DB dev hiện tại thành snapshot dùng chung, worktree khác `bin/docker load-dev [tên]` để nạp. Chỉ dùng giữa các worktree cùng schema — xem `docs/KIEN_THUC_DOCKER.md`.
 - **Trùng cổng** (hiếm): nếu `bin/docker up` báo `port already allocated`, đặt `POSTGRES_HOST_PORT` / `NGINX_HOST_PORT` thủ công trước khi chạy.
 - **Máy hỗ trợ:** macOS Apple Silicon (M1/M2/M3...) — đã kiểm chứng đầy đủ (cả Docker lẫn host). macOS Intel và Linux: nên chạy được nhưng chưa kiểm chứng kỹ. Windows: dùng qua WSL2, chưa kiểm chứng. Gặp vấn đề trên máy khác → ưu tiên dùng Apple Silicon.
 
@@ -66,6 +67,9 @@ bin/docker logs postgres      # Xem logs container postgres
 bin/docker ps                 # Trạng thái containers
 bin/docker stop               # Dừng
 bin/docker start              # Chạy lại
+bin/docker nuke               # Dọn sạch Docker của worktree (chạy trước git worktree remove)
+bin/docker dump-dev [tên]     # Lưu DB dev thành snapshot dùng chung (mặc định "dev")
+bin/docker load-dev [tên]     # Nạp snapshot dùng chung vào DB dev worktree này
 ```
 
 ### Workflow hàng ngày
