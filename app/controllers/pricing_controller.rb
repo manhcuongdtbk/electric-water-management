@@ -2,6 +2,9 @@ class PricingController < ApplicationController
   include AuthorizeResource
   include BusinessRoleRequired
   include ListSortable
+  include SettingsAccessGuard
+
+  before_action :require_system_admin!
 
   def show
     load_show_data

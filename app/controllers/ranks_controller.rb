@@ -3,7 +3,9 @@ class RanksController < ApplicationController
   include StructureChangeGuard
   include AuthorizeResource
   include BusinessRoleRequired
+  include SettingsAccessGuard
 
+  before_action :require_system_admin!
   before_action :set_rank, only: [:show, :edit, :update, :destroy]
   before_action :require_open_period, only: [:create, :update, :destroy]
   before_action :require_latest_period_when_open,

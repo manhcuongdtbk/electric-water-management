@@ -1,6 +1,6 @@
 # Thiết kế hệ thống quản lý điện nội bộ Sư đoàn — Hệ thống v2
 
-> **Phiên bản tài liệu:** 2.13.0
+> **Phiên bản tài liệu:** 2.13.1
 > **Ngày:** 24/05/2026
 > **Tính chất:** Tài liệu thiết kế hệ thống v2, nguồn sự thật cho implementation.
 > **Nguồn nghiệp vụ:** V2_XAC_NHAN_NGHIEP_VU (phiên bản mới nhất tại thời điểm thiết kế: v2.11.0)
@@ -973,7 +973,7 @@ Sidebar chỉ hiển thị các mục mà vai trò được phép thấy (theo b
 | Nhóm | ✓ | ✓ | ✓ (xem) | ✗ |
 | Cấu hình đơn vị | ✓ | ✓ | ✓ (xem) | ✗ |
 | **THIẾT LẬP** | | | | |
-| Khu vực | ✓ | ✓ (zone-manager, xem) | ✓ (zone-manager, xem) | ✗ |
+| Khu vực | ✓ | ✗ | ✗ | ✗ |
 | Đơn vị | ✓ | ✗ | ✗ | ✗ |
 | Phân bổ bơm nước | ✓ | ✓ (zone-manager) | ✓ (zone-manager, xem) | ✗ |
 | Đơn giá điện | ✓ | ✗ | ✗ | ✗ |
@@ -1226,6 +1226,10 @@ Mọi thao tác trên hệ thống đều được ghi lại (PaperTrail). Syste
 ---
 
 ## Lịch sử thay đổi
+
+### v2.13.1 (31/05/2026)
+
+- Sidebar per role: hàng "Khu vực" — đổi ô unit_admin và commander từ "✓ (zone-manager, xem)" sang "✗". Trang /zones nay chỉ system_admin (`require_system_admin!`, giống /units); đơn vị quản lý khu vực (UA-ZM/CMD-ZM) không còn thấy mục Khu vực trên sidebar (sidebar zone-manager 12 → 11 mục). /pump_allocations giữ nguyên cho zone-manager.
 
 ### v2.13.0 (24/05/2026)
 

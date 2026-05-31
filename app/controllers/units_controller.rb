@@ -4,7 +4,9 @@ class UnitsController < ApplicationController
   include StructureChangeGuard
   include BusinessRoleRequired
   include ZoneUnitFilterable
+  include SettingsAccessGuard
 
+  before_action :require_system_admin!
   before_action :set_unit, only: [:show, :edit, :update, :destroy]
   before_action :require_open_period,
     only: [:create, :update, :destroy]

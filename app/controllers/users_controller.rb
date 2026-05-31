@@ -1,7 +1,9 @@
 class UsersController < ApplicationController
   include AuthorizeResource
   include ZoneUnitFilterable
+  include SettingsAccessGuard
 
+  before_action :require_account_manager!
   before_action :set_user, only: [:show, :edit, :update, :destroy]
 
   SORT_COLUMNS = {
