@@ -1,7 +1,7 @@
 # Hành vi hệ thống — Hệ thống quản lý điện nội bộ Sư đoàn (Hệ thống v2)
 
-> **Phiên bản:** 1.2.0
-> **Ngày:** 24/05/2026
+> **Phiên bản:** 1.2.1
+> **Ngày:** 31/05/2026
 > **Tính chất:** Tài liệu mô tả hành vi thực tế của hệ thống đã được verify qua code và test. Bổ sung cho V2_XAC_NHAN_NGHIEP_VU (cái gì) và V2_THIET_KE_HE_THONG (làm thế nào) bằng cách trả lời "hệ thống hành xử ra sao" trong các kịch bản thực tế.
 > **Nguồn:** Kết quả audit toàn diện codebase, 14 đợt page-by-page, 781+ test cases.
 
@@ -27,7 +27,7 @@ User model có 4 enum values (`system_admin`, `unit_admin`, `commander`, `techni
 | Ký hiệu | Vai trò | Cách xác định | Phạm vi |
 |---|---|---|---|
 | SA | Quản trị viên hệ thống | `role == "system_admin"` | Toàn hệ thống |
-| UA-ZM | Quản trị viên đơn vị quản lý khu vực | `role == "unit_admin"` + `Zone.exists?(manager_unit_id: unit_id)` | Đơn vị mình + toàn bộ đầu mối/công tơ khu vực mình quản lý |
+| UA-ZM | Quản trị viên đơn vị quản lý khu vực | `role == "unit_admin"` + `Zone.exists?(manager_unit_id: unit_id)` | Đơn vị mình + đầu mối/công tơ cấp khu vực (thuộc trực tiếp khu vực mình quản lý, không gồm đơn vị khác cùng khu vực) |
 | UA | Quản trị viên đơn vị không quản lý khu vực | `role == "unit_admin"` + không quản lý khu vực | Chỉ đơn vị mình |
 | CMD-ZM | Chỉ huy đơn vị quản lý khu vực | `role == "commander"` + `Zone.exists?(manager_unit_id: unit_id)` | Chỉ xem, phạm vi như UA-ZM |
 | CMD | Chỉ huy đơn vị không quản lý khu vực | `role == "commander"` + không quản lý khu vực | Chỉ xem, phạm vi như UA |
@@ -350,6 +350,10 @@ Code từ session AI trước có thể thiếu suy nghĩ sâu về edge cases. 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.2.1 (31/05/2026)
+
+- Mục 1: làm rõ phạm vi UA-ZM trong bảng vai trò — "toàn bộ đầu mối/công tơ khu vực" dễ hiểu nhầm là gồm cả đơn vị khác cùng khu vực. Sửa thành "đầu mối/công tơ cấp khu vực (thuộc trực tiếp khu vực mình quản lý, không gồm đơn vị khác cùng khu vực)" để nhất quán với mục 1 dòng "Billing data" và V2_THIET_KE_HE_THONG mục "Mapping filter theo vai trò". Khớp code: `Ability` chỉ cấp quyền cho đầu mối có `unit_id` đơn vị mình HOẶC `zone_id` khu vực quản lý (validation XOR đảm bảo đầu mối thuộc đơn vị có `zone_id` null nên không trùng quy tắc zone).
 
 ### v1.2.0 (24/05/2026)
 
