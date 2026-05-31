@@ -95,7 +95,7 @@ case "${1}" in
     if [ -n "$shared_db_port" ]; then
       export DATABASE_HOST="host.docker.internal"
       export DATABASE_PORT="$shared_db_port"
-      echo "→ DB dùng chung (live): host.docker.internal:${shared_db_port} — không bật postgres riêng"
+      echo "→ Shared DB (live): host.docker.internal:${shared_db_port} — own postgres not started"
       [ -n "${NGINX_HOST_PORT:-}" ] && echo "→ App (nginx): http://localhost:${NGINX_HOST_PORT}"
       $COMPOSE up --no-deps app nginx "${up_args[@]}"
     else
@@ -160,7 +160,7 @@ case "${1}" in
     $COMPOSE exec -T app sh -c 'PGPASSWORD="$ELECTRIC_WATER_MANAGEMENT_DATABASE_PASSWORD" LANG=C PGCLIENTENCODING=UTF8 pg_dump --format=custom --no-owner --no-privileges --file=/tmp/dev_snapshot.dump --dbname="$DATABASE_NAME" --host="$DATABASE_HOST" --port="${DATABASE_PORT:-5432}" --username="$DATABASE_USERNAME"'
     $COMPOSE cp app:/tmp/dev_snapshot.dump "$snap_dir/$name.dump"
     $COMPOSE exec -T app rm -f /tmp/dev_snapshot.dump
-    echo "✓ Đã lưu snapshot DB dev → $snap_dir/$name.dump"
+    echo "✓ Saved dev DB snapshot → $snap_dir/$name.dump"
     ;;
   load-dev)
     # Nạp snapshot dùng chung vào DB dev của worktree HIỆN TẠI (ghi đè bằng pg_restore).
@@ -169,15 +169,15 @@ case "${1}" in
     snap_dir="$(dev_snapshot_dir)"
     file="$snap_dir/$name.dump"
     if [ ! -f "$file" ]; then
-      echo "Không thấy snapshot: $file" >&2
-      echo "Snapshot có sẵn trong $snap_dir:" >&2
-      ls -1 "$snap_dir"/*.dump 2>/dev/null | sed 's#.*/##; s#\.dump$##; s#^#  #' >&2 || echo "  (chưa có — tạo bằng: bin/docker dump-dev [tên])" >&2
+      echo "Snapshot not found: $file" >&2
+      echo "Available snapshots in $snap_dir:" >&2
+      ls -1 "$snap_dir"/*.dump 2>/dev/null | sed 's#.*/##; s#\.dump$##; s#^#  #' >&2 || echo "  (none yet — create with: bin/docker dump-dev [name])" >&2
       exit 1
     fi
     $COMPOSE cp "$file" app:/tmp/dev_snapshot.dump
     $COMPOSE exec -T app sh -c 'PGPASSWORD="$ELECTRIC_WATER_MANAGEMENT_DATABASE_PASSWORD" LANG=C PGCLIENTENCODING=UTF8 pg_restore --clean --if-exists --no-owner --no-privileges --dbname="$DATABASE_NAME" --host="$DATABASE_HOST" --port="${DATABASE_PORT:-5432}" --username="$DATABASE_USERNAME" /tmp/dev_snapshot.dump'
     $COMPOSE exec -T app rm -f /tmp/dev_snapshot.dump
-    echo "✓ Đã nạp snapshot \"$name\" vào DB dev của worktree này (đã ghi đè dữ liệu cũ)."
+    echo "✓ Loaded snapshot \"$name\" into this worktree's dev DB (overwrote existing data)."
     ;;
   *)
     $COMPOSE exec "${ENV_ARGS[@]}" app "$@"
