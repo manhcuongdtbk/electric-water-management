@@ -1,6 +1,6 @@
 # V2 — Kịch bản kiểm thử (số liệu cụ thể)
 
-> **Phiên bản:** 2.0.2
+> **Phiên bản:** 2.0.3
 > **Ngày:** 31/05/2026
 > **Nguồn nghiệp vụ:** `docs/V2_XAC_NHAN_NGHIEP_VU.md` v2.13.0
 > **Nguồn thiết kế:** `docs/V2_THIET_KE_HE_THONG.md` v2.13.0
@@ -1074,7 +1074,7 @@ Quy ước Phần 4:
 
 - Mọi con số tính toán trích dẫn đều **trỏ về Phần 2** (golden numbers engine-verified), nêu rõ mã EN-* nguồn. Phần 4 không tính lại; với trang không mang số liệu, chỉ mô tả đầu ra hiển thị mong đợi.
 - Cả hai khu vực dùng cùng kỳ tháng 5 năm 2026 đang mở (trạng thái B), đã tính toán (golden numbers Phần 2 hiển thị đúng) trừ khi kịch bản ghi khác.
-- **Số mục sidebar (toàn tài liệu):** SA 17 mục, UA 8 mục, UA-ZM 12 mục, CMD 8 mục (khớp UA), CMD-ZM 12 mục (khớp UA-ZM), TECH 3 mục. Nguồn: `V2_THIET_KE_HE_THONG.md` mục "Sidebar per role" + `V2_CHIEU_TEST.md` danh mục Sidebar.
+- **Số mục sidebar (toàn tài liệu):** SA 17 mục, UA 8 mục, UA-ZM 11 mục, CMD 8 mục (khớp UA), CMD-ZM 11 mục (khớp UA-ZM), TECH 3 mục. Nguồn: `V2_THIET_KE_HE_THONG.md` mục "Sidebar per role" + `V2_CHIEU_TEST.md` danh mục Sidebar.
 - **Phạm vi billing của UA-ZM (dùng nhất quán toàn Phần 4):** đầu mối đơn vị mình **cộng** đầu mối sinh hoạt **thuộc khu vực trực tiếp** (`unit_id` null, `zone_id` có giá trị) — **KHÔNG** bao gồm đầu mối của các đơn vị khác trong cùng khu vực. Cụ thể (theo GD3-05 và Phần 2):
   - adminA (UA-ZM Khu vực 1) thấy 4 hàng billing: Ban Tác huấn, Văn thư, Kho vật tư (Đơn vị A) cộng Chỉ huy khu vực (thuộc khu vực trực tiếp). KHÔNG thấy Đại đội 1 (Đơn vị B).
   - adminB (UA Khu vực 1) thấy 1 hàng: Đại đội 1 (Đơn vị B).
@@ -1092,9 +1092,9 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 | Vai trò | Số mục | Mục hiển thị |
 |---|---|---|
 | SA (quanTri) | 17 | XEM KẾT QUẢ (3): Tổng quan, Bảng tính tiền, Tra cứu lịch sử. NHẬP LIỆU (3): Nhập số điện lực, Chỉ số đầu mối, Chỉ số bơm nước. KHAI BÁO (4): Đầu mối, Khối, Nhóm, Cấu hình đơn vị. THIẾT LẬP (5): Khu vực, Đơn vị, Phân bổ bơm nước, Đơn giá điện, Nhóm cấp bậc. HỆ THỐNG (2): Tài khoản, Nhật ký hoạt động. (Không có Sao lưu.) |
-| UA-ZM (adminA, adminC) | 12 | XEM KẾT QUẢ (3) + NHẬP LIỆU (3: cả điện lực và bơm nước) + KHAI BÁO (4) + THIẾT LẬP (2): Khu vực, Phân bổ bơm nước. (Không Đơn vị, Đơn giá, Nhóm cấp bậc, Hệ thống.) |
+| UA-ZM (adminA, adminC) | 11 | XEM KẾT QUẢ (3) + NHẬP LIỆU (3: cả điện lực và bơm nước) + KHAI BÁO (4) + THIẾT LẬP (1): Phân bổ bơm nước. (Không Khu vực, Đơn vị, Đơn giá, Nhóm cấp bậc, Hệ thống.) |
 | UA (adminB, adminD) | 8 | XEM KẾT QUẢ (3) + NHẬP LIỆU (1: chỉ Chỉ số đầu mối) + KHAI BÁO (4). (Không điện lực, không bơm nước, không Thiết lập, không Hệ thống.) |
-| CMD-ZM (chiHuyA, chiHuyC) | 12 | Khớp UA-ZM (cùng mục), nhưng mọi trang chỉ xem. |
+| CMD-ZM (chiHuyA, chiHuyC) | 11 | Khớp UA-ZM (cùng mục), nhưng mọi trang chỉ xem. |
 | CMD (chiHuyB, chiHuyD) | 8 | Khớp UA (cùng mục), nhưng mọi trang chỉ xem. |
 | TECH (kyThuat) | 3 | HỆ THỐNG (3): Tài khoản, Nhật ký hoạt động, Sao lưu dữ liệu. |
 
@@ -1111,7 +1111,7 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 - **TR-dashboard-SA `[CẢ HAI]`:** quanTri thấy tổng quan toàn hệ thống — bảng đơn vị (thâm điện, thành tiền, trạng thái nhập liệu của Đơn vị A, B, C, D) cộng bảng khu vực (tổng điện công cộng và bơm nước per Khu vực 1, Khu vực 2) cộng vùng cảnh báo. Số liệu khớp Phần 2: tổng thiếu Khu vực 1 = 177,42 kW, tổng thừa 33,34 kW, tổng thành tiền thiếu 414.517 đồng, tổng thành tiền thừa 77.891 đồng (EN-KV1-TOTALS); Khu vực 2 tổng thiếu 22,87 kW, tổng thừa 20,53 kW, tổng thành tiền thiếu 53.430 đồng, tổng thành tiền thừa 47.956 đồng (EN-KV2-TOTALS). Cảnh báo phạm vi toàn hệ thống; kỳ tháng 5 năm 2026 đã tính đủ → không cảnh báo thiếu dữ liệu. Sidebar 17 mục.
 - **TR-dashboard-UAZM `[CẢ HAI]`:** adminA thấy tổng quan Đơn vị A cộng Khu vực 1 (phạm vi quản lý khu vực). Cảnh báo chỉ giới hạn Khu vực 1. adminC: Đơn vị C cộng Khu vực 2 (tổng Khu vực 2 theo EN-KV2-TOTALS). Sidebar 12 mục.
 - **TR-dashboard-UA `[CẢ HAI]`:** adminB thấy tổng quan **chỉ Đơn vị B** (đầu mối Đại đội 1: thiếu 106,86 kW, thành tiền 249.659 đồng — EN-KV1-SUMMARY-04). Không thấy số liệu khu vực, không thấy đơn vị khác. adminD: chỉ Đơn vị D (Trinh sát thiếu 22,87 kW, thành tiền 53.430 đồng — EN-KV2-SUMMARY-02). Sidebar 8 mục.
-- **TR-dashboard-CMDZM `[CẢ HAI]`:** chiHuyA hiển thị giống adminA (Đơn vị A + Khu vực 1), chiHuyC giống adminC, chỉ xem. Dashboard không có ô nhập hay nút thao tác nên khác biệt CMD/UA ở đây không đáng kể; sidebar 12 mục.
+- **TR-dashboard-CMDZM `[CẢ HAI]`:** chiHuyA hiển thị giống adminA (Đơn vị A + Khu vực 1), chiHuyC giống adminC, chỉ xem. Dashboard không có ô nhập hay nút thao tác nên khác biệt CMD/UA ở đây không đáng kể; sidebar 11 mục.
 - **TR-dashboard-CMD `[CẢ HAI]`:** chiHuyB giống adminB (chỉ Đơn vị B), chiHuyD giống adminD, chỉ xem. Sidebar 8 mục.
 - **TR-dashboard-TECH `[TỰ ĐỘNG]`:** kyThuat bị chặn — vào `/dashboard` redirect về `/users`. Dashboard không xuất hiện trên sidebar TECH (3 mục).
 
@@ -1141,9 +1141,9 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 | Vai trò | Truy cập | Dữ liệu so sánh | Sửa được | Ghi chú |
 |---|---|---|---|---|
 | TR-history-SA `[CẢ HAI]` | Xem | Toàn bộ 8 đầu mối sinh hoạt, lọc theo dropdown | Không (chỉ xem lịch sử) | Chọn kỳ A + kỳ B → bảng so sánh 2 cột + cột chênh lệch; đầu mối chỉ có ở 1 kỳ → cột kỳ thiếu trống + ghi chú. Dropdown zone/unit dùng `with_discarded`. Sidebar 17. |
-| TR-history-UAZM `[CẢ HAI]` | Xem | adminA: 4 đầu mối (Đơn vị A + Chỉ huy khu vực); adminC: 2 (Quân y + Chỉ huy khu vực 2) | Không | Phạm vi như billing UA-ZM. Cả hai cột Khu vực + Đơn vị hiện. Sidebar 12. |
+| TR-history-UAZM `[CẢ HAI]` | Xem | adminA: 4 đầu mối (Đơn vị A + Chỉ huy khu vực); adminC: 2 (Quân y + Chỉ huy khu vực 2) | Không | Phạm vi như billing UA-ZM. Cả hai cột Khu vực + Đơn vị hiện. Sidebar 11. |
 | TR-history-UA `[CẢ HAI]` | Xem | adminB: Đại đội 1; adminD: Trinh sát | Không | Phạm vi 1 đơn vị. Sidebar 8. |
-| TR-history-CMDZM `[CẢ HAI]` | Xem | Như UA-ZM tương ứng | Không | Trang chỉ xem; không có ô nhập nên không khác CMD. Sidebar 12. |
+| TR-history-CMDZM `[CẢ HAI]` | Xem | Như UA-ZM tương ứng | Không | Trang chỉ xem; không có ô nhập nên không khác CMD. Sidebar 11. |
 | TR-history-CMD `[CẢ HAI]` | Xem | Như UA tương ứng | Không | Sidebar 8. |
 | TR-history-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | Không có mục trên sidebar. |
 
@@ -1160,9 +1160,9 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 | Vai trò | Truy cập | Dữ liệu | Sửa được | Ghi chú |
 |---|---|---|---|---|
 | TR-electricity_supply-SA `[CẢ HAI]` | Vào được | Tất cả công tơ tổng (CT-Tổng-KV1 = 2.100; CT-Tổng-KV2 = 1.100) | Sửa | Ô nhập số sử dụng; nút Lưu hiện. Sidebar 17. |
-| TR-electricity_supply-UAZM `[CẢ HAI]` | Vào được | Công tơ tổng khu vực mình (adminA: CT-Tổng-KV1; adminC: CT-Tổng-KV2) | Sửa | Sidebar 12. |
+| TR-electricity_supply-UAZM `[CẢ HAI]` | Vào được | Công tơ tổng khu vực mình (adminA: CT-Tổng-KV1; adminC: CT-Tổng-KV2) | Sửa | Sidebar 11. |
 | TR-electricity_supply-UA `[TỰ ĐỘNG]` | **Redirect** | — | — | `authorize_or_redirect` chặn (đơn vị B/D không có main_meter). Không có mục trên sidebar UA (8 mục). |
-| TR-electricity_supply-CMDZM `[CẢ HAI]` | Vào được (xem) | Công tơ tổng khu vực mình | Không (disabled) | Ô nhập disabled, nút Lưu ẩn. chiHuyA: CT-Tổng-KV1; chiHuyC: CT-Tổng-KV2. Sidebar 12. |
+| TR-electricity_supply-CMDZM `[CẢ HAI]` | Vào được (xem) | Công tơ tổng khu vực mình | Không (disabled) | Ô nhập disabled, nút Lưu ẩn. chiHuyA: CT-Tổng-KV1; chiHuyC: CT-Tổng-KV2. Sidebar 11. |
 | TR-electricity_supply-CMD `[TỰ ĐỘNG]` | **Redirect** | — | — | Như UA. Không có mục trên sidebar CMD (8 mục). |
 | TR-electricity_supply-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | — |
 
@@ -1177,9 +1177,9 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 | Vai trò | Truy cập | Dữ liệu/Cột | Sửa được | Ghi chú |
 |---|---|---|---|---|
 | TR-meter_entries-SA `[CẢ HAI]` | Vào được | Tất cả công tơ sinh hoạt + công cộng cả 2 khu vực; có cột Khu vực + Đơn vị; có filter zone/unit cascade + search | Sửa | Nút Lưu hiện. Sidebar 17. |
-| TR-meter_entries-UAZM `[CẢ HAI]` | Vào được | adminA: CT-A1, CT-A2, CT-A3, CT-CC-A (Đơn vị A) + CT-KV1, CT-CC-KV (khu vực trực tiếp). adminC: CT-QY, CT-CC-C + CT-CHKV2. Không cột Khu vực/Đơn vị, không filter | Sửa | Có search theo tên. Số đầu kỳ editable. Sidebar 12. |
+| TR-meter_entries-UAZM `[CẢ HAI]` | Vào được | adminA: CT-A1, CT-A2, CT-A3, CT-CC-A (Đơn vị A) + CT-KV1, CT-CC-KV (khu vực trực tiếp). adminC: CT-QY, CT-CC-C + CT-CHKV2. Không cột Khu vực/Đơn vị, không filter | Sửa | Có search theo tên. Số đầu kỳ editable. Sidebar 11. |
 | TR-meter_entries-UA `[CẢ HAI]` | Vào được | adminB: CT-B1 (Đại đội 1) + CT-CC-B (Trạm gác). adminD: CT-TS (Trinh sát). Chỉ công tơ đơn vị mình; không cột Khu vực/Đơn vị | Sửa | Sidebar 8. |
-| TR-meter_entries-CMDZM `[CẢ HAI]` | Vào được (xem) | Như adminA/adminC tương ứng | Không (disabled) | Mọi ô nhập disabled, nút Lưu ẩn. Sidebar 12. |
+| TR-meter_entries-CMDZM `[CẢ HAI]` | Vào được (xem) | Như adminA/adminC tương ứng | Không (disabled) | Mọi ô nhập disabled, nút Lưu ẩn. Sidebar 11. |
 | TR-meter_entries-CMD `[CẢ HAI]` | Vào được (xem) | Như adminB/adminD tương ứng | Không (disabled) | Sidebar 8. |
 | TR-meter_entries-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | — |
 
@@ -1194,9 +1194,9 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 | Vai trò | Truy cập | Dữ liệu | Sửa được | Ghi chú |
 |---|---|---|---|---|
 | TR-pump_entries-SA `[CẢ HAI]` | Vào được | Tất cả công tơ bơm nước (CT-BN1 Khu vực 1; CT-BN2 Khu vực 2); có cột zone/unit + filter + search | Sửa | Sidebar 17. |
-| TR-pump_entries-UAZM `[CẢ HAI]` | Vào được | adminA: CT-BN1 (Trạm bơm 1). adminC: CT-BN2 (Trạm bơm 2) | Sửa | Sidebar 12. |
+| TR-pump_entries-UAZM `[CẢ HAI]` | Vào được | adminA: CT-BN1 (Trạm bơm 1). adminC: CT-BN2 (Trạm bơm 2) | Sửa | Sidebar 11. |
 | TR-pump_entries-UA `[CẢ HAI]` | Vào được | **Trống** (Đơn vị B/D không có công tơ bơm nước) | — | Hiển thị trạng thái rỗng "Không có bản ghi". Mục **không hiện** trên sidebar UA (8 mục) — UA không có trang này. |
-| TR-pump_entries-CMDZM `[CẢ HAI]` | Vào được (xem) | Như UA-ZM tương ứng | Không (disabled) | Ô nhập disabled, nút Lưu ẩn. Sidebar 12. |
+| TR-pump_entries-CMDZM `[CẢ HAI]` | Vào được (xem) | Như UA-ZM tương ứng | Không (disabled) | Ô nhập disabled, nút Lưu ẩn. Sidebar 11. |
 | TR-pump_entries-CMD `[CẢ HAI]` | — | **Trống** | — | Mục không hiện trên sidebar CMD (8 mục) — CMD không có data bơm nước. |
 | TR-pump_entries-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | — |
 
@@ -1213,9 +1213,9 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 | Vai trò | Truy cập | Dữ liệu/Cột | Tạo/Sửa/Xóa | Ghi chú |
 |---|---|---|---|---|
 | TR-contact_points-SA `[CẢ HAI]` | CRUD | Tất cả đầu mối cả 2 khu vực; cột Khu vực + Đơn vị; filter loại 4 giá trị + filter zone/unit | Có | Form tạo có radio "Đơn vị/Khu vực" (assignment_mode). Sidebar 17. |
-| TR-contact_points-UAZM `[CẢ HAI]` | CRUD | adminA: đầu mối Đơn vị A + đầu mối thuộc Khu vực 1 (Chỉ huy khu vực, Đèn đường, Trạm bơm 1, Thợ xây). adminC: đầu mối Đơn vị C + thuộc Khu vực 2. Không cột Khu vực/Đơn vị. Dropdown loại 4 giá trị | Có (4 loại khu vực mình) | Có radio "Đơn vị/Khu vực". Sidebar 12. |
+| TR-contact_points-UAZM `[CẢ HAI]` | CRUD | adminA: đầu mối Đơn vị A + đầu mối thuộc Khu vực 1 (Chỉ huy khu vực, Đèn đường, Trạm bơm 1, Thợ xây). adminC: đầu mối Đơn vị C + thuộc Khu vực 2. Không cột Khu vực/Đơn vị. Dropdown loại 4 giá trị | Có (4 loại khu vực mình) | Có radio "Đơn vị/Khu vực". Sidebar 11. |
 | TR-contact_points-UA `[CẢ HAI]` | CRUD | adminB: chỉ đầu mối Đơn vị B (Đại đội 1, Trạm gác). adminD: Đơn vị D (Trinh sát). Dropdown loại **2 giá trị** (sinh hoạt, công cộng) | Có (sinh hoạt + công cộng đơn vị mình) | Không có radio "Đơn vị/Khu vực" (mặc định đơn vị). Không thấy loại bơm nước/ngoài biên chế. Sidebar 8. |
-| TR-contact_points-CMDZM `[CẢ HAI]` | Xem | Như adminA/adminC | Không | Nút Thêm/Sửa/Xóa ẩn. Sidebar 12. |
+| TR-contact_points-CMDZM `[CẢ HAI]` | Xem | Như adminA/adminC | Không | Nút Thêm/Sửa/Xóa ẩn. Sidebar 11. |
 | TR-contact_points-CMD `[CẢ HAI]` | Xem | Như adminB/adminD (đầu mối đơn vị) | Không | Nút Thêm/Sửa/Xóa ẩn. Sidebar 8. |
 | TR-contact_points-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | — |
 
@@ -1230,9 +1230,9 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 | Vai trò | Truy cập | Dữ liệu/Cột | Tạo/Sửa/Xóa | Ghi chú |
 |---|---|---|---|---|
 | TR-blocks-SA `[CẢ HAI]` | CRUD | Tất cả khối (Khu vực 1: "Phòng Tham mưu" của Đơn vị A); cột Khu vực + Đơn vị; filter zone/unit | Có | Sidebar 17. |
-| TR-blocks-UAZM `[CẢ HAI]` | CRUD | adminA: khối Đơn vị A ("Phòng Tham mưu"). adminC: khối Đơn vị C (Khu vực 2 không có khối → trống). Không cột Khu vực/Đơn vị | Có (đơn vị) | Khối thuộc đơn vị, không có khối "thuộc khu vực". Sidebar 12. |
+| TR-blocks-UAZM `[CẢ HAI]` | CRUD | adminA: khối Đơn vị A ("Phòng Tham mưu"). adminC: khối Đơn vị C (Khu vực 2 không có khối → trống). Không cột Khu vực/Đơn vị | Có (đơn vị) | Khối thuộc đơn vị, không có khối "thuộc khu vực". Sidebar 11. |
 | TR-blocks-UA `[CẢ HAI]` | CRUD | adminB/adminD: khối đơn vị mình (Đơn vị B/D không có khối → trạng thái rỗng "Không có bản ghi") | Có (đơn vị) | Sidebar 8. |
-| TR-blocks-CMDZM `[CẢ HAI]` | Xem | Như adminA/adminC | Không | Nút ẩn. Sidebar 12. |
+| TR-blocks-CMDZM `[CẢ HAI]` | Xem | Như adminA/adminC | Không | Nút ẩn. Sidebar 11. |
 | TR-blocks-CMD `[CẢ HAI]` | Xem | Như adminB/adminD | Không | Nút ẩn. Sidebar 8. |
 | TR-blocks-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | — |
 
@@ -1247,9 +1247,9 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 | Vai trò | Truy cập | Dữ liệu/Cột | Tạo/Sửa/Xóa | Ghi chú |
 |---|---|---|---|---|
 | TR-groups-SA `[CẢ HAI]` | CRUD | Tất cả nhóm (Khu vực 1: "Ban Tác huấn" trong khối; Khu vực 2: "Tổ Quân y" không khối); cột Khu vực + Đơn vị; filter zone/unit | Có | Form cascade Đơn vị → Khối. Sidebar 17. |
-| TR-groups-UAZM `[CẢ HAI]` | CRUD | adminA: nhóm Đơn vị A ("Ban Tác huấn"). adminC: nhóm Đơn vị C ("Tổ Quân y"). Không cột Khu vực/Đơn vị | Có (đơn vị) | "Tổ Quân y" là nhóm trực tiếp dưới đơn vị, không khối (vị trí phân cấp thứ 3). Sidebar 12. |
+| TR-groups-UAZM `[CẢ HAI]` | CRUD | adminA: nhóm Đơn vị A ("Ban Tác huấn"). adminC: nhóm Đơn vị C ("Tổ Quân y"). Không cột Khu vực/Đơn vị | Có (đơn vị) | "Tổ Quân y" là nhóm trực tiếp dưới đơn vị, không khối (vị trí phân cấp thứ 3). Sidebar 11. |
 | TR-groups-UA `[CẢ HAI]` | CRUD | adminB/adminD: nhóm đơn vị mình (Đơn vị B/D không có nhóm → trạng thái rỗng) | Có (đơn vị) | Sidebar 8. |
-| TR-groups-CMDZM `[CẢ HAI]` | Xem | Như adminA/adminC | Không | Nút ẩn. Sidebar 12. |
+| TR-groups-CMDZM `[CẢ HAI]` | Xem | Như adminA/adminC | Không | Nút ẩn. Sidebar 11. |
 | TR-groups-CMD `[CẢ HAI]` | Xem | Như adminB/adminD | Không | Nút ẩn. Sidebar 8. |
 | TR-groups-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | — |
 
@@ -1264,9 +1264,9 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 | Vai trò | Truy cập | Dữ liệu | Sửa được | Ghi chú |
 |---|---|---|---|---|
 | TR-unit_config-SA `[CẢ HAI]` | Vào được | Chọn đơn vị bất kỳ; cột Khác đầu mối đơn vị đó (cộng đầu mối khu vực nếu đơn vị là quản lý khu vực) | Sửa | Đơn vị A 3%, Đơn vị B 0%, Đơn vị C 5%, Đơn vị D 0%. Sidebar 17. |
-| TR-unit_config-UAZM `[CẢ HAI]` | Vào được | adminA: Đơn vị A (3%) + cột Khác đầu mối Đơn vị A (Ban Tác huấn cố định 5; Văn thư hệ số −2,5; Kho vật tư cố định 0) + cột Khác đầu mối khu vực (Chỉ huy khu vực cố định 0). adminC: Đơn vị C (5%) + Quân y + Chỉ huy khu vực 2 | Sửa | Sidebar 12. |
+| TR-unit_config-UAZM `[CẢ HAI]` | Vào được | adminA: Đơn vị A (3%) + cột Khác đầu mối Đơn vị A (Ban Tác huấn cố định 5; Văn thư hệ số −2,5; Kho vật tư cố định 0) + cột Khác đầu mối khu vực (Chỉ huy khu vực cố định 0). adminC: Đơn vị C (5%) + Quân y + Chỉ huy khu vực 2 | Sửa | Sidebar 11. |
 | TR-unit_config-UA `[CẢ HAI]` | Vào được | adminB: Đơn vị B (0%) + cột Khác Đại đội 1 (hệ số 3). adminD: Đơn vị D (0%) + Trinh sát. Không thấy đầu mối khu vực | Sửa | Sidebar 8. |
-| TR-unit_config-CMDZM `[CẢ HAI]` | Vào được (xem) | Như adminA/adminC | Không (disabled) | Ô nhập disabled, nút Lưu ẩn. Sidebar 12. |
+| TR-unit_config-CMDZM `[CẢ HAI]` | Vào được (xem) | Như adminA/adminC | Không (disabled) | Ô nhập disabled, nút Lưu ẩn. Sidebar 11. |
 | TR-unit_config-CMD `[CẢ HAI]` | Vào được (xem) | Như adminB/adminD | Không (disabled) | Sidebar 8. |
 | TR-unit_config-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | — |
 
@@ -1280,18 +1280,18 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 
 ### TR-zones — Khu vực (/zones)
 
-**Route:** `/zones` (CRUD). **Lớp bảo vệ:** SettingsAccessGuard (`require_system_admin_or_zone_manager!`) + PeriodGuard + StructureChangeGuard (chiều 3). CRUD khu vực + công tơ tổng (nested). Chỉ SA toàn quyền; vai trò quản lý khu vực chỉ **xem khu vực mình**; UA/CMD không quản lý khu vực bị **chặn** (page-level guard, sidebar cũng ẩn mục).
+**Route:** `/zones` (CRUD). **Lớp bảo vệ:** SettingsAccessGuard (`require_system_admin!`) + PeriodGuard + StructureChangeGuard (chiều 3). CRUD khu vực + công tơ tổng (nested). Chỉ SA toàn quyền; mọi vai trò non-SA (kể cả đơn vị quản lý khu vực UA-ZM/CMD-ZM) bị **chặn** (page-level guard, sidebar cũng ẩn mục).
 
 | Vai trò | Truy cập | Dữ liệu | Tạo/Sửa/Xóa | Ghi chú |
 |---|---|---|---|---|
 | TR-zones-SA `[CẢ HAI]` | CRUD | Khu vực 1, Khu vực 2 (kèm công tơ tổng CT-Tổng-KV1, CT-Tổng-KV2) | Có | Sidebar 17. |
-| TR-zones-UAZM `[CẢ HAI]` | Xem (khu vực mình) | adminA: Khu vực 1; adminC: Khu vực 2 | Không | Mục **hiện** trên sidebar (12 mục) nhưng chỉ xem; nút Thêm/Sửa/Xóa ẩn. |
-| TR-zones-UA `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | — | adminB/adminD không thấy mục Khu vực (8 mục); truy cập trực tiếp `/zones` bị `require_system_admin_or_zone_manager!` chặn. |
-| TR-zones-CMDZM `[CẢ HAI]` | Xem (khu vực mình) | Như adminA/adminC | Không | Mục hiện trên sidebar (12). |
+| TR-zones-UAZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | — | adminA/adminC không thấy mục Khu vực (11 mục); truy cập trực tiếp `/zones` bị `require_system_admin!` chặn. |
+| TR-zones-UA `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | — | adminB/adminD không thấy mục Khu vực (8 mục); truy cập trực tiếp `/zones` bị `require_system_admin!` chặn. |
+| TR-zones-CMDZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | — | chiHuyA/chiHuyC không thấy mục Khu vực (11 mục); truy cập trực tiếp bị chặn. |
 | TR-zones-CMD `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | — | Như UA (8 mục); truy cập trực tiếp bị chặn. |
 | TR-zones-TECH `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | — | — |
 
-- **Chiều liên quan:** chiều 2, chiều 3 (Khu vực). Truy cập trực tiếp URL của UA/CMD đã được `SettingsAccessGuard` chặn (CLAUDE.md).
+- **Chiều liên quan:** chiều 2, chiều 3 (Khu vực). Truy cập trực tiếp URL của mọi vai trò non-SA đã được `SettingsAccessGuard` chặn (CLAUDE.md).
 
 ### TR-units — Đơn vị (/units)
 
@@ -1302,7 +1302,7 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 | TR-units-SA `[CẢ HAI]` | CRUD | Đơn vị A, B (Khu vực 1), C, D (Khu vực 2); cột Khu vực | Có | Sidebar 17. |
 | TR-units-UAZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | Mục không trên sidebar (12 mục không gồm Đơn vị); truy cập trực tiếp `/units` bị `require_system_admin!` chặn. |
 | TR-units-UA `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | Như trên (8 mục). |
-| TR-units-CMDZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (12 mục). |
+| TR-units-CMDZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (11 mục). |
 | TR-units-CMD `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (8 mục). |
 | TR-units-TECH `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | — | — |
 
@@ -1315,9 +1315,9 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 | Vai trò | Truy cập | Dữ liệu | Tạo/Sửa/Xóa | Ghi chú |
 |---|---|---|---|---|
 | TR-pump_allocations-SA `[CẢ HAI]` | CRUD | Tất cả phân bổ (Khu vực 1: Trạm bơm 1 → Chỉ huy khu vực 20% + Đơn vị A/B hệ số 1 + Thợ xây hệ số 0,5; Khu vực 2: Trạm bơm 2 thuần hệ số) | Có | Cho sửa cả khi kỳ cũ mở lại. Form có toggle target (đơn vị/đầu mối) + toggle allocation (% cố định/hệ số). Sidebar 17. |
-| TR-pump_allocations-UAZM `[CẢ HAI]` | CRUD | adminA: phân bổ Khu vực 1. adminC: phân bổ Khu vực 2 (thuần hệ số) | Có (khu vực mình) | Sidebar 12. |
+| TR-pump_allocations-UAZM `[CẢ HAI]` | CRUD | adminA: phân bổ Khu vực 1. adminC: phân bổ Khu vực 2 (thuần hệ số) | Có (khu vực mình) | Sidebar 11. |
 | TR-pump_allocations-UA `[CẢ HAI]` | Chặn (redirect, errors.access_denied) | — | — | adminB/adminD không thấy mục (8 mục); truy cập trực tiếp bị `require_system_admin_or_zone_manager!` chặn. |
-| TR-pump_allocations-CMDZM `[CẢ HAI]` | Xem | Như adminA/adminC | Không (chỉ đọc) | Nút Thêm/Sửa/Xóa ẩn. Sidebar 12. |
+| TR-pump_allocations-CMDZM `[CẢ HAI]` | Xem | Như adminA/adminC | Không (chỉ đọc) | Nút Thêm/Sửa/Xóa ẩn. Sidebar 11. |
 | TR-pump_allocations-CMD `[CẢ HAI]` | Chặn (redirect, errors.access_denied) | — | — | Như UA (8 mục); truy cập trực tiếp bị chặn. |
 | TR-pump_allocations-TECH `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | — | — |
 
@@ -1332,7 +1332,7 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 | TR-pricing-SA `[CẢ HAI]` | Toàn quyền | Đơn giá kỳ tháng 5 năm 2026 = 2.336,4 đồng/kW; danh sách kỳ | Mở kỳ mới, đóng kỳ, mở lại kỳ cũ | Sidebar 17. Tham chiếu Phần 5 (vòng đời kỳ). |
 | TR-pricing-UAZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | Không có mục (12 mục không gồm Đơn giá); truy cập trực tiếp bị `require_system_admin!` chặn. |
 | TR-pricing-UA `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (8 mục). |
-| TR-pricing-CMDZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (12 mục). |
+| TR-pricing-CMDZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (11 mục). |
 | TR-pricing-CMD `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (8 mục). |
 | TR-pricing-TECH `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | — | — |
 
@@ -1345,9 +1345,9 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 | Vai trò | Truy cập | Dữ liệu | Tạo/Sửa/Xóa | Ghi chú |
 |---|---|---|---|---|
 | TR-ranks-SA `[CẢ HAI]` | CRUD | 7 nhóm với định mức 570, 440, 305, 130, 210, 110, 24 | Có | Sidebar 17. Thêm rank giữa kỳ → personnel_entries count 0 cho mọi đầu mối sinh hoạt (GD6-02). |
-| TR-ranks-UAZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | Mục không trên sidebar (12 mục); truy cập trực tiếp bị `require_system_admin!` chặn. |
+| TR-ranks-UAZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | Mục không trên sidebar (11 mục); truy cập trực tiếp bị `require_system_admin!` chặn. |
 | TR-ranks-UA `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (8 mục). |
-| TR-ranks-CMDZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (12 mục). |
+| TR-ranks-CMDZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (11 mục). |
 | TR-ranks-CMD `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (8 mục). |
 | TR-ranks-TECH `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | — | — |
 
@@ -1367,9 +1367,9 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 |---|---|---|---|---|
 | TR-users-SA `[CẢ HAI]` | CRUD (trừ TECH) | Tất cả tài khoản trừ tài khoản technician | Có (không quản lý kyThuat) | Form có toggle Role → Unit (`role_unit_toggle`). Reset mật khẩu. Sidebar 17. |
 | TR-users-TECH `[CẢ HAI]` | CRUD (tất cả) | Tất cả tài khoản (gồm cả SA và TECH khác) | Có | TECH là vai trò duy nhất quản lý được mọi tài khoản. Sidebar 3 mục. |
-| TR-users-UAZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | Mục không trên sidebar (12 mục); truy cập trực tiếp `/users` bị `require_account_manager!` chặn. |
+| TR-users-UAZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | Mục không trên sidebar (11 mục); truy cập trực tiếp `/users` bị `require_account_manager!` chặn. |
 | TR-users-UA `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (8 mục). |
-| TR-users-CMDZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (12 mục). |
+| TR-users-CMDZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (11 mục). |
 | TR-users-CMD `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (8 mục). |
 
 **Validation:** tạo/sửa tài khoản — mật khẩu phải đủ phức tạp (1 chữ hoa, 1 chữ thường, 1 số, 1 ký tự đặc biệt); không tự xóa mình; không xóa tài khoản mặc định (chi tiết Phần 5). Toggle Role → Unit: chọn role unit_admin/commander → hiện field Đơn vị; chọn system_admin/technician → ẩn field Đơn vị.
@@ -1384,9 +1384,9 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 |---|---|---|---|
 | TR-audit_logs-SA `[CẢ HAI]` | Xem | Toàn bộ log PaperTrail; filter loại thao tác (tạo/sửa/xóa) + đối tượng (model) + người thao tác + khoảng thời gian | Sidebar 17. |
 | TR-audit_logs-TECH `[CẢ HAI]` | Xem | Như SA | Sidebar 3 mục. |
-| TR-audit_logs-UAZM `[TỰ ĐỘNG]` | **Chặn** | — | Bị chặn (không phải redirect /users — authorize! từ chối). Mục không trên sidebar (12). |
+| TR-audit_logs-UAZM `[TỰ ĐỘNG]` | **Chặn** | — | Bị chặn (không phải redirect /users — authorize! từ chối). Mục không trên sidebar (11). |
 | TR-audit_logs-UA `[TỰ ĐỘNG]` | **Chặn** | — | (8 mục). |
-| TR-audit_logs-CMDZM `[TỰ ĐỘNG]` | **Chặn** | — | (12 mục). |
+| TR-audit_logs-CMDZM `[TỰ ĐỘNG]` | **Chặn** | — | (11 mục). |
 | TR-audit_logs-CMD `[TỰ ĐỘNG]` | **Chặn** | — | (8 mục). |
 
 **Filter kết hợp:** chọn nhiều filter (event + item_type + whodunnit + date range) → kết quả chỉ chứa record match tất cả điều kiện (theo đặc tả mục R "trang danh sách" — input đặc thù audit_logs — của V2_CHIEU_TEST).
@@ -1401,9 +1401,9 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 |---|---|---|---|
 | TR-backups-TECH `[CẢ HAI]` | CRUD | Tạo backup (tối đa 3 bản), xóa backup. Restore **qua dòng lệnh** (không qua giao diện) | Backup khi đã 3 bản → flash "đã đạt tối đa". Sidebar 3 mục. |
 | TR-backups-SA `[TỰ ĐỘNG]` | **Chặn** | — | SA cũng không quản lý sao lưu. Mục không trên sidebar SA (17 mục không gồm Sao lưu). |
-| TR-backups-UAZM `[TỰ ĐỘNG]` | **Chặn** | — | Mục không trên sidebar (12). |
+| TR-backups-UAZM `[TỰ ĐỘNG]` | **Chặn** | — | Mục không trên sidebar (11). |
 | TR-backups-UA `[TỰ ĐỘNG]` | **Chặn** | — | (8 mục). |
-| TR-backups-CMDZM `[TỰ ĐỘNG]` | **Chặn** | — | (12 mục). |
+| TR-backups-CMDZM `[TỰ ĐỘNG]` | **Chặn** | — | (11 mục). |
 | TR-backups-CMD `[TỰ ĐỘNG]` | **Chặn** | — | (8 mục). |
 
 - **Chiều liên quan:** chiều 2, chiều 3 (Sao lưu dữ liệu). Tham chiếu Phần 5 (backup tối đa 3, restore qua dòng lệnh).
@@ -1795,6 +1795,12 @@ Phần này lập bản đồ từ mỗi **nhóm kịch bản** (không phải t
 ---
 
 ## Lịch sử thay đổi
+
+### v2.0.3 (31/05/2026)
+
+- **Thắt chặt trang Khu vực (/zones) còn chỉ SA:** `SettingsAccessGuard` đổi từ `require_system_admin_or_zone_manager!` sang `require_system_admin!` (giống /units). Đơn vị quản lý khu vực (UA-ZM/CMD-ZM) nay cũng bị chặn — chỉ SA vào được /zones. /pump_allocations giữ nguyên `require_system_admin_or_zone_manager!` (zone-manager vẫn cần dùng).
+- Cập nhật các hàng TR-zones Phần 4: TR-zones-UAZM và TR-zones-CMDZM đổi từ "Xem (khu vực mình)" → **"Chặn (redirect, errors.access_denied)"**. Cập nhật route guard và mô tả lớp bảo vệ của TR-zones.
+- **Sidebar zone-manager 12 → 11 mục:** UA-ZM và CMD-ZM bỏ mục "Khu vực" khỏi nhóm THIẾT LẬP (còn THIẾT LẬP 1 mục: Phân bổ bơm nước). Cập nhật dòng tổng số mục sidebar Phần 4, bảng tổng quan số mục, và mọi ghi chú "Sidebar 12" / "(12 mục)" của hàng UA-ZM/CMD-ZM thành 11. Giữ nguyên SA (17), UA (8), CMD (8), TECH (3).
 
 ### v2.0.2 (31/05/2026)
 

@@ -1,6 +1,6 @@
 # Hành vi hệ thống — Hệ thống quản lý điện nội bộ Sư đoàn (Hệ thống v2)
 
-> **Phiên bản:** 1.2.1
+> **Phiên bản:** 1.2.2
 > **Ngày:** 31/05/2026
 > **Tính chất:** Tài liệu mô tả hành vi thực tế của hệ thống đã được verify qua code và test. Bổ sung cho V2_XAC_NHAN_NGHIEP_VU (cái gì) và V2_THIET_KE_HE_THONG (làm thế nào) bằng cách trả lời "hệ thống hành xử ra sao" trong các kịch bản thực tế.
 > **Nguồn:** Kết quả audit toàn diện codebase, 14 đợt page-by-page, 781+ test cases.
@@ -41,7 +41,7 @@ UA-ZM và CMD-ZM không phải role riêng trong database — là unit_admin/com
 
 | Trang | UA | UA-ZM | CMD | CMD-ZM |
 |---|---|---|---|---|
-| Sidebar | 8 mục | 12 mục (+điện lực, bơm nước, khu vực, phân bổ) | 8 mục | 12 mục (+điện lực, bơm nước, khu vực, phân bổ) |
+| Sidebar | 8 mục | 11 mục (+điện lực, bơm nước, phân bổ) | 8 mục | 11 mục (+điện lực, bơm nước, phân bổ) |
 | Billing data | Đầu mối đơn vị mình | Đơn vị mình + đầu mối sinh hoạt khu vực | Như UA | Như UA-ZM |
 | Billing cột | 28 (ẩn Khu vực + Đơn vị) | 29 (có Đơn vị, ẩn Khu vực) | 28 | 29 |
 | Billing sửa | Recalculate | Recalculate | Không | Không |
@@ -350,6 +350,10 @@ Code từ session AI trước có thể thiếu suy nghĩ sâu về edge cases. 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.2.2 (31/05/2026)
+
+- Mục 1, bảng "Khác biệt giữa các variant quản lý khu vực" — hàng Sidebar: UA-ZM và CMD-ZM đổi từ "12 mục (+điện lực, bơm nước, khu vực, phân bổ)" sang "11 mục (+điện lực, bơm nước, phân bổ)". Trang /zones nay chỉ system_admin (`require_system_admin!`); đơn vị quản lý khu vực không còn thấy mục Khu vực trên sidebar và không vào được /zones (page-level guard chặn). /pump_allocations giữ nguyên cho zone-manager. Khớp với dòng "tạo/sửa/xóa zone = SA only" đã có sẵn trong mục 1.
 
 ### v1.2.1 (31/05/2026)
 
