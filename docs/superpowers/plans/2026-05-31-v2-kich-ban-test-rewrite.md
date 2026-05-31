@@ -8,7 +8,7 @@
 
 **Tech Stack:** Rails 8, RSpec + FactoryBot, BigDecimal, Docker (`bin/docker rspec` / `bin/docker console`). Tài liệu Markdown tiếng Việt.
 
-**Nguồn:** Spec thiết kế `docs/specs/2026-05-31-v2-kich-ban-test-rewrite-design.md` (đọc trước khi thực hiện).
+**Nguồn:** Spec thiết kế `docs/superpowers/specs/2026-05-31-v2-kich-ban-test-rewrite-design.md` (đọc trước khi thực hiện).
 
 ---
 
