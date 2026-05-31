@@ -41,8 +41,11 @@ services:
         condition: service_healthy
     environment:
       RAILS_ENV: development
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5432
+      # Mặc định trỏ postgres riêng của worktree. `bin/docker up --shared-db[=PORT]`
+      # ghi đè hai biến này (host.docker.internal:PORT) để dùng chung một postgres
+      # SỐNG với worktree khác — xem docs/KIEN_THUC_DOCKER.md (Cách B).
+      DATABASE_HOST: ${DATABASE_HOST:-postgres}
+      DATABASE_PORT: ${DATABASE_PORT:-5432}
       DATABASE_USERNAME: electric_water_management
       DATABASE_NAME: electric_water_management_development
       ELECTRIC_WATER_MANAGEMENT_DATABASE_PASSWORD: dev_password

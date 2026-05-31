@@ -46,7 +46,7 @@ Mỗi git worktree dùng bộ cổng host riêng do `bin/docker` tự gán (post
 - Mở shell: `bin/docker bash` (hoặc `bin/docker bash postgres`)
 - Trạng thái: `bin/docker ps`
 - Dọn rác worktree: `bin/docker nuke` (xóa container + network + volume + image của worktree; chạy TRƯỚC `git worktree remove` để tránh orphan; KHÔNG xóa dữ liệu DB)
-- Chia sẻ dữ liệu dev giữa worktree: `bin/docker dump-dev [tên]` / `bin/docker load-dev [tên]` (snapshot dùng chung; chỉ giữa các worktree cùng schema)
+- Chia sẻ dữ liệu dev giữa worktree: `bin/docker dump-dev [tên]` / `bin/docker load-dev [tên]` (snapshot dùng chung), hoặc `bin/docker up --shared-db=<cổng>` (DB sống chung). Chỉ giữa các worktree cùng schema
 
 ## Ngôn ngữ
 

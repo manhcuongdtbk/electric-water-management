@@ -79,9 +79,30 @@ case "${1}" in
     ;;
   up)
     shift
-    [ -n "${NGINX_HOST_PORT:-}" ] && echo "→ App (nginx): http://localhost:${NGINX_HOST_PORT}"
-    [ -n "${POSTGRES_HOST_PORT:-}" ] && echo "→ PostgreSQL: localhost:${POSTGRES_HOST_PORT}"
-    $COMPOSE up "$@"
+    # --shared-db[=PORT] (Cách B): app nối tới một postgres DÙNG CHUNG đang publish ở
+    # cổng host PORT (mặc định 5433) qua host.docker.internal, KHÔNG bật postgres riêng
+    # (--no-deps). Dữ liệu DB dev sống (live) chung với worktree khác. Chỉ dùng giữa
+    # các worktree CÙNG schema; cần postgres nguồn đang chạy + Docker Desktop.
+    shared_db_port=""
+    up_args=()
+    for a in "$@"; do
+      case "$a" in
+        --shared-db)   shared_db_port="5433" ;;
+        --shared-db=*) shared_db_port="${a#--shared-db=}" ;;
+        *)             up_args+=("$a") ;;
+      esac
+    done
+    if [ -n "$shared_db_port" ]; then
+      export DATABASE_HOST="host.docker.internal"
+      export DATABASE_PORT="$shared_db_port"
+      echo "→ DB dùng chung (live): host.docker.internal:${shared_db_port} — không bật postgres riêng"
+      [ -n "${NGINX_HOST_PORT:-}" ] && echo "→ App (nginx): http://localhost:${NGINX_HOST_PORT}"
+      $COMPOSE up --no-deps app nginx "${up_args[@]}"
+    else
+      [ -n "${NGINX_HOST_PORT:-}" ] && echo "→ App (nginx): http://localhost:${NGINX_HOST_PORT}"
+      [ -n "${POSTGRES_HOST_PORT:-}" ] && echo "→ PostgreSQL: localhost:${POSTGRES_HOST_PORT}"
+      $COMPOSE up "${up_args[@]}"
+    fi
     ;;
   stop)
     $COMPOSE stop

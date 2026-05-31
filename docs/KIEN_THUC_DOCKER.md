@@ -1,6 +1,6 @@
 # Kiến thức Docker — Hệ thống quản lý điện nội bộ Sư đoàn
 
-> **Phiên bản:** 1.6.0
+> **Phiên bản:** 1.7.0
 > **Ngày:** 31/05/2026
 > **Đối tượng:** Developer hoặc người muốn hiểu hệ thống chạy thế nào ở mọi môi trường.
 > **Tiền đề:** Bạn biết code Rails nhưng chưa biết Docker và chưa từng deploy.
@@ -595,11 +595,11 @@ Muốn ép cổng cụ thể (vd để bookmark cố định): đặt `POSTGRES_
 **Chia sẻ một bộ dữ liệu dev giữa các worktree:** mặc định mỗi worktree có DB riêng (sạch + seed). Khi thỉnh thoảng cần chung data:
 
 - **Cách A — snapshot (khuyến nghị, an toàn):** `bin/docker dump-dev [tên]` chạy `pg_dump` DB dev hiện tại ra file `.dump` trong thư mục **dùng chung** (`<repo gốc>/docker/dev/shared-snapshots/`, đổi bằng `EWM_DEV_SNAPSHOT_DIR`); worktree khác `bin/docker load-dev [tên]` để `pg_restore` vào DB dev của nó (ghi đè). Dùng cùng pg_dump/pg_restore như tính năng backup nhưng tách khỏi model `Backup`. Là ảnh chụp một chiều, có kiểm soát.
-- **Cách B — DB sống chung (live), opt-in bằng env:** trỏ app của worktree về một postgres chung khi `up` —
+- **Cách B — DB sống chung (live):** trỏ app của worktree về một postgres dùng chung bằng cờ `--shared-db`:
   ```bash
-  DATABASE_HOST=host.docker.internal DATABASE_PORT=<cổng postgres nguồn> bin/docker up -d app nginx
+  bin/docker up --shared-db=<cổng host của postgres nguồn>   # bỏ trống = 5433
   ```
-  Thay đổi data thấy ngay giữa các worktree. Phức tạp hơn; dùng khi thật sự cần live.
+  App nối tới `host.docker.internal:<cổng>` và KHÔNG bật postgres riêng của worktree (`--no-deps`). Thay đổi data thấy ngay **hai chiều** giữa các worktree dùng chung. Cần postgres nguồn đang chạy + Docker Desktop (để có `host.docker.internal`). Dùng khi thật sự cần live. (Bên dưới, cờ này chỉ đặt env `DATABASE_HOST`/`DATABASE_PORT` mà `compose.dev.yml` đã đọc — nên cũng có thể tự đặt hai env đó thủ công.)
 - **Lưu ý chung (cả A lẫn B):** file `.dump` mang theo **cả schema lẫn data**, và DB sống chung cũng vậy → chỉ chia sẻ giữa các worktree **cùng schema** (thường cùng off `main`). Khác schema thì cẩn thận: restore sẽ thay schema của worktree đích; còn migration trên DB sống chung sẽ ảnh hưởng các worktree khác.
 
 ### Test
@@ -831,6 +831,10 @@ docker compose up -d      # Tạo lại (database trống, 2 tài khoản mặc 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.7.0 (31/05/2026)
+
+- Mục 11 (Chia sẻ dữ liệu dev — Cách B): thêm cờ `bin/docker up --shared-db[=PORT]` (trỏ app tới postgres dùng chung qua `host.docker.internal`, `--no-deps`) thay cho việc tự đặt env thủ công. `compose.dev.yml` cho `DATABASE_HOST`/`DATABASE_PORT` đọc từ env (mặc định giữ postgres riêng).
 
 ### v1.6.0 (31/05/2026)
 
