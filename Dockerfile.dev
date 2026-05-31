@@ -22,6 +22,17 @@ RUN apt-get update -qq && \
     locale-gen && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
+# Chromium + chromedriver cho system test (Capybara + Selenium).
+# Dùng gói Debian thay vì Google Chrome: Google Chrome chỉ có bản amd64, còn
+# development chạy bằng Docker trên arm64 (Apple Silicon). Hai gói chromium và
+# chromium-driver do Debian phát hành cùng một phiên bản nên chromedriver luôn
+# khớp Chromium, không cần Selenium Manager tải driver lúc chạy (chạy được cả khi
+# offline). fonts-liberation để Chromium render chữ đầy đủ.
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y \
+      chromium chromium-driver fonts-liberation && \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+
 # Foreman để chạy Procfile.dev (Rails server + Tailwind watcher)
 RUN gem install foreman
 
