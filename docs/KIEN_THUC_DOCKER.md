@@ -1,7 +1,7 @@
 # Kiến thức Docker — Hệ thống quản lý điện nội bộ Sư đoàn
 
-> **Phiên bản:** 1.2.0
-> **Ngày:** 24/05/2026
+> **Phiên bản:** 1.3.0
+> **Ngày:** 31/05/2026
 > **Đối tượng:** Developer hoặc người muốn hiểu hệ thống chạy thế nào ở mọi môi trường.
 > **Tiền đề:** Bạn biết code Rails nhưng chưa biết Docker và chưa từng deploy.
 
@@ -317,6 +317,7 @@ Công thức build image cho development. Khác Dockerfile production:
 - Không precompile assets — Tailwind watch realtime
 - Không copy source code — mount từ Mac vào container
 - Cài `foreman` để chạy nhiều process (Rails server + Tailwind watch)
+- Cài `chromium` + `chromium-driver` (gói Debian) để chạy system test (Capybara + Selenium). Dùng Chromium thay Google Chrome vì Google Chrome chỉ có bản amd64, còn development chạy trên Docker arm64 (Apple Silicon); hai gói Debian cùng phiên bản nên chromedriver luôn khớp Chromium và không cần tải driver lúc chạy
 
 ### compose.dev.yml
 
@@ -594,6 +595,24 @@ RAILS_ENV=test bin/docker exec app bundle exec rails db:drop
 
 **Parallel test:** `bin/docker prspec` chạy test song song. Auto-detect số processes = nproc / 2. Cần setup 1 lần: `bin/docker prspec:setup` (tạo databases test2, test3, ...).
 
+**System test (trình duyệt thật):** Các spec trong `spec/system` (`type: :system`) mở Chromium thật qua Selenium để kiểm thử hành vi cần JavaScript (auto-submit, cascade filter, modal xác nhận). Image development đã cài sẵn `chromium` + `chromium-driver`, chạy headless (không cửa sổ).
+
+```bash
+bin/docker rspec spec/system                 # Toàn bộ system test
+bin/docker rspec spec/system/zones_spec.rb   # Một file
+```
+
+Cấu hình driver ở `spec/support/system_test_config.rb`: trong Docker trỏ thẳng tới Chromium + chromedriver cài sẵn (không tải gì lúc chạy); trên host (`bin/dev`) để Selenium Manager tự tìm Chrome.
+
+**Chạy headful (nhìn trình duyệt chạy, để debug):** Container Docker không có màn hình nên không hiện được cửa sổ. Muốn NHÌN test chạy, chạy trên máy host bằng `bin/dev` (cần cài Google Chrome trên Mac) với biến `HEADLESS=false`:
+
+```bash
+# Trên host, KHÔNG trong Docker
+HEADLESS=false bundle exec rspec spec/system/zones_spec.rb
+```
+
+Mặc định (không set `HEADLESS`, hoặc trong Docker) luôn chạy headless. Muốn xem trực tiếp trong Docker thì phải thêm hạ tầng hiển thị (Xvfb + VNC) — hiện chưa cấu hình.
+
 ### Staging (Railway)
 
 Railway là platform cloud (giống Heroku). Dùng cho:
@@ -769,6 +788,11 @@ docker compose up -d      # Tạo lại (database trống, 2 tài khoản mặc 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.3.0 (31/05/2026)
+
+- Mục 7 (Dockerfile.dev): thêm Chromium + chromium-driver cho system test (lý do dùng Chromium thay Google Chrome trên Docker arm64).
+- Mục 11 (Test): thêm phần "System test (trình duyệt thật)" — cách chạy `bin/docker rspec spec/system` và cách chạy headful (`HEADLESS=false` trên host) để debug.
 
 ### v1.2.0 (24/05/2026)
 
