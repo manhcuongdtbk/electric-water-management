@@ -82,7 +82,9 @@ case "${1}" in
     # --shared-db[=PORT] (Cách B): app nối tới một postgres DÙNG CHUNG đang publish ở
     # cổng host PORT (mặc định 5433) qua host.docker.internal, KHÔNG bật postgres riêng
     # (--no-deps). Dữ liệu DB dev sống (live) chung với worktree khác. Chỉ dùng giữa
-    # các worktree CÙNG schema; cần postgres nguồn đang chạy + Docker Desktop.
+    # các worktree CÙNG schema; cần postgres nguồn đang chạy. (host.docker.internal
+    # có sẵn trên Docker Desktop/Mac; compose.dev.yml thêm extra_hosts:host-gateway
+    # nên chạy cả trên Linux.)
     shared_db_port=""
     up_args=()
     for a in "$@"; do
