@@ -1,6 +1,6 @@
 # Kiến thức Docker — Hệ thống quản lý điện nội bộ Sư đoàn
 
-> **Phiên bản:** 1.3.0
+> **Phiên bản:** 1.4.0
 > **Ngày:** 31/05/2026
 > **Đối tượng:** Developer hoặc người muốn hiểu hệ thống chạy thế nào ở mọi môi trường.
 > **Tiền đề:** Bạn biết code Rails nhưng chưa biết Docker và chưa từng deploy.
@@ -326,6 +326,7 @@ Ghép 3 containers cho development. Khác compose.yml production:
 - Database bind mount ra `docker/dev/pgdata/` (nhìn thấy trên Mac)
 - Gems cache trong named volume `bundle_cache` (không mất khi restart)
 - Env vars hardcoded (không dùng file .env)
+- Cổng host của postgres (`5433`) và nginx (`80`) tham số hóa qua `${POSTGRES_HOST_PORT}` / `${NGINX_HOST_PORT}` (mặc định vẫn 5433/80) — để mỗi git worktree chạy được trên cổng riêng, không đụng nhau. `app` chỉ `expose` cổng 3000 trong mạng nội bộ (truy cập qua nginx) nên không bind cổng host, không cần tham số hóa
 
 ### bin/docker
 
@@ -333,6 +334,7 @@ Shortcut script cho lệnh Docker development. Bọc `docker compose -f compose.
 - Test commands (`rspec`, `prspec`) tự set `RAILS_ENV=test` — không đụng dev database
 - Các lệnh khác forward `RAILS_ENV` từ host nếu được set
 - Hỗ trợ chọn container: `bin/docker bash postgres`
+- Khi chạy trong git worktree: tự gán cổng host riêng & ổn định cho postgres + nginx (suy ra từ đường dẫn worktree) để không đụng project gốc / worktree khác, và in URL khi `bin/docker up`. Project gốc (không phải worktree) giữ cổng mặc định 5433/80 (xem mục 11 Development)
 
 ### railway.json
 
@@ -379,6 +381,8 @@ Development không dùng file `.env` — tất cả giá trị hardcoded trong `
 | `ELECTRIC_WATER_MANAGEMENT_DATABASE_PASSWORD` | `dev_password` | Mật khẩu dev (không bảo mật) |
 | `PORT` | `3000` | Foreman dùng port này thay vì mặc định 5000 |
 | `BINDING` | `0.0.0.0` | Rails lắng nghe mọi kết nối (nginx cần) |
+
+Ngoài bảng trên, hai biến điều khiển cổng host publish ra (KHÔNG hardcode, có giá trị mặc định): `POSTGRES_HOST_PORT` (mặc định `5433`) và `NGINX_HOST_PORT` (mặc định `80`). `bin/docker` tự đặt cổng riêng cho mỗi git worktree — xem mục 11 Development.
 
 ### Staging (Railway dashboard)
 
@@ -567,6 +571,18 @@ compose.dev.yml
 | Build tools | Giữ lại (cần cho gem mới) | Vứt ở final stage |
 | Assets | Tailwind watch realtime | Precompile lúc build |
 | Size | ~800MB | ~500MB |
+
+**Chạy nhiều worktree song song:** Khi làm nhiều việc cùng lúc, mỗi việc nên ở một **git worktree** riêng. Mỗi worktree là một project Docker Compose độc lập (tách theo tên thư mục) nên container/network/volume đã riêng — nhưng **cổng publish ra host** là tài nguyên chung của cả máy: hai môi trường không thể cùng bind `5433`/`80`.
+
+`bin/docker` tự xử lý: khi chạy trong git worktree, nó gán **cổng host riêng và ổn định** cho postgres + nginx (suy ra từ đường dẫn worktree — cùng worktree luôn cùng cổng), nên nhiều worktree (và cả project gốc) chạy song song không đụng nhau. Project gốc (không phải worktree) giữ mặc định `5433`/`80`. Cổng được gán in ra khi `bin/docker up`, và xem lại bằng `bin/docker ps`:
+
+```bash
+bin/docker up -d
+# → App (nginx): http://localhost:35508       # cổng ví dụ, mỗi worktree một khác
+# → PostgreSQL: localhost:25508
+```
+
+Muốn ép cổng cụ thể (vd để bookmark cố định): đặt `POSTGRES_HOST_PORT` / `NGINX_HOST_PORT` trên host trước khi chạy.
 
 ### Test
 
@@ -797,6 +813,10 @@ docker compose up -d      # Tạo lại (database trống, 2 tài khoản mặc 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.4.0 (31/05/2026)
+
+- Mục 7 (compose.dev.yml + bin/docker), Mục 8 (biến môi trường), Mục 11 (Development): tài liệu hóa cơ chế cấp cổng host riêng cho mỗi git worktree — postgres/nginx tham số hóa qua `POSTGRES_HOST_PORT`/`NGINX_HOST_PORT`, `bin/docker` tự gán cổng theo worktree để chạy song song không đụng nhau; project gốc giữ mặc định 5433/80.
 
 ### v1.3.0 (31/05/2026)
 

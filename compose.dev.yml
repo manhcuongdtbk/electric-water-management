@@ -56,6 +56,9 @@ services:
       - ./docker/dev/backups:/rails/storage/backups
     networks:
       - dev
+    # app chỉ expose cổng 3000 trong mạng nội bộ Docker, KHÔNG publish ra host
+    # (truy cập app qua nginx). Vì không bind cổng host nên không thể đụng nhau giữa
+    # các worktree → không cần cổng riêng theo worktree như postgres/nginx.
     expose:
       - "3000"
     command: >

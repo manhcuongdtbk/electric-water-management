@@ -65,7 +65,7 @@ case "${1}" in
     ;;
   up)
     shift
-    [ -n "${NGINX_HOST_PORT:-}" ] && echo "→ Ứng dụng (nginx): http://localhost:${NGINX_HOST_PORT}"
+    [ -n "${NGINX_HOST_PORT:-}" ] && echo "→ App (nginx): http://localhost:${NGINX_HOST_PORT}"
     [ -n "${POSTGRES_HOST_PORT:-}" ] && echo "→ PostgreSQL: localhost:${POSTGRES_HOST_PORT}"
     $COMPOSE up "$@"
     ;;
