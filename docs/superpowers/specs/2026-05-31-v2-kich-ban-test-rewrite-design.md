@@ -42,7 +42,7 @@ Phần golden numbers engine (T01–T04) vẫn đúng và khớp `spec/support/s
 
 6. **KV2 = tối thiểu, lấp đúng lỗ hổng KV1 chưa có** (shape cụ thể ở Phần 1B). Bỏ qua ngoài biên chế + công tơ không tổn hao (KV1 đã cover).
 7. **Helper = thêm `setup_zone_two_full_sample(period:)`** — additive, nhận period do KV1 tạo (cùng 1 kỳ mở, do ràng buộc partial unique index chỉ 1 kỳ mở). Không sửa `setup_zone_one_full_sample`.
-8. **Vị trí spec = `docs/specs/`** (đổi từ `docs/superpowers/specs/`) — tên trung tính, tách khỏi doc nghiệp vụ `docs/V2_*`.
+8. **Vị trí spec/plan = mặc định superpowers** — spec ở `docs/superpowers/specs/`, plan ở `docs/superpowers/plans/`. Nhất quán với skill superpowers để session sau tự khớp, không cần cấu hình. (Ban đầu cân nhắc `docs/specs/` cho tên trung tính, nhưng đổi lại theo mặc định để tránh tách nơi lưu giữa các session.)
 
 ---
 
