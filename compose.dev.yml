@@ -20,7 +20,9 @@ services:
     volumes:
       - ./docker/dev/pgdata:/var/lib/postgresql/data
     ports:
-      - "5433:5432"
+      # Cổng host mặc định 5433. Khi chạy trong git worktree, bin/docker tự đặt
+      # POSTGRES_HOST_PORT riêng cho từng worktree để không đụng nhau / đụng gốc.
+      - "${POSTGRES_HOST_PORT:-5433}:5432"
     networks:
       - dev
     healthcheck:
@@ -54,6 +56,9 @@ services:
       - ./docker/dev/backups:/rails/storage/backups
     networks:
       - dev
+    # app chỉ expose cổng 3000 trong mạng nội bộ Docker, KHÔNG publish ra host
+    # (truy cập app qua nginx). Vì không bind cổng host nên không thể đụng nhau giữa
+    # các worktree → không cần cổng riêng theo worktree như postgres/nginx.
     expose:
       - "3000"
     command: >
@@ -71,7 +76,9 @@ services:
     depends_on:
       - app
     ports:
-      - "80:80"
+      # Cổng host mặc định 80. Khi chạy trong git worktree, bin/docker tự đặt
+      # NGINX_HOST_PORT riêng cho từng worktree để không đụng nhau / đụng gốc.
+      - "${NGINX_HOST_PORT:-80}:80"
     volumes:
       - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
     networks:

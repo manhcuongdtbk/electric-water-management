@@ -24,6 +24,32 @@ set -e
 
 COMPOSE="docker compose -f compose.dev.yml"
 
+# Tự gán cổng host RIÊNG khi chạy trong git worktree.
+#
+# Compose đã tách container/network/volume theo project (lấy theo tên thư mục),
+# nhưng cổng publish ra host là tài nguyên chung của cả máy: hai môi trường không
+# thể cùng bind 5433/80. Nên mỗi git worktree cần một bộ cổng host riêng để chạy
+# song song mà không đụng project gốc hay worktree khác.
+#
+# Thứ tự ưu tiên cho cổng web (nginx):
+#   1. NGINX_HOST_PORT người dùng tự đặt → tôn trọng.
+#   2. Biến PORT (preview_start với autoPort cấp cổng trống rồi truyền qua PORT)
+#      → map nginx ra đúng cổng đó để preview kết nối được (cả worktree lẫn gốc).
+#   3. Trong worktree → cổng ổn định suy ra từ đường dẫn worktree.
+#   4. Còn lại (project gốc) → mặc định 80 trong compose.dev.yml.
+# PostgreSQL: worktree dùng cổng ổn định riêng; gốc giữ mặc định 5433.
+# Cổng worktree suy ra từ đường dẫn → cùng worktree luôn cùng cổng (tiện bookmark).
+if [ -n "${PORT:-}" ]; then
+  export NGINX_HOST_PORT="${NGINX_HOST_PORT:-$PORT}"
+fi
+
+if git rev-parse --git-dir 2>/dev/null | grep -q '/worktrees/'; then
+  WORKTREE_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
+  WORKTREE_PORT_HASH="$(printf '%s' "$WORKTREE_ROOT" | cksum | cut -d' ' -f1)"
+  export POSTGRES_HOST_PORT="${POSTGRES_HOST_PORT:-$((20000 + WORKTREE_PORT_HASH % 10000))}"
+  export NGINX_HOST_PORT="${NGINX_HOST_PORT:-$((30000 + WORKTREE_PORT_HASH % 10000))}"
+fi
+
 # Forward RAILS_ENV vào container nếu được set trên host.
 # Không set → container dùng RAILS_ENV từ compose.dev.yml (development).
 ENV_ARGS=()
@@ -39,6 +65,8 @@ case "${1}" in
     ;;
   up)
     shift
+    [ -n "${NGINX_HOST_PORT:-}" ] && echo "→ App (nginx): http://localhost:${NGINX_HOST_PORT}"
+    [ -n "${POSTGRES_HOST_PORT:-}" ] && echo "→ PostgreSQL: localhost:${POSTGRES_HOST_PORT}"
     $COMPOSE up "$@"
     ;;
   stop)
