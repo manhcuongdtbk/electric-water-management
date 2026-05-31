@@ -1,6 +1,6 @@
 # V2 — Kịch bản kiểm thử (số liệu cụ thể)
 
-> **Phiên bản:** 2.0.0
+> **Phiên bản:** 2.0.1
 > **Ngày:** 31/05/2026
 > **Nguồn nghiệp vụ:** `docs/V2_XAC_NHAN_NGHIEP_VU.md` v2.13.0
 > **Nguồn thiết kế:** `docs/V2_THIET_KE_HE_THONG.md` v2.13.0
@@ -1351,7 +1351,7 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 | TR-ranks-CMD `[TỰ ĐỘNG]` | Sidebar ẩn (xem) | 7 nhóm | Không | (8 mục). |
 | TR-ranks-TECH `[TỰ ĐỘNG]` | Chặn (redirect /users) | — | — | — |
 
-> **Lưu ý nguồn:** Chiều 3 ghi non-SA "Xem" trang `/ranks`, nhưng bảng "Sidebar per role" (`V2_THIET_KE_HE_THONG.md`) đánh dấu Nhóm cấp bậc ✗ cho unit_admin/commander/technician. Theo quy tắc ưu tiên (CHIEU_TEST chiều 3 + THIET_KE sidebar table), kết luận: SA CRUD; non-SA mục ẩn trên sidebar, nếu vào trực tiếp thì chỉ xem (không có nút thao tác). Đây là điểm cần xác nhận khi triển khai (mục ẩn sidebar nhưng route vẫn cho xem).
+> **Phạm vi /ranks (đã đối chiếu code):** SA toàn quyền CRUD. Các vai trò nghiệp vụ non-SA (UA, UA-ZM, CMD, CMD-ZM) **xem được** /ranks qua URL trực tiếp (chỉ đọc, không nút thao tác): `Ability` cấp `can :read, Rank` cho unit_admin/commander, và `RanksController#index` chỉ gọi `authorize!(:read, Rank)`. Mục "Nhóm cấp bậc" **ẩn trên sidebar** cho non-SA (`sidebar_helper.rb` chỉ thêm `ranks` vào danh mục của `system_admin`). TECH bị chặn (`BusinessRoleRequired`). Vậy hai tài liệu nguồn KHÔNG mâu thuẫn: THIET_KE "Sidebar per role" ✗ mô tả việc **ẩn mục sidebar**, còn CHIEU_TEST chiều 3 "Xem" mô tả **quyền truy cập** — cả hai đều đúng và mô tả hai khía cạnh khác nhau. Việc non-SA xem được /ranks là **có chủ đích** (ranks là cấu hình dùng chung, chỉ đọc), không phải lỗi thừa quyền.
 
 - **Chiều liên quan:** chiều 2, chiều 3 (Nhóm cấp bậc), chiều 11 (thêm rank giữa kỳ). Tham chiếu GD6-02.
 
@@ -1410,7 +1410,7 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 
 ---
 
-> **Tổng kết Phần 4:** 18 trang × 6 vai trò được instance hóa cụ thể bằng dữ liệu Phần 1 và golden numbers Phần 2. Phạm vi billing/history của UA-ZM nhất quán là **đầu mối đơn vị mình cộng đầu mối sinh hoạt thuộc khu vực trực tiếp** (KHÔNG gồm đầu mối các đơn vị khác cùng khu vực): adminA 4 hàng, adminC 2 hàng, adminB/adminD 1 hàng, SA gộp 8 hàng. CMD/CMD-ZM khớp UA/UA-ZM về phạm vi nhưng chỉ xem. TECH chặn khỏi mọi trang nghiệp vụ. Hai điểm cần xác nhận khi triển khai đã ghi chú: (1) design issue truy cập trực tiếp URL `/zones`, `/units`, `/pricing`, `/users`, `/pump_allocations` qua thừa quyền `can :read, Zone/Unit` (CLAUDE.md); (2) `/ranks` cho non-SA — chiều 3 ghi "Xem" nhưng sidebar table đánh dấu ẩn mục.
+> **Tổng kết Phần 4:** 18 trang × 6 vai trò được instance hóa cụ thể bằng dữ liệu Phần 1 và golden numbers Phần 2. Phạm vi billing/history của UA-ZM nhất quán là **đầu mối đơn vị mình cộng đầu mối sinh hoạt thuộc khu vực trực tiếp** (KHÔNG gồm đầu mối các đơn vị khác cùng khu vực): adminA 4 hàng, adminC 2 hàng, adminB/adminD 1 hàng, SA gộp 8 hàng. CMD/CMD-ZM khớp UA/UA-ZM về phạm vi nhưng chỉ xem. TECH chặn khỏi mọi trang nghiệp vụ. Một điểm cần xác nhận khi triển khai vẫn còn ghi chú: design issue truy cập trực tiếp URL `/zones`, `/units`, `/pricing`, `/users`, `/pump_allocations` qua thừa quyền `can :read, Zone/Unit` (CLAUDE.md). (Điểm `/ranks` đã đối chiếu code và xác nhận: non-SA ẩn mục sidebar nhưng xem được qua URL — hai tài liệu nguồn không mâu thuẫn, là có chủ đích; xem ghi chú tại TR-ranks.)
 
 ---
 
@@ -1795,6 +1795,10 @@ Phần này lập bản đồ từ mỗi **nhóm kịch bản** (không phải t
 ---
 
 ## Lịch sử thay đổi
+
+### v2.0.1 (31/05/2026)
+
+- Xử lý ghi chú "cần xác nhận" về `/ranks`: đối chiếu code (`Ability` `can :read, Rank` cho non-SA, `RanksController#index` `authorize!(:read, Rank)`, `sidebar_helper.rb` chỉ thêm `ranks` cho `system_admin`) → xác nhận hai tài liệu nguồn KHÔNG mâu thuẫn (THIET_KE ✗ = ẩn mục sidebar; CHIEU_TEST "Xem" = quyền truy cập đọc qua URL). Non-SA xem được /ranks là có chủ đích, không phải lỗi thừa quyền. Cập nhật ghi chú TR-ranks và phần tổng kết Phần 4 (còn 1 điểm cần xác nhận: design issue `can :read, Zone/Unit`).
 
 ### v2.0.0 (31/05/2026)
 
