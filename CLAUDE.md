@@ -36,6 +36,8 @@ Rails 8, PostgreSQL, Tailwind, Hotwire (Turbo + Stimulus), Devise, CanCanCan, Pa
 
 Development chạy hoàn toàn trong Docker (3 containers: postgres, app, nginx). Khi cần verify UI hoặc chạy app, dùng `preview_start` với server name `docker-dev` (cấu hình trong `.claude/launch.json`). Không chạy `docker compose` thủ công — để preview quản lý process.
 
+Mỗi git worktree dùng bộ cổng host riêng do `bin/docker` tự gán (postgres + nginx), nên nhiều worktree (và project gốc) chạy song song không đụng nhau — không tự đặt cổng hay chạy `docker compose` tay. `preview_start docker-dev` tự trỏ đúng app của worktree hiện tại (autoPort), kể cả khi mở nhiều session.
+
 `bin/docker` là shortcut cho các lệnh Docker development:
 
 - Chạy test: `bin/docker rspec` (hoặc `bin/docker rspec spec/models`)
