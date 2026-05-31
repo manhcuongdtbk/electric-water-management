@@ -1,6 +1,6 @@
 # Kiến thức Docker — Hệ thống quản lý điện nội bộ Sư đoàn
 
-> **Phiên bản:** 1.5.0
+> **Phiên bản:** 1.6.0
 > **Ngày:** 31/05/2026
 > **Đối tượng:** Developer hoặc người muốn hiểu hệ thống chạy thế nào ở mọi môi trường.
 > **Tiền đề:** Bạn biết code Rails nhưng chưa biết Docker và chưa từng deploy.
@@ -586,6 +586,22 @@ bin/docker up -d
 
 Muốn ép cổng cụ thể (vd để bookmark cố định): đặt `POSTGRES_HOST_PORT` / `NGINX_HOST_PORT` trên host trước khi chạy.
 
+**Dọn dẹp khi xong một worktree:** Docker KHÔNG tự dọn gì khi đóng session hay xóa worktree → image + container + volume + network ở lại thành rác (mỗi worktree để lại image tự build + volume gems + ~130MB pgdata). Quy tắc:
+
+- **Tạm nghỉ, sẽ quay lại:** `bin/docker stop` — giữ tất cả, bật lại tức thì bằng `bin/docker start`.
+- **Xong hẳn worktree:** `bin/docker nuke` (= `docker compose down -v --rmi local`) xóa container + network + volume gems + image tự build. Chạy `nuke` **TRƯỚC** `git worktree remove` — nếu xóa thư mục worktree trước, các artifact Docker (đặt tên theo thư mục đã mất) thành **orphan**: vẫn chiếm đĩa và không `bin/docker` được nữa.
+- `nuke` (và cả `down -v`) **KHÔNG xóa dữ liệu DB**: pgdata là bind mount trong `docker/dev/pgdata` của worktree, chỉ mất khi xóa thư mục worktree (`-v` chỉ xóa named volume = gems).
+
+**Chia sẻ một bộ dữ liệu dev giữa các worktree:** mặc định mỗi worktree có DB riêng (sạch + seed). Khi thỉnh thoảng cần chung data:
+
+- **Cách A — snapshot (khuyến nghị, an toàn):** `bin/docker dump-dev [tên]` chạy `pg_dump` DB dev hiện tại ra file `.dump` trong thư mục **dùng chung** (`<repo gốc>/docker/dev/shared-snapshots/`, đổi bằng `EWM_DEV_SNAPSHOT_DIR`); worktree khác `bin/docker load-dev [tên]` để `pg_restore` vào DB dev của nó (ghi đè). Dùng cùng pg_dump/pg_restore như tính năng backup nhưng tách khỏi model `Backup`. Là ảnh chụp một chiều, có kiểm soát.
+- **Cách B — DB sống chung (live), opt-in bằng env:** trỏ app của worktree về một postgres chung khi `up` —
+  ```bash
+  DATABASE_HOST=host.docker.internal DATABASE_PORT=<cổng postgres nguồn> bin/docker up -d app nginx
+  ```
+  Thay đổi data thấy ngay giữa các worktree. Phức tạp hơn; dùng khi thật sự cần live.
+- **Lưu ý chung (cả A lẫn B):** file `.dump` mang theo **cả schema lẫn data**, và DB sống chung cũng vậy → chỉ chia sẻ giữa các worktree **cùng schema** (thường cùng off `main`). Khác schema thì cẩn thận: restore sẽ thay schema của worktree đích; còn migration trên DB sống chung sẽ ảnh hưởng các worktree khác.
+
 ### Test
 
 Test chạy bên trong container app, dùng database riêng (`electric_water_management_test`), cùng PostgreSQL server với development.
@@ -815,6 +831,10 @@ docker compose up -d      # Tạo lại (database trống, 2 tài khoản mặc 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.6.0 (31/05/2026)
+
+- Mục 11 (Development): thêm "Dọn dẹp khi xong một worktree" (`bin/docker nuke`; quy tắc nuke trước khi `git worktree remove` để tránh orphan; dữ liệu DB an toàn qua down) và "Chia sẻ một bộ dữ liệu dev giữa các worktree" (Cách A `dump-dev`/`load-dev` snapshot tách khỏi model Backup; Cách B DB sống chung opt-in bằng env; lưu ý cùng schema).
 
 ### v1.5.0 (31/05/2026)
 
