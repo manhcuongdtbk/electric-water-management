@@ -16,6 +16,11 @@
 #      Manager tự tìm Chrome + tải chromedriver khớp. Nhờ vậy system test chạy được
 #      cả ngoài Docker.
 #
+# CÙNG một file này phục vụ CẢ hai bối cảnh: khác nhau duy nhất là đường dẫn
+# Chromium/chromedriver (tự nhận qua File.exist? bên dưới). Các cờ Chromium còn lại
+# (--no-sandbox, --disable-gpu, --disable-dev-shm-usage, headless) an toàn ở cả hai
+# nên áp dụng chung — không cần rẽ nhánh theo môi trường.
+#
 # Các tham số chỉnh qua biến môi trường (không cần sửa file):
 #   HEADLESS=false          Hiện cửa sổ trình duyệt thật thay vì chạy ẩn — dùng khi
 #                           cần quan sát trực tiếp những gì trình duyệt làm. Chỉ có
@@ -66,6 +71,8 @@ Capybara.register_driver :headless_chromium do |app|
   # Có chromedriver tại đường dẫn chỉ định (vd trong Docker) → dùng thẳng, bỏ qua
   # Selenium Manager (không tải gì lúc chạy, chạy được cả khi offline, khớp Chromium).
   # Không có (vd trên host) → để Selenium Manager tải bản chromedriver khớp Chrome.
+  # (Hiếm khi lệch version — vd có chromedriver cũ bị ghim/PATH; cách xử lý ở mục
+  # "Lỗi version Chrome ≠ chromedriver" trong docs/KIEN_THUC_DOCKER.md.)
   if File.exist?(chromedriver_binary)
     driver_arguments[:service] = Selenium::WebDriver::Chrome::Service.new(path: chromedriver_binary)
   end

@@ -608,20 +608,19 @@ Cấu hình driver ở `spec/support/system_test_config.rb`: trong Docker trỏ 
 
 ```bash
 # Chạy trên máy host, KHÔNG qua Docker.
-# (Không liên quan `bin/dev` — đó là lệnh chạy server dev, không phải lệnh chạy test.)
 HEADLESS=false bundle exec rspec spec/system/zones_spec.rb
 ```
 
 Mặc định (không set `HEADLESS`, hoặc trong Docker) luôn chạy headless. Muốn xem trực tiếp ngay trong Docker thì phải thêm hạ tầng hiển thị (Xvfb + VNC) — hiện chưa cấu hình.
 
-**Lỗi version Chrome ≠ chromedriver khi chạy trên host:** Triệu chứng là lỗi kiểu `session not created: This version of ChromeDriver only supports Chrome version XX (current browser version is YY)`. Nguyên nhân thường gặp: trên máy có một `chromedriver` cài tay (vd qua Homebrew) chen vào `PATH`, trong khi Chrome đã tự cập nhật lên version khác. Config này KHÔNG ghim đường dẫn chromedriver khi chạy ngoài Docker, nên Selenium Manager (đi kèm `selenium-webdriver` ≥ 4.11, repo đang dùng 4.44) sẽ tự tải đúng bản khớp Chrome — chỉ cần dẹp cái chromedriver cài tay đi:
+**Lỗi version Chrome ≠ chromedriver khi chạy trên host:** Triệu chứng là lỗi kiểu `session not created: This version of ChromeDriver only supports Chrome version XX (current browser version is YY)`. Nguyên nhân thường gặp: trên máy có một `chromedriver` cài tay (vd qua Homebrew) chen vào `PATH`, trong khi Chrome đã tự cập nhật lên version khác. Config này KHÔNG ghim đường dẫn chromedriver khi chạy ngoài Docker, nên Selenium Manager (cơ chế tự quản driver đi kèm `selenium-webdriver`, bật mặc định từ bản 4.11) sẽ tự tải đúng bản khớp Chrome — chỉ cần dẹp cái chromedriver cài tay đi:
 
 ```bash
 brew uninstall --force chromedriver   # Gỡ chromedriver cài tay (nếu có) để khỏi chen PATH
 rm -rf ~/.cache/selenium              # Xóa cache để Selenium Manager tải lại bản khớp
 ```
 
-Chạy lại, Selenium Manager sẽ tải chromedriver khớp đúng Chrome hiện tại. (Trong Docker không gặp lỗi này vì `chromium` + `chromium-driver` cùng version do Debian phát hành.)
+Chạy lại, Selenium Manager sẽ tải đúng chromedriver khớp Chrome hiện tại **vào cache riêng theo user** (`~/.cache/selenium`). Nó KHÔNG sửa Chrome, KHÔNG đụng `PATH` hệ thống, KHÔNG cài đặt gì ở mức global — nên xóa thư mục cache đó hoàn toàn an toàn (lần sau Selenium Manager tự tải lại khi cần). (Trong Docker không gặp lỗi này vì `chromium` + `chromium-driver` cùng version do Debian phát hành.)
 
 ### Staging (Railway)
 
