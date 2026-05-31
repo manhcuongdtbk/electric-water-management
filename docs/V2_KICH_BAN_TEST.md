@@ -4,8 +4,8 @@
 > **Ngày:** 31/05/2026
 > **Nguồn nghiệp vụ:** `docs/V2_XAC_NHAN_NGHIEP_VU.md` v2.13.0
 > **Nguồn thiết kế:** `docs/V2_THIET_KE_HE_THONG.md` v2.13.0
-> **Nguồn hành vi runtime:** `docs/V2_HANH_VI_HE_THONG.md` v1.2.0
-> **Nguồn không gian kiểm thử:** `docs/V2_CHIEU_TEST.md` v1.2.0
+> **Nguồn hành vi runtime:** `docs/V2_HANH_VI_HE_THONG.md` v1.2.1
+> **Nguồn không gian kiểm thử:** `docs/V2_CHIEU_TEST.md` v1.2.1
 > **Tính chất:** Kịch bản số liệu cụ thể — instance hóa không gian kiểm thử của `V2_CHIEU_TEST.md` bằng dữ liệu thật cộng với golden numbers được kiểm chứng bằng engine. Tài liệu này KHÔNG lặp lại 12 chiều kiểm thử hay ma trận trang × vai trò của `V2_CHIEU_TEST.md`; nó chỉ trỏ tới các chiều đó và cung cấp số liệu cụ thể để kiểm chứng.
 
 ---
@@ -1806,4 +1806,5 @@ Phần này lập bản đồ từ mỗi **nhóm kịch bản** (không phải t
 - **Walkthrough 18 trang × 6 vai trò (Phần 4):** đầu ra hiển thị cụ thể per vai trò (số cột, số hàng dữ liệu, trạng thái ô nhập, nút, sidebar, cảnh báo, trạng thái rỗng).
 - **Phần 5 Vận hành:** vòng đời kỳ (VH-period), CRUD/validation (VH-validation), xác thực/sao lưu/nhật ký (VH-auth, VH-backup).
 - **Phần 6 Bản đồ truy vết:** map mỗi nhóm kịch bản → chiều `V2_CHIEU_TEST.md` + nhóm giao điểm + tập tin RSpec hiện có (đã xác minh tồn tại); ghi chú ưu tiên automation.
-- Cập nhật version nguồn: NGHIEP_VU v2.13.0, THIET_KE v2.13.0, HANH_VI v1.2.0, CHIEU_TEST v1.2.0.
+- Cập nhật version nguồn: NGHIEP_VU v2.13.0, THIET_KE v2.13.0, HANH_VI v1.2.1, CHIEU_TEST v1.2.1.
+- Nội dung khớp bản reconcile v1.2.1 của `V2_HANH_VI_HE_THONG.md` và `V2_CHIEU_TEST.md` (PR #266): phạm vi billing UA-ZM = đầu mối đơn vị mình + đầu mối thuộc khu vực trực tiếp (không gồm đơn vị khác cùng khu vực); radio `assignment_mode` hiện cho SA và UA-ZM.
