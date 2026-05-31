@@ -144,10 +144,10 @@ RSpec.describe "Role access matrix (chiều 2)", type: :request do
     describe "zones" do
       let(:path) { zones_path }
       it("SA → 200")      { expect_access(sa, path, :ok) }
-      it("UA-ZM → 200 (xem khu vực mình quản lý)") { expect_access(ua_zm, path, :ok) }
-      it("UA → redirect (không quản lý khu vực)") { expect_access(ua, path, :redirect) }
-      it("CMD-ZM → 200 (xem khu vực mình quản lý)") { expect_access(cmd_zm, path, :ok) }
-      it("CMD → redirect (không quản lý khu vực)") { expect_access(cmd, path, :redirect) }
+      it("UA-ZM → redirect (chỉ system_admin)") { expect_access(ua_zm, path, :redirect) }
+      it("UA → redirect (chỉ system_admin)") { expect_access(ua, path, :redirect) }
+      it("CMD-ZM → redirect (chỉ system_admin)") { expect_access(cmd_zm, path, :redirect) }
+      it("CMD → redirect (chỉ system_admin)") { expect_access(cmd, path, :redirect) }
       it("TECH → redirect") { expect_access(tech, path, :redirect) }
     end
 
