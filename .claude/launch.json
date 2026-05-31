@@ -6,7 +6,7 @@
       "runtimeExecutable": "bin/docker",
       "runtimeArgs": ["up"],
       "port": 80,
-      "autoPort": false
+      "autoPort": true
     },
     {
       "name": "local-dev",
