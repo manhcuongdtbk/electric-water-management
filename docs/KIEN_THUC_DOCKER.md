@@ -1,6 +1,6 @@
 # Kiến thức Docker — Hệ thống quản lý điện nội bộ Sư đoàn
 
-> **Phiên bản:** 1.4.0
+> **Phiên bản:** 1.5.0
 > **Ngày:** 31/05/2026
 > **Đối tượng:** Developer hoặc người muốn hiểu hệ thống chạy thế nào ở mọi môi trường.
 > **Tiền đề:** Bạn biết code Rails nhưng chưa biết Docker và chưa từng deploy.
@@ -123,6 +123,8 @@ Docker đóng gói tất cả vào 1 "image" (ảnh). Image giống file ISO cà
 | `compose.dev.yml` | Ghép 3 containers dev: bind mounts, foreman, port mapping | Docker Compose |
 | `bin/docker` | Shortcut cho lệnh Docker dev (rspec, console, bash, logs, ...) | Developer |
 | `Procfile.dev` | Định nghĩa 2 processes cho foreman: rails server + tailwind watch | foreman trong container |
+
+> Process `css` dùng `tailwindcss:watch[always]` (không phải `tailwindcss:watch`): cờ `[always]` giữ watcher Tailwind chạy kể cả khi stdin đóng/EOF — cần khi `bin/dev` chạy dưới foreman ở môi trường non-TTY (vd AI/CI/pipe trên host), nếu không Tailwind thoát code 0 → foreman dừng luôn cả `web`. Trong Docker không gặp vì `compose.dev.yml` để `tty: true`/`stdin_open: true`. Phải để trong nháy kép vì `[...]` là glob (zsh báo lỗi nếu không quote), và KHÔNG đặt comment trong `Procfile.dev` vì foreman đọc file theo US-ASCII → ký tự non-ASCII gây lỗi parse.
 
 ### Files data và vận hành
 
@@ -813,6 +815,10 @@ docker compose up -d      # Tạo lại (database trống, 2 tài khoản mặc 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.5.0 (31/05/2026)
+
+- Mục 4 (Procfile.dev): ghi chú vì sao process `css` dùng `tailwindcss:watch[always]` (giữ watcher Tailwind chạy dưới foreman ở môi trường non-TTY, vd `bin/dev` trên host khi không có TTY) và vì sao phải quote / không đặt comment trong Procfile.dev.
 
 ### v1.4.0 (31/05/2026)
 
