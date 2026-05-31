@@ -1,7 +1,7 @@
 # Kiến thức Docker — Hệ thống quản lý điện nội bộ Sư đoàn
 
-> **Phiên bản:** 1.2.0
-> **Ngày:** 24/05/2026
+> **Phiên bản:** 1.3.0
+> **Ngày:** 31/05/2026
 > **Đối tượng:** Developer hoặc người muốn hiểu hệ thống chạy thế nào ở mọi môi trường.
 > **Tiền đề:** Bạn biết code Rails nhưng chưa biết Docker và chưa từng deploy.
 
@@ -317,6 +317,7 @@ Công thức build image cho development. Khác Dockerfile production:
 - Không precompile assets — Tailwind watch realtime
 - Không copy source code — mount từ Mac vào container
 - Cài `foreman` để chạy nhiều process (Rails server + Tailwind watch)
+- Cài `chromium` + `chromium-driver` (gói Debian) để chạy system test (Capybara + Selenium). Dùng Chromium thay Google Chrome để image dùng được trên **mọi kiến trúc CPU** (cả Intel/amd64 lẫn ARM/arm64 như Apple Silicon): apt repo của Google Chrome chỉ có bản amd64 nên không cài được trên máy arm64, còn gói `chromium` của Debian có cả hai. Hai gói Debian cùng phiên bản nên chromedriver luôn khớp Chromium và không cần tải driver lúc chạy
 
 ### compose.dev.yml
 
@@ -594,6 +595,33 @@ RAILS_ENV=test bin/docker exec app bundle exec rails db:drop
 
 **Parallel test:** `bin/docker prspec` chạy test song song. Auto-detect số processes = nproc / 2. Cần setup 1 lần: `bin/docker prspec:setup` (tạo databases test2, test3, ...).
 
+**System test (trình duyệt thật):** Các spec trong `spec/system` (`type: :system`) mở Chromium thật qua Selenium để kiểm thử hành vi cần JavaScript (auto-submit, cascade filter, modal xác nhận, ...). Image development đã cài sẵn `chromium` + `chromium-driver`, mặc định chạy headless (không cửa sổ).
+
+```bash
+bin/docker rspec spec/system                 # Toàn bộ system test
+bin/docker rspec spec/system/zones_spec.rb   # Một file
+```
+
+Cấu hình driver ở `spec/support/system_test_config.rb`: trong Docker trỏ thẳng tới Chromium + chromedriver cài sẵn (không tải gì lúc chạy); chạy ngoài Docker thì để Selenium Manager tự tìm Chrome và tải chromedriver khớp. Chỉnh được qua biến môi trường — `HEADLESS`, `WINDOW_SIZE`, `CHROMIUM_BINARY`, `CHROMEDRIVER_BINARY` (xem chú thích trong file).
+
+**Chạy headful (hiện cửa sổ trình duyệt thật):** Dùng khi cần quan sát trực tiếp những gì trình duyệt làm — ví dụ debug, xem từng bước, dựng lại flow lỗi, v.v. Container Docker KHÔNG có màn hình nên không hiện cửa sổ được; phải chạy system test **ngoài Docker, ngay trên máy host** (cần đã cài Ruby + gems + một trình duyệt Chrome/Chromium trên máy), với `HEADLESS=false`:
+
+```bash
+# Chạy trên máy host, KHÔNG qua Docker.
+HEADLESS=false bundle exec rspec spec/system/zones_spec.rb
+```
+
+Mặc định (không set `HEADLESS`, hoặc trong Docker) luôn chạy headless. Muốn xem trực tiếp ngay trong Docker thì phải thêm hạ tầng hiển thị (Xvfb + VNC) — hiện chưa cấu hình.
+
+**Lỗi version Chrome ≠ chromedriver khi chạy trên host:** Triệu chứng là lỗi kiểu `session not created: This version of ChromeDriver only supports Chrome version XX (current browser version is YY)`. Nguyên nhân thường gặp: trên máy có một `chromedriver` cài tay (vd qua Homebrew) chen vào `PATH`, trong khi Chrome đã tự cập nhật lên version khác. Config này KHÔNG ghim đường dẫn chromedriver khi chạy ngoài Docker, nên Selenium Manager (cơ chế tự quản driver đi kèm `selenium-webdriver`, bật mặc định từ bản 4.11) sẽ tự tải đúng bản khớp Chrome — chỉ cần dẹp cái chromedriver cài tay đi:
+
+```bash
+brew uninstall --force chromedriver   # Gỡ chromedriver cài tay (nếu có) để khỏi chen PATH
+rm -rf ~/.cache/selenium              # Xóa cache để Selenium Manager tải lại bản khớp
+```
+
+Chạy lại, Selenium Manager sẽ tải đúng chromedriver khớp Chrome hiện tại **vào cache riêng theo user** (`~/.cache/selenium`). Nó KHÔNG sửa Chrome, KHÔNG đụng `PATH` hệ thống, KHÔNG cài đặt gì ở mức global — nên xóa thư mục cache đó hoàn toàn an toàn (lần sau Selenium Manager tự tải lại khi cần). (Trong Docker không gặp lỗi này vì `chromium` + `chromium-driver` cùng version do Debian phát hành.)
+
 ### Staging (Railway)
 
 Railway là platform cloud (giống Heroku). Dùng cho:
@@ -769,6 +797,11 @@ docker compose up -d      # Tạo lại (database trống, 2 tài khoản mặc 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.3.0 (31/05/2026)
+
+- Mục 7 (Dockerfile.dev): thêm Chromium + chromium-driver cho system test (dùng Chromium thay Google Chrome để image chạy được trên mọi kiến trúc CPU).
+- Mục 11 (Test): thêm phần "System test (trình duyệt thật)" — cách chạy `bin/docker rspec spec/system`, chạy headful để quan sát trình duyệt (`HEADLESS=false`, chạy ngoài Docker), các biến môi trường cấu hình driver, và cách xử lý lỗi version Chrome ≠ chromedriver trên host.
 
 ### v1.2.0 (24/05/2026)
 
