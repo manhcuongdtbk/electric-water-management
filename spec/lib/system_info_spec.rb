@@ -13,23 +13,23 @@ RSpec.describe SystemInfo do
     end
   end
 
-  describe ".environment_label" do
+  describe ".app_environment" do
     before { allow(ENV).to receive(:[]).and_call_original }
 
     it "dùng APP_ENVIRONMENT_LABEL khi được đặt" do
       allow(ENV).to receive(:[]).with("APP_ENVIRONMENT_LABEL").and_return("Acceptance")
-      expect(described_class.environment_label).to eq("Acceptance")
+      expect(described_class.app_environment).to eq("Acceptance")
     end
 
     it "cắt khoảng trắng thừa của APP_ENVIRONMENT_LABEL" do
       allow(ENV).to receive(:[]).with("APP_ENVIRONMENT_LABEL").and_return("  Mirror  ")
-      expect(described_class.environment_label).to eq("Mirror")
+      expect(described_class.app_environment).to eq("Mirror")
     end
 
     it "dự phòng Rails.env.capitalize khi biến trống" do
       allow(ENV).to receive(:[]).with("APP_ENVIRONMENT_LABEL").and_return(nil)
       allow(Rails).to receive(:env).and_return(ActiveSupport::StringInquirer.new("production"))
-      expect(described_class.environment_label).to eq("Production")
+      expect(described_class.app_environment).to eq("Production")
     end
   end
 
@@ -39,7 +39,7 @@ RSpec.describe SystemInfo do
       allow(ENV).to receive(:[]).with("APP_ENVIRONMENT_LABEL").and_return(nil)
       expect(described_class.to_h).to eq(
         version: SystemInfo::VERSION,
-        environment: Rails.env.to_s.capitalize,
+        app_environment: Rails.env.to_s.capitalize,
         rails_env: Rails.env.to_s
       )
     end
