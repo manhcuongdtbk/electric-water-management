@@ -1,6 +1,6 @@
 ---
 title: Tự báo cáo phiên bản (application self-version reporting)
-version: 0.2.0
+version: 0.3.0
 status: draft (chờ duyệt)
 date: 2026-06-07
 ---
@@ -35,9 +35,9 @@ end
 - Thiếu file hoặc file rỗng → trả `"unknown"`, ứng dụng vẫn khởi động bình thường (không raise).
 - Initializer cũng ghi **một dòng log khởi động** (xem ADR-004).
 
-### 2. PORO `SystemInfo` — `app/services/system_info.rb`
+### 2. Module `SystemInfo` — `lib/system_info.rb`
 
-Một **module** không trạng thái, gom phiên bản + nhãn môi trường; là nơi duy nhất view / endpoint / Excel / log gọi tới. Đặt cạnh các info-provider PORO có sẵn (`dashboard_summary.rb`, `period_comparison.rb`).
+Một **module** không trạng thái, gom phiên bản + nhãn môi trường; là nơi duy nhất view / endpoint / Excel / log gọi tới. Đặt ở `lib/` (đã bật `autoload_lib`) — đây là mối quan tâm **hạ tầng** (đọc `version.txt` + ENV), không phải service domain; để `app/services/` thuần class domain, không trộn module với class.
 
 ```ruby
 module SystemInfo
@@ -59,7 +59,7 @@ end
 
 | # | Bề mặt | Vị trí | Nội dung |
 |---|--------|--------|----------|
-| 1a | **Đáy sidebar** | `app/views/layouts/_sidebar.html.erb` (đổi `<aside>` thành `flex flex-col`, `<nav>` `flex-1`, khối phiên bản ghim đáy) | dòng chữ xám nhỏ `v1.0.1 · Production` — mọi trang sau đăng nhập, mọi vai trò |
+| 1a | **Đáy sidebar** | `app/views/layouts/_sidebar.html.erb` (đổi `<aside>` thành `flex flex-col`, `<nav>` `flex-1`, khối phiên bản ghim đáy) | **hai dòng xếp dọc**, chữ nhỏ/mờ: dòng 1 `v1.0.1`, dòng 2 `Production` — súc tích cho sidebar hẹp; mọi trang sau đăng nhập, mọi vai trò |
 | 1b | **Màn hình đăng nhập** | `app/views/devise/sessions/new.html.erb` | cùng dòng đó, dưới phụ đề — nhìn thấy **trước khi** đăng nhập (quan trọng cho người nghiệm thu) |
 | 2 | **Endpoint `/version` (JSON)** | route `get "version" => "version#show"`, `VersionController` bỏ qua `authenticate_user!` → công khai | `{"version":"1.0.1","environment":"Acceptance","rails_env":"production"}` |
 | 3 | **Log** | dòng khởi động trong initializer + `config.log_tags` (production) thêm lambda gộp version + môi trường | mọi dòng log request + báo cáo lỗi mang `[v1.0.1 Production]`; một dòng khởi động `Booting ... version=... environment=...` |
@@ -125,7 +125,7 @@ end
 
 ## Kiểm thử (mỗi bề mặt một spec)
 
-- `spec/services/system_info_spec.rb` — `environment_label` khi có `APP_ENVIRONMENT_LABEL` vs. khi rơi về `Rails.env.capitalize`; hình dạng `to_h`; `version` đọc đúng hằng số.
+- `spec/lib/system_info_spec.rb` — `environment_label` khi có `APP_ENVIRONMENT_LABEL` vs. khi rơi về `Rails.env.capitalize`; hình dạng `to_h`; `version` đọc đúng hằng số.
 - `spec/requests/version_spec.rb` — `GET /version` trả JSON đúng trường, **hoạt động khi chưa đăng nhập**.
 - Hiển thị ở sidebar + đăng nhập — request spec kiểm tra body chứa `v#{version}` trên một trang đã đăng nhập và trên trang đăng nhập (`new_user_session_path`).
 - Excel — mở rộng `spec/requests/billing_spec.rb` dùng `parse_xlsx` để xác nhận chuỗi phiên bản có trong các dòng.
@@ -143,5 +143,6 @@ end
 
 ## Lịch sử thay đổi
 
+- 0.3.0 (2026-06-07): Sau review của chủ dự án — chuyển `SystemInfo` sang `lib/system_info.rb` (giữ là module, không trộn với class trong `app/services/`); sidebar hiển thị hai dòng xếp dọc súc tích cho sidebar hẹp.
 - 0.2.0 (2026-06-07): Sau review của chủ dự án — chuyển `SystemInfo` sang `app/services/`; bỏ trang admin "Thông tin hệ thống" (YAGNI); nhãn môi trường dùng tiếng Anh (`Rails.env.capitalize` dự phòng); gộp môi trường vào tag log cùng phiên bản.
 - 0.1.0 (2026-06-07): Bản thảo đầu tiên, chốt sau brainstorming với chủ dự án.
