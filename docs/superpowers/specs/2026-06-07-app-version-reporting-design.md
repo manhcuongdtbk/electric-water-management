@@ -1,6 +1,6 @@
 ---
 title: Tự báo cáo phiên bản (application self-version reporting)
-version: 0.4.0
+version: 0.5.0
 status: draft (chờ duyệt)
 date: 2026-06-07
 ---
@@ -21,37 +21,39 @@ Cho phép ứng dụng đang chạy **tự báo cáo phiên bản của chính n
 
 Mọi nơi hiển thị/trả về phiên bản đều đọc từ **một** nguồn, không lặp lại logic.
 
-### 1. Hằng số phiên bản — `config/initializers/version.rb`
+### 1. Module `SystemInfo` — `lib/system_info.rb` (sở hữu phiên bản)
 
-```ruby
-module ElectricWaterManagement
-  VERSION = (File.exist?(Rails.root.join("version.txt")) ?
-    File.read(Rails.root.join("version.txt")).strip.presence : nil) || "unknown"
-  VERSION.freeze
-end
-```
-
-- Đọc `version.txt` **một lần lúc khởi động** vào hằng số.
-- Thiếu file hoặc file rỗng → trả `"unknown"`, ứng dụng vẫn khởi động bình thường (không raise).
-- Initializer cũng ghi **một dòng log khởi động** (xem ADR-004).
-
-### 2. Module `SystemInfo` — `lib/system_info.rb`
-
-Một **module** không trạng thái, gom phiên bản + nhãn môi trường; là nơi duy nhất view / endpoint / Excel / log gọi tới. Đặt ở `lib/` (đã bật `autoload_lib`) — đây là mối quan tâm **hạ tầng** (đọc `version.txt` + ENV), không phải service domain; để `app/services/` thuần class domain, không trộn module với class.
+Một **module** không trạng thái (namespace, không khởi tạo), gom phiên bản + nhãn môi trường; là nơi duy nhất view / endpoint / Excel / log gọi tới. Đặt ở `lib/` (đã bật `autoload_lib`) — mối quan tâm **hạ tầng** (đọc `version.txt` + ENV), không phải service domain; để `app/services/` thuần class domain.
 
 ```ruby
 module SystemInfo
-  module_function
+  version_file = Rails.root.join("version.txt")
+  VERSION = ((File.exist?(version_file) ? File.read(version_file).strip.presence : nil) || "unknown").freeze
 
-  def version           = ElectricWaterManagement::VERSION
-  def environment_label = ENV["APP_ENVIRONMENT_LABEL"].presence || Rails.env.to_s.capitalize
-  def to_h              = { version:, environment: environment_label, rails_env: Rails.env }
+  def self.version           = VERSION
+  def self.environment_label = ENV["APP_ENVIRONMENT_LABEL"]&.strip.presence || Rails.env.to_s.capitalize
+  def self.to_h              = { version:, environment: environment_label, rails_env: Rails.env.to_s }
+  def self.log_tag           = "v#{version} #{environment_label}"
 end
 ```
 
-- **Nhãn môi trường là tiếng Anh** (xem ADR-003). Vận hành (ops) đặt `APP_ENVIRONMENT_LABEL` cho từng môi trường: Railway ví dụ `Acceptance` / `Mirror`, Mini PC `Production`.
-- Khi biến môi trường trống → dự phòng `Rails.env.capitalize` (`Development` / `Test` / `Production`) — vẫn tiếng Anh, không cần i18n cho tên môi trường.
-- `SystemInfo` là PORO (không phải ActiveRecord) → dễ test, không chạm database.
+- **`SystemInfo` sở hữu việc đọc `version.txt`** một lần khi nạp module (eager-load lúc khởi động ở production). `SystemInfo::VERSION` là hằng số đã đóng băng; không định nghĩa `AppModule::VERSION` để **không phụ thuộc tên app** (an toàn khi đổi tên — không hard-code `ElectricWaterManagement` ở đâu cả).
+- Dùng **`def self.`** (không `module_function`): hàm gọi như `SystemInfo.version`, minh bạch, không tạo bản instance-method thừa.
+- **Nhãn môi trường là tiếng Anh** (xem ADR-003). Ops đặt `APP_ENVIRONMENT_LABEL` cho từng môi trường (ví dụ `Acceptance` / `Mirror` / `Production`); trống → `Rails.env.capitalize`.
+- `SystemInfo` là module thuần (không ActiveRecord) → dễ test, không chạm database.
+
+### 2. Dòng log khởi động — `config/initializers/version.rb`
+
+Chỉ ghi **một dòng log khởi động** (xem ADR-004), không định nghĩa hằng số. Dùng `after_initialize` để `SystemInfo` đã sẵn sàng, và `Rails.application.class.module_parent_name` để lấy tên app **động** (không hard-code).
+
+```ruby
+Rails.application.config.after_initialize do
+  Rails.logger.info(
+    "Booting #{Rails.application.class.module_parent_name} version=#{SystemInfo.version} " \
+    "environment=#{SystemInfo.environment_label} rails_env=#{Rails.env}"
+  )
+end
+```
 
 ---
 
@@ -103,8 +105,8 @@ end
 
 - **Trạng thái:** Proposed · 2026-06-07
 - **Bối cảnh:** Cần truy vết lỗi báo về từ Mini PC offline / Railway tới đúng bản phát hành **và** đúng môi trường (khi log của nhiều môi trường bị gộp lại). Production dùng `TaggedLogging` ra STDOUT, `config.log_tags = [:request_id]`.
-- **Quyết định:** (a) Một **dòng log khởi động** trong initializer ghi cả phiên bản và môi trường; (b) thêm **lambda** `->(req){ "v#{ElectricWaterManagement::VERSION} #{SystemInfo.environment_label}" }` vào đầu `config.log_tags` (production) → mọi dòng log request + báo cáo lỗi mang **một tag gộp** `[v1.0.1 Production]`. Gộp version + môi trường vào **một** tag để gọn (một cặp ngoặc thay vì hai).
-- **Lý do:** Cả tính năng tồn tại để phân biệt môi trường gần giống nhau; tag chỉ có phiên bản sẽ không cho biết log đến từ Nghiệm thu hay Mốc khi log bị gộp. Hằng số định nghĩa trong initializer (chạy *sau* `production.rb`); nhưng lambda của `log_tags` được tính **theo từng request lúc runtime** nên hằng số đã có sẵn — không vướng thứ tự nạp.
+- **Quyết định:** (a) Một **dòng log khởi động** trong initializer ghi cả phiên bản và môi trường; (b) thêm **lambda** `->(_request) { SystemInfo.log_tag }` vào đầu `config.log_tags` (production) → mọi dòng log request + báo cáo lỗi mang **một tag gộp** `[v1.0.1 Production]`. Gộp version + môi trường vào **một** tag để gọn (một cặp ngoặc thay vì hai). Chỉ đặt ở `production.rb` (dev/test không tag request log; dòng khởi động đã in version ở mọi môi trường).
+- **Lý do:** Cả tính năng tồn tại để phân biệt môi trường gần giống nhau; tag chỉ có phiên bản sẽ không cho biết log đến từ môi trường nào khi log bị gộp. `SystemInfo` (lib/) được nạp khi initializer chạy hay muộn hơn; nhưng lambda của `log_tags` được tính **theo từng request lúc runtime** nên `SystemInfo` đã sẵn sàng — không vướng thứ tự nạp.
 - **Tradeoff:** (+) Mọi dòng log tự mô tả được phiên bản **và** môi trường. (−) Mỗi dòng dài thêm ít ký tự.
 
 ---
@@ -144,6 +146,7 @@ end
 
 ## Lịch sử thay đổi
 
+- 0.5.0 (2026-06-07): Sau review code của chủ dự án — `SystemInfo` **tự sở hữu** việc đọc `version.txt` (`SystemInfo::VERSION`), bỏ `ElectricWaterManagement::VERSION` để không phụ thuộc tên app (an toàn khi đổi tên); chuyển `module_function` → `def self.`; dòng log khởi động lấy tên app động qua `module_parent_name`; ghi rõ `log_tags` chỉ ở production.
 - 0.4.0 (2026-06-07): Sau review code của chủ dự án trước khi mở PR — sidebar hiển thị version + môi trường trên **một dòng** (`whitespace-nowrap`, vẫn vừa sidebar); nhãn Excel footer dùng **i18n** (`system_info.excel_footer`), không hard-code chuỗi tiếng Việt.
 - 0.3.0 (2026-06-07): Sau review của chủ dự án — chuyển `SystemInfo` sang `lib/system_info.rb` (giữ là module, không trộn với class trong `app/services/`); sidebar hiển thị hai dòng xếp dọc súc tích cho sidebar hẹp.
 - 0.2.0 (2026-06-07): Sau review của chủ dự án — chuyển `SystemInfo` sang `app/services/`; bỏ trang admin "Thông tin hệ thống" (YAGNI); nhãn môi trường dùng tiếng Anh (`Rails.env.capitalize` dự phòng); gộp môi trường vào tag log cùng phiên bản.
