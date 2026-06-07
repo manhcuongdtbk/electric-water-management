@@ -35,7 +35,10 @@ Rails.application.configure do
   # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
 
   # Log to STDOUT with the current request id as a default log tag.
-  config.log_tags = [ :request_id ]
+  # Gắn phiên bản + môi trường vào mọi dòng log (request + báo cáo lỗi) để truy vết
+  # bản phát hành và phân biệt môi trường. Lambda chạy theo từng request lúc runtime,
+  # nên hằng số/SystemInfo đã sẵn sàng dù initializer chạy sau file này.
+  config.log_tags = [ ->(_request) { SystemInfo.log_tag }, :request_id ]
   config.logger   = ActiveSupport::TaggedLogging.logger(STDOUT)
 
   # Change to "debug" to log everything (including potentially personally-identifiable information!).
