@@ -832,6 +832,10 @@ docker compose up -d      # Tạo lại (database trống, 2 tài khoản mặc 
 
 ## Lịch sử thay đổi
 
+### v1.8.1 (07/06/2026)
+
+- Mục 7 (bin/prepare-delivery): cập nhật mô tả danh sách file phát triển bị xóa khỏi bản giao khách — thêm `AGENTS.md` và `CONTRIBUTING.md` (theo thay đổi `bin/prepare-delivery` sau khi chuyển nguồn quy ước canonical sang `AGENTS.md`).
+
 ### v1.8.0 (31/05/2026)
 
 - compose.dev.yml: thêm `extra_hosts: host.docker.internal:host-gateway` cho service `app` → `bin/docker up --shared-db` (Cách B) chạy được cả trên Linux, không chỉ Docker Desktop/Mac (vô hại trên Mac). Cập nhật mục 11 + comment bin/docker.
