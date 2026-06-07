@@ -1,6 +1,6 @@
 ---
 title: Quy trình phát hành (release process) — Mảnh 1 của SDLC
-version: 0.2.0
+version: 0.3.0
 status: draft (chờ duyệt)
 date: 2026-06-07
 governed_by: 2026-06-07-sdlc-overview-design.md
@@ -141,6 +141,7 @@ flowchart LR
 - **Quyết định:** Workflow CI (free Actions) chạy trên PR: `rspec` (gồm system spec), `rubocop`, `brakeman`, `bundler-audit`, `rails zeitwerk:check`, kiểm schema không lệch, `commitlint`, **branch-source guard** (PR đích `main` mà nguồn ≠ `release/*`/`hotfix/*` → fail).
 - **Lý do:** CLAUDE.md yêu cầu rubocop do CI cover; các bước còn lại bắt lỗi sớm; branch-guard ép luật Git Flow (native, không dependency).
 - **Tradeoff:** (+) bắt lỗi trước khi tới khách. (−) system spec cần trình duyệt headless trên runner (cấu hình nhỉnh hơn — chi tiết để spec CI riêng).
+- **Phân kỳ triển khai (chốt 2026-06-07):** P2 chỉ dựng tập **tĩnh, không cần Postgres/trình duyệt/boot app**: `rubocop`, `brakeman`, `bundler-audit`, `commitlint`, branch-source guard (grandfather vi phạm hiện có để lần CI đầu xanh, không sửa code app). Phần **chạy test** (`rspec` gồm system spec, kiểm schema không lệch, `rails zeitwerk:check`) cùng runner/cache/headless chuyển sang mảnh **"CI spec chi tiết"** (Backlog #1) — vì cần dựng dịch vụ Postgres + Chrome headless và quyết định runner/cache mà mảnh đó sở hữu. Lý do tách: tập tĩnh ép được ngay, chi phí thấp, giữ P2 gọn + nhanh; chạy test cần thêm hạ tầng.
 - **Điều kiện xem lại:** thời gian CI quá lâu → tách system spec / cache.
 
 ---
@@ -200,7 +201,7 @@ flowchart LR
 ## Backlog
 
 **Mảnh SDLC còn lại (mỗi mảnh 1 spec, làm tuần tự):**
-1. CI spec (workflow chi tiết, runner, cache, headless browser).
+1. CI spec — phần **chạy test trên CI** còn lại sau P2: `rspec` (gồm system spec headless Chrome), kiểm schema không lệch, `rails zeitwerk:check`; cùng runner, cache, trình duyệt headless. (P2 đã dựng tập tĩnh: rubocop/brakeman/bundler-audit/commitlint/branch-source guard — xem ADR-011 "Phân kỳ triển khai".)
 2. Truy vết / quản lý thay đổi (yêu cầu → thiết kế → test → release).
 3. Vận hành / bảo trì (giám sát production offline, backup, tiếp nhận lỗi khách).
 4. Tiếp nhận công việc (issue/backlog, ưu tiên).
@@ -209,5 +210,6 @@ flowchart LR
 
 ## Changelog
 
+- **0.3.0 (2026-06-07):** ADR-011 thêm "Phân kỳ triển khai" chốt ranh giới P2 (tập tĩnh: rubocop/brakeman/bundler-audit/commitlint/branch-source guard) ↔ mảnh "CI spec chi tiết" (rspec/system + schema-drift + zeitwerk + runner/cache/headless); làm rõ Backlog #1 tương ứng.
 - **0.2.0 (2026-06-07):** Viết lại theo ADR-style; thêm Goals/Non-Goals, Glossary, sơ đồ Mermaid, tiêu chí thành công, rủi ro+rollback, truy vết; đổi pairing sang VS Code Dev Tunnels; thêm nguồn nvie; trỏ về SDLC Overview.
 - **0.1.0 (2026-06-07):** Bản thảo đầu.
