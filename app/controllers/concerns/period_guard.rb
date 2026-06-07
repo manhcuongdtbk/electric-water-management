@@ -12,7 +12,7 @@ module PeriodGuard
         flash[:alert] = message
         redirect_back(fallback_location: "/", allow_other_host: false)
       end
-      format.json { render json: { error: message }, status: :unprocessable_entity }
+      format.json { render json: { error: message }, status: :unprocessable_content }
     end
   end
 end

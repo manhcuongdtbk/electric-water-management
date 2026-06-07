@@ -78,7 +78,7 @@ class ContactPointsController < ApplicationController
       @contact_point.errors.add(:base,
         I18n.t("activerecord.errors.models.contact_point.attributes.base.must_have_at_least_one_meter"))
       @contact_point.meters.build
-      render :new, status: :unprocessable_entity and return
+      render :new, status: :unprocessable_content and return
     end
 
     if @contact_point.save
@@ -86,7 +86,7 @@ class ContactPointsController < ApplicationController
                   notice: t("flash.record_created", resource: t("resources.contact_point"), name: @contact_point.name)
     else
       @contact_point.meters.build if @contact_point.meters.empty? && needs_meter?(@contact_point)
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -118,7 +118,7 @@ class ContactPointsController < ApplicationController
                          notice: t("flash.record_updated", resource: t("resources.contact_point"), name: @contact_point.name)
     end
     @contact_point.meters.build if @contact_point.meters.kept.empty? && needs_meter?(@contact_point)
-    render :edit, status: :unprocessable_entity
+    render :edit, status: :unprocessable_content
   end
 
   def destroy

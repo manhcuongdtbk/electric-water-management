@@ -10,14 +10,14 @@ class PasswordChangesController < ApplicationController
 
     if !@force_change && !valid_current_password?
       current_user.errors.add(:current_password, I18n.t("password_changes.errors.current_password_invalid"))
-      render :edit, status: :unprocessable_entity and return
+      render :edit, status: :unprocessable_content and return
     end
 
     if current_user.update(password_params.merge(force_password_change: false))
       bypass_sign_in(current_user)
       redirect_to root_path, notice: I18n.t("flash.password_changed")
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

@@ -94,7 +94,7 @@ RSpec.describe "Groups", type: :request do
     it "update tên trùng → lỗi validation" do
       create(:group, unit: unit, name: "Nhóm trùng")
       patch group_path(group), params: { group: { name: "Nhóm trùng" } }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 

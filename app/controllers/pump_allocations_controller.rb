@@ -49,7 +49,7 @@ class PumpAllocationsController < ApplicationController
       redirect_to pump_allocations_path,
         notice: t("flash.record_created", resource: t("resources.pump_allocation"), name: @pump_allocation.zone.name)
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -61,7 +61,7 @@ class PumpAllocationsController < ApplicationController
       redirect_to pump_allocations_path,
         notice: t("flash.record_updated", resource: t("resources.pump_allocation"), name: @pump_allocation.zone.name)
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 
