@@ -11,9 +11,9 @@ Rails 8, PostgreSQL 16, Tailwind CSS, Hotwire (Turbo + Stimulus).
 | Loại | Hạ tầng | Nguồn deploy | Nhãn (`APPLICATION_ENVIRONMENT_LABEL`) | URL |
 |---|---|---|---|---|
 | Phát triển (local) | Docker Desktop (`Dockerfile.dev`, `compose.dev.yml`) | máy bạn — `develop`/`feature/*` | — | http://localhost |
-| Railway `development` | Railway (`Dockerfile`, `railway.json`, sleep) | nhánh `develop` (tự deploy) | `Development` | https://electric-water-management-development-b881.up.railway.app |
-| Railway `acceptance` | Railway (`Dockerfile`, `railway.json`, sleep) | nhánh `main` (tự deploy) | `Acceptance` | https://electric-water-management-acceptance-e503.up.railway.app |
-| Railway `mirror` | Railway (`Dockerfile`, `railway.json`, sleep) | nhánh `production` (ghim tag đang giao) | `Mirror` | https://electric-water-management.up.railway.app |
+| Railway `development` | Railway (`Dockerfile`, `railway.json`, sleep) | nhánh `develop` (tự deploy) | `Development` | https://electric-water-management-development.up.railway.app |
+| Railway `acceptance` | Railway (`Dockerfile`, `railway.json`, sleep) | nhánh `main` (tự deploy) | `Acceptance` | https://electric-water-management-acceptance.up.railway.app |
+| Railway `mirror` | Railway (`Dockerfile`, `railway.json`, sleep) | nhánh `production` (ghim tag đang giao) | `Mirror` | https://electric-water-management-mirror.up.railway.app |
 | **Production (thật)** | Ubuntu Mini PC LAN offline (`Dockerfile`, `compose.yml` + `.env`) | tag `main` đã giao | `Production` (đặt tại Mini PC) | http://\<IP server\> |
 
 > Ba env Railway và Mini PC đều chạy `RAILS_ENV=production`; chỉ `APPLICATION_ENVIRONMENT_LABEL` khác nhau để phân biệt (xem "environment terminology" trong `AGENTS.md`). **Production thật là Mini PC offline tại chỗ khách**, không phải Railway. `mirror` là bản sinh đôi *online* của Production để khách đối chiếu với `acceptance` (bản ứng viên). Hiện `mirror` chạy `v1.0.0` — bản này **ra đời trước** tính năng tự báo cáo phiên bản nên chưa có nhãn/endpoint `/version`; `acceptance`/`development` (1.1.0+) thì có. Khi Production lên 1.1.0+, `mirror` sẽ hiện nhãn.
