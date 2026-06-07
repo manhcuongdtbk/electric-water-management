@@ -213,7 +213,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version-file: .ruby-version
+          ruby-version: .ruby-version # setup-ruby chấp nhận tên file như giá trị đặc biệt
           bundler-cache: false # Cache để dành mảnh "CI spec chi tiết"
       - name: Cài gem (không cache — tinh chỉnh cache thuộc mảnh CI spec)
         run: bundle install --jobs 4
