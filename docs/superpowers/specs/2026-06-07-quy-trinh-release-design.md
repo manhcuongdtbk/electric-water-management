@@ -1,6 +1,6 @@
 ---
 title: Quy trình phát hành (release process) — Mảnh 1 của SDLC
-version: 0.6.0
+version: 0.7.0
 status: draft (chờ duyệt)
 date: 2026-06-07
 governed_by: 2026-06-07-sdlc-overview-design.md
@@ -206,7 +206,7 @@ flowchart LR
 ## Backlog
 
 **Mảnh SDLC còn lại (mỗi mảnh 1 spec, làm tuần tự):**
-1. CI spec — phần **chạy test trên CI** còn lại sau P2: `rspec` (gồm system spec headless Chrome), kiểm schema không lệch, `rails zeitwerk:check`; cùng runner, cache, trình duyệt headless. (P2 đã dựng tập tĩnh: rubocop/brakeman/bundler-audit/commitlint/branch-source guard — xem ADR-011 "Phân kỳ triển khai".)
+1. **✅ Đã hiện thực** (P5 — ADR-012, [`2026-06-07-ci-spec-design.md`](2026-06-07-ci-spec-design.md)): phần **chạy test trên CI** sau P2 — `rspec` (gồm system spec headless Chrome), kiểm schema không lệch, `rails zeitwerk:check`; runner native + service container Postgres + Chrome qua Selenium Manager; bật cache. (P2 đã dựng tập tĩnh: rubocop/brakeman/bundler-audit/commitlint/branch-source guard — xem ADR-011 "Phân kỳ triển khai".)
 2. Truy vết / quản lý thay đổi (yêu cầu → thiết kế → test → release).
 3. Vận hành / bảo trì (giám sát production offline, backup, tiếp nhận lỗi khách).
 4. Tiếp nhận công việc (issue/backlog, ưu tiên).
@@ -215,6 +215,7 @@ flowchart LR
 
 ## Changelog
 
+- **0.7.0 (2026-06-07):** Backlog #1 ("CI spec chi tiết") đánh dấu **đã hiện thực** (ADR-012) cho khớp ghi chú "Triển khai (P5)" trong ADR-011 — bỏ mâu thuẫn "còn lại" trong Backlog.
 - **0.6.0 (2026-06-07):** ADR-011 thêm ghi chú "Triển khai (P5)" trỏ tới ADR-012 (`2026-06-07-ci-spec-design.md`) — phần chạy test trên CI (rspec/system + kiểm schema không lệch + zeitwerk; runner native + service container Postgres + Chrome qua Selenium Manager; bật cache gem) đã hiện thực.
 - **0.5.0 (2026-06-07):** ADR-008 thêm sub-note "Yêu cầu setup" đúc kết khi cắt bản phát hành 1.1.0 — (1) phải bật cài đặt repository "Allow GitHub Actions to create and approve pull requests", nếu không release-please thất bại ở bước tạo Release pull request; (2) `feature`/`fix` phải squash-merge vào `develop` (GitHub không có cách biến merge commit thành "không theo Conventional Commits"; tổ hợp `MERGE_MESSAGE`+`BLANK` bị từ chối HTTP 422) để changelog không trùng dòng — repository đặt `squash_merge_commit_title=PR_TITLE` + `squash_merge_commit_message=BLANK`, và đặt tiêu đề `release/*`/`hotfix/*`/merge-back bằng tiền tố không sinh changelog; trỏ chéo `CONTRIBUTING.md` mục 2.
 - **0.4.0 (2026-06-07):** ADR-008 thêm ghi chú triển khai P3: release-please trên `main` (final releases, `simple`, `version.txt`, manifest 1.0.1, `target-branch: main`); guard cho phép `release-please--*`; đồng bộ main→develop sau release; rc để dành P4.
