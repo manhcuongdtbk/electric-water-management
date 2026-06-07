@@ -1,6 +1,6 @@
 ---
 title: Tự báo cáo phiên bản (application self-version reporting)
-version: 0.7.0
+version: 0.8.0
 status: draft (chờ duyệt)
 date: 2026-06-07
 ---
@@ -65,9 +65,9 @@ end
 | 1b | **Màn hình đăng nhập** | `app/views/devise/sessions/new.html.erb` | cùng dòng đó, dưới phụ đề — nhìn thấy **trước khi** đăng nhập (quan trọng cho người nghiệm thu) |
 | 2 | **Endpoint `/version` (JSON)** | route `get "version" => "version#show"`, `VersionController` bỏ qua `authenticate_user!` → công khai | `{"version":"1.0.1","application_environment":"Acceptance","rails_environment":"production"}` |
 | 3 | **Log** | dòng khởi động trong initializer + `config.log_tags` (production) thêm lambda gộp version + môi trường | mọi dòng log request + báo cáo lỗi mang `[v1.0.1 Production]`; một dòng khởi động `Booting ... version=... application_environment=... rails_environment=...` |
-| 4 | **Excel** | `app/views/billing/show.xlsx.axlsx` — thêm dòng trống + dòng lấy từ i18n `system_info.excel_footer` (`Phiên bản hệ thống: v1.0.1 · Môi trường: Production`) **dưới** dòng `TỔNG` (kiểu chữ nhỏ/xám, không merge → không phá bảng) |
+| 4 | **Excel** | `app/views/billing/show.xlsx.axlsx` — thêm dòng trống + dòng lấy từ i18n `system_info.excel_footer` (`Phiên bản hệ thống: v1.0.1 · Môi trường ứng dụng: Production`) **dưới** dòng `TỔNG` (kiểu chữ nhỏ/xám, không merge → không phá bảng) |
 
-> Nhãn tiếng Việt bao quanh chỉ xuất hiện ở Excel ("Phiên bản hệ thống", "Môi trường") và lấy từ i18n; sidebar/đăng nhập chỉ hiển thị `vX.Y.Z · <môi trường>` (không có chữ tiếng Việt). Chỉ **giá trị môi trường** là tiếng Anh.
+> Nhãn tiếng Việt bao quanh chỉ xuất hiện ở Excel ("Phiên bản hệ thống", "Môi trường ứng dụng") và lấy từ i18n; sidebar/đăng nhập chỉ hiển thị `vX.Y.Z · <môi trường>` (không có chữ tiếng Việt). Chỉ **giá trị môi trường** là tiếng Anh.
 
 ---
 
@@ -115,7 +115,7 @@ end
 
 `config/locales/vi.yml` — thêm khóa cho nhãn tiếng Việt của Excel footer (giá trị môi trường vẫn tiếng Anh):
 
-- `system_info.excel_footer: "Phiên bản hệ thống: v%{version} · Môi trường: %{application_environment}"` — template axlsx gọi `I18n.t("system_info.excel_footer", version:, application_environment:)`. **Không hard-code** chuỗi tiếng Việt trong view.
+- `system_info.excel_footer: "Phiên bản hệ thống: v%{version} · Môi trường ứng dụng: %{application_environment}"` — template axlsx gọi `I18n.t("system_info.excel_footer", version:, application_environment:)`. **Không hard-code** chuỗi tiếng Việt trong view.
 - Sidebar/đăng nhập chỉ hiển thị `vX.Y.Z · <môi trường>` (không có chữ tiếng Việt) → không cần khóa i18n.
 - **Không** cần khóa i18n cho tên môi trường (đã là tiếng Anh, lấy từ biến môi trường / `Rails.env`).
 
@@ -146,6 +146,7 @@ end
 
 ## Lịch sử thay đổi
 
+- 0.8.0 (2026-06-07): Nhãn Excel rõ nghĩa — "Môi trường" → "Môi trường ứng dụng" (không nhầm với Rails environment). Đồng bộ plan doc (`docs/superpowers/plans/2026-06-07-app-version-reporting.md`) với code cuối cùng để session khác không hiểu sai.
 - 0.7.0 (2026-06-07): Viết đầy đủ tên theo quy tắc không viết tắt — `app_environment` → `application_environment`, key JSON `rails_env` → `rails_environment`, biến `APP_ENVIRONMENT_LABEL` → `APPLICATION_ENVIRONMENT_LABEL` (đồng bộ ở code, i18n, log, glossary `AGENTS.md`).
 - 0.6.0 (2026-06-07): Khử nhầm lẫn "environment" — đổi `SystemInfo.environment_label` → `SystemInfo.app_environment`, key JSON `environment` → `app_environment`, log khởi động `app_environment=`, biến i18n `%{app_environment}`. Thêm glossary "app environment vs Rails environment" vào `AGENTS.md`.
 - 0.5.0 (2026-06-07): Sau review code của chủ dự án — `SystemInfo` **tự sở hữu** việc đọc `version.txt` (`SystemInfo::VERSION`), bỏ `ElectricWaterManagement::VERSION` để không phụ thuộc tên app (an toàn khi đổi tên); chuyển `module_function` → `def self.`; dòng log khởi động lấy tên app động qua `module_parent_name`; ghi rõ `log_tags` chỉ ở production.
