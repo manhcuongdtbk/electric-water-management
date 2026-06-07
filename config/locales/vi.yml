@@ -419,7 +419,7 @@ vi:
   application:
     name: "Hệ thống quản lý điện nội bộ Sư đoàn"
   system_info:
-    excel_footer: "Phiên bản hệ thống: v%{version} · Môi trường: %{app_environment}"
+    excel_footer: "Phiên bản hệ thống: v%{version} · Môi trường: %{application_environment}"
   meter_entries:
     flash:
       saved: "Đã lưu chỉ số công tơ."

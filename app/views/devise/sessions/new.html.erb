@@ -1,7 +1,7 @@
 <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
   <h1 class="text-2xl font-semibold mb-4 text-gray-900">Đăng nhập</h1>
   <p class="text-sm text-gray-600 mb-1">Hệ thống quản lý điện nội bộ Sư đoàn</p>
-  <p class="text-xs text-gray-400 mb-6">v<%= SystemInfo.version %> · <%= SystemInfo.app_environment %></p>
+  <p class="text-xs text-gray-400 mb-6">v<%= SystemInfo.version %> · <%= SystemInfo.application_environment %></p>
 
   <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "space-y-4" }) do |f| %>
     <div>

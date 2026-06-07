@@ -5,6 +5,6 @@
 Rails.application.config.after_initialize do
   Rails.logger.info(
     "Booting #{Rails.application.class.module_parent_name} version=#{SystemInfo.version} " \
-    "app_environment=#{SystemInfo.app_environment} rails_env=#{Rails.env}"
+    "application_environment=#{SystemInfo.application_environment} rails_environment=#{Rails.env}"
   )
 end

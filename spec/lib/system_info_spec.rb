@@ -13,34 +13,34 @@ RSpec.describe SystemInfo do
     end
   end
 
-  describe ".app_environment" do
+  describe ".application_environment" do
     before { allow(ENV).to receive(:[]).and_call_original }
 
-    it "dùng APP_ENVIRONMENT_LABEL khi được đặt" do
-      allow(ENV).to receive(:[]).with("APP_ENVIRONMENT_LABEL").and_return("Acceptance")
-      expect(described_class.app_environment).to eq("Acceptance")
+    it "dùng APPLICATION_ENVIRONMENT_LABEL khi được đặt" do
+      allow(ENV).to receive(:[]).with("APPLICATION_ENVIRONMENT_LABEL").and_return("Acceptance")
+      expect(described_class.application_environment).to eq("Acceptance")
     end
 
-    it "cắt khoảng trắng thừa của APP_ENVIRONMENT_LABEL" do
-      allow(ENV).to receive(:[]).with("APP_ENVIRONMENT_LABEL").and_return("  Mirror  ")
-      expect(described_class.app_environment).to eq("Mirror")
+    it "cắt khoảng trắng thừa của APPLICATION_ENVIRONMENT_LABEL" do
+      allow(ENV).to receive(:[]).with("APPLICATION_ENVIRONMENT_LABEL").and_return("  Mirror  ")
+      expect(described_class.application_environment).to eq("Mirror")
     end
 
     it "dự phòng Rails.env.capitalize khi biến trống" do
-      allow(ENV).to receive(:[]).with("APP_ENVIRONMENT_LABEL").and_return(nil)
+      allow(ENV).to receive(:[]).with("APPLICATION_ENVIRONMENT_LABEL").and_return(nil)
       allow(Rails).to receive(:env).and_return(ActiveSupport::StringInquirer.new("production"))
-      expect(described_class.app_environment).to eq("Production")
+      expect(described_class.application_environment).to eq("Production")
     end
   end
 
   describe ".to_h" do
-    it "trả version, environment, rails_env" do
+    it "trả version, application_environment, rails_environment" do
       allow(ENV).to receive(:[]).and_call_original
-      allow(ENV).to receive(:[]).with("APP_ENVIRONMENT_LABEL").and_return(nil)
+      allow(ENV).to receive(:[]).with("APPLICATION_ENVIRONMENT_LABEL").and_return(nil)
       expect(described_class.to_h).to eq(
         version: SystemInfo::VERSION,
-        app_environment: Rails.env.to_s.capitalize,
-        rails_env: Rails.env.to_s
+        application_environment: Rails.env.to_s.capitalize,
+        rails_environment: Rails.env.to_s
       )
     end
   end
@@ -48,7 +48,7 @@ RSpec.describe SystemInfo do
   describe ".log_tag" do
     it "gộp phiên bản và môi trường thành một tag" do
       allow(ENV).to receive(:[]).and_call_original
-      allow(ENV).to receive(:[]).with("APP_ENVIRONMENT_LABEL").and_return("Acceptance")
+      allow(ENV).to receive(:[]).with("APPLICATION_ENVIRONMENT_LABEL").and_return("Acceptance")
       expect(described_class.log_tag).to eq("v#{SystemInfo::VERSION} Acceptance")
     end
   end

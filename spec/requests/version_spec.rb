@@ -10,8 +10,8 @@ RSpec.describe "Version", type: :request do
       expect(response.media_type).to eq("application/json")
       body = JSON.parse(response.body)
       expect(body["version"]).to eq(SystemInfo.version)
-      expect(body["app_environment"]).to eq(SystemInfo.app_environment)
-      expect(body["rails_env"]).to eq(Rails.env.to_s)
+      expect(body["application_environment"]).to eq(SystemInfo.application_environment)
+      expect(body["rails_environment"]).to eq(Rails.env.to_s)
     end
   end
 
@@ -24,7 +24,7 @@ RSpec.describe "Version", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("v#{SystemInfo.version}")
-      expect(response.body).to include(SystemInfo.app_environment)
+      expect(response.body).to include(SystemInfo.application_environment)
     end
   end
 
@@ -34,7 +34,7 @@ RSpec.describe "Version", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("v#{SystemInfo.version}")
-      expect(response.body).to include(SystemInfo.app_environment)
+      expect(response.body).to include(SystemInfo.application_environment)
     end
   end
 end
