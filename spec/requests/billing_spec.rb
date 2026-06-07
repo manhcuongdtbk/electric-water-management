@@ -259,6 +259,14 @@ RSpec.describe "Billing", type: :request do
           header_merges = xlsx.merges.select { |m| m.include?("3") }
           expect(header_merges).not_to be_empty
         end
+
+        it "đóng dấu phiên bản hệ thống ở chân file" do
+          get billing_path(format: :xlsx)
+          xlsx = parse_xlsx(response.body)
+          all_text = xlsx.rows.compact.flatten.compact.map(&:to_s).join(" ")
+          expect(all_text).to include("Phiên bản hệ thống")
+          expect(all_text).to include("v#{ElectricWaterManagement::VERSION}")
+        end
       end
 
       context "UA (28 cột — ẩn Khu vực + Đơn vị)" do
