@@ -13,8 +13,7 @@
       </div>
     <% end %>
   </nav>
-  <div class="px-3 py-2 border-t border-gray-100 text-[11px] text-gray-400 leading-tight">
-    <div>v<%= SystemInfo.version %></div>
-    <div><%= SystemInfo.environment_label %></div>
+  <div class="px-3 py-2 border-t border-gray-100 text-[11px] text-gray-400 whitespace-nowrap">
+    v<%= SystemInfo.version %> · <%= SystemInfo.environment_label %>
   </div>
 </aside>
