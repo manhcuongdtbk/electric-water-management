@@ -98,6 +98,7 @@ Mỗi git worktree dùng bộ cổng host riêng do `bin/docker` tự gán (post
 - Test tạo nhiều unit trong cùng zone: dùng `let!` (không dùng `let`) để đảm bảo thứ tự tạo. Unit đầu tiên tự động thành zone manager (auto-assign callback). Nếu test cần unit cụ thể là zone manager, set `zone.update!(manager_unit_id: unit.id)` tường minh — không dựa vào thứ tự auto-assign.
 - Audit/review phải theo luồng nghiệp vụ end-to-end (tạo → xóa → đóng kỳ → mở kỳ mới → xem), không theo file.
 - Không chạy rubocop locally (CI cover).
+- Version và lịch sử thay đổi tài liệu: file meta ở gốc repo (`README.md`, `AGENTS.md`, `CONTRIBUTING.md`, `CLAUDE.md`) KHÔNG có version/changelog riêng (theo dõi qua git history). Tài liệu trong `docs/` (có `Phiên bản:` + `## Lịch sử thay đổi`) thì khi sửa PHẢI bump version và thêm entry trong cùng commit. Chi tiết và lý do: ADR-002 trong `docs/superpowers/specs/2026-06-07-sdlc-overview-design.md`.
 - Không tự mở rộng scope. Nếu thấy thiếu gì trong thiết kế → dừng lại, báo lỗi.
 
 ## Quy trình phát triển và phát hành (trỏ tới spec)

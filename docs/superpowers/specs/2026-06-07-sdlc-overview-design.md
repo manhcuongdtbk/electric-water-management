@@ -1,6 +1,6 @@
 ---
 title: SDLC Overview — Mô hình phát triển & chiến lược tài liệu
-version: 0.1.0
+version: 0.2.0
 status: draft (chờ duyệt)
 date: 2026-06-07
 ---
@@ -43,6 +43,11 @@ Tài liệu **đứng đầu** loạt spec chuẩn hoá SDLC. Mỗi mảnh (rele
      - Claude Code **không** đọc `AGENTS.md` → `CLAUDE.md` chỉ chứa một dòng **`@AGENTS.md`** (cú pháp import của Claude Code). **Không dùng symlink** (hỏng trên Windows). Hai file đều là file thường → an toàn Windows, nội dung vẫn một chỗ.
   3. **`docs/` (spec + ADR)** — chi tiết & *vì sao*; có version + changelog; cải tiến qua PR + supersede.
   4. **`CONTRIBUTING.md`** — onboarding/quy trình cho người; trỏ về AGENTS.md + docs.
+
+  **Quy ước version & changelog cho tài liệu (hệ quả của 4 lớp trên):**
+  - **File meta ở gốc repo** (`README.md`, `AGENTS.md`, `CONTRIBUTING.md`, `CLAUDE.md`): **KHÔNG** có version/changelog riêng — theo dõi qua git history; lịch sử cấp dự án do `CHANGELOG.md` sinh tự động từ Conventional Commits (release-please, xem ADR-008).
+  - **Tài liệu trong `docs/`** (thiết kế, nghiệp vụ, hành vi, kiểm thử, `KIEN_THUC_*`, `HUONG_DAN_*`, `hdsd/*`, `superpowers/specs/*`): **CÓ** version + lịch sử thay đổi riêng (`> **Phiên bản:**` + `## Lịch sử thay đổi`, hoặc frontmatter `version:` + `## Changelog`). Sửa file loại này → **bump version + thêm entry trong cùng commit**.
+  - **Vì sao tách vậy:** khớp quy ước ngành (file meta ở gốc không versioned; versioning diễn ra ở cấp dự án/bản phát hành), còn tài liệu thiết kế/tri thức cần version riêng vì ghi nhận quyết định tiến hoá theo thời gian (kiểu ADR/RFC).
 - **Lý do:** Repo = thứ duy nhất vừa bền, vừa chia sẻ được cả team, vừa cải tiến qua PR. AGENTS.md là chuẩn sẵn cho "tương thích mọi AI". `@import` thay symlink để an toàn Windows mà vẫn DRY.
 - **Tradeoff:**
   - (+) Một nguồn sự thật; mọi AI + người đọc; tự động hoá tối đa; an toàn đa nền tảng.
@@ -59,4 +64,5 @@ Tài liệu **đứng đầu** loạt spec chuẩn hoá SDLC. Mỗi mảnh (rele
 
 ## Changelog
 
+- **0.2.0 (2026-06-07):** ADR-002: thêm quy ước version & changelog cho tài liệu — file meta ở gốc repo (`README.md`, `AGENTS.md`, `CONTRIBUTING.md`, `CLAUDE.md`) không versioned; tài liệu trong `docs/` có version + lịch sử thay đổi, bump khi sửa.
 - **0.1.0 (2026-06-07):** Bản thảo đầu; ADR-001 (mô hình) + ADR-002 (tài liệu/tri thức). Chờ duyệt.
