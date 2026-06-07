@@ -84,6 +84,22 @@ RSpec.describe "Users", type: :request do
       end
     end
 
+    describe "không được nâng vai trò user khác thành technician (privilege escalation)" do
+      it "chặn đổi vai trò unit_admin sang technician" do
+        target = create(:user, :unit_admin, unit: unit)
+        patch user_path(target), params: { user: { role: "technician" } }
+        expect(response).to redirect_to(root_path)
+        expect(target.reload.role).to eq("unit_admin")
+      end
+
+      it "vẫn cho đổi vai trò sang commander (chuyển hợp lệ)" do
+        target = create(:user, :unit_admin, unit: unit)
+        patch user_path(target), params: { user: { role: "commander", unit_id: unit.id } }
+        expect(response).to redirect_to(users_path)
+        expect(target.reload.role).to eq("commander")
+      end
+    end
+
     describe "T46: không tự xóa chính mình" do
       it "redirect alert khi xóa current_user" do
         delete user_path(system_admin)
@@ -109,6 +125,13 @@ RSpec.describe "Users", type: :request do
       tech2 = create(:user, username: "tech2")
       patch user_path(tech2), params: { user: { display_name: "T2 New" } }
       expect(tech2.reload.display_name).to eq("T2 New")
+    end
+
+    it "được phép nâng vai trò user khác thành technician" do
+      target = create(:user, :unit_admin, unit: unit)
+      patch user_path(target), params: { user: { role: "technician" } }
+      expect(response).to redirect_to(users_path)
+      expect(target.reload.role).to eq("technician")
     end
   end
 
