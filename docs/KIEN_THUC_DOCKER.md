@@ -1,6 +1,6 @@
 # Kiến thức Docker — Hệ thống quản lý điện nội bộ Sư đoàn
 
-> **Phiên bản:** 1.8.1
+> **Phiên bản:** 1.8.2
 > **Ngày:** 07/06/2026
 > **Đối tượng:** Developer hoặc người muốn hiểu hệ thống chạy thế nào ở mọi môi trường.
 > **Tiền đề:** Bạn biết code Rails nhưng chưa biết Docker và chưa từng deploy.
@@ -306,7 +306,7 @@ Script tạo cron job chạy mỗi ngày 2:00 sáng:
 
 ### bin/prepare-delivery
 
-Tạo bản sạch để ship cho khách. Source code gốc chứa file phát triển (CLAUDE.md, AGENTS.md, CONTRIBUTING.md, .claude/) và dấu vết AI trong git history. Script:
+Tạo bản sạch để ship cho khách. Source code gốc chứa file phát triển (CLAUDE.md, AGENTS.md, CONTRIBUTING.md, .claude/, docs/superpowers/) và dấu vết AI trong git history. Script:
 1. Clone repo
 2. Xóa dấu vết AI khỏi commit messages
 3. Xóa file phát triển
@@ -831,6 +831,10 @@ docker compose up -d      # Tạo lại (database trống, 2 tài khoản mặc 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.8.2 (07/06/2026)
+
+- Mục 7 (bin/prepare-delivery): bản giao khách xóa thêm cả thư mục `docs/superpowers/` (spec + plan nội bộ của quy trình phát triển) — tránh lộ quy trình/tooling/chi phí nội bộ ra khách; cập nhật danh sách file phát triển bị xóa.
 
 ### v1.8.1 (07/06/2026)
 

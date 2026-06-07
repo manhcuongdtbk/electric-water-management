@@ -53,8 +53,8 @@ if len(commit.parents) > 1:
 ' \
   --force --quiet
 
-# 3. Remove Claude files and references
-rm -rf .claude CLAUDE.md AGENTS.md CONTRIBUTING.md
+# 3. Remove development/internal files and references
+rm -rf .claude CLAUDE.md AGENTS.md CONTRIBUTING.md docs/superpowers
 sed -i '' '/[Cc]laude/d' .gitignore
 
 # 4. Remove Claude references from file contents
