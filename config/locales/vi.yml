@@ -418,6 +418,8 @@ vi:
       match: "Mật khẩu xác nhận khớp"
   application:
     name: "Hệ thống quản lý điện nội bộ Sư đoàn"
+  system_info:
+    excel_footer: "Phiên bản hệ thống: v%{version} · Môi trường ứng dụng: %{application_environment}"
   meter_entries:
     flash:
       saved: "Đã lưu chỉ số công tơ."

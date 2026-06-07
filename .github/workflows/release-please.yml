@@ -1,0 +1,25 @@
+name: release-please
+
+# P3 — release automation (ADR-008). Runs on pushes to `main` (final releases
+# only; rc/UAT deferred to P4). Maintains a human-gated Release PR that bumps the
+# version, updates CHANGELOG.md + version.txt, and on merge tags vX.Y.Z + creates
+# the GitHub Release. Uses the default GITHUB_TOKEN (free); the Release PR it opens
+# does not re-trigger other workflows — fine, it only edits changelog/version.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # Default branch is `develop`; releases live on `main`, so target it explicitly.
+          target-branch: main

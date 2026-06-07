@@ -54,7 +54,13 @@ class UsersController < ApplicationController
   end
 
   def update
-    if @user.update(update_user_params)
+    @user.assign_attributes(update_user_params)
+    # Vai trò KHÔNG đi qua mass assignment (xem update_user_params). Gán tường minh
+    # rồi authorize! lại với vai trò mới để Ability (vd: system_admin không được tạo
+    # technician) chặn được nâng quyền — set_user chỉ authorize trên vai trò cũ.
+    @user.role = params[:user][:role] if params[:user].key?(:role)
+    authorize!(:update, @user)
+    if @user.save
       redirect_to users_path,
         notice: t("flash.record_updated", resource: t("resources.user"), name: @user.username)
     else
@@ -94,7 +100,9 @@ class UsersController < ApplicationController
   end
 
   def update_user_params
-    permitted = [:display_name, :role, :unit_id]
+    # :role bị loại khỏi permit (mass assignment) vì là thuộc tính nâng quyền —
+    # nó được gán tường minh và authorize! lại trong #update.
+    permitted = [:display_name, :unit_id]
     permitted += [:password, :password_confirmation] if params[:user][:password].present?
     attrs = params.require(:user).permit(*permitted)
 

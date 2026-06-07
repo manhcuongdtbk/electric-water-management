@@ -1,0 +1,69 @@
+name: CI
+
+# P2 — minimal STATIC CI (ADR-007, ADR-011). Only checks that need NO Postgres,
+# NO browser, and NO app boot. Test runs (rspec incl. system specs, schema-drift,
+# zeitwerk:check) plus runner/cache/headless tuning are deferred to the "CI spec"
+# piece (Backlog in quy-trinh-release-design.md). Per ADR-007 this CI only SHOWS
+# status (a private repo has no free branch protection) — single-merger discipline
+# enforces the rules.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+# Cancel superseded runs on the same pull request (saves Actions minutes).
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ruby-checks:
+    name: Ruby static checks (rubocop, brakeman, bundler-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version # setup-ruby accepts the filename as a special value
+          bundler-cache: false # caching deferred to the "CI spec" piece
+      - name: Install gems (no cache — cache tuning belongs to the CI-spec piece)
+        run: bundle install --jobs 4
+      - name: rubocop
+        if: ${{ !cancelled() }}
+        run: bundle exec rubocop --no-server --format progress
+      - name: brakeman
+        if: ${{ !cancelled() }}
+        run: bundle exec brakeman --exit-on-warn --no-progress --quiet
+      - name: bundler-audit
+        if: ${{ !cancelled() }}
+        # Project binstub: appends `--config config/bundler-audit.yml` (the ignore list).
+        run: bin/bundler-audit check --update
+
+  commitlint:
+    name: Conventional Commits (commitlint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # need full history to lint the pull request's commit range
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*" # always the latest Node LTS
+      - name: commitlint
+        run: >
+          npx --yes
+          -p @commitlint/cli
+          -p @commitlint/config-conventional
+          commitlint
+          --from ${{ github.event.pull_request.base.sha }}
+          --to ${{ github.event.pull_request.head.sha }}
+
+  branch-source-guard:
+    name: Branch-source guard (Git Flow)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the pull request source for a main target
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: bash .github/scripts/check-branch-source.sh

@@ -1,0 +1,16 @@
+{
+  "ignored_warnings": [
+    {
+      "fingerprint": "9642309f093c186cf4d0b33a3b927c176cf73f65bcb659583d4900288794d457",
+      "note": "Reviewed (P2 follow-up): false positive. ListSortable#apply_sort interpolates into Arel.sql only values taken from a hardcoded SORT_COLUMNS allowlist (resolved via allowed.key?/allowed[]); user input controls only the lookup key and the ASC/DESC whitelist, never the SQL fragment."
+    },
+    {
+      "fingerprint": "b9797b1c4cecad3beb00efdd081257bef8fa2aefff98095b02cd9bfc93ede21c",
+      "note": "Reviewed (P2 follow-up): false positive. UsersController#create permits :role but authorize!(:create, @user) runs after User.new(create_user_params), so the Ability (e.g. system_admin cannot create a technician) is enforced on the assigned role. Controller is restricted to system_admin/technician via require_account_manager!."
+    },
+    {
+      "fingerprint": "fd0016e86683991ecff7161b8beefdc17c37e4add7d6770500d570fdbc7de5a2",
+      "note": "Reviewed (P2 follow-up): false positive. The default-sort branch of ListSortable#apply_sort interpolates allowed.fetch(col) (a hardcoded SORT_COLUMNS value) and a direction, both derived from the controller's literal `default:` argument, not from user input."
+    }
+  ]
+}
