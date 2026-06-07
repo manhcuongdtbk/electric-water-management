@@ -118,7 +118,8 @@ bin/docker prspec:setup                 # Tạo databases cho test song song (ch
 | `docs/V2_CHIEU_TEST.md` | 12 chiều kiểm thử |
 | `docs/KIEN_THUC_DOCKER.md` | Kiến thức Docker, 4 môi trường, deploy |
 | `docs/HUONG_DAN_DEPLOY.md` | Hướng dẫn deploy production (cho kỹ thuật viên) |
-| `CLAUDE.md` | Quy tắc code, convention |
+| `AGENTS.md` | Quy ước code và quy trình — nguồn canonical (Claude Code đọc qua `CLAUDE.md` `@import`) |
+| `CONTRIBUTING.md` | Quy trình đóng góp cho người (Git Flow, Conventional Commits, pair local) |
 
 **Cập nhật ảnh hướng dẫn sử dụng** khi giao diện thay đổi:
 
