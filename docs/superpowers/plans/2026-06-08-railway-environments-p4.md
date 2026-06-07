@@ -14,8 +14,9 @@
 
 | Ký hiệu | Nghĩa |
 |---|---|
-| **(MCP)** | Tôi chạy qua Railway MCP tool — *cần bạn cho phép từng call* |
-| **(DASH)** | **Bạn** thao tác trong Railway dashboard (MCP không làm được: đổi tên env, chọn nhánh deploy, đặt prefix domain, duyệt staged changes) |
+| **(MCP)** | Tôi chạy qua Railway MCP tool (đã xác thực sẵn) |
+| **(API)** | Tôi gọi Railway GraphQL API bằng token bạn cấp (xem "Phương pháp thực thi") — cho các thao tác MCP thiếu: đặt nhánh deploy, trigger deploy bản staged, (có thể) đổi tên env |
+| **(DASH)** | **Fallback hiếm** — chỉ khi API không hỗ trợ (đổi tên env nếu schema không cho; prefix domain đẹp). Tôi báo rõ khi cần |
 | **(GIT)** | Lệnh git trong worktree; **push cần bạn duyệt** |
 | **(VERIFY)** | Bước kiểm chứng — không đổi gì |
 
@@ -29,6 +30,43 @@
 - Postgres service (env hiện tại): `2bf2d328-5e3c-495a-b58e-db931960bee9`
 - Tag ghim cho `mirror`: **`v1.0.0`** (= phiên bản đang ở Mini PC production)
 - Project cũ `electric-water-management-v1` (`0ebff64c-...`): **không đụng** (idle)
+
+---
+
+## Phương pháp thực thi (chốt 2026-06-08): token + GraphQL API
+
+Chủ dự án chọn: cấp Railway API token để tôi làm tối đa qua API, hạn chế thao tác dashboard. Mọi bước **(DASH)** trong các Task dưới được thay bằng **(API)** theo bảng ánh xạ này; **(DASH)** chỉ còn là fallback hiếm.
+
+**Token (bạn tạo, KHÔNG dán vào chat):**
+1. Tạo **Account token** tại https://railway.com/account/tokens.
+2. Lưu vào file NGOÀI repo, không in ra màn hình:
+   ```bash
+   printf '%s' 'PASTE_TOKEN_HERE' > ~/.railway-p4-token && chmod 600 ~/.railway-p4-token
+   ```
+3. Báo tôi "token sẵn sàng". Tôi dùng inline `RAILWAY_TOKEN=$(cat ~/.railway-p4-token)`, **không in token, không commit**.
+4. **Xong P4:** `rm ~/.railway-p4-token` + **thu hồi token** trong Railway. Account token có quyền toàn tài khoản → chỉ dùng phiên này, thu hồi ngay.
+
+**Endpoint:** `https://backboard.railway.com/graphql/v2`, header `Authorization: Bearer $RAILWAY_TOKEN`. Service id dùng chung mọi env (app `14003ec0-9bff-497e-85d5-968549a9c070`, Postgres `2bf2d328-5e3c-495a-b58e-db931960bee9`); chỉ `environmentId` khác.
+
+**Ánh xạ thao tác → công cụ:**
+
+| Thao tác | Công cụ |
+|---|---|
+| Tạo (duplicate) env `development`/`acceptance` | (MCP) `create_environment(source_environment_id=1d6d64d6…)` |
+| Đặt nhánh deploy (`develop`, `production`) | (API) `serviceConnect(id, {repo, branch})` hoặc field branch trong `serviceInstanceUpdate` — **introspect trước** |
+| Đặt `APPLICATION_ENVIRONMENT_LABEL` | (MCP) `set_variables` (hoặc API `variableCollectionUpsert`) |
+| Bật sleep | (MCP) `update_service(sleep_application:true)` |
+| Trigger deploy / duyệt bản staged | (API) `serviceInstanceDeployV2(serviceId, environmentId[, commitSha])` |
+| Domain | (MCP) `generate_domain` / (API) `serviceDomainCreate` — **chỉ tạo domain tự sinh**; prefix đẹp `-mirror/-acceptance/-development` chỉ sửa được trong dashboard (không bắt buộc) |
+| Đổi tên env `production`→`mirror` | (API) nếu schema có mutation rename; nếu không → 1 click (DASH) hoặc giữ tên `production` + label `Mirror` |
+
+**Bước 0 — introspection (chạy trước khi đổi branch/rename):**
+```graphql
+query { __type(name:"ServiceInstanceUpdateInput"){ inputFields{ name } } }   # tìm field đặt branch/source
+query { __type(name:"Mutation"){ fields{ name } } }                          # tìm environment* (rename/update)
+```
+
+> **Còn 0–2 click dashboard tối đa** (chỉ khi API không hỗ trợ rename / muốn prefix domain đẹp). Tôi sẽ báo rõ nếu gặp.
 
 ---
 
