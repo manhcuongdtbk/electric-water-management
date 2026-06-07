@@ -65,6 +65,20 @@ RSpec.describe "Users", type: :request do
         expect(response).to redirect_to(users_path)
         expect(User.find_by(username: "newAdmin")).to be_present
       end
+
+      it "không cho tạo tài khoản technician" do
+        post users_path, params: {
+          user: {
+            username: "newTech",
+            display_name: "Kỹ thuật mới",
+            role: "technician",
+            password: "Secure@123",
+            password_confirmation: "Secure@123"
+          }
+        }
+        expect(response).to redirect_to(root_path)
+        expect(User.find_by(username: "newTech")).to be_nil
+      end
     end
 
     describe "T66: system_admin không quản lý technician" do
