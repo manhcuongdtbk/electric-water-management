@@ -243,5 +243,12 @@ wb = xlsx_package.workbook
       sheet.add_row total_row, style: total_styles
     end
 
+    # Đóng dấu phiên bản để truy vết file xuất về đúng bản phát hành.
+    # Một ô ở cột A, dưới dòng TỔNG — không merge nên không phá cấu trúc bảng.
+    sheet.add_row []
+    version_style = wb.styles.add_style(sz: 9, i: true, fg_color: "9CA3AF")
+    sheet.add_row [I18n.t("system_info.excel_footer", version: SystemInfo.version, application_environment: SystemInfo.application_environment)],
+                  style: [version_style]
+
     sheet.column_widths(*Array.new(total_columns, 14))
   end
