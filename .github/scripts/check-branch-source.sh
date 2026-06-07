@@ -18,12 +18,12 @@ if [ "$base" != "main" ]; then
 fi
 
 case "$head" in
-  release/* | hotfix/*)
-    echo "✓ Pull request to main from '$head' — allowed (Git Flow)."
+  release/* | hotfix/* | release-please--*)
+    echo "✓ Pull request to main from '$head' — allowed (Git Flow / release-please)."
     exit 0
     ;;
   *)
-    echo "✗ Pull request to main may only come from release/* or hotfix/* (ADR-003)."
+    echo "✗ Pull request to main may only come from release/*, hotfix/*, or release-please--* (ADR-003, ADR-008)."
     echo "  Current source: '${head:-<empty>}'."
     echo "  → Retarget to 'develop', or branch from release/* | hotfix/* per Git Flow."
     exit 1
