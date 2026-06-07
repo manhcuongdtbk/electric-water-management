@@ -1,0 +1,68 @@
+name: CI
+
+# P2 — CI TĨNH tối thiểu (ADR-007, ADR-011). Chỉ các kiểm tra KHÔNG cần Postgres,
+# trình duyệt, hay boot app. Phần chạy test (rspec gồm system spec, kiểm schema
+# không lệch, zeitwerk:check) + runner/cache/headless để dành mảnh "CI spec chi
+# tiết" (Backlog trong quy-trinh-release-design.md). Theo ADR-007, CI chỉ HIỆN
+# trạng thái (repo private không có branch protection miễn phí) — kỷ luật một
+# người merge giữ luật.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+# Hủy run cũ khi có thay đổi mới trên cùng pull request (tiết kiệm phút Actions).
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ruby-checks:
+    name: Ruby tĩnh (rubocop, brakeman, bundler-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version # setup-ruby chấp nhận tên file như giá trị đặc biệt
+          bundler-cache: false # Cache để dành mảnh "CI spec chi tiết"
+      - name: Cài gem (không cache — tinh chỉnh cache thuộc mảnh CI spec)
+        run: bundle install --jobs 4
+      - name: rubocop
+        if: ${{ !cancelled() }}
+        run: bundle exec rubocop --no-server --format progress
+      - name: brakeman
+        if: ${{ !cancelled() }}
+        run: bundle exec brakeman --exit-on-warn --no-progress --quiet
+      - name: bundler-audit
+        if: ${{ !cancelled() }}
+        run: bundle exec bundler-audit check --update
+
+  commitlint:
+    name: Conventional Commits (commitlint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Cần đủ lịch sử để lint dải commit của pull request
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: commitlint
+        run: >
+          npx --yes
+          -p @commitlint/cli
+          -p @commitlint/config-conventional
+          commitlint
+          --from ${{ github.event.pull_request.base.sha }}
+          --to ${{ github.event.pull_request.head.sha }}
+
+  branch-source-guard:
+    name: Branch-source guard (Git Flow)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Kiểm tra nguồn pull request đích main
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: bash .github/scripts/check-branch-source.sh
