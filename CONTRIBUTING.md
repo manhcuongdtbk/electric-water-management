@@ -80,9 +80,11 @@ release-please đã được cấu hình (P3): khi `release/*`/`hotfix/*` vào `
 
 **CI tĩnh đã chạy trên mọi pull request (P2):** `rubocop`, `brakeman`, `bundler-audit`, `commitlint`, và **branch-source guard** (chặn pull request đích `main` đến từ nhánh không phải `release/*`/`hotfix/*`). Theo ADR-007, CI chỉ **hiện trạng thái** đỏ/xanh — chưa khoá cứng ở server (repo private không có branch protection miễn phí); kỷ luật một người merge giữ luật.
 
+**CI chạy test đã chạy trên mọi pull request (mảnh "CI spec chi tiết"):** một job `tests` chạy `rspec` (gồm 12 system spec điều khiển headless Chrome), kiểm `db/schema.rb` không lệch, và `rails zeitwerk:check` — trên runner native `ubuntu-latest` + service container Postgres, Chrome qua Selenium Manager. Vẫn theo ADR-007 (chỉ hiện trạng thái). Chi tiết: ADR-012 trong `docs/superpowers/specs/2026-06-07-ci-spec-design.md`.
+
 **release-please đã cấu hình (P3):** workflow `release-please` chạy trên `main` tự mở Release pull request (bump version + `CHANGELOG.md` + `version.txt`), merge thì tự tag + tạo GitHub Release. Phần **rc/UAT để dành P4**.
 
-**Còn ở các giai đoạn sau:** chạy test trên CI (`rspec` gồm system spec, kiểm schema không lệch, `rails zeitwerk:check`) cùng tinh chỉnh runner/cache/headless là **mảnh "CI spec chi tiết"** (Backlog #1 trong release spec); môi trường Railway Nghiệm thu + Mốc + bản rc (P4). Các quy ước ở mục 2–3 ngoài phần CI ép được vẫn giữ bằng kỷ luật + review thủ công.
+**Còn ở các giai đoạn sau:** môi trường Railway Nghiệm thu + Mốc + bản rc (P4); các mảnh SDLC còn lại trong Backlog của release spec. Các quy ước ở mục 2–3 ngoài phần CI ép được vẫn giữ bằng kỷ luật + review thủ công.
 
 ## Tài liệu liên quan
 
