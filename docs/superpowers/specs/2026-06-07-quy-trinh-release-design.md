@@ -1,6 +1,6 @@
 ---
 title: Quy trình phát hành (release process) — Mảnh 1 của SDLC
-version: 0.7.0
+version: 0.8.0
 status: draft (chờ duyệt)
 date: 2026-06-07
 governed_by: 2026-06-07-sdlc-overview-design.md
@@ -207,14 +207,15 @@ flowchart LR
 
 **Mảnh SDLC còn lại (mỗi mảnh 1 spec, làm tuần tự):**
 1. **✅ Đã hiện thực** (P5 — ADR-012, [`2026-06-07-ci-spec-design.md`](2026-06-07-ci-spec-design.md)): phần **chạy test trên CI** sau P2 — `rspec` (gồm system spec headless Chrome), kiểm schema không lệch, `rails zeitwerk:check`; runner native + service container Postgres + Chrome qua Selenium Manager; bật cache. (P2 đã dựng tập tĩnh: rubocop/brakeman/bundler-audit/commitlint/branch-source guard — xem ADR-011 "Phân kỳ triển khai".)
-2. Truy vết / quản lý thay đổi (yêu cầu → thiết kế → test → release).
+2. **🔄 Thiết kế xong, chờ hiện thực** (ADR-013..015, [`2026-06-08-truy-vet-quan-ly-thay-doi-design.md`](2026-06-08-truy-vet-quan-ly-thay-doi-design.md)): truy vết / quản lý thay đổi (yêu cầu → thiết kế → test → release). Hybrid (GitHub Issues cho luồng + repo cho dấu vết bền); anchor yêu cầu `NV-...` thêm dần + chuẩn hoá mục "Truy vết" của spec; template Issue change-request + pull request + ADR. Hiện thực (file template + `CONTRIBUTING.md` + `AGENTS.md`) ở plan kế tiếp.
 3. Vận hành / bảo trì (giám sát production offline, backup, tiếp nhận lỗi khách).
 4. Tiếp nhận công việc (issue/backlog, ưu tiên).
 
-**Cải tiến optional (chưa làm — YAGNI cho quy mô hiện tại):** template ADR/PR/issue; cheat-sheet đầu AGENTS.md; checklist onboarding; lint định dạng ADR trong CI; DORA metrics; tách ADR ra `docs/adr/`.
+**Cải tiến optional (chưa làm — YAGNI cho quy mô hiện tại):** cheat-sheet đầu AGENTS.md; checklist onboarding; lint định dạng ADR trong CI; DORA metrics; tách ADR ra `docs/adr/`. *(Template ADR/PR/issue đã chuyển vào Backlog #2 — ADR-015.)*
 
 ## Changelog
 
+- **0.8.0 (2026-06-08):** Backlog #2 ("Truy vết / quản lý thay đổi") đánh dấu **thiết kế xong, chờ hiện thực** — trỏ tới spec mới [`2026-06-08-truy-vet-quan-ly-thay-doi-design.md`](2026-06-08-truy-vet-quan-ly-thay-doi-design.md) (ADR-013 Hybrid Issues+repo; ADR-014 anchor yêu cầu + truy vết; ADR-015 template Issue/pull request/ADR). Chuyển "template ADR/PR/issue" từ danh mục optional sang Backlog #2 (ADR-015).
 - **0.7.0 (2026-06-07):** Backlog #1 ("CI spec chi tiết") đánh dấu **đã hiện thực** (ADR-012) cho khớp ghi chú "Triển khai (P5)" trong ADR-011 — bỏ mâu thuẫn "còn lại" trong Backlog.
 - **0.6.0 (2026-06-07):** ADR-011 thêm ghi chú "Triển khai (P5)" trỏ tới ADR-012 (`2026-06-07-ci-spec-design.md`) — phần chạy test trên CI (rspec/system + kiểm schema không lệch + zeitwerk; runner native + service container Postgres + Chrome qua Selenium Manager; bật cache gem) đã hiện thực.
 - **0.5.0 (2026-06-07):** ADR-008 thêm sub-note "Yêu cầu setup" đúc kết khi cắt bản phát hành 1.1.0 — (1) phải bật cài đặt repository "Allow GitHub Actions to create and approve pull requests", nếu không release-please thất bại ở bước tạo Release pull request; (2) `feature`/`fix` phải squash-merge vào `develop` (GitHub không có cách biến merge commit thành "không theo Conventional Commits"; tổ hợp `MERGE_MESSAGE`+`BLANK` bị từ chối HTTP 422) để changelog không trùng dòng — repository đặt `squash_merge_commit_title=PR_TITLE` + `squash_merge_commit_message=BLANK`, và đặt tiêu đề `release/*`/`hotfix/*`/merge-back bằng tiền tố không sinh changelog; trỏ chéo `CONTRIBUTING.md` mục 2.
