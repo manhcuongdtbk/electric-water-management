@@ -27,4 +27,14 @@ RSpec.describe "Version", type: :request do
       expect(response.body).to include(SystemInfo.environment_label)
     end
   end
+
+  describe "hiển thị phiên bản ở màn hình đăng nhập" do
+    it "hiện phiên bản trên trang đăng nhập (chưa đăng nhập)" do
+      get new_user_session_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("v#{ElectricWaterManagement::VERSION}")
+      expect(response.body).to include(SystemInfo.environment_label)
+    end
+  end
 end
