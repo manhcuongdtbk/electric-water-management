@@ -20,6 +20,11 @@ Theo ADR-003 (xem `docs/superpowers/specs/2026-06-07-quy-trinh-release-design.md
 - `hotfix/*` — cắt từ `main` khi production lỗi gấp.
 - **Merge-back bắt buộc:** sau khi `release/*` hoặc `hotfix/*` hoàn tất, phải merge ngược về `develop` để bản vá không bị mất.
 - **Cổng nhánh:** pull request đích `main` chỉ được đến từ `release/*` hoặc `hotfix/*` (branch-source guard sẽ ép ở CI — xem ADR-011).
+- **Kiểu merge pull request** (quan trọng cho changelog của release-please):
+    - feature/fix → `develop`: dùng **Squash and merge** — mỗi pull request gộp thành **1 commit conventional**, changelog 1 dòng/PR, **không bị trùng dòng**.
+    - `release/*`/`hotfix/*` → `main` và merge-back `main` → `develop`: dùng **Create a merge commit** — giữ từng commit để release-please liệt kê đầy đủ trong changelog.
+    - *Vì sao squash cho feature:* GitHub **không có** cấu hình nào làm merge commit "không-conventional" (mọi tổ hợp title/message đều đưa tiêu đề pull request vào merge commit). Nếu merge feature bằng merge-commit, release-please đếm **cả** commit thật **lẫn** merge commit → **trùng dòng**. Squash chỉ tạo 1 commit nên tránh được. (Repo đã đặt squash: title = tiêu đề pull request, body để trống.)
+    - Đặt tiêu đề pull request của `release/*`/`hotfix/*`/merge-back bằng prefix **không phải loại changelog** (ví dụ `release:`) để merge commit của chúng không thêm dòng thừa vào changelog.
 
 ## 3. Conventional Commits (commit message tiếng Anh)
 
