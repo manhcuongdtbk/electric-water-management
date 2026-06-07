@@ -1,6 +1,6 @@
 ---
 title: Tự báo cáo phiên bản (application self-version reporting)
-version: 0.5.0
+version: 0.6.0
 status: draft (chờ duyệt)
 date: 2026-06-07
 ---
@@ -30,10 +30,10 @@ module SystemInfo
   version_file = Rails.root.join("version.txt")
   VERSION = ((File.exist?(version_file) ? File.read(version_file).strip.presence : nil) || "unknown").freeze
 
-  def self.version           = VERSION
-  def self.environment_label = ENV["APP_ENVIRONMENT_LABEL"]&.strip.presence || Rails.env.to_s.capitalize
-  def self.to_h              = { version:, environment: environment_label, rails_env: Rails.env.to_s }
-  def self.log_tag           = "v#{version} #{environment_label}"
+  def self.version         = VERSION
+  def self.app_environment = ENV["APP_ENVIRONMENT_LABEL"]&.strip.presence || Rails.env.to_s.capitalize
+  def self.to_h            = { version:, app_environment:, rails_env: Rails.env.to_s }
+  def self.log_tag         = "v#{version} #{app_environment}"
 end
 ```
 
@@ -50,7 +50,7 @@ Chỉ ghi **một dòng log khởi động** (xem ADR-004), không định nghĩ
 Rails.application.config.after_initialize do
   Rails.logger.info(
     "Booting #{Rails.application.class.module_parent_name} version=#{SystemInfo.version} " \
-    "environment=#{SystemInfo.environment_label} rails_env=#{Rails.env}"
+    "app_environment=#{SystemInfo.app_environment} rails_env=#{Rails.env}"
   )
 end
 ```
@@ -63,7 +63,7 @@ end
 |---|--------|--------|----------|
 | 1a | **Đáy sidebar** | `app/views/layouts/_sidebar.html.erb` (đổi `<aside>` thành `flex flex-col`, `<nav>` `flex-1`, khối phiên bản ghim đáy) | **một dòng**, chữ nhỏ/mờ: `v1.0.1 · Production` (`whitespace-nowrap`) — vừa sidebar, súc tích; mọi trang sau đăng nhập, mọi vai trò |
 | 1b | **Màn hình đăng nhập** | `app/views/devise/sessions/new.html.erb` | cùng dòng đó, dưới phụ đề — nhìn thấy **trước khi** đăng nhập (quan trọng cho người nghiệm thu) |
-| 2 | **Endpoint `/version` (JSON)** | route `get "version" => "version#show"`, `VersionController` bỏ qua `authenticate_user!` → công khai | `{"version":"1.0.1","environment":"Acceptance","rails_env":"production"}` |
+| 2 | **Endpoint `/version` (JSON)** | route `get "version" => "version#show"`, `VersionController` bỏ qua `authenticate_user!` → công khai | `{"version":"1.0.1","app_environment":"Acceptance","rails_env":"production"}` |
 | 3 | **Log** | dòng khởi động trong initializer + `config.log_tags` (production) thêm lambda gộp version + môi trường | mọi dòng log request + báo cáo lỗi mang `[v1.0.1 Production]`; một dòng khởi động `Booting ... version=... environment=...` |
 | 4 | **Excel** | `app/views/billing/show.xlsx.axlsx` — thêm dòng trống + dòng lấy từ i18n `system_info.excel_footer` (`Phiên bản hệ thống: v1.0.1 · Môi trường: Production`) **dưới** dòng `TỔNG` (kiểu chữ nhỏ/xám, không merge → không phá bảng) |
 
@@ -115,7 +115,7 @@ end
 
 `config/locales/vi.yml` — thêm khóa cho nhãn tiếng Việt của Excel footer (giá trị môi trường vẫn tiếng Anh):
 
-- `system_info.excel_footer: "Phiên bản hệ thống: v%{version} · Môi trường: %{environment}"` — template axlsx gọi `I18n.t("system_info.excel_footer", version:, environment:)`. **Không hard-code** chuỗi tiếng Việt trong view.
+- `system_info.excel_footer: "Phiên bản hệ thống: v%{version} · Môi trường: %{app_environment}"` — template axlsx gọi `I18n.t("system_info.excel_footer", version:, app_environment:)`. **Không hard-code** chuỗi tiếng Việt trong view.
 - Sidebar/đăng nhập chỉ hiển thị `vX.Y.Z · <môi trường>` (không có chữ tiếng Việt) → không cần khóa i18n.
 - **Không** cần khóa i18n cho tên môi trường (đã là tiếng Anh, lấy từ biến môi trường / `Rails.env`).
 
@@ -128,7 +128,7 @@ end
 
 ## Kiểm thử (mỗi bề mặt một spec)
 
-- `spec/lib/system_info_spec.rb` — `environment_label` khi có `APP_ENVIRONMENT_LABEL` vs. khi rơi về `Rails.env.capitalize`; hình dạng `to_h`; `version` đọc đúng hằng số.
+- `spec/lib/system_info_spec.rb` — `app_environment` khi có `APP_ENVIRONMENT_LABEL` vs. khi rơi về `Rails.env.capitalize`; hình dạng `to_h`; `version` đọc đúng hằng số.
 - `spec/requests/version_spec.rb` — `GET /version` trả JSON đúng trường, **hoạt động khi chưa đăng nhập**.
 - Hiển thị ở sidebar + đăng nhập — request spec kiểm tra body chứa `v#{version}` trên một trang đã đăng nhập và trên trang đăng nhập (`new_user_session_path`).
 - Excel — mở rộng `spec/requests/billing_spec.rb` dùng `parse_xlsx` để xác nhận chuỗi phiên bản có trong các dòng.
@@ -146,6 +146,7 @@ end
 
 ## Lịch sử thay đổi
 
+- 0.6.0 (2026-06-07): Khử nhầm lẫn "environment" — đổi `SystemInfo.environment_label` → `SystemInfo.app_environment`, key JSON `environment` → `app_environment`, log khởi động `app_environment=`, biến i18n `%{app_environment}`. Thêm glossary "app environment vs Rails environment" vào `AGENTS.md`.
 - 0.5.0 (2026-06-07): Sau review code của chủ dự án — `SystemInfo` **tự sở hữu** việc đọc `version.txt` (`SystemInfo::VERSION`), bỏ `ElectricWaterManagement::VERSION` để không phụ thuộc tên app (an toàn khi đổi tên); chuyển `module_function` → `def self.`; dòng log khởi động lấy tên app động qua `module_parent_name`; ghi rõ `log_tags` chỉ ở production.
 - 0.4.0 (2026-06-07): Sau review code của chủ dự án trước khi mở PR — sidebar hiển thị version + môi trường trên **một dòng** (`whitespace-nowrap`, vẫn vừa sidebar); nhãn Excel footer dùng **i18n** (`system_info.excel_footer`), không hard-code chuỗi tiếng Việt.
 - 0.3.0 (2026-06-07): Sau review của chủ dự án — chuyển `SystemInfo` sang `lib/system_info.rb` (giữ là module, không trộn với class trong `app/services/`); sidebar hiển thị hai dòng xếp dọc súc tích cho sidebar hẹp.
