@@ -72,6 +72,7 @@ Expected: nhánh hiện tại là `feature/p3-release-please`, đỉnh là merge
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "release-type": "simple",
   "include-v-in-tag": true,
+  "include-component-in-tag": false,
   "packages": {
     ".": {
       "package-name": "electric-water-management"
