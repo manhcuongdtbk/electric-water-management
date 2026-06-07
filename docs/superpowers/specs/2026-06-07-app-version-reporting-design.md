@@ -1,6 +1,6 @@
 ---
 title: Tự báo cáo phiên bản (application self-version reporting)
-version: 0.1.0
+version: 0.2.0
 status: draft (chờ duyệt)
 date: 2026-06-07
 ---
@@ -35,37 +35,37 @@ end
 - Thiếu file hoặc file rỗng → trả `"unknown"`, ứng dụng vẫn khởi động bình thường (không raise).
 - Initializer cũng ghi **một dòng log khởi động** (xem ADR-004).
 
-### 2. PORO `SystemInfo` — `app/models/system_info.rb`
+### 2. PORO `SystemInfo` — `app/services/system_info.rb`
 
-Một module gom phiên bản + nhãn môi trường; là nơi duy nhất view / endpoint / Excel / log gọi tới.
+Một **module** không trạng thái, gom phiên bản + nhãn môi trường; là nơi duy nhất view / endpoint / Excel / log gọi tới. Đặt cạnh các info-provider PORO có sẵn (`dashboard_summary.rb`, `period_comparison.rb`).
 
 ```ruby
 module SystemInfo
   module_function
 
   def version           = ElectricWaterManagement::VERSION
-  def environment_label = ENV["APP_ENVIRONMENT_LABEL"].presence ||
-                          I18n.t("system_info.environments.#{Rails.env}", default: Rails.env)
+  def environment_label = ENV["APP_ENVIRONMENT_LABEL"].presence || Rails.env.to_s.capitalize
   def to_h              = { version:, environment: environment_label, rails_env: Rails.env }
 end
 ```
 
-- Vận hành (ops) đặt `APP_ENVIRONMENT_LABEL` cho từng môi trường: Railway `Nghiệm thu` / `Mốc`, Mini PC `Sản xuất`.
-- Khi biến môi trường trống → dùng nhãn dự phòng theo `Rails.env` từ i18n (Development/Test).
+- **Nhãn môi trường là tiếng Anh** (xem ADR-003). Vận hành (ops) đặt `APP_ENVIRONMENT_LABEL` cho từng môi trường: Railway ví dụ `Acceptance` / `Mirror`, Mini PC `Production`.
+- Khi biến môi trường trống → dự phòng `Rails.env.capitalize` (`Development` / `Test` / `Production`) — vẫn tiếng Anh, không cần i18n cho tên môi trường.
 - `SystemInfo` là PORO (không phải ActiveRecord) → dễ test, không chạm database.
 
 ---
 
-## Bốn bề mặt hiển thị/trả về
+## Ba bề mặt hiển thị + endpoint + log
 
 | # | Bề mặt | Vị trí | Nội dung |
 |---|--------|--------|----------|
-| 1a | **Đáy sidebar** | `app/views/layouts/_sidebar.html.erb` (đổi `<aside>` thành `flex flex-col`, `<nav>` `flex-1`, khối phiên bản ghim đáy) | dòng chữ xám nhỏ `v1.0.1 · Nghiệm thu` — mọi trang sau đăng nhập, mọi vai trò |
+| 1a | **Đáy sidebar** | `app/views/layouts/_sidebar.html.erb` (đổi `<aside>` thành `flex flex-col`, `<nav>` `flex-1`, khối phiên bản ghim đáy) | dòng chữ xám nhỏ `v1.0.1 · Production` — mọi trang sau đăng nhập, mọi vai trò |
 | 1b | **Màn hình đăng nhập** | `app/views/devise/sessions/new.html.erb` | cùng dòng đó, dưới phụ đề — nhìn thấy **trước khi** đăng nhập (quan trọng cho người nghiệm thu) |
-| 1c | **Trang "Thông tin hệ thống"** | route `resource :system_info, only: [:show]` → `SystemInfoController#show`; liên kết sidebar trong nhóm `:system` | đầy đủ: phiên bản, môi trường, Rails env. Guard cấp trang: **chỉ TECH + SA** (khớp nhóm `:system`) |
-| 2 | **Endpoint `/version` (JSON)** | route `get "version" => "version#show"`, `VersionController` bỏ qua `authenticate_user!` → công khai | `{"version":"1.0.1","environment":"Nghiệm thu","rails_env":"production"}` |
-| 3 | **Log** | dòng khởi động trong initializer + `config.log_tags` (production) thêm lambda `->(req){ "v#{ElectricWaterManagement::VERSION}" }` | mọi dòng log request + báo cáo lỗi mang `[v1.0.1]`; một dòng khởi động `Booting ... version=... environment=...` |
-| 4 | **Excel** | `app/views/billing/show.xlsx.axlsx` — thêm dòng trống + dòng `Phiên bản hệ thống: v1.0.1 · Môi trường: Nghiệm thu` **dưới** dòng `TỔNG` (kiểu chữ nhỏ/xám, không merge → không phá bảng) |
+| 2 | **Endpoint `/version` (JSON)** | route `get "version" => "version#show"`, `VersionController` bỏ qua `authenticate_user!` → công khai | `{"version":"1.0.1","environment":"Acceptance","rails_env":"production"}` |
+| 3 | **Log** | dòng khởi động trong initializer + `config.log_tags` (production) thêm lambda gộp version + môi trường | mọi dòng log request + báo cáo lỗi mang `[v1.0.1 Production]`; một dòng khởi động `Booting ... version=... environment=...` |
+| 4 | **Excel** | `app/views/billing/show.xlsx.axlsx` — thêm dòng trống + dòng `Phiên bản hệ thống: v1.0.1 · Môi trường: Production` **dưới** dòng `TỔNG` (kiểu chữ nhỏ/xám, không merge → không phá bảng) |
+
+> Nhãn tiếng Việt bao quanh (sidebar/Excel: "Phiên bản hệ thống", "Môi trường") giữ tiếng Việt; chỉ **giá trị môi trường** là tiếng Anh.
 
 ---
 
@@ -75,10 +75,12 @@ end
 
 - **Trạng thái:** Proposed · 2026-06-07
 - **Bối cảnh:** Mục tiêu cao nhất là để người nghiệm thu phân biệt được hai môi trường Railway gần giống hệt. Mọi trang sau đăng nhập đều có sidebar; chưa có footer.
-- **Quyết định:** Hiển thị ở **(a) đáy sidebar** (mọi trang, mọi vai trò), **(b) màn hình đăng nhập** (trước khi đăng nhập), và **(c) trang "Thông tin hệ thống"** dành cho quản trị (TECH + SA).
-- **Lý do:** Tận dụng sidebar có sẵn ở mọi trang thay vì thêm footer mới; màn hình đăng nhập cho người nghiệm thu thấy ngay khi mở app; trang admin cho thông tin đầy đủ + chỗ mở rộng sau này.
-- **Tradeoff:** (+) Phủ trước-và-sau đăng nhập, không thêm thành phần layout mới. (−) Phải sửa cấu trúc flex của sidebar.
-- **Phương án đã loại:** *Footer toàn cục* — loại: thêm thành phần layout mới trong khi sidebar đã có mặt khắp nơi.
+- **Quyết định:** Hiển thị ở **(a) đáy sidebar** (mọi trang, mọi vai trò) và **(b) màn hình đăng nhập** (trước khi đăng nhập). **Không** làm trang admin "Thông tin hệ thống" riêng.
+- **Lý do:** Sidebar có mặt ở mọi trang nên không cần footer mới; màn hình đăng nhập cho người nghiệm thu thấy ngay khi mở app. Một trang admin riêng là **thừa** khi phiên bản đã hiện khắp nơi và đã có endpoint `/version` cho thông tin máy đọc — thêm route/controller/view/mục sidebar/guard + test 6 vai trò mà giá trị tăng thêm rất ít (YAGNI).
+- **Tradeoff:** (+) Phủ trước-và-sau đăng nhập, không thêm thành phần layout mới, không đụng `SettingsAccessGuard`. (−) Phải sửa cấu trúc flex của sidebar.
+- **Phương án đã loại:**
+  - *Footer toàn cục* — loại: thêm thành phần layout mới trong khi sidebar đã có mặt khắp nơi.
+  - *Trang admin "Thông tin hệ thống" riêng* — loại: thừa so với sidebar + login + `/version`.
 
 ### ADR-002: Dạng endpoint trả phiên bản
 
@@ -86,49 +88,46 @@ end
 - **Bối cảnh:** Script deploy và hỗ trợ cần xác minh bản đang chạy bằng cách gọi HTTP (kể cả Mini PC offline trong mạng nội bộ). Đã có sẵn health check `/up` của Rails (đã bị tắt log).
 - **Quyết định:** Thêm endpoint riêng `GET /version` trả **JSON** `{version, environment, rails_env}`, **công khai (không cần đăng nhập)**.
 - **Lý do:** JSON cho máy đọc dễ; tách khỏi `/up` để không trộn ngữ nghĩa health-check với version; công khai để script/hỗ trợ gọi không cần phiên đăng nhập.
-- **Tradeoff:** (+) Máy đọc dễ, ổn định. (−) Lộ số phiên bản công khai — chấp nhận được với hệ nội bộ; số phiên bản không phải bí mật.
+- **Tradeoff:** (+) Máy đọc dễ, ổn định. (−) Lộ số phiên bản + tên môi trường công khai — chấp nhận được với hệ nội bộ; không phải bí mật.
 - **Phương án đã loại:** *plain text* (kém cấu trúc khi cần thêm trường); *gộp vào `/up`* (trộn ngữ nghĩa, `/up` đã bị tắt log).
 
-### ADR-003: Kèm nhãn môi trường cạnh phiên bản
+### ADR-003: Nhãn môi trường — tiếng Anh, từ biến môi trường
 
 - **Trạng thái:** Proposed · 2026-06-07
-- **Bối cảnh:** Hai môi trường Railway (Nghiệm thu, Mốc) có thể **tạm thời chạy cùng một phiên bản**; khi đó chỉ số phiên bản không đủ để phân biệt.
-- **Quyết định:** Hiển thị/trả thêm **nhãn môi trường** lấy từ biến `APP_ENVIRONMENT_LABEL`, dự phòng theo `Rails.env` qua i18n.
-- **Lý do:** Giải quyết trực tiếp mục tiêu phân biệt hai môi trường; cấu hình đơn giản (một biến môi trường mỗi nơi triển khai).
-- **Tradeoff:** (+) Phân biệt chắc chắn ngay cả khi trùng phiên bản. (−) Phụ thuộc ops đặt đúng biến; nếu quên → rơi về nhãn dự phòng (vẫn an toàn, không lỗi).
+- **Bối cảnh:** Hai môi trường Railway (Nghiệm thu, Mốc) có thể **tạm thời chạy cùng một phiên bản**; khi đó chỉ số phiên bản không đủ để phân biệt. Quy ước dự án: UI tiếng Việt 100%, nhưng tên môi trường là **định danh triển khai/kỹ thuật**.
+- **Quyết định:** Hiển thị/trả thêm **nhãn môi trường bằng tiếng Anh**, lấy từ biến `APP_ENVIRONMENT_LABEL`; dự phòng `Rails.env.capitalize` khi biến trống.
+- **Lý do:** Giải quyết trực tiếp mục tiêu phân biệt hai môi trường; tên môi trường là định danh triển khai (đồng bộ với `Rails.env`, tài liệu deploy, biến môi trường) nên để tiếng Anh — chủ dự án xác nhận ngoại lệ với quy ước UI-tiếng-Việt. Cấu hình đơn giản (một biến mỗi nơi triển khai), không cần i18n cho tên môi trường.
+- **Tradeoff:** (+) Phân biệt chắc chắn ngay cả khi trùng phiên bản; nhất quán với định danh triển khai. (−) Phụ thuộc ops đặt đúng biến; nếu quên → rơi về `Rails.env.capitalize` (vẫn an toàn, không lỗi).
 
-### ADR-004: Cách gắn phiên bản vào log
+### ADR-004: Cách gắn phiên bản (và môi trường) vào log
 
 - **Trạng thái:** Proposed · 2026-06-07
-- **Bối cảnh:** Cần truy vết lỗi báo về từ Mini PC offline tới đúng bản phát hành. Production dùng `TaggedLogging` ra STDOUT, `config.log_tags = [:request_id]`.
-- **Quyết định:** (a) Một **dòng log khởi động** trong initializer ghi cả phiên bản và môi trường; (b) thêm **lambda** `->(req){ "v#{ElectricWaterManagement::VERSION}" }` vào đầu `config.log_tags` (production) → mọi dòng log request + báo cáo lỗi mang tag `[v1.0.1]`. Tag log **chỉ chứa phiên bản** (môi trường nằm ở dòng khởi động) để gọn.
-- **Lý do:** Hằng số định nghĩa trong initializer (chạy *sau* `production.rb`); nhưng lambda của `log_tags` được tính **theo từng request lúc runtime** nên hằng số đã có sẵn — không vướng thứ tự nạp.
-- **Tradeoff:** (+) Mọi dòng log truy vết được về phiên bản. (−) Mỗi dòng dài thêm vài ký tự.
+- **Bối cảnh:** Cần truy vết lỗi báo về từ Mini PC offline / Railway tới đúng bản phát hành **và** đúng môi trường (khi log của nhiều môi trường bị gộp lại). Production dùng `TaggedLogging` ra STDOUT, `config.log_tags = [:request_id]`.
+- **Quyết định:** (a) Một **dòng log khởi động** trong initializer ghi cả phiên bản và môi trường; (b) thêm **lambda** `->(req){ "v#{ElectricWaterManagement::VERSION} #{SystemInfo.environment_label}" }` vào đầu `config.log_tags` (production) → mọi dòng log request + báo cáo lỗi mang **một tag gộp** `[v1.0.1 Production]`. Gộp version + môi trường vào **một** tag để gọn (một cặp ngoặc thay vì hai).
+- **Lý do:** Cả tính năng tồn tại để phân biệt môi trường gần giống nhau; tag chỉ có phiên bản sẽ không cho biết log đến từ Nghiệm thu hay Mốc khi log bị gộp. Hằng số định nghĩa trong initializer (chạy *sau* `production.rb`); nhưng lambda của `log_tags` được tính **theo từng request lúc runtime** nên hằng số đã có sẵn — không vướng thứ tự nạp.
+- **Tradeoff:** (+) Mọi dòng log tự mô tả được phiên bản **và** môi trường. (−) Mỗi dòng dài thêm ít ký tự.
 
 ---
 
 ## i18n
 
-`config/locales/vi.yml` — thêm namespace `system_info:` (tiếng Việt 100%):
+`config/locales/vi.yml` — thêm tối thiểu cho nhãn tiếng Việt bao quanh (giá trị môi trường vẫn tiếng Anh):
 
-- Tiêu đề trang, nhãn mục sidebar.
-- Nhãn các trường (phiên bản, môi trường, Rails env).
-- `environments: { development:, test:, production: }` — nhãn dự phòng khi `APP_ENVIRONMENT_LABEL` trống.
+- Nhãn Excel/sidebar: "Phiên bản hệ thống", "Môi trường" (namespace nhỏ `system_info:`).
+- **Không** cần khóa i18n cho tên môi trường (đã là tiếng Anh, lấy từ biến môi trường / `Rails.env`).
 
-## Phân quyền (khớp `SettingsAccessGuard`)
+## Phân quyền
 
-- Trang `/system_info`: guard cấp trang cho **TECH + SA** (khớp nhóm sidebar `:system`). Thêm mục `system_info` vào `allowed_sidebar_items` cho `technician` và `system_admin`.
 - Endpoint `/version`: **công khai**, `VersionController` bỏ qua `authenticate_user!` (và không vướng `enforce_password_change`).
+- Không thêm trang quản trị nào → không cần đụng `SettingsAccessGuard` hay `allowed_sidebar_items`.
 
 ---
 
 ## Kiểm thử (mỗi bề mặt một spec)
 
-- `spec/models/system_info_spec.rb` — `environment_label` khi có `APP_ENVIRONMENT_LABEL` vs. khi rơi về i18n; hình dạng `to_h`.
+- `spec/services/system_info_spec.rb` — `environment_label` khi có `APP_ENVIRONMENT_LABEL` vs. khi rơi về `Rails.env.capitalize`; hình dạng `to_h`; `version` đọc đúng hằng số.
 - `spec/requests/version_spec.rb` — `GET /version` trả JSON đúng trường, **hoạt động khi chưa đăng nhập**.
-- `spec/requests/system_info_spec.rb` — TECH + SA nhận 200 và thấy phiên bản; **4 vai trò còn lại bị redirect** (guard cấp trang, test đủ 6 vai trò theo AGENTS.md).
-- `spec/helpers/sidebar_helper_spec.rb` — mục `system_info` xuất hiện cho TECH + SA, không cho vai trò khác.
-- Hiển thị ở sidebar + đăng nhập — request spec kiểm tra body chứa `v#{version}` trên một trang đã đăng nhập và trên trang đăng nhập.
+- Hiển thị ở sidebar + đăng nhập — request spec kiểm tra body chứa `v#{version}` trên một trang đã đăng nhập và trên trang đăng nhập (`new_user_session_path`).
 - Excel — mở rộng `spec/requests/billing_spec.rb` dùng `parse_xlsx` để xác nhận chuỗi phiên bản có trong các dòng.
 - Chạy đầy đủ `bin/docker rspec`.
 
@@ -138,9 +137,11 @@ end
 
 - **Không** đụng `version.txt` (release-please sở hữu).
 - Hằng số chỉ đọc lúc khởi động.
-- Các file meta ở gốc repo không có version/changelog riêng; spec này là file mới có ngày trong `docs/superpowers/specs/` nên không cần bump version tài liệu khác.
+- Các file meta ở gốc repo không có version/changelog riêng; spec này là file có ngày trong `docs/superpowers/specs/` — khi sửa thì bump version + thêm changelog (đã làm).
 - Theo Git Flow: nhánh từ `develop`, mở pull request về `develop`. Commit theo Conventional Commits (tiếng Anh). Không push/merge khi chưa được chủ dự án duyệt.
+- **Việc của ops (ghi chú cho P4):** đặt `APP_ENVIRONMENT_LABEL` cho mỗi môi trường triển khai (Railway Nghiệm thu/Mốc, Mini PC) bằng tiếng Anh.
 
 ## Lịch sử thay đổi
 
+- 0.2.0 (2026-06-07): Sau review của chủ dự án — chuyển `SystemInfo` sang `app/services/`; bỏ trang admin "Thông tin hệ thống" (YAGNI); nhãn môi trường dùng tiếng Anh (`Rails.env.capitalize` dự phòng); gộp môi trường vào tag log cùng phiên bản.
 - 0.1.0 (2026-06-07): Bản thảo đầu tiên, chốt sau brainstorming với chủ dự án.
