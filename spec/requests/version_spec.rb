@@ -14,4 +14,17 @@ RSpec.describe "Version", type: :request do
       expect(body["rails_env"]).to eq(Rails.env.to_s)
     end
   end
+
+  describe "hiển thị phiên bản ở sidebar" do
+    let(:user) { create(:user, :system_admin) }
+    before { sign_in user }
+
+    it "hiện phiên bản ở đáy sidebar trên trang đã đăng nhập" do
+      get users_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("v#{ElectricWaterManagement::VERSION}")
+      expect(response.body).to include(SystemInfo.environment_label)
+    end
+  end
 end
