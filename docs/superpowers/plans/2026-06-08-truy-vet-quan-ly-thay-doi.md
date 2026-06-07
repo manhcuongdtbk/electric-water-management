@@ -460,7 +460,7 @@ Expected: chỉ in `link check done`, không có dòng `BROKEN`.
 
 ## Self-Review (đã chạy khi viết plan)
 
-- **Spec coverage:** ADR-013 (luồng Hybrid, nhãn, milestone, lớp khách) → Task 4 mục 9. ADR-014 (anchor `NV-...`, "Truy vết" chuẩn, test↔yêu cầu) → Task 4 mục 9 + Task 1 (PR checklist). ADR-015 (3 template) → Task 1/2/3. Cập nhật Backlog + spec notes → Task 6. Pointer canonical → Task 5.
+- **Spec coverage:** ADR-013 (luồng Hybrid, nhãn, milestone, lớp khách) → Task 4 mục 9. ADR-014 (anchor `NV-...`, "Truy vết" chuẩn, test↔yêu cầu) → Task 4 mục 9 + Task 1 (pull request checklist). ADR-015 (3 template) → Task 1/2/3. Cập nhật Backlog + spec notes → Task 6. Pointer canonical → Task 5.
 - **Placeholder scan:** không có TBD/TODO; mọi file có nội dung đầy đủ.
 - **Type/identifier consistency:** tên file, nhãn (`change-request`/`enhancement`/`bug`/`needs-design`), slug `NV-<chủ-đề>`, version `0.9.0`/`0.2.0` nhất quán giữa các task.
 - **Không đụng code** (Task 7 Step 1 ép kiểm) — khớp tiêu chí "0 thay đổi code/test" của spec.
