@@ -53,12 +53,14 @@ if len(commit.parents) > 1:
 ' \
   --force --quiet
 
-# 3. Remove Claude files and references
-rm -rf .claude CLAUDE.md
+# 3. Remove development/internal files and references
+rm -rf .claude CLAUDE.md AGENTS.md CONTRIBUTING.md docs/superpowers
 sed -i '' '/[Cc]laude/d' .gitignore
 
 # 4. Remove Claude references from file contents
 sed -i '' '/CLAUDE\.md/d' README.md
+sed -i '' '/AGENTS\.md/d' README.md
+sed -i '' '/CONTRIBUTING\.md/d' README.md
 sed -i '' 's/ Giải quyết: convention ghi rõ trong CLAUDE\.md\.//' docs/V2_THIET_KE_HE_THONG.md
 
 # 5. Commit removal
