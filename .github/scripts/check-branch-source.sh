@@ -13,19 +13,19 @@ base="${BASE_REF:-}"
 head="${HEAD_REF:-}"
 
 if [ "$base" != "main" ]; then
-  echo "✓ Pull request đích '${base:-<rỗng>}' (không phải main) — branch-source guard bỏ qua."
+  echo "✓ Pull request targets '${base:-<empty>}' (not main) — branch-source guard skipped."
   exit 0
 fi
 
 case "$head" in
   release/* | hotfix/*)
-    echo "✓ Pull request đích main đến từ '$head' — hợp lệ (Git Flow)."
+    echo "✓ Pull request to main from '$head' — allowed (Git Flow)."
     exit 0
     ;;
   *)
-    echo "✗ Pull request đích main chỉ được đến từ release/* hoặc hotfix/* (ADR-003)."
-    echo "  Nguồn hiện tại: '${head:-<rỗng>}'."
-    echo "  → Đổi đích sang 'develop', hoặc cắt nhánh release/* | hotfix/* theo Git Flow."
+    echo "✗ Pull request to main may only come from release/* or hotfix/* (ADR-003)."
+    echo "  Current source: '${head:-<empty>}'."
+    echo "  → Retarget to 'develop', or branch from release/* | hotfix/* per Git Flow."
     exit 1
     ;;
 esac
