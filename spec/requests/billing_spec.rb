@@ -265,7 +265,7 @@ RSpec.describe "Billing", type: :request do
           xlsx = parse_xlsx(response.body)
           all_text = xlsx.rows.compact.flatten.compact.map(&:to_s).join(" ")
           expect(all_text).to include("Phiên bản hệ thống")
-          expect(all_text).to include("v#{ElectricWaterManagement::VERSION}")
+          expect(all_text).to include("v#{SystemInfo.version}")
         end
       end
 

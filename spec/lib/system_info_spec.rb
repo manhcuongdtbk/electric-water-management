@@ -2,8 +2,9 @@ require "rails_helper"
 
 RSpec.describe SystemInfo do
   describe ".version" do
-    it "trả về hằng số phiên bản đọc từ version.txt" do
-      expect(described_class.version).to eq(ElectricWaterManagement::VERSION)
+    it "trả về hằng số VERSION đã đóng băng" do
+      expect(described_class.version).to equal(SystemInfo::VERSION)
+      expect(SystemInfo::VERSION).to be_frozen
     end
 
     it "khớp nội dung version.txt ở gốc repo" do
@@ -37,7 +38,7 @@ RSpec.describe SystemInfo do
       allow(ENV).to receive(:[]).and_call_original
       allow(ENV).to receive(:[]).with("APP_ENVIRONMENT_LABEL").and_return(nil)
       expect(described_class.to_h).to eq(
-        version: ElectricWaterManagement::VERSION,
+        version: SystemInfo::VERSION,
         environment: Rails.env.to_s.capitalize,
         rails_env: Rails.env.to_s
       )
@@ -48,7 +49,7 @@ RSpec.describe SystemInfo do
     it "gộp phiên bản và môi trường thành một tag" do
       allow(ENV).to receive(:[]).and_call_original
       allow(ENV).to receive(:[]).with("APP_ENVIRONMENT_LABEL").and_return("Acceptance")
-      expect(described_class.log_tag).to eq("v#{ElectricWaterManagement::VERSION} Acceptance")
+      expect(described_class.log_tag).to eq("v#{SystemInfo::VERSION} Acceptance")
     end
   end
 end

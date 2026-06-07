@@ -9,7 +9,7 @@ RSpec.describe "Version", type: :request do
       expect(response).not_to have_http_status(:redirect)
       expect(response.media_type).to eq("application/json")
       body = JSON.parse(response.body)
-      expect(body["version"]).to eq(ElectricWaterManagement::VERSION)
+      expect(body["version"]).to eq(SystemInfo.version)
       expect(body["environment"]).to eq(SystemInfo.environment_label)
       expect(body["rails_env"]).to eq(Rails.env.to_s)
     end
@@ -23,7 +23,7 @@ RSpec.describe "Version", type: :request do
       get users_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("v#{ElectricWaterManagement::VERSION}")
+      expect(response.body).to include("v#{SystemInfo.version}")
       expect(response.body).to include(SystemInfo.environment_label)
     end
   end
@@ -33,7 +33,7 @@ RSpec.describe "Version", type: :request do
       get new_user_session_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("v#{ElectricWaterManagement::VERSION}")
+      expect(response.body).to include("v#{SystemInfo.version}")
       expect(response.body).to include(SystemInfo.environment_label)
     end
   end

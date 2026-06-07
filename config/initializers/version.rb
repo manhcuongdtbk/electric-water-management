@@ -1,15 +1,10 @@
-# Đọc phiên bản ứng dụng từ version.txt (do release-please quản lý) một lần lúc khởi động.
-# Thiếu file hoặc file rỗng → "unknown" để ứng dụng vẫn khởi động được.
-module ElectricWaterManagement
-  version_file = Rails.root.join("version.txt")
-  VERSION = ((File.exist?(version_file) ? File.read(version_file).strip.presence : nil) || "unknown").freeze
-end
-
 # Ghi một dòng log khởi động kèm phiên bản + môi trường để truy vết bản phát hành.
-# Dùng after_initialize để SystemInfo (lib/) đã sẵn sàng, tránh autoload lúc khởi tạo.
+# Phiên bản được đọc trong SystemInfo (lib/system_info.rb) — nguồn sự thật duy nhất.
+# Dùng after_initialize để SystemInfo đã sẵn sàng; lấy tên app động (module_parent_name)
+# để không hard-code tên app, an toàn khi đổi tên sau này.
 Rails.application.config.after_initialize do
   Rails.logger.info(
-    "Booting ElectricWaterManagement version=#{ElectricWaterManagement::VERSION} " \
+    "Booting #{Rails.application.class.module_parent_name} version=#{SystemInfo.version} " \
     "environment=#{SystemInfo.environment_label} rails_env=#{Rails.env}"
   )
 end
