@@ -225,7 +225,8 @@ jobs:
         run: bundle exec brakeman --exit-on-warn --no-progress --quiet
       - name: bundler-audit
         if: ${{ !cancelled() }}
-        run: bundle exec bundler-audit check --update
+        # Dùng binstub dự án: tự thêm `--config config/bundler-audit.yml` (ignore list).
+        run: bin/bundler-audit check --update
 
   commitlint:
     name: Conventional Commits (commitlint)
@@ -444,7 +445,7 @@ ignore:
 - [ ] **Step 3: Xác nhận xanh + commit (chỉ khi sửa file)**
 
 ```bash
-bin/docker exec app bundle exec bundler-audit check --update; echo "exit=$?"
+bin/docker exec app bin/bundler-audit check --update; echo "exit=$?"  # binstub thêm --config
 git add config/bundler-audit.yml
 git commit -m "$(cat <<'EOF'
 chore(bundler-audit): document ignored advisories for CI baseline

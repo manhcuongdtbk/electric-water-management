@@ -35,7 +35,8 @@ jobs:
         run: bundle exec brakeman --exit-on-warn --no-progress --quiet
       - name: bundler-audit
         if: ${{ !cancelled() }}
-        run: bundle exec bundler-audit check --update
+        # Dùng binstub dự án: tự thêm `--config config/bundler-audit.yml` (ignore list).
+        run: bin/bundler-audit check --update
 
   commitlint:
     name: Conventional Commits (commitlint)
