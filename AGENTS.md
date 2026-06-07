@@ -66,14 +66,14 @@ Mỗi git worktree dùng bộ cổng host riêng do `bin/docker` tự gán (post
 | Kỳ tính toán | periods | Period |
 | Nhóm cấp bậc | ranks | Rank |
 
-## Thuật ngữ: "environment" (app environment vs Rails environment)
+## Thuật ngữ: "environment" (application environment vs Rails environment)
 
 Có HAI khái niệm "environment" khác nhau — khi nói/viết phải nói rõ kẻo nhầm:
 
-- **App environment** (môi trường ứng dụng / nơi triển khai): nhãn tiếng Anh do ops đặt qua biến `APP_ENVIRONMENT_LABEL` (ví dụ `Acceptance`, `Mirror`, `Production` trên Mini PC). Truy cập qua `SystemInfo.app_environment`; key JSON `/version` là `app_environment`. Đây là cái phân biệt hai môi trường Railway gần giống hệt và là cái hiển thị ở sidebar/đăng nhập/log/Excel.
-- **Rails environment**: `Rails.env` (`development` / `test` / `production`) — chế độ runtime của framework. Key JSON `/version` là `rails_env`.
+- **Application environment** (môi trường ứng dụng / nơi triển khai): nhãn tiếng Anh do ops đặt qua biến `APPLICATION_ENVIRONMENT_LABEL` (ví dụ `Acceptance`, `Mirror`, `Production` trên Mini PC). Truy cập qua `SystemInfo.application_environment`; key JSON `/version` là `application_environment`. Đây là cái phân biệt hai môi trường Railway gần giống hệt và là cái hiển thị ở sidebar/đăng nhập/log/Excel.
+- **Rails environment**: `Rails.env` (`development` / `test` / `production`) — chế độ runtime của framework. Key JSON `/version` là `rails_environment`.
 
-Hai cái CÓ THỂ khác nhau (ví dụ Nghiệm thu và Mốc đều `rails_env=production` nhưng `app_environment` khác). Mặc định trong dự án, "environment/môi trường" không kèm bổ nghĩa ở UI/log = **app environment**; còn nói tới Rails thì luôn gọi rõ `Rails.env`. Chi tiết: spec `docs/superpowers/specs/2026-06-07-app-version-reporting-design.md`.
+Hai cái CÓ THỂ khác nhau (ví dụ Nghiệm thu và Mốc đều `rails_environment=production` nhưng `application_environment` khác). Mặc định trong dự án, "environment/môi trường" không kèm bổ nghĩa ở UI/log = **application environment**; còn nói tới Rails thì luôn gọi rõ `Rails.env`. Chi tiết: spec `docs/superpowers/specs/2026-06-07-app-version-reporting-design.md`.
 
 ## Quy tắc code
 
