@@ -8,14 +8,15 @@ Rails 8, PostgreSQL 16, Tailwind CSS, Hotwire (Turbo + Stimulus).
 
 ## Environments
 
-| | Development | Staging | Production |
-|---|---|---|---|
-| Hạ tầng | Docker Desktop (Mac) | Railway | Ubuntu Mini PC (LAN offline) |
-| Dockerfile | Dockerfile.dev | Dockerfile | Dockerfile |
-| Web server | nginx container | Railway edge proxy | nginx container |
-| Database | PostgreSQL container | Railway PostgreSQL | PostgreSQL container |
-| Config | compose.dev.yml | railway.json | compose.yml + .env |
-| URL | http://localhost | https://electric-water-management.up.railway.app | http://\<IP server\> |
+| Loại | Hạ tầng | Nguồn deploy | Nhãn (`APPLICATION_ENVIRONMENT_LABEL`) | URL |
+|---|---|---|---|---|
+| Phát triển (local) | Docker Desktop (`Dockerfile.dev`, `compose.dev.yml`) | máy bạn — `develop`/`feature/*` | — | http://localhost |
+| Railway `development` | Railway (`Dockerfile`, `railway.json`, sleep) | nhánh `develop` (tự deploy) | `Development` | https://electric-water-management-development-b881.up.railway.app |
+| Railway `acceptance` | Railway (`Dockerfile`, `railway.json`, sleep) | nhánh `main` (tự deploy) | `Acceptance` | https://electric-water-management-acceptance-e503.up.railway.app |
+| Railway `mirror` | Railway (`Dockerfile`, `railway.json`, sleep) | nhánh `production` (ghim tag đang giao) | `Mirror` | https://electric-water-management.up.railway.app |
+| **Production (thật)** | Ubuntu Mini PC LAN offline (`Dockerfile`, `compose.yml` + `.env`) | tag `main` đã giao | `Production` (đặt tại Mini PC) | http://\<IP server\> |
+
+> Ba env Railway và Mini PC đều chạy `RAILS_ENV=production`; chỉ `APPLICATION_ENVIRONMENT_LABEL` khác nhau để phân biệt (xem "environment terminology" trong `AGENTS.md`). **Production thật là Mini PC offline tại chỗ khách**, không phải Railway. `mirror` là bản sinh đôi *online* của Production để khách đối chiếu với `acceptance` (bản ứng viên). Hiện `mirror` chạy `v1.0.0` — bản này **ra đời trước** tính năng tự báo cáo phiên bản nên chưa có nhãn/endpoint `/version`; `acceptance`/`development` (1.1.0+) thì có. Khi Production lên 1.1.0+, `mirror` sẽ hiện nhãn.
 
 ## Development
 
@@ -129,13 +130,15 @@ docs/hdsd/capture-screenshots
 
 Script tự reset database, tạo dữ liệu mẫu, chụp lại toàn bộ ảnh. Thêm/sửa trang chụp: sửa mảng `PAGES` trong `docs/hdsd/capture.mjs`.
 
-## Staging
+## Railway (development / acceptance / mirror)
 
-Railway auto-deploy khi push branch main. Cấu hình trong `railway.json`.
+Ba environment trên Railway (đều bật sleep) tự deploy theo nhánh: `develop`→`development`, `main`→`acceptance`, nhánh con trỏ `production`→`mirror`. Mỗi env có nhãn `APPLICATION_ENVIRONMENT_LABEL` riêng (Development/Acceptance/Mirror). Chi tiết và lý do: ADR-005 (ghi chú "Triển khai & điều chỉnh (P4)") trong `docs/superpowers/specs/2026-06-07-quy-trinh-release-design.md`.
 
 ## Production
 
 3 containers (PostgreSQL + Rails + nginx). Deploy trên máy Ubuntu LAN nội bộ (offline).
+
+> **Phiên bản:** repo này là **hệ thống v2**, nhưng version phần mềm theo **SemVer từ `1.0.0`** (số MAJOR = tương thích/breaking, không phải "đời sản phẩm"; hệ thống v1 ở project Railway riêng). Production hiện chạy `v1.0.0`.
 
 **Hướng dẫn chi tiết:** `docs/HUONG_DAN_DEPLOY.md`
 
