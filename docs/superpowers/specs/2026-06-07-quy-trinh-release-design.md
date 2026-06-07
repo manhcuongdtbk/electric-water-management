@@ -1,6 +1,6 @@
 ---
 title: Quy trình phát hành (release process) — Mảnh 1 của SDLC
-version: 0.4.0
+version: 0.5.0
 status: draft (chờ duyệt)
 date: 2026-06-07
 governed_by: 2026-06-07-sdlc-overview-design.md
@@ -117,6 +117,9 @@ flowchart LR
 - **Tradeoff:** (+) tự động hoá phần dễ quên, có cổng duyệt. (−) cần cấu hình để khớp Git Flow (release-please thiên trunk/GitHub-flow).
 - **Phương án đã loại:** *semantic-release* — tự release mỗi push, không có cổng → không hợp nghiệm thu; *script tự viết toàn bộ* — tốn công bảo trì.
 - **Triển khai (P3, chốt 2026-06-07):** release-please chạy trên `main` lo **bản phát hành chính thức** — release-type `simple`, tag tiền tố `v`, cập nhật `CHANGELOG.md` + `version.txt`, manifest mỏ neo `1.0.1`; đặt `target-branch: main` vì default branch là `develop`. Phần **rc/UAT để dành P4** (chưa có môi trường Nghiệm thu để deploy). Mở rộng branch-source guard cho phép nhánh `release-please--*` vào `main` (Release PR do bot tạo). release-please ghi `CHANGELOG.md`/`version.txt` lên `main` → sau mỗi release phải **đồng bộ `main` → `develop`** (gộp vào merge-back). Dùng `GITHUB_TOKEN` mặc định (miễn phí) — Release PR do bot tạo không tự kích hoạt CI, chấp nhận được vì chỉ sửa changelog/version.
+- **Yêu cầu setup (đúc kết khi cắt bản phát hành 1.1.0):**
+    - **Cài đặt repository bắt buộc:** phải BẬT tùy chọn "Allow GitHub Actions to create and approve pull requests", nếu không release-please **thất bại** ngay ở bước tạo Release pull request (lỗi: *"GitHub Actions is not permitted to create or approve pull requests"*). Bật bằng: `gh api -X PUT repos/{owner}/{repo}/actions/permissions/workflow -F can_approve_pull_request_reviews=true` (quyền workflow mặc định vẫn để `read` được, vì workflow tự cấp `pull-requests: write` cho chính nó).
+    - **Tránh changelog trùng dòng (phương thức merge):** **không có** cài đặt GitHub nào khiến merge commit trở thành "không theo Conventional Commits" — cả ba tổ hợp tiêu đề/nội dung merge hợp lệ đều nhét tiêu đề pull request vào tiêu đề hoặc thân của merge commit; riêng tổ hợp `MERGE_MESSAGE`+`BLANK` bị từ chối với lỗi HTTP 422. Vì vậy pull request loại `feature`/`fix` **phải squash-merge vào `develop`**, nếu không release-please đếm trùng (commit thật + merge commit) và changelog sinh dòng lặp. Repository nay đã đặt `squash_merge_commit_title=PR_TITLE` + `squash_merge_commit_message=BLANK`. Quy ước phương thức merge này đã ghi ở `CONTRIBUTING.md` mục 2 (squash cho `feature`/`fix` vào `develop`; merge commit cho `release/*`/`hotfix/*` và merge-back). Ngoài ra: đặt tiêu đề pull request của `release/*`/`hotfix/*`/merge-back bằng tiền tố **không thuộc loại sinh changelog** (ví dụ `release:`) để merge commit của chúng không thêm dòng changelog lạc.
 - **Điều kiện xem lại:** nếu cấu hình release-please + Git Flow quá vướng → cân nhắc semantic-release hoặc script tối giản.
 
 ### ADR-009: Review code — AI local + người duyệt
@@ -211,6 +214,7 @@ flowchart LR
 
 ## Changelog
 
+- **0.5.0 (2026-06-07):** ADR-008 thêm sub-note "Yêu cầu setup" đúc kết khi cắt bản phát hành 1.1.0 — (1) phải bật cài đặt repository "Allow GitHub Actions to create and approve pull requests", nếu không release-please thất bại ở bước tạo Release pull request; (2) `feature`/`fix` phải squash-merge vào `develop` (GitHub không có cách biến merge commit thành "không theo Conventional Commits"; tổ hợp `MERGE_MESSAGE`+`BLANK` bị từ chối HTTP 422) để changelog không trùng dòng — repository đặt `squash_merge_commit_title=PR_TITLE` + `squash_merge_commit_message=BLANK`, và đặt tiêu đề `release/*`/`hotfix/*`/merge-back bằng tiền tố không sinh changelog; trỏ chéo `CONTRIBUTING.md` mục 2.
 - **0.4.0 (2026-06-07):** ADR-008 thêm ghi chú triển khai P3: release-please trên `main` (final releases, `simple`, `version.txt`, manifest 1.0.1, `target-branch: main`); guard cho phép `release-please--*`; đồng bộ main→develop sau release; rc để dành P4.
 - **0.3.0 (2026-06-07):** ADR-011 thêm "Phân kỳ triển khai" chốt ranh giới P2 (tập tĩnh: rubocop/brakeman/bundler-audit/commitlint/branch-source guard) ↔ mảnh "CI spec chi tiết" (rspec/system + schema-drift + zeitwerk + runner/cache/headless); làm rõ Backlog #1 tương ứng.
 - **0.2.0 (2026-06-07):** Viết lại theo ADR-style; thêm Goals/Non-Goals, Glossary, sơ đồ Mermaid, tiêu chí thành công, rủi ro+rollback, truy vết; đổi pairing sang VS Code Dev Tunnels; thêm nguồn nvie; trỏ về SDLC Overview.
