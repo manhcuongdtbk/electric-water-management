@@ -84,11 +84,12 @@ Expected: nhánh hiện tại là `feature/p3-release-please`, đỉnh là merge
     { "type": "perf", "section": "Performance Improvements" },
     { "type": "build", "section": "Dependencies" },
     { "type": "refactor", "section": "Code Refactoring" },
-    { "type": "docs", "section": "Documentation", "hidden": true },
-    { "type": "chore", "section": "Miscellaneous", "hidden": true },
-    { "type": "ci", "section": "Continuous Integration", "hidden": true },
-    { "type": "test", "section": "Tests", "hidden": true },
-    { "type": "style", "section": "Styles", "hidden": true }
+    { "type": "docs", "section": "Documentation" },
+    { "type": "test", "section": "Tests" },
+    { "type": "ci", "section": "Continuous Integration" },
+    { "type": "chore", "section": "Miscellaneous Chores" },
+    { "type": "style", "section": "Styles" },
+    { "type": "revert", "section": "Reverts" }
   ]
 }
 ```
