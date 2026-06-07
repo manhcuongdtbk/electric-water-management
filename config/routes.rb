@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   root to: "dashboard#show"
 
   get "up" => "rails/health#show", as: :rails_health_check
+  get "version" => "version#show", as: :app_version
 
   resource :password_change, only: [:edit, :update]
 
