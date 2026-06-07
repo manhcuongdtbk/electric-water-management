@@ -1,6 +1,6 @@
 ---
 title: Tự báo cáo phiên bản (application self-version reporting)
-version: 0.3.0
+version: 0.4.0
 status: draft (chờ duyệt)
 date: 2026-06-07
 ---
@@ -59,13 +59,13 @@ end
 
 | # | Bề mặt | Vị trí | Nội dung |
 |---|--------|--------|----------|
-| 1a | **Đáy sidebar** | `app/views/layouts/_sidebar.html.erb` (đổi `<aside>` thành `flex flex-col`, `<nav>` `flex-1`, khối phiên bản ghim đáy) | **hai dòng xếp dọc**, chữ nhỏ/mờ: dòng 1 `v1.0.1`, dòng 2 `Production` — súc tích cho sidebar hẹp; mọi trang sau đăng nhập, mọi vai trò |
+| 1a | **Đáy sidebar** | `app/views/layouts/_sidebar.html.erb` (đổi `<aside>` thành `flex flex-col`, `<nav>` `flex-1`, khối phiên bản ghim đáy) | **một dòng**, chữ nhỏ/mờ: `v1.0.1 · Production` (`whitespace-nowrap`) — vừa sidebar, súc tích; mọi trang sau đăng nhập, mọi vai trò |
 | 1b | **Màn hình đăng nhập** | `app/views/devise/sessions/new.html.erb` | cùng dòng đó, dưới phụ đề — nhìn thấy **trước khi** đăng nhập (quan trọng cho người nghiệm thu) |
 | 2 | **Endpoint `/version` (JSON)** | route `get "version" => "version#show"`, `VersionController` bỏ qua `authenticate_user!` → công khai | `{"version":"1.0.1","environment":"Acceptance","rails_env":"production"}` |
 | 3 | **Log** | dòng khởi động trong initializer + `config.log_tags` (production) thêm lambda gộp version + môi trường | mọi dòng log request + báo cáo lỗi mang `[v1.0.1 Production]`; một dòng khởi động `Booting ... version=... environment=...` |
-| 4 | **Excel** | `app/views/billing/show.xlsx.axlsx` — thêm dòng trống + dòng `Phiên bản hệ thống: v1.0.1 · Môi trường: Production` **dưới** dòng `TỔNG` (kiểu chữ nhỏ/xám, không merge → không phá bảng) |
+| 4 | **Excel** | `app/views/billing/show.xlsx.axlsx` — thêm dòng trống + dòng lấy từ i18n `system_info.excel_footer` (`Phiên bản hệ thống: v1.0.1 · Môi trường: Production`) **dưới** dòng `TỔNG` (kiểu chữ nhỏ/xám, không merge → không phá bảng) |
 
-> Nhãn tiếng Việt bao quanh (sidebar/Excel: "Phiên bản hệ thống", "Môi trường") giữ tiếng Việt; chỉ **giá trị môi trường** là tiếng Anh.
+> Nhãn tiếng Việt bao quanh chỉ xuất hiện ở Excel ("Phiên bản hệ thống", "Môi trường") và lấy từ i18n; sidebar/đăng nhập chỉ hiển thị `vX.Y.Z · <môi trường>` (không có chữ tiếng Việt). Chỉ **giá trị môi trường** là tiếng Anh.
 
 ---
 
@@ -111,9 +111,10 @@ end
 
 ## i18n
 
-`config/locales/vi.yml` — thêm tối thiểu cho nhãn tiếng Việt bao quanh (giá trị môi trường vẫn tiếng Anh):
+`config/locales/vi.yml` — thêm khóa cho nhãn tiếng Việt của Excel footer (giá trị môi trường vẫn tiếng Anh):
 
-- Nhãn Excel/sidebar: "Phiên bản hệ thống", "Môi trường" (namespace nhỏ `system_info:`).
+- `system_info.excel_footer: "Phiên bản hệ thống: v%{version} · Môi trường: %{environment}"` — template axlsx gọi `I18n.t("system_info.excel_footer", version:, environment:)`. **Không hard-code** chuỗi tiếng Việt trong view.
+- Sidebar/đăng nhập chỉ hiển thị `vX.Y.Z · <môi trường>` (không có chữ tiếng Việt) → không cần khóa i18n.
 - **Không** cần khóa i18n cho tên môi trường (đã là tiếng Anh, lấy từ biến môi trường / `Rails.env`).
 
 ## Phân quyền
@@ -143,6 +144,7 @@ end
 
 ## Lịch sử thay đổi
 
+- 0.4.0 (2026-06-07): Sau review code của chủ dự án trước khi mở PR — sidebar hiển thị version + môi trường trên **một dòng** (`whitespace-nowrap`, vẫn vừa sidebar); nhãn Excel footer dùng **i18n** (`system_info.excel_footer`), không hard-code chuỗi tiếng Việt.
 - 0.3.0 (2026-06-07): Sau review của chủ dự án — chuyển `SystemInfo` sang `lib/system_info.rb` (giữ là module, không trộn với class trong `app/services/`); sidebar hiển thị hai dòng xếp dọc súc tích cho sidebar hẹp.
 - 0.2.0 (2026-06-07): Sau review của chủ dự án — chuyển `SystemInfo` sang `app/services/`; bỏ trang admin "Thông tin hệ thống" (YAGNI); nhãn môi trường dùng tiếng Anh (`Rails.env.capitalize` dự phòng); gộp môi trường vào tag log cùng phiên bản.
 - 0.1.0 (2026-06-07): Bản thảo đầu tiên, chốt sau brainstorming với chủ dự án.
