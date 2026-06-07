@@ -1,6 +1,6 @@
 ---
 title: Truy vết & quản lý thay đổi (yêu cầu → thiết kế → test → release) — Mảnh 2 của SDLC
-version: 0.1.0
+version: 0.2.0
 status: draft (chờ duyệt)
 date: 2026-06-08
 governed_by: 2026-06-07-sdlc-overview-design.md
@@ -172,8 +172,9 @@ Tổng thao tác *quản lý trạng thái bằng tay*: mở Issue + gắn/gỡ 
 - **Umbrella:** [SDLC Overview](2026-06-07-sdlc-overview-design.md) — ADR-001 (mô hình), ADR-002 (tài liệu/tri thức).
 - **Mảnh cha:** [Quy trình phát hành](2026-06-07-quy-trinh-release-design.md) — Backlog #2 (mảnh này); tận dụng ADR-008 (release-please/CHANGELOG), ADR-011/ADR-012 (CI), Git Flow (ADR-003).
 - **Issue/thay đổi liên quan khi nghiệm thu thiết kế:** pull request #264 ("bổ sung yêu cầu nghiệp vụ cho khách xem") là *nội dung yêu cầu mẫu* mà luồng này sẽ quản lý — dùng để đối chiếu thiết kế; **không phải điều kiện chặn**.
-- **Sẽ hiện thực ở plan kế tiếp:** `.github/ISSUE_TEMPLATE/change-request.md`, `.github/pull_request_template.md`, template ADR; mục "Quản lý thay đổi" trong `CONTRIBUTING.md`; trỏ ngắn trong `AGENTS.md`; cập nhật Backlog #2 trong release spec.
+- **Đã hiện thực** (plan [`2026-06-08-truy-vet-quan-ly-thay-doi.md`](../plans/2026-06-08-truy-vet-quan-ly-thay-doi.md)): `.github/ISSUE_TEMPLATE/change-request.md`, `.github/pull_request_template.md`, `docs/superpowers/ADR-TEMPLATE.md`; mục 9 "Quản lý thay đổi & truy vết" trong `CONTRIBUTING.md`; pointer trong `AGENTS.md`; Backlog #2 trong release spec đã chốt ✅.
 
 ## Changelog
 
+- **0.2.0 (2026-06-08):** Hiện thực xong (xem plan `2026-06-08-truy-vet-quan-ly-thay-doi.md`): thêm 3 template (Issue change-request, pull request, ADR), mục 9 `CONTRIBUTING.md`, pointer `AGENTS.md`; cập nhật mục "Truy vết" sang trạng thái đã hiện thực.
 - **0.1.0 (2026-06-08):** Bản thảo đầu — ADR-013 (Hybrid: GitHub Issues cho luồng + repo cho dấu vết bền; vòng đời 6 bước; P1 nhãn tối thiểu + artifact tự mang trạng thái + milestone; lớp khách mức release), ADR-014 (anchor yêu cầu `NV-...` tường minh thêm dần; chuẩn hoá "Truy vết" của spec; chiều ngược grep; test ↔ yêu cầu ở phía spec/PR không tag test), ADR-015 (template Issue change-request + pull request + ADR). Hiện thực truy vết yêu cầu → thiết kế → test → release (Backlog #2). Chờ duyệt.
