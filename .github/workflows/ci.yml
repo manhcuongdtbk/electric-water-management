@@ -22,7 +22,7 @@ jobs:
     name: Ruby static checks (rubocop, brakeman, bundler-audit)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: .ruby-version # setup-ruby accepts the filename as a special value
@@ -42,10 +42,10 @@ jobs:
     name: Conventional Commits (commitlint)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0 # need full history to lint the pull request's commit range
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "lts/*" # always the latest Node LTS
       - name: commitlint
@@ -61,7 +61,7 @@ jobs:
     name: Branch-source guard (Git Flow)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Check the pull request source for a main target
         env:
           BASE_REF: ${{ github.base_ref }}
@@ -97,7 +97,7 @@ jobs:
       CHROMIUM_BINARY: /nonexistent/chromium
       CHROMEDRIVER_BINARY: /nonexistent/chromedriver
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: .ruby-version
