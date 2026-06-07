@@ -3,10 +3,3 @@
 
 ignore:
   - CVE-THAT-DOES-NOT-APPLY
-  # P2 grandfather (2026-06-07): Puma PROXY Protocol v1 parser (DoS). Ứng dụng chạy
-  # sau nginx, KHÔNG bật PROXY protocol nên không áp dụng. Theo dõi bump puma
-  # >= 8.0.2 ở backlog.
-  - CVE-2026-47736
-  - GHSA-qpgp-93vx-g8v8
-  - CVE-2026-47737
-  - GHSA-2vqw-3mp8-cgmx
