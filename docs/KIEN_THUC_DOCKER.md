@@ -1,7 +1,7 @@
 # Kiến thức Docker — Hệ thống quản lý điện nội bộ Sư đoàn
 
-> **Phiên bản:** 1.8.0
-> **Ngày:** 31/05/2026
+> **Phiên bản:** 1.8.1
+> **Ngày:** 07/06/2026
 > **Đối tượng:** Developer hoặc người muốn hiểu hệ thống chạy thế nào ở mọi môi trường.
 > **Tiền đề:** Bạn biết code Rails nhưng chưa biết Docker và chưa từng deploy.
 
@@ -306,7 +306,7 @@ Script tạo cron job chạy mỗi ngày 2:00 sáng:
 
 ### bin/prepare-delivery
 
-Tạo bản sạch để ship cho khách. Source code gốc chứa file phát triển (CLAUDE.md, .claude/) và dấu vết AI trong git history. Script:
+Tạo bản sạch để ship cho khách. Source code gốc chứa file phát triển (CLAUDE.md, AGENTS.md, CONTRIBUTING.md, .claude/) và dấu vết AI trong git history. Script:
 1. Clone repo
 2. Xóa dấu vết AI khỏi commit messages
 3. Xóa file phát triển
