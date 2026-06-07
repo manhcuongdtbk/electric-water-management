@@ -47,7 +47,7 @@ class BlocksController < ApplicationController
       redirect_to blocks_path,
         notice: t("flash.record_created", resource: t("resources.block"), name: @block.name)
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -59,7 +59,7 @@ class BlocksController < ApplicationController
       redirect_to blocks_path,
         notice: t("flash.record_updated", resource: t("resources.block"), name: @block.name)
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

@@ -52,7 +52,7 @@ class ZonesController < ApplicationController
       redirect_to zones_path, notice: msg
     else
       @zone.main_meters.build if @zone.main_meters.empty?
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -64,7 +64,7 @@ class ZonesController < ApplicationController
       redirect_to zones_path,
         notice: t("flash.record_updated", resource: t("resources.zone"), name: @zone.name)
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

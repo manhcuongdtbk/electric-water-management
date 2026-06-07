@@ -47,7 +47,7 @@ module MeterReadingEntry
     if errors_collected.any?
       flash.now[:alert] = errors_collected.map { |e| "#{e[:name]}: #{e[:msgs].join(', ')}" }.join("\n")
       @readings = load_readings
-      render :show, status: :unprocessable_entity
+      render :show, status: :unprocessable_content
     else
       redirect_to after_update_path, notice: t("#{controller_name}.flash.saved")
     end

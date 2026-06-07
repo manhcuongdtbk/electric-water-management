@@ -20,7 +20,7 @@ class PricingController < ApplicationController
     else
       @current_period = @period
       load_show_data
-      render :show, status: :unprocessable_entity
+      render :show, status: :unprocessable_content
     end
   end
 

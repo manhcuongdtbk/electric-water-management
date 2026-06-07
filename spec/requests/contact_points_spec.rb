@@ -103,7 +103,7 @@ RSpec.describe "ContactPoints", type: :request do
           meters_attributes: { "0" => { name: "CT-T0", no_loss: "0" } }
         }
       }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("Tổng quân số")
     end
 
@@ -114,7 +114,7 @@ RSpec.describe "ContactPoints", type: :request do
           personnel_counts: { ranks.last.id.to_s => "1" }
         }
       }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("ít nhất một công tơ")
     end
 

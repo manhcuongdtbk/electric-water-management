@@ -70,7 +70,7 @@ RSpec.describe "Zones", type: :request do
 
     it "T28: chặn tạo zone thiếu main_meter" do
       post zones_path, params: { zone: { name: "Khu vực 2" } }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("ít nhất một công tơ tổng")
     end
   end

@@ -48,7 +48,7 @@ class GroupsController < ApplicationController
       redirect_to groups_path,
         notice: t("flash.record_created", resource: t("resources.group"), name: @group.name)
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -60,7 +60,7 @@ class GroupsController < ApplicationController
       redirect_to groups_path,
         notice: t("flash.record_updated", resource: t("resources.group"), name: @group.name)
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

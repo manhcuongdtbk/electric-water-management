@@ -61,7 +61,7 @@ class UnitConfigController < ApplicationController
       @unit_config = UnitConfig.find_by(unit: @unit, period: @period)
       @other_deductions = scope_other_deductions
       @zone_other_deductions = scope_zone_other_deductions
-      render :show, status: :unprocessable_entity
+      render :show, status: :unprocessable_content
     else
       redirect_to unit_config_path(unit_id: @unit&.id), notice: t("unit_config.flash.saved")
     end
