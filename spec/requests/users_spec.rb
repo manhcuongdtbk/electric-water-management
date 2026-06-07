@@ -65,6 +65,20 @@ RSpec.describe "Users", type: :request do
         expect(response).to redirect_to(users_path)
         expect(User.find_by(username: "newAdmin")).to be_present
       end
+
+      it "không cho tạo tài khoản technician" do
+        post users_path, params: {
+          user: {
+            username: "newTech",
+            display_name: "Kỹ thuật mới",
+            role: "technician",
+            password: "Secure@123",
+            password_confirmation: "Secure@123"
+          }
+        }
+        expect(response).to redirect_to(root_path)
+        expect(User.find_by(username: "newTech")).to be_nil
+      end
     end
 
     describe "T66: system_admin không quản lý technician" do
@@ -81,6 +95,22 @@ RSpec.describe "Users", type: :request do
         delete user_path(tech)
         expect(response).to redirect_to(root_path)
         expect(User.where(id: tech.id)).to be_present
+      end
+    end
+
+    describe "không được nâng vai trò user khác thành technician (privilege escalation)" do
+      it "chặn đổi vai trò unit_admin sang technician" do
+        target = create(:user, :unit_admin, unit: unit)
+        patch user_path(target), params: { user: { role: "technician" } }
+        expect(response).to redirect_to(root_path)
+        expect(target.reload.role).to eq("unit_admin")
+      end
+
+      it "vẫn cho đổi vai trò sang commander (chuyển hợp lệ)" do
+        target = create(:user, :unit_admin, unit: unit)
+        patch user_path(target), params: { user: { role: "commander", unit_id: unit.id } }
+        expect(response).to redirect_to(users_path)
+        expect(target.reload.role).to eq("commander")
       end
     end
 
@@ -109,6 +139,13 @@ RSpec.describe "Users", type: :request do
       tech2 = create(:user, username: "tech2")
       patch user_path(tech2), params: { user: { display_name: "T2 New" } }
       expect(tech2.reload.display_name).to eq("T2 New")
+    end
+
+    it "được phép nâng vai trò user khác thành technician" do
+      target = create(:user, :unit_admin, unit: unit)
+      patch user_path(target), params: { user: { role: "technician" } }
+      expect(response).to redirect_to(users_path)
+      expect(target.reload.role).to eq("technician")
     end
   end
 
