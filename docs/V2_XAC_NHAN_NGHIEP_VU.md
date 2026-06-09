@@ -1,6 +1,6 @@
 # Xác nhận nghiệp vụ — Hệ thống quản lý điện nội bộ Sư đoàn (Hệ thống v2)
 
-> **Phiên bản:** 2.13.0
+> **Phiên bản:** 2.14.0
 > **Ngày:** 21/05/2026
 > **Tính chất:** Tài liệu nội bộ giữa chủ dự án và đội phát triển. Là nguồn sự thật duy nhất cho thiết kế và triển khai.
 > **Ngôn ngữ hệ thống:** Toàn bộ hệ thống phải được Việt hóa 100% (giao diện, thông báo, cảnh báo, xuất file) vì hệ thống dùng trong Sư đoàn Quân đội nhân dân Việt Nam.
@@ -619,6 +619,7 @@ Trang tổng quan tách riêng với bảng tính tiền, là trang đầu tiên
 
 ---
 
+<a id="NV-nhat-ky-he-thong"></a>
 ## 20. Nhật ký hệ thống
 
 - Mọi thao tác trên hệ thống đều được ghi lại phòng trừ mọi trường hợp xấu.
@@ -626,6 +627,7 @@ Trang tổng quan tách riêng với bảng tính tiền, là trang đầu tiên
 
 ---
 
+<a id="NV-sao-luu-phuc-hoi"></a>
 ## 21. Sao lưu và phục hồi
 
 - Kỹ thuật viên hệ thống có thể tạo backup toàn bộ data.
@@ -823,6 +825,10 @@ Người dùng chỉ cần sửa chỗ có thay đổi. Mọi thao tác ở kỳ
 ---
 
 ## 29. Lịch sử thay đổi
+
+### v2.14.0 (09/06/2026)
+
+- Nhật ký hệ thống (mục 20) và Sao lưu và phục hồi (mục 21): thêm anchor truy vết `NV-nhat-ky-he-thong` / `NV-sao-luu-phuc-hoi` (ADR-014) để spec vận hành & bảo trì (ADR-016..018) link tới. Không đổi nội dung nghiệp vụ.
 
 ### v2.13.0 (24/05/2026)
 
