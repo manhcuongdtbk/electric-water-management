@@ -55,7 +55,7 @@ gem "paper_trail"
 gem "discard", "~> 1.4"
 
 # Pagination
-gem "pagy", "~> 9.0"
+gem "pagy", "~> 43.5"
 
 # Excel export
 gem "caxlsx"
