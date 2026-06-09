@@ -57,6 +57,22 @@ Mọi thay đổi bắt đầu từ một **GitHub Issue** (luồng đầy đủ
 4. Mở pull request đích `develop` (với `feature/*`); mô tả ghi `Refs #N` (hoặc `Closes #N` nếu giải quyết trọn). CI xanh + chủ dự án duyệt → merge.
 5. Pull request đích `main` chỉ đến từ `release/*` hoặc `hotfix/*`.
 
+### Việc nối tiếp phụ thuộc (nhánh xếp chồng)
+
+Khi việc B cần kết quả của việc A mà A **chưa merge** (đang chờ CI hoặc chờ duyệt): đừng đợi. Cắt `feature/B` **từ nhánh A** (không phải từ `develop`) rồi làm tiếp ngay — không kẹt chờ CI của A.
+
+- Khi A đã merge vào `develop`, rebase B để bỏ các commit của A ra:
+
+  ```bash
+  git fetch origin
+  git rebase --onto origin/develop <A> feature/B   # <A> = commit/nhánh A mà B đã cắt từ đó
+  ```
+
+- Rồi mở pull request B đích `develop` như thường (mục 4).
+- Nếu A bị sửa theo review trước khi merge: rebase B lên nhánh A mới (`git rebase A feature/B`) rồi làm tiếp.
+
+Cùng tinh thần với path filter (ADR-021, mục 8): cái gì tăng tốc được thì để CI lo, cái gì là *quy trình* (chuỗi phụ thuộc) thì xử bằng quy trình — không đổi phút CI lấy wall-clock.
+
 ## 5. Pair lập trình / cùng test app đang chạy local — VS Code Dev Tunnels
 
 Theo ADR-010.
@@ -84,6 +100,8 @@ release-please đã được cấu hình (P3): khi `release/*`/`hotfix/*` vào `
 **CI tĩnh đã chạy trên mọi pull request (P2):** `rubocop`, `brakeman`, `bundler-audit`, `commitlint`, và **branch-source guard** (chặn pull request đích `main` đến từ nhánh không phải `release/*`/`hotfix/*`). Theo ADR-007, CI chỉ **hiện trạng thái** đỏ/xanh — chưa khoá cứng ở server (repo private không có branch protection miễn phí); kỷ luật một người merge giữ luật.
 
 **CI chạy test đã chạy trên mọi pull request (mảnh "CI spec chi tiết"):** một job `tests` chạy `rspec` (gồm 12 system spec điều khiển headless Chrome), kiểm `db/schema.rb` không lệch, và `rails zeitwerk:check` — trên runner native `ubuntu-latest` + service container Postgres, Chrome qua Selenium Manager. Vẫn theo ADR-007 (chỉ hiện trạng thái). Chi tiết: ADR-012 trong `docs/superpowers/specs/2026-06-07-ci-spec-design.md`.
+
+**CI chỉ chạy job nặng khi pull request đụng code (ADR-021):** một job `changes` (`.github/scripts/detect-code-changes.sh` — native bash, fail-safe) bỏ qua `tests` + `ruby-checks` khi pull request **chỉ sửa tài liệu/meta** (`*.md`, `docs/**`, `LICENSE`…) → pull request docs gần như không tốn phút CI. Bất kỳ file code nào (kể cả workflow) → chạy đủ; bất định (thiếu thông tin, lỗi) cũng **chạy đủ** (fail-safe, không bao giờ bỏ sót test cho thay đổi code). Trigger CI **không** còn `edited` nên sửa tiêu đề/mô tả pull request không chạy lại CI. Chi tiết: ADR-021 trong `docs/superpowers/specs/2026-06-07-ci-spec-design.md`.
 
 **release-please đã cấu hình (P3):** workflow `release-please` chạy trên `main` tự mở Release pull request (bump version + `CHANGELOG.md` + `version.txt`), merge thì tự tag + tạo GitHub Release. Phần **rc/UAT để dành P4**.
 
