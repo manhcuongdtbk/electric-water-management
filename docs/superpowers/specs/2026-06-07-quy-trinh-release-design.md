@@ -1,6 +1,6 @@
 ---
 title: Quy trình phát hành (release process) — Mảnh 1 của SDLC
-version: 0.9.0
+version: 0.10.0
 status: draft (chờ duyệt)
 date: 2026-06-07
 governed_by: 2026-06-07-sdlc-overview-design.md
@@ -224,13 +224,14 @@ flowchart LR
 **Mảnh SDLC còn lại (mỗi mảnh 1 spec, làm tuần tự):**
 1. **✅ Đã hiện thực** (P5 — ADR-012, [`2026-06-07-ci-spec-design.md`](2026-06-07-ci-spec-design.md)): phần **chạy test trên CI** sau P2 — `rspec` (gồm system spec headless Chrome), kiểm schema không lệch, `rails zeitwerk:check`; runner native + service container Postgres + Chrome qua Selenium Manager; bật cache. (P2 đã dựng tập tĩnh: rubocop/brakeman/bundler-audit/commitlint/branch-source guard — xem ADR-011 "Phân kỳ triển khai".)
 2. **✅ Đã hiện thực** (ADR-013..015, [`2026-06-08-truy-vet-quan-ly-thay-doi-design.md`](2026-06-08-truy-vet-quan-ly-thay-doi-design.md)): truy vết / quản lý thay đổi (yêu cầu → thiết kế → test → release). Hybrid (GitHub Issues cho luồng + repo cho dấu vết bền); anchor yêu cầu `NV-...` thêm dần + chuẩn hoá mục "Truy vết" của spec; template Issue change-request (`.github/ISSUE_TEMPLATE/change-request.md`) + pull request (`.github/pull_request_template.md`) + ADR (`docs/superpowers/ADR-TEMPLATE.md`); mục 9 trong `CONTRIBUTING.md` + pointer ở `AGENTS.md`.
-3. Vận hành / bảo trì (giám sát production offline, backup, tiếp nhận lỗi khách).
+3. **✅ Đã hiện thực** (ADR-016..018, [`2026-06-09-van-hanh-bao-tri-design.md`](2026-06-09-van-hanh-bao-tri-design.md)): vận hành / bảo trì — giám sát Mini PC offline (review khi giao bản, không nhịp định kỳ; nhật ký §20 tra theo yêu cầu); chính sách sao lưu/khôi phục trên tính năng 3 lớp đã có (Lớp 3 off-box bắt buộc; diễn tập khôi phục mỗi bản giao phía dev); tiếp nhận lỗi/sự cố mở rộng luồng Hybrid #2 — template bug-report (`.github/ISSUE_TEMPLATE/bug-report.md`) + mức độ 2 bậc → đường vá + nhãn `severity-critical`; mục 10 `CONTRIBUTING.md` + pointer `AGENTS.md`.
 4. Tiếp nhận công việc (issue/backlog, ưu tiên).
 
 **Cải tiến optional (chưa làm — YAGNI cho quy mô hiện tại):** cheat-sheet đầu AGENTS.md; checklist onboarding; lint định dạng ADR trong CI; DORA metrics; tách ADR ra `docs/adr/`. *(Template ADR/pull request/issue đã chuyển vào Backlog #2 — ADR-015.)*
 
 ## Changelog
 
+- **0.10.0 (2026-06-09):** Backlog #3 ("Vận hành / bảo trì") **thiết kế + hiện thực xong** — spec mới [`2026-06-09-van-hanh-bao-tri-design.md`](2026-06-09-van-hanh-bao-tri-design.md) (ADR-016 giám sát offline; ADR-017 chính sách sao lưu/khôi phục; ADR-018 tiếp nhận lỗi/sự cố mở rộng #2); template `.github/ISSUE_TEMPLATE/bug-report.md` + nhãn `severity-critical`; anchor `NV-nhat-ky-he-thong`/`NV-sao-luu-phuc-hoi` trong tài liệu nghiệp vụ; mục 10 `CONTRIBUTING.md` + pointer `AGENTS.md`; Backlog #3 → ✅.
 - **0.9.0 (2026-06-08):** Backlog #2 ("Truy vết / quản lý thay đổi") **thiết kế + hiện thực xong** — spec mới [`2026-06-08-truy-vet-quan-ly-thay-doi-design.md`](2026-06-08-truy-vet-quan-ly-thay-doi-design.md) (ADR-013 Hybrid GitHub Issues + repo; ADR-014 anchor yêu cầu `NV-...` + chuẩn hoá "Truy vết"; ADR-015 template); 3 template (Issue change-request, pull request, ADR) + mục 9 `CONTRIBUTING.md` + pointer `AGENTS.md`; Backlog #2 → ✅. Chuyển "template ADR/pull request/issue" từ danh mục optional sang Backlog #2.
 - **0.8.0 (2026-06-08):** ADR-005 thêm ghi chú "Triển khai & điều chỉnh (P4)" — **3 Railway env tiếng Anh** `development`/`acceptance`/`mirror` trong project sẵn có (không tạo mới); **Acceptance ← `main`** (không rc); **Mirror ← nhánh con trỏ `production` ghim tag đã giao** (sửa lỗ hổng "Mốc = tag main"); **thêm env `development`** cho tiện đội (đảo "Phương án đã loại"); hai trục *danh tính* vs `RAILS_ENV=production`; sleep cả ba; Mirror giữ data; URL; lý do "tập con có cơ sở của chuỗi tầng chuẩn ngành". ADR-008 thêm ghi chú **rc/UAT deploy không còn cần**. ADR-004 thêm ghi chú không dùng `-rc.N` trong luồng deploy + làm rõ repo là *hệ thống v2* nhưng SemVer từ `1.0.0`. Cập nhật Glossary (tên env tiếng Anh + thêm Development), sơ đồ Mermaid, Goals, quy trình end-to-end, tiêu chí thành công, rủi ro, checklist phát hành, chi phí (3 env) cho khớp.
 - **0.7.0 (2026-06-07):** Backlog #1 ("CI spec chi tiết") đánh dấu **đã hiện thực** (ADR-012) cho khớp ghi chú "Triển khai (P5)" trong ADR-011 — bỏ mâu thuẫn "còn lại" trong Backlog.

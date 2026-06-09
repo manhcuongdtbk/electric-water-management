@@ -120,7 +120,40 @@ Theo ADR-013..015 (chi tiết + lý do: `docs/superpowers/specs/2026-06-08-truy-
 - **Test ↔ yêu cầu:** link ở phía spec/pull request, **không** gắn mã vào code test. Yêu cầu cũ (chưa có design spec) trỏ `docs/V2_KICH_BAN_TEST.md` / `docs/V2_CHIEU_TEST.md`.
 - **Truy vết hai chiều bằng grep:** xuôi `grep -rn "NV-<slug>" docs/`; ngược từ `(#N)` trong CHANGELOG/commit → Issue → mô tả gốc.
 
-> Lỗi production + tiếp nhận/ưu tiên backlog **không** thuộc mục này (Backlog #3, #4 của release spec).
+> Tiếp nhận/ưu tiên backlog **không** thuộc mục này (Backlog #4). Lỗi/sự cố production xem mục 10.
+
+## 10. Vận hành & xử lý sự cố
+
+Theo ADR-016..018 (chi tiết + lý do: `docs/superpowers/specs/2026-06-09-van-hanh-bao-tri-design.md`). Đặt *quy trình* lên trên tính năng đã có (sao lưu 3 lớp, nhật ký mục 20, `/up` + `/version`, Docker); how-to thao tác xem `docs/HUONG_DAN_DEPLOY.md` + `docs/KIEN_THUC_DOCKER.md` mục 10.
+
+### Giám sát Mini PC offline (ADR-016)
+
+Không có nhịp định kỳ. Giám sát = **review khi giao phiên bản** + lưới auto-backup nền + tra nhật ký mục 20 theo yêu cầu. Checklist khi giao bản (tại hộp):
+
+- [ ] 3 container `Up` (`docker compose ps`).
+- [ ] `/up` xanh; `/version` đúng bản vừa giao.
+- [ ] Đĩa còn chỗ (`df -h`, `docker system df`).
+- [ ] Cron auto-backup (ổ phụ) có file/log mới.
+
+### Sao lưu & khôi phục (ADR-017)
+
+- **Lớp 3 (auto, ổ phụ, 7 bản) = nguồn cậy chính, bắt buộc.** Lớp 1 (giao diện, 3 bản) = snapshot trước thao tác nguy hiểm. How-to: deploy guide mục Sao lưu.
+- **Diễn tập khôi phục mỗi lần giao bản, phía dev/nghiệm thu:** chạy `backups:restore` với một backup sinh ở đó để chứng minh cơ chế của đúng version chạy được. Không diễn tập trên prod; không mang file backup prod ra ngoài.
+- **Trên prod:** chỉ khôi phục thật khi sự cố; **luôn tạo backup Lớp 1 trước khi restore**.
+
+### Tiếp nhận lỗi/sự cố (ADR-018)
+
+Lỗi/sự cố là một "thay đổi" — dùng luồng 6 bước mục 9, chỉ khác template + đường vá:
+
+1. **Tiếp nhận** — mở Issue bằng template *Báo lỗi / sự cố* (`.github/ISSUE_TEMPLATE/bug-report.md`); khách báo qua kênh ngoài thì đội mở thay. Nhãn `bug`.
+2. **Phân loại mức độ → đường vá:**
+   - **Nghiêm trọng** (prod không dùng được / sai số tiền / mất hoặc nguy cơ mất dữ liệu) → gắn thêm nhãn `severity-critical`; vá theo `hotfix/*` ← `main` (mục 2); cân nhắc **rollback tag trước** trên Mini PC làm bước chữa cháy tức thì.
+   - **Thường** (vẫn dùng được) → luồng `feature/*` → `develop` → `release/*`, gồn vào bản sau.
+3. **Vá + test** — pull request `Refs #N`, test cover lỗi.
+4. **Phát hành + giao** — tag (release-please); giao Mini PC + fast-forward `production`.
+5. **Đóng + báo khách** — `Closes #N`; báo khách kèm release notes tiếng Việt.
+
+> Nhãn `severity-critical` tạo một lần khi lần đầu cần (production hiện đang hoãn): `gh label create severity-critical --color B60205 --description "Lỗi nghiêm trọng - đường hotfix"`.
 
 ## Tài liệu liên quan
 
