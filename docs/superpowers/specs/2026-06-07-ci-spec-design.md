@@ -1,6 +1,6 @@
 ---
 title: Nội dung CI — phần chạy test (rspec + system, schema-drift, zeitwerk) — Mảnh "CI spec chi tiết"
-version: 0.1.0
+version: 0.2.0
 status: draft (chờ duyệt)
 date: 2026-06-07
 governed_by: 2026-06-07-sdlc-overview-design.md
@@ -8,7 +8,7 @@ governed_by: 2026-06-07-sdlc-overview-design.md
 
 # Nội dung CI — phần chạy test trên Continuous Integration
 
-Mảnh **"CI spec chi tiết"** (Backlog #1 trong [quy trình phát hành](2026-06-07-quy-trinh-release-design.md)). Tiếp nối trực tiếp **ADR-011**: P2 đã dựng tập kiểm tra **tĩnh** (rubocop, brakeman, bundler-audit, commitlint, branch-source guard); mảnh này bổ sung phần **chạy test** mà P2 cố ý hoãn vì cần thêm hạ tầng (Postgres + trình duyệt headless) và các quyết định runner/cache/headless.
+Mảnh **"CI spec chi tiết"** (Backlog #1 trong [quy trình phát hành](2026-06-07-quy-trinh-release-design.md)). Tiếp nối trực tiếp **ADR-011**: P2 đã dựng tập kiểm tra **tĩnh** (rubocop, brakeman, bundler-audit, commitlint, branch-source guard); mảnh này bổ sung phần **chạy test** mà P2 cố ý hoãn vì cần thêm hạ tầng (Postgres + trình duyệt headless) và các quyết định runner/cache/headless. Về sau mảnh này bổ sung **ADR-021** — cắt chi phí & độ trễ CI (path filter bỏ qua job nặng cho pull request không đụng code + bỏ trigger `edited`), kích hoạt từ chính "Điều kiện xem lại" của ADR-012.
 
 > **Cách đọc:** quyết định viết theo **ADR** (xem [ADR-012](#adr-012-nội-dung-ci--phần-chạy-test)): Bối cảnh → Quyết định → Lý do → Tradeoff → Phương án đã loại → Điều kiện xem lại → Trạng thái.
 
@@ -126,6 +126,24 @@ Bật cache: **`bundler-cache: true`** ở job `tests`, và **đổi luôn job `
   - *apt-install chromium + chromium-driver* — trên Ubuntu mới chromium là snap, cài apt trục trặc; Google Chrome cài sẵn ổn định hơn.
 - **Điều kiện xem lại:** thời gian job `tests` quá lâu → tách system spec / chạy song song; system spec chập chờn lặp lại → thêm `rspec-retry` hoặc tinh chỉnh thời gian chờ Capybara; cần khớp trình duyệt prod tuyệt đối → cân nhắc chạy trong image Docker.
 
+### ADR-021: Cắt chi phí & độ trễ CI — path filter cho pull request không đụng code + bỏ trigger `edited`
+- **Trạng thái:** Proposed · 2026-06-09
+- **Bối cảnh:** Repo private dùng **GitHub Free** (2000 phút Actions/tháng). `ci.yml` chạy trên mỗi pull request; job `tests` ~8 phút (Postgres + headless Chrome), `ruby-checks` ~1.5 phút. Hai nguồn lãng phí: (1) pull request **chỉ sửa tài liệu** vẫn chạy full `tests` + `ruby-checks`; (2) trigger có `edited` → mỗi lần sửa **tiêu đề/mô tả** pull request là **chạy lại toàn bộ CI** (~10 phút). `concurrency: cancel-in-progress` đã bật. Đội than: docs vẫn chạy full test; phút eo hẹp; việc nối tiếp phụ thuộc kẹt chờ ~10 phút CI mới merge được. Đây chính là **Điều kiện xem lại của ADR-012** ("CI quá lâu") cộng góc **chi phí phút**.
+- **Quyết định:**
+  1. **Path filter fail-safe (native bash).** Thêm job `changes` chạy `.github/scripts/detect-code-changes.sh`: so file thay đổi `base...head`, xuất `code_touched`. Hai job nặng `tests` + `ruby-checks` thêm `needs: changes` + `if: needs.changes.outputs.code_touched == 'true'`. `commitlint` + `branch-source-guard` **luôn chạy** (vài giây). **Fail-safe:** chỉ trả `false` khi MỌI file thay đổi thuộc allowlist docs/meta (`*.md`, `docs/**`, `LICENSE`, `.gitignore`, `.gitattributes`, `.editorconfig`); thiếu SHA / lỗi git / path lạ → `true` ⇒ **không bao giờ bỏ sót test cho thay đổi code**. `.github/workflows/**` và `.github/scripts/**` (không phải `*.md`) tính là code → đổi chính workflow vẫn chạy full để tự kiểm.
+  2. **Bỏ `edited` khỏi trigger** → `types: [opened, synchronize, reopened]`. Sửa tiêu đề/mô tả/base pull request không còn chạy lại CI. (`commitlint` lint dải commit, không phụ thuộc mô tả; `branch-source-guard` vẫn chạy ở `opened`/`synchronize`.)
+  3. **Giữ `concurrency: cancel-in-progress`** (đã có) — push dồn thì huỷ run cũ.
+  4. **KHÔNG split / song song hoá job `tests`.** Split system spec ra job riêng (hoặc `parallel_tests`) giảm wall-clock nhưng **tăng tổng phút bill** (mỗi job trả phí setup Ruby+gem+DB riêng) → sai cho repo free khi **phút là ràng buộc đang siết**. Giữ làm escape hatch của ADR-012 cho khi wall-clock vượt giá trị tiết kiệm phút.
+- **Lý do:** Path filter + bỏ `edited` cắt phần lớn phút lãng phí mà **không giảm độ phủ test cho code** (allowlist fail-safe nghiêng về chạy). Native bash khớp ethos "miễn phí trước, không phụ thuộc công cụ bị bỏ rơi" (ADR-007/011), tái dùng pattern `.github/scripts/` của branch-source-guard. Không split vì tối ưu cho **phút** (ràng buộc thật), không phải wall-clock. **Việc nối tiếp phụ thuộc** (kẹt chờ CI để merge) là vấn đề *quy trình*, giải bằng **nhánh xếp chồng** (`CONTRIBUTING.md`) — không đáng đổi phút lấy wall-clock.
+- **Tradeoff:** (+) pull request docs gần như 0 phút CI; sửa mô tả pull request không đốt phút; độ phủ code giữ nguyên; native, không phụ thuộc mới. (−) job nặng hiện trạng thái **"skipped"** trên pull request docs — nếu sau này bật branch protection coi chúng *required* thì "skipped" có thể chặn merge (chưa phải vấn đề: ADR-007 CI chỉ hiện trạng thái). (−) allowlist phải bảo trì khi có loại file mới — fail-safe nghiêng "chạy" nên rủi ro chỉ là **chạy thừa**, không **bỏ sót**. (−) đổi base pull request sau khi mở không tự re-check guard (hiếm; push lại là chạy). (−) job `changes` thêm ~20–30s trước khi `tests` bắt đầu trên pull request code (đổi lại tiết kiệm lớn ở pull request docs).
+- **Phương án đã loại:**
+  - *`dorny/paths-filter`* — robust + chuẩn cộng đồng nhưng thêm **third-party action** (đội đã thay action bằng bash native vì sợ bỏ rơi — ADR-007/011); native + allowlist fail-safe đủ tốt.
+  - *`paths-ignore` mức workflow* — bỏ qua **cả** `commitlint` + `branch-source-guard` trên pull request docs → mất lint commit; per-job `if` giữ được các check rẻ.
+  - *Split / `parallel_tests` job `tests`* — đổi phút lấy wall-clock, sai ràng buộc free-tier (xem Quyết định 4); để dành escape hatch ADR-012.
+  - *Bỏ CI cho pull request docs hẳn / merge không CI* — mất `commitlint` + guard + dấu vết; path filter giữ check rẻ mà vẫn nhanh.
+  - *Inline detect trong từng job nặng (không job `changes` riêng)* — lặp logic + không chia sẻ output; một job `changes` gọn hơn.
+- **Điều kiện xem lại:** phút Actions vẫn căng sau tối ưu → cân nhắc self-hosted runner hoặc giảm tần suất chạy; wall-clock job `tests` thành nút thắt (vượt giá trị tiết kiệm phút) → bật split/`parallel_tests` theo escape hatch ADR-012; bật GitHub Team + branch protection (required checks) → đổi job nặng từ "skip" sang trạng thái *neutral/success* (vd luôn chạy job nhưng các bước tự no-op khi docs-only) để "skipped" không kẹt merge; allowlist bỏ sót loại file docs mới khiến chạy thừa thường xuyên → bổ sung allowlist.
+
 ---
 
 ## Tiêu chí thành công (đo được)
@@ -159,4 +177,5 @@ Bật cache: **`bundler-cache: true`** ở job `tests`, và **đổi luôn job `
 
 ## Changelog
 
+- **0.2.0 (2026-06-09):** Thêm **ADR-021** (cắt chi phí & độ trễ CI) — path filter fail-safe native bash (`.github/scripts/detect-code-changes.sh` + job `changes`) bỏ qua `tests`/`ruby-checks` cho pull request chỉ sửa docs/meta; bỏ trigger `edited`; giữ `concurrency` + KHÔNG split job `tests` (tối ưu phút, không wall-clock). Hiện thực ở `.github/workflows/ci.yml` + script; ghi chú CONTRIBUTING §8 + mục "nhánh xếp chồng". Kích hoạt từ Điều kiện xem lại của ADR-012.
 - **0.1.0 (2026-06-07):** Bản thảo đầu — ADR-012 (runner native + Postgres service container + Chrome qua Selenium Manager; một job `tests` gộp schema-drift + zeitwerk + rspec gồm system; bật cache gem; không gem retry; chỉ sửa workflow). Hiện thực phần chạy test mà ADR-011 hoãn (Backlog #1).

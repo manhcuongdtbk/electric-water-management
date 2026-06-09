@@ -1,16 +1,21 @@
 name: CI
 
-# CI on pull requests (ADR-007, ADR-011, ADR-012). Two tiers:
+# CI on pull requests (ADR-007, ADR-011, ADR-012, ADR-021). Two tiers:
 #   - STATIC checks (no Postgres / no browser / no app boot): rubocop, brakeman,
 #     bundler-audit, commitlint, branch-source guard.
 #   - TEST runs (Postgres service container + headless Chrome): rspec incl. system
 #     specs, a schema-drift check, and zeitwerk:check — see the `tests` job and
 #     docs/superpowers/specs/2026-06-07-ci-spec-design.md (ADR-012).
+# Cost/latency controls (ADR-021): the heavy jobs (`tests`, `ruby-checks`) run
+# only when a pull request touches code — a `changes` job (fail-safe native bash,
+# .github/scripts/detect-code-changes.sh) skips them for docs/meta-only changes.
+# `edited` is intentionally NOT a trigger, so editing a pull request's title or
+# body does not re-run CI.
 # Per ADR-007 this CI only SHOWS status (a private repo has no free branch
 # protection) — single-merger discipline enforces the rules.
 on:
   pull_request:
-    types: [opened, synchronize, reopened, edited]
+    types: [opened, synchronize, reopened]
 
 # Cancel superseded runs on the same pull request (saves Actions minutes).
 concurrency:
@@ -18,9 +23,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Fail-safe path filter (ADR-021): decide whether the heavy jobs run.
+  # Skips them only when EVERY changed file is docs/meta; any uncertainty → run.
+  changes:
+    name: Detect code changes
+    runs-on: ubuntu-latest
+    outputs:
+      code_touched: ${{ steps.detect.outputs.code_touched }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # need history to diff base...head
+      - id: detect
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bash .github/scripts/detect-code-changes.sh
+
   ruby-checks:
     name: Ruby static checks (rubocop, brakeman, bundler-audit)
     runs-on: ubuntu-latest
+    needs: changes
+    if: ${{ needs.changes.outputs.code_touched == 'true' }} # ADR-021: skip on docs-only
     steps:
       - uses: actions/checkout@v6
       - uses: ruby/setup-ruby@v1
@@ -71,6 +95,8 @@ jobs:
   tests:
     name: Tests (rspec incl. system specs, zeitwerk, schema drift)
     runs-on: ubuntu-latest
+    needs: changes
+    if: ${{ needs.changes.outputs.code_touched == 'true' }} # ADR-021: skip on docs-only
     services:
       postgres:
         image: postgres:16-alpine # matches compose.yml
