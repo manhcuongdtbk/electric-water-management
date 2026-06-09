@@ -117,6 +117,7 @@ Hai cái CÓ THỂ khác nhau (ví dụ Nghiệm thu và Mốc đều `rails_env
 - **Quy trình phát hành** (Git Flow, SemVer + release candidate, release-please, môi trường, nội dung CI): `docs/superpowers/specs/2026-06-07-quy-trinh-release-design.md` (ADR-003..011).
 - **Truy vết & quản lý thay đổi** (yêu cầu → thiết kế → test → release; GitHub Issue cho luồng, repo cho dấu vết; anchor `NV-...`; template Issue/pull request/ADR): `docs/superpowers/specs/2026-06-08-truy-vet-quan-ly-thay-doi-design.md` (ADR-013..015) + `CONTRIBUTING.md` mục 9.
 - **Vận hành & bảo trì** (giám sát Mini PC offline, chính sách sao lưu/khôi phục, tiếp nhận lỗi/sự cố khách): `docs/superpowers/specs/2026-06-09-van-hanh-bao-tri-design.md` (ADR-016..018) + `CONTRIBUTING.md` mục 10.
+- **Tiếp nhận & ưu tiên công việc** (một backlog Issue; nhãn `priority-high` trên nền milestone = version đích; cổng release-readiness): `docs/superpowers/specs/2026-06-09-tiep-nhan-uu-tien-cong-viec-design.md` (ADR-019..020) + `CONTRIBUTING.md` mục 11.
 - **Quy trình cho người** (thao tác Git Flow, Conventional Commits, pair local bằng VS Code Dev Tunnels): `CONTRIBUTING.md`.
 
 > Tóm tắt một dòng (chi tiết và lý do ở các spec trên — đừng lặp lại ở đây): nhánh theo **Git Flow** (`main` / `develop` / `feature/*` / `release/*` / `hotfix/*`); version theo **SemVer** kèm hậu tố `-rc.N` cho bản chờ nghiệm thu; commit theo **Conventional Commits** (tiếng Anh).

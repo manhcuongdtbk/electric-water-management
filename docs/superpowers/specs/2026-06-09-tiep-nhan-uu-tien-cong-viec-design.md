@@ -1,6 +1,6 @@
 ---
 title: Tiếp nhận & ưu tiên công việc (intake & backlog priority) — Mảnh 4 của SDLC
-version: 0.1.0
+version: 0.2.0
 status: draft (chờ duyệt)
 date: 2026-06-09
 governed_by: 2026-06-07-sdlc-overview-design.md
@@ -148,8 +148,9 @@ flowchart LR
 - **Mảnh cha:** [Quy trình phát hành](2026-06-07-quy-trinh-release-design.md) — Backlog #4 (mảnh này); **làm rõ** bước "Đủ nội dung → `release/*`"; tái dùng milestone/Issue.
 - **Mảnh #2:** [Truy vết & quản lý thay đổi](2026-06-08-truy-vet-quan-ly-thay-doi-design.md) — ADR-013 (Hybrid; milestone = version; trạng thái từ artifact), ADR-014 (anchor + "Truy vết"); #4 dùng nguyên **backlog + milestone** của #2.
 - **Mảnh #3:** [Vận hành & bảo trì](2026-06-09-van-hanh-bao-tri-design.md) — ADR-018 (`severity-critical`); #4 đặt `severity-critical` **ngoài** thang planned-priority.
-- **Đã hiện thực:** *(điền sau khi hiện thực — bump 0.2.0, giống #2/#3).*
+- **Đã hiện thực** (plan [`2026-06-09-tiep-nhan-uu-tien-cong-viec.md`](../plans/2026-06-09-tiep-nhan-uu-tien-cong-viec.md)): mục 11 "Ưu tiên công việc (backlog)" trong `CONTRIBUTING.md` + sửa câu trỏ cuối mục 9; pointer trong `AGENTS.md`; Backlog #4 trong release spec → ✅ + bump version; nhãn `priority-high` (tạo lười — lệnh trong `CONTRIBUTING.md` mục 11). **0 thay đổi code/test.**
 
 ## Changelog
 
+- **0.2.0 (2026-06-09):** Hiện thực xong (xem plan `2026-06-09-tiep-nhan-uu-tien-cong-viec.md`): mục 11 `CONTRIBUTING.md` + sửa câu trỏ mục 9; pointer `AGENTS.md`; Backlog #4 trong release spec → ✅; nhãn `priority-high` (tạo lười). Cập nhật mục "Truy vết" sang trạng thái đã hiện thực.
 - **0.1.0 (2026-06-09):** Bản thảo đầu — ADR-019 (cơ chế ưu tiên: nhãn `priority-high` tối thiểu trên nền milestone; `severity-critical` ngoài thang), ADR-020 (nhịp ad-hoc gộp vào bước Phân loại của #2; cổng release-readiness = mọi `priority-high` của milestone đã xong, việc không cờ reslot; một backlog một thứ tự). Backlog #4. Chờ duyệt.
