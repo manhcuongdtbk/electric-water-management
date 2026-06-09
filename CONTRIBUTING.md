@@ -90,6 +90,8 @@ release-please đã được cấu hình (P3): khi `release/*`/`hotfix/*` vào `
 
 **Claude Code chặn push nhánh cũ (`.claude/hooks/check-branch-behind-base.sh`):** một `PreToolUse` hook — trước `git push`, kiểm tra nhánh hiện tại có cũ hơn base không (base theo Git Flow: `release/*`·`hotfix/*` → `main`; còn lại → base của pull request, mặc định `develop`). Nếu cũ hơn → **chặn push** và nhắc tích hợp base trước (merge/rebase, hỏi khi xung đột, re-check hot file như release spec). Fail-open: không xác định được base/mạng thì cho push. Cần `jq` + `gh`.
 
+**Claude Code nhắc bump version tài liệu (`.claude/hooks/remind-doc-version-bump.sh`):** một `PostToolUse` hook — khi sửa một file `docs/` có version header, nhắc bump version + thêm entry changelog trong cùng commit (ADR-002). Chỉ nhắc, không chặn; fail-open. Cần `jq`.
+
 **Còn ở các giai đoạn sau:** môi trường Railway Nghiệm thu + Mốc + bản rc (P4); các mảnh SDLC còn lại trong Backlog của release spec. Các quy ước ở mục 2–3 ngoài phần CI ép được vẫn giữ bằng kỷ luật + review thủ công.
 
 ## 9. Quản lý thay đổi & truy vết

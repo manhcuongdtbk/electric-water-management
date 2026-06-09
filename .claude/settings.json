@@ -20,6 +20,15 @@
             "command": "jq -r '.tool_input.command // empty' | grep -Eq 'gh[[:space:]]+pr[[:space:]]+(create|edit|ready|reopen)' && echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"Team convention (this repo): a pull request was just created or updated — monitor its CI and report the result so nobody has to check manually. Use gh pr checks <number> --watch (or poll gh pr view <number> --json statusCheckRollup), then summarize which checks passed or failed.\"}}' || true"
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/remind-doc-version-bump.sh\" 2>/dev/null"
+          }
+        ]
       }
     ]
   }
