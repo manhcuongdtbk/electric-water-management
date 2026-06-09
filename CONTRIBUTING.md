@@ -25,6 +25,7 @@ Theo ADR-003 (xem `docs/superpowers/specs/2026-06-07-quy-trinh-release-design.md
     - `release/*`/`hotfix/*` → `main` và merge-back `main` → `develop`: dùng **Create a merge commit** — giữ từng commit để release-please liệt kê đầy đủ trong changelog.
     - *Vì sao squash cho feature:* GitHub **không có** cấu hình nào làm merge commit "không-conventional" (mọi tổ hợp title/message đều đưa tiêu đề pull request vào merge commit). Nếu merge feature bằng merge-commit, release-please đếm **cả** commit thật **lẫn** merge commit → **trùng dòng**. Squash chỉ tạo 1 commit nên tránh được. (Repo đã đặt squash: title = tiêu đề pull request, body để trống.)
     - Đặt tiêu đề pull request của `release/*`/`hotfix/*`/merge-back bằng prefix **không phải loại changelog** (ví dụ `release:`) để merge commit của chúng không thêm dòng thừa vào changelog.
+- **Đồng bộ base vào nhánh đang làm** (khi pre-push guard báo nhánh tụt sau base): tích hợp bằng `git merge origin/<base>` hoặc `rebase` rồi push lại. Merge commit **không** cần đúng Conventional Commits — `commitlint.config.mjs` đã ignore mọi commit mở đầu `Merge ` nên không làm đỏ CI.
 
 ## 3. Conventional Commits (commit message tiếng Anh)
 
