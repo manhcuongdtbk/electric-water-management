@@ -1,6 +1,6 @@
 ---
 title: Quy trình phát hành (release process) — Mảnh 1 của SDLC
-version: 0.11.0
+version: 0.12.0
 status: draft (chờ duyệt)
 date: 2026-06-07
 governed_by: 2026-06-07-sdlc-overview-design.md
@@ -227,12 +227,23 @@ flowchart LR
 3. **✅ Đã hiện thực** (ADR-016..018, [`2026-06-09-van-hanh-bao-tri-design.md`](2026-06-09-van-hanh-bao-tri-design.md)): vận hành / bảo trì — giám sát Mini PC offline (review khi giao bản, không nhịp định kỳ; nhật ký §20 tra theo yêu cầu); chính sách sao lưu/khôi phục trên tính năng 3 lớp đã có (Lớp 3 off-box bắt buộc; diễn tập khôi phục mỗi bản giao phía dev); tiếp nhận lỗi/sự cố mở rộng luồng Hybrid #2 — template bug-report (`.github/ISSUE_TEMPLATE/bug-report.md`) + mức độ 2 bậc → đường vá + nhãn `severity-critical`; mục 10 `CONTRIBUTING.md` + pointer `AGENTS.md`.
 4. **✅ Đã hiện thực** (ADR-019..020, [`2026-06-09-tiep-nhan-uu-tien-cong-viec-design.md`](2026-06-09-tiep-nhan-uu-tien-cong-viec-design.md)): tiếp nhận & ưu tiên công việc — thừa hưởng intake Issue của #2/#3; nhãn `priority-high` tối thiểu trên nền milestone = version đích (`severity-critical` của #3 nằm ngoài thang); nhịp ad-hoc gộp vào bước phân loại #2; cổng release-readiness (mọi `priority-high` của milestone đã xong, việc không cờ reslot) làm rõ bước "Đủ nội dung → `release/*`"; mục 11 `CONTRIBUTING.md` + pointer `AGENTS.md`.
 
-> **Bốn mảnh SDLC tuần tự đã hoàn tất.** Phần còn lại chỉ là *cải tiến optional* dưới đây (YAGNI cho quy mô hiện tại).
+> **Bốn mảnh SDLC tuần tự đã hoàn tất.** Phần còn lại chỉ là *cải tiến optional* dưới đây — **mỗi mục kèm một *trigger* hồi sinh để không bỏ lửng**, không phải danh sách trần.
 
-**Cải tiến optional (chưa làm — YAGNI cho quy mô hiện tại):** cheat-sheet đầu AGENTS.md; checklist onboarding; lint định dạng ADR trong CI; DORA metrics; tách ADR ra `docs/adr/`. *(Template ADR/pull request/issue đã chuyển vào Backlog #2 — ADR-015.)*
+**Cải tiến optional (chưa làm — YAGNI tới khi chạm trigger; đã xét từng mục):**
+
+| Mục | Verdict | Trigger (điều kiện làm) |
+|---|---|---|
+| Cheat-sheet đầu `AGENTS.md` | Hoãn — AGENTS.md vốn ngắn/canonical, cheat-sheet dễ trùng & lệch (ADR-002) | Có người mới onboard thấy `AGENTS.md` khó nắm nhanh |
+| Checklist onboarding (`CONTRIBUTING.md`) | Hoãn — §1 đã có "trước khi bắt đầu"; đội hiện đã thạo | Có người mới gia nhập đội |
+| Lint định dạng ADR trong CI | Hoãn sâu — đã có `ADR-TEMPLATE.md`; kỷ luật + người duyệt đủ; linter niche, tốn bảo trì | ADR sai định dạng lặp lại nhiều lần |
+| DORA metrics | Hoãn sâu — đội nhỏ, deploy offline thủ công nên phần lớn không đo được | Đội >5 người, hoặc giao hàng thành mối lo cần đo (≈ Điều kiện xem lại ADR-001) |
+| Tách ADR ra `docs/adr/` | Hoãn — 20 ADR vẫn quản tốt theo spec + đánh số toàn cục + template | Khi tra/cross-link ADR thành cực hình (Điều kiện xem lại ADR-002) |
+
+*(Template ADR/pull request/issue đã chuyển vào Backlog #2 — ADR-015.)*
 
 ## Changelog
 
+- **0.12.0 (2026-06-09):** "Cải tiến optional" chuyển từ danh sách trần sang **bảng có *verdict* + *trigger* hồi sinh** cho từng mục (cheat-sheet `AGENTS.md`; checklist onboarding; lint định dạng ADR trong CI; DORA metrics; tách ADR ra `docs/adr/`) — để không mục nào bị bỏ lửng, nhất quán với discipline "Điều kiện xem lại" của ADR. Không đổi quyết định nào (vẫn YAGNI tới khi chạm trigger).
 - **0.11.0 (2026-06-09):** Backlog #4 ("Tiếp nhận công việc / ưu tiên") **thiết kế + hiện thực xong** — spec mới [`2026-06-09-tiep-nhan-uu-tien-cong-viec-design.md`](2026-06-09-tiep-nhan-uu-tien-cong-viec-design.md) (ADR-019 cơ chế ưu tiên nhãn `priority-high` trên nền milestone; ADR-020 nhịp ad-hoc + cổng release-readiness); mục 11 `CONTRIBUTING.md` + pointer `AGENTS.md`; Backlog #4 → ✅ (bốn mảnh SDLC tuần tự hoàn tất).
 - **0.10.0 (2026-06-09):** Backlog #3 ("Vận hành / bảo trì") **thiết kế + hiện thực xong** — spec mới [`2026-06-09-van-hanh-bao-tri-design.md`](2026-06-09-van-hanh-bao-tri-design.md) (ADR-016 giám sát offline; ADR-017 chính sách sao lưu/khôi phục; ADR-018 tiếp nhận lỗi/sự cố mở rộng #2); template `.github/ISSUE_TEMPLATE/bug-report.md` + nhãn `severity-critical`; anchor `NV-nhat-ky-he-thong`/`NV-sao-luu-phuc-hoi` trong tài liệu nghiệp vụ; mục 10 `CONTRIBUTING.md` + pointer `AGENTS.md`; Backlog #3 → ✅.
 - **0.9.0 (2026-06-08):** Backlog #2 ("Truy vết / quản lý thay đổi") **thiết kế + hiện thực xong** — spec mới [`2026-06-08-truy-vet-quan-ly-thay-doi-design.md`](2026-06-08-truy-vet-quan-ly-thay-doi-design.md) (ADR-013 Hybrid GitHub Issues + repo; ADR-014 anchor yêu cầu `NV-...` + chuẩn hoá "Truy vết"; ADR-015 template); 3 template (Issue change-request, pull request, ADR) + mục 9 `CONTRIBUTING.md` + pointer `AGENTS.md`; Backlog #2 → ✅. Chuyển "template ADR/pull request/issue" từ danh mục optional sang Backlog #2.
