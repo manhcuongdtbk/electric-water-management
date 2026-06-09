@@ -1,6 +1,6 @@
 ---
 title: Vận hành & bảo trì (giám sát production offline, sao lưu, tiếp nhận lỗi khách) — Mảnh 3 của SDLC
-version: 0.1.0
+version: 0.2.0
 status: draft (chờ duyệt)
 date: 2026-06-09
 governed_by: 2026-06-07-sdlc-overview-design.md
@@ -181,8 +181,9 @@ flowchart LR
 - **Mảnh cha:** [Quy trình phát hành](2026-06-07-quy-trinh-release-design.md) — Backlog #3 (mảnh này); tái dùng ADR-003 (`hotfix/*`), mục Rollback, ADR-008 (release-please/CHANGELOG).
 - **Mảnh #2 (mở rộng):** [Truy vết & quản lý thay đổi](2026-06-08-truy-vet-quan-ly-thay-doi-design.md) — ADR-013 (Hybrid), ADR-014 (anchor `NV-...` + "Truy vết"), ADR-015 (template) — mảnh này **hoàn thành** template báo lỗi mà ADR-015 đã hoãn.
 - **Tính năng + how-to liên quan (đã có, chỉ trỏ — không lặp lại):** sao lưu `app/models/backup.rb`, `app/services/backup_service.rb`, `lib/backup_restore_runner.rb`, `script/setup-auto-backup`; nhật ký `app/controllers/audit_logs_controller.rb`; version reporting spec `2026-06-07-app-version-reporting-design.md`; deploy guide `docs/HUONG_DAN_DEPLOY.md` (§Vận hành hàng ngày, §Sao lưu dữ liệu, §Xử lý sự cố); docker guide `docs/KIEN_THUC_DOCKER.md` §10.
-- **Sẽ hiện thực** (xem plan `docs/superpowers/plans/2026-06-09-van-hanh-bao-tri.md` khi có): `.github/ISSUE_TEMPLATE/bug-report.md` + nhãn `severity-critical`; anchor `NV-nhat-ky-he-thong`/`NV-sao-luu-phuc-hoi` trong tài liệu nghiệp vụ; mục 10 "Vận hành & xử lý sự cố" trong `CONTRIBUTING.md`; pointer trong `AGENTS.md`; Backlog #3 trong release spec → ✅.
+- **Đã hiện thực** (plan [`2026-06-09-van-hanh-bao-tri.md`](../plans/2026-06-09-van-hanh-bao-tri.md)): `.github/ISSUE_TEMPLATE/bug-report.md` + nhãn `severity-critical`; anchor `NV-nhat-ky-he-thong`/`NV-sao-luu-phuc-hoi` trong `docs/V2_XAC_NHAN_NGHIEP_VU.md`; mục 10 "Vận hành & xử lý sự cố" trong `CONTRIBUTING.md`; pointer trong `AGENTS.md`; Backlog #3 trong release spec → ✅.
 
 ## Changelog
 
+- **0.2.0 (2026-06-09):** Hiện thực xong (xem plan `2026-06-09-van-hanh-bao-tri.md`): template `bug-report` + nhãn `severity-critical`; anchor `NV-nhat-ky-he-thong`/`NV-sao-luu-phuc-hoi`; mục 10 `CONTRIBUTING.md`; pointer `AGENTS.md`; Backlog #3 → ✅. Cập nhật mục "Truy vết" sang trạng thái đã hiện thực.
 - **0.1.0 (2026-06-09):** Bản thảo đầu — ADR-016 (giám sát production offline = review khi giao bản + lưới auto-backup nền + nhật ký §20 tra theo yêu cầu; không nhịp định kỳ), ADR-017 (chính sách sao lưu/khôi phục trên tính năng 3 lớp đã có: Lớp 3 off-box bắt buộc là nguồn cậy chính, Lớp 1 là snapshot trước thao tác; diễn tập khôi phục mỗi bản giao phía dev; backup Lớp 1 trước restore thật trên prod), ADR-018 (tiếp nhận lỗi/sự cố = mở rộng luồng Hybrid #2; một template bug-report + mức độ 2 bậc → đường vá hotfix/thường; nhãn `severity-critical`; đội mở Issue thay khách). Backlog #3. Chờ duyệt.
