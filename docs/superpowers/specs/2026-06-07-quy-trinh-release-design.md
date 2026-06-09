@@ -1,6 +1,6 @@
 ---
 title: Quy trình phát hành (release process) — Mảnh 1 của SDLC
-version: 0.12.0
+version: 0.13.0
 status: draft (chờ duyệt)
 date: 2026-06-07
 governed_by: 2026-06-07-sdlc-overview-design.md
@@ -229,12 +229,12 @@ flowchart LR
 
 > **Bốn mảnh SDLC tuần tự đã hoàn tất.** Phần còn lại chỉ là *cải tiến optional* dưới đây — **mỗi mục kèm một *trigger* hồi sinh để không bỏ lửng**, không phải danh sách trần.
 
-**Cải tiến optional (chưa làm — YAGNI tới khi chạm trigger; đã xét từng mục):**
+**Cải tiến optional (mỗi mục kèm *verdict* + *trigger* hồi sinh; một số đã làm khi chạm trigger):**
 
 | Mục | Verdict | Trigger (điều kiện làm) |
 |---|---|---|
-| Cheat-sheet đầu `AGENTS.md` | Hoãn — AGENTS.md vốn ngắn/canonical, cheat-sheet dễ trùng & lệch (ADR-002) | Có người mới onboard thấy `AGENTS.md` khó nắm nhanh |
-| Checklist onboarding (`CONTRIBUTING.md`) | Hoãn — §1 đã có "trước khi bắt đầu"; đội hiện đã thạo | Có người mới gia nhập đội |
+| Cheat-sheet đầu `AGENTS.md` | ✅ Đã làm (2026-06-09, [#307](https://github.com/manhcuongdtbk/electric-water-management/issues/307)) — **không** nhồi cheat-sheet vào `AGENTS.md` (giữ ADR-002): tạo lối vào distill `docs/HUONG_DAN_SDLC.md` + pointer ở đầu `AGENTS.md`. Spec: [`2026-06-09-huong-dan-sdlc-onboarding-design.md`](2026-06-09-huong-dan-sdlc-onboarding-design.md) (ADR-022) | (đã chạm) |
+| Checklist onboarding (`CONTRIBUTING.md`) | ✅ Đã làm (2026-06-09, [#307](https://github.com/manhcuongdtbk/electric-water-management/issues/307)) — thêm checklist onboarding ở `CONTRIBUTING.md` §1 trỏ `docs/HUONG_DAN_SDLC.md` | (đã chạm) |
 | Lint định dạng ADR trong CI | Hoãn sâu — đã có `ADR-TEMPLATE.md`; kỷ luật + người duyệt đủ; linter niche, tốn bảo trì | ADR sai định dạng lặp lại nhiều lần |
 | DORA metrics | Hoãn sâu — đội nhỏ, deploy offline thủ công nên phần lớn không đo được | Đội >5 người, hoặc giao hàng thành mối lo cần đo (≈ Điều kiện xem lại ADR-001) |
 | Tách ADR ra `docs/adr/` | Hoãn — 20 ADR vẫn quản tốt theo spec + đánh số toàn cục + template | Khi tra/cross-link ADR thành cực hình (Điều kiện xem lại ADR-002) |
@@ -243,6 +243,7 @@ flowchart LR
 
 ## Changelog
 
+- **0.13.0 (2026-06-09):** Hai mục "Cải tiến optional" *cheat-sheet `AGENTS.md`* + *checklist onboarding* → **✅ Đã làm** (Issue #307): tạo lối vào distill `docs/HUONG_DAN_SDLC.md` (ADR-022, spec [`2026-06-09-huong-dan-sdlc-onboarding-design.md`](2026-06-09-huong-dan-sdlc-onboarding-design.md)) + pointer `AGENTS.md`/`CONTRIBUTING.md`; **không** nhồi cheat-sheet vào `AGENTS.md` (giữ ADR-002). Kèm rà soát mạch lạc tài liệu canonical (bỏ drift `-rc.N`/env/nhánh).
 - **0.12.0 (2026-06-09):** "Cải tiến optional" chuyển từ danh sách trần sang **bảng có *verdict* + *trigger* hồi sinh** cho từng mục (cheat-sheet `AGENTS.md`; checklist onboarding; lint định dạng ADR trong CI; DORA metrics; tách ADR ra `docs/adr/`) — để không mục nào bị bỏ lửng, nhất quán với discipline "Điều kiện xem lại" của ADR. Không đổi quyết định nào (vẫn YAGNI tới khi chạm trigger).
 - **0.11.0 (2026-06-09):** Backlog #4 ("Tiếp nhận công việc / ưu tiên") **thiết kế + hiện thực xong** — spec mới [`2026-06-09-tiep-nhan-uu-tien-cong-viec-design.md`](2026-06-09-tiep-nhan-uu-tien-cong-viec-design.md) (ADR-019 cơ chế ưu tiên nhãn `priority-high` trên nền milestone; ADR-020 nhịp ad-hoc + cổng release-readiness); mục 11 `CONTRIBUTING.md` + pointer `AGENTS.md`; Backlog #4 → ✅ (bốn mảnh SDLC tuần tự hoàn tất).
 - **0.10.0 (2026-06-09):** Backlog #3 ("Vận hành / bảo trì") **thiết kế + hiện thực xong** — spec mới [`2026-06-09-van-hanh-bao-tri-design.md`](2026-06-09-van-hanh-bao-tri-design.md) (ADR-016 giám sát offline; ADR-017 chính sách sao lưu/khôi phục; ADR-018 tiếp nhận lỗi/sự cố mở rộng #2); template `.github/ISSUE_TEMPLATE/bug-report.md` + nhãn `severity-critical`; anchor `NV-nhat-ky-he-thong`/`NV-sao-luu-phuc-hoi` trong tài liệu nghiệp vụ; mục 10 `CONTRIBUTING.md` + pointer `AGENTS.md`; Backlog #3 → ✅.
