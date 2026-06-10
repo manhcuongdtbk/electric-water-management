@@ -16,7 +16,7 @@ Tuyệt đối không viết tắt, không rút gọn — áp dụng mọi nơi:
 
 - Trước khi cập nhật tài liệu: **đọc lại toàn file và đối chiếu** xem fact đã có chỗ chưa. Thêm hay sửa là **tùy kết quả đánh giá** — đã có thì sửa/tích hợp tại chỗ; thực sự mới thì thêm vào đúng nơi canonical. Cái cần tránh là **"append mù"** (dán thêm khi chưa đọc) tạo trùng lặp/mâu thuẫn.
 - Mỗi fact chỉ **một nơi canonical**; nơi khác **trỏ về**, không chép. Không chắc fact thuộc file nào → tra `docs/BAN_DO_TAI_LIEU.md` (mỗi tài liệu + mục đích + đối tượng + loại canonical/current-state/lịch sử) để biết chỗ để **sửa** thay vì thêm nơi mới.
-- Thuật ngữ và từ viết tắt: nguồn duy nhất là `docs/THUAT_NGU.md`. Gặp thuật ngữ mới hoặc thấy giải thích cũ chưa đủ rõ → cập nhật ở đó.
+- Thuật ngữ và từ viết tắt: nguồn duy nhất là `docs/THUAT_NGU.md`. Gặp thuật ngữ mới, giải thích cũ chưa đủ rõ, **hoặc jargon chưa được định nghĩa trong bất kỳ tài liệu nào — kể cả bản ghi lịch sử không sửa được** → thêm/cập nhật định nghĩa ở đó (bổ sung glossary để bản ghi cũ vẫn đọc hiểu được, **không viết lại** tài liệu lịch sử).
 - Quyết định & lý do đầy đủ: ADR-023 trong `docs/superpowers/specs/2026-06-10-quan-tri-tai-lieu-design.md` (mở rộng ADR-002).
 
 ## Tài liệu nguồn (đọc trước khi làm bất cứ gì)
