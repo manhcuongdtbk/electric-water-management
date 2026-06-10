@@ -7,7 +7,7 @@
 ## Ba loại tài liệu
 
 - **canonical** — nguồn sự thật cho một fact. Khi một fact sai/cũ → **sửa tại đây**. Mỗi fact chỉ một nơi canonical; nơi khác trỏ về.
-- **current-state** — mô tả hiện trạng hoặc dữ liệu suy ra từ canonical (distill, hướng dẫn, kịch bản test). **Phải rà cho khớp** khi canonical/ADR đổi (xem checklist phát hành).
+- **current-state** — mô tả hiện trạng, hoặc nội dung cô đọng/suy ra từ canonical (hướng dẫn, kịch bản test). **Phải rà cho khớp** khi canonical/ADR đổi (xem checklist phát hành).
 - **lịch sử** — bản ghi quyết định/thời điểm (ADR, plan, changelog). **KHÔNG viết lại**; quyết định mới *supersede* quyết định cũ, giữ nguyên bản cũ.
 
 ## Bản đồ
