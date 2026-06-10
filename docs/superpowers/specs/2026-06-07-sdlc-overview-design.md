@@ -1,6 +1,6 @@
 ---
 title: SDLC Overview — Mô hình phát triển & chiến lược tài liệu
-version: 0.2.0
+version: 0.3.0
 status: draft (chờ duyệt)
 date: 2026-06-07
 ---
@@ -35,7 +35,7 @@ Tài liệu **đứng đầu** loạt spec chuẩn hoá SDLC. Mỗi mảnh (rele
 
 ## ADR-002: Chiến lược tài liệu & tri thức (bền + chia sẻ + tự động + tool-agnostic)
 
-- **Trạng thái:** Proposed · 2026-06-07
+- **Trạng thái:** Proposed · 2026-06-07 · **mở rộng bởi [ADR-023](2026-06-10-quan-tri-tai-lieu-design.md)** (quản trị tài liệu: từ điển thuật ngữ + bản đồ tài liệu + quy tắc "sửa đừng thêm").
 - **Bối cảnh:** Cần giữ kiến thức/quyết định không bị quên qua các session; cả team (người + nhiều loại AI: Claude Code, Cursor, …, có thể cả Windows) thừa hưởng và cải tiến được.
 - **Quyết định:** Kiến trúc **4 lớp**, nguồn sự thật nằm trong **repo** (version-control), không nằm ở trí nhớ:
   1. **Guardrails tự động** — luật nào máy kiểm được thì để máy ép: CI, release-please, commitlint, branch-guard, AI review PR. *(Không viết prose rồi mong người nhớ.)*
@@ -64,5 +64,6 @@ Tài liệu **đứng đầu** loạt spec chuẩn hoá SDLC. Mỗi mảnh (rele
 
 ## Changelog
 
+- **0.3.0 (2026-06-10):** ADR-002 ghi chú được **mở rộng bởi ADR-023** (quản trị tài liệu — spec `2026-06-10-quan-tri-tai-lieu-design.md`; Issue #310).
 - **0.2.0 (2026-06-07):** ADR-002: thêm quy ước version & changelog cho tài liệu — file meta ở gốc repo (`README.md`, `AGENTS.md`, `CONTRIBUTING.md`, `CLAUDE.md`) không versioned; tài liệu trong `docs/` có version + lịch sử thay đổi, bump khi sửa.
 - **0.1.0 (2026-06-07):** Bản thảo đầu; ADR-001 (mô hình) + ADR-002 (tài liệu/tri thức). Chờ duyệt.
