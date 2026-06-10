@@ -1,6 +1,6 @@
 ---
 title: Hướng dẫn onboarding SDLC (lối vào distill) + rà soát mạch lạc tài liệu canonical
-version: 0.3.0
+version: 0.4.0
 status: draft (chờ duyệt)
 date: 2026-06-09
 governed_by: 2026-06-07-sdlc-overview-design.md
@@ -130,12 +130,14 @@ flowchart LR
    | Môi trường | Dev local Docker; **3 env Railway** `development`/`acceptance`(←`main`)/`mirror`(←tag production); Production = Mini PC offline; **không `-rc.N`** | release spec · ADR-005, ADR-006 |
    | Cộng tác & review | `/code-review` local trước push; pair qua VS Code Dev Tunnel | `§4, §5` · ADR-009, ADR-010 |
    | Tài liệu | `docs/` versioned → bump version+changelog; file meta gốc không versioned | `AGENTS.md` · ADR-002 |
-6. Mini-box "quy ước sống còn": tài liệu/giao diện tiếng Việt; commit + tiêu đề pull request tiếng Anh; không viết tắt (trừ CI/ADR/CRUD/UI); luôn worktree riêng + Docker.
+6. Mini-box "quy ước sống còn": tài liệu/giao diện tiếng Việt; commit + tiêu đề pull request tiếng Anh; không viết tắt (trỏ bảng "Từ viết tắt được phép" ở `AGENTS.md`); luôn worktree riêng + Docker.
 7. Footer: "Chi tiết & lý do → `CONTRIBUTING.md` + `docs/superpowers/specs/` (ADR-001..022)."
 
-**B. Pointer + checklist onboarding (meta, không versioned).**
-- `AGENTS.md`: thêm **1–2 dòng pointer** gần đầu trỏ guide là *lối vào cho người mới*.
-- `CONTRIBUTING.md §1`: thêm **checklist onboarding ngắn** trỏ guide (không đánh số lại 11 mục).
+*(Bổ sung theo review chủ dự án — v0.4.0):* guide thêm các mục **"Mô hình nhánh: Git Flow"** (làm rõ Git Flow là mô hình nhánh cụ thể + link bài gốc nvie), **"Ba nghĩa của môi trường"** (application/Rails/Railway + mặc định = application environment), **"Lỗi thường vs lỗi nghiêm trọng"** (bảng so sánh); **link hoá** mọi tham chiếu file/spec/ADR; **đồng nhất "merge"** (bỏ "gộp"); **bỏ từ "distill"** trong guide; định nghĩa **"chủ dự án"**, **"canonical"**, **rebase**; **ghi chú công cụ** (hiện chỉ Claude Code). Ưu tiên dễ hiểu hơn ngắn (guide có thể dài hơn).
+
+**B. Pointer + checklist onboarding + làm rõ thuật ngữ (meta, không versioned).**
+- `AGENTS.md`: thêm **1–2 dòng pointer** gần đầu trỏ guide là *lối vào cho người mới*; **giải thích "canonical"** ngay lần đầu dùng; thêm **ghi chú công cụ** (hiện chỉ Claude Code, các tự động hoá là tính năng Claude Code); thêm **bảng "Từ viết tắt được phép"** (CI/ADR/CRUD/UI/SDLC/SemVer) làm nguồn tập trung duy nhất, sửa quy tắc "Nguyên tắc viết" trỏ về bảng. Vẫn giữ ngắn.
+- `CONTRIBUTING.md §1`: thêm **checklist onboarding ngắn** trỏ guide (không đánh số lại 11 mục); gloss "canonical" ở lần dùng đầu.
 
 **C. Sửa drift meta (đã verify).**
 - `AGENTS.md`: dòng tóm tắt Git Flow — bỏ *"kèm hậu tố `-rc.N`"*, nêu **không dùng `-rc.N`** (Acceptance deploy thẳng `main`), thêm mệnh đề **kiểu merge** (squash `feature`→`develop`; merge-commit cho `release`·`hotfix`), trỏ `CONTRIBUTING §2` + ADR-004/005/008; cập nhật dòng "ba môi trường" sang `development`/`acceptance`/`mirror` + Production Mini PC (tên tiếng Anh, trỏ ADR-005). Giữ ngắn.
@@ -168,6 +170,7 @@ flowchart LR
 
 ## Changelog
 
+- **0.4.0 (2026-06-09):** Sau review của chủ dự án trên `docs/HUONG_DAN_SDLC.md` (PR1) — tinh chỉnh guide cho dễ hiểu hơn nữa: (1) **link** tới mọi file/spec/ADR được nhắc; (2) **đồng nhất thuật ngữ** với GitHub — luôn dùng "merge" (bỏ "gộp"), giải nghĩa thuật ngữ trước khi dùng; (3) **bỏ từ "distill"** trong guide (khó hiểu) — dùng "lối vào/tổng quan"; (4) thêm mục **"Mô hình nhánh: Git Flow"** (làm rõ Git Flow là mô hình nhánh cụ thể + link bài gốc nvie); (5) thêm mục **"Ba nghĩa của môi trường"** (application/Rails/Railway + mặc định = application environment); (6) thêm mục **"Lỗi thường vs lỗi nghiêm trọng"** dạng bảng so sánh; (7) định nghĩa **"chủ dự án"** (project owner, không phải GitHub Projects) + **rebase**; (8) **ghi chú công cụ**: hiện chỉ dùng Claude Code, các tự động hoá là tính năng Claude Code. Kèm rà soát canonical: thêm **bảng "Từ viết tắt được phép"** (nguồn tập trung duy nhất: CI/ADR/CRUD/UI/SDLC/SemVer) + giải thích **"canonical"** + ghi chú công cụ vào `AGENTS.md`; gloss "canonical" + pointer guide ở `CONTRIBUTING.md`. Không đổi quyết định nào.
 - **0.3.0 (2026-06-09):** Sau phản hồi chủ dự án — (1) nguyên tắc "dễ hiểu cho người non" thành **cross-cutting** cho mọi file human-facing động đến (ngoại lệ `AGENTS.md` giữ ngắn, đã chốt); (2) **mở rộng rà soát toàn bộ `.md`**: thêm verified drift ở `README.md` (cắt nhánh từ `main`), `KIEN_THUC_DOCKER.md` (mô hình "Staging" cũ), `HUONG_DAN_DEPLOY.md` (sao lưu/khôi phục); tách *doc current-state* vs *bản ghi versioned/lịch sử* (loại plans/spec/V2_*/hdsd/CHANGELOG); (3) chia phạm vi **hai giai đoạn / hai pull request**; (4) thêm nguyên tắc bump version cho guide versioned. ADR-022 cập nhật.
 - **0.2.0 (2026-06-09):** Audience đổi sang intern/junior rất non (bỏ ràng buộc ≤1 trang, thêm Từ vựng + Nguyên tắc viết); mở rộng phạm vi rà soát `AGENTS.md` + `CONTRIBUTING.md` theo audit (drift `-rc.N` verify với ADR-004/005/008); gắn Issue `#307`.
 - **0.1.0 (2026-06-09):** Bản thảo đầu — ADR-022 (lối vào distill + pointer, không cheat-sheet trong `AGENTS.md`); Goals/Non-Goals/Glossary; sơ đồ; phạm vi 4 thay đổi; tiêu chí; truy vết.
