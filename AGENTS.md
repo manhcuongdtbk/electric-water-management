@@ -10,7 +10,7 @@
 
 ## Nguyên tắc viết
 
-Tuyệt đối không viết tắt, không rút gọn — áp dụng mọi nơi: tài liệu, code (tên biến, method, cột, i18n, commit message), giao diện, giao tiếp. **Ngoại lệ duy nhất** là các từ viết tắt liệt kê trong `docs/THUAT_NGU.md` (đã quá phổ biến, ai cũng hiểu ngay). Cần dùng một từ viết tắt mới → **thêm vào `docs/THUAT_NGU.md` trước** (đó là danh sách canonical duy nhất). Thuật ngữ và gloss khái niệm cũng tra/cập nhật tại `docs/THUAT_NGU.md`.
+Tuyệt đối không viết tắt, không rút gọn — áp dụng mọi nơi: tài liệu, code (tên biến, method, cột, i18n, commit message), giao diện, giao tiếp. **Ngoại lệ duy nhất** là các từ viết tắt có trong danh sách được phép ở `docs/THUAT_NGU.md` (danh sách canonical duy nhất, kèm tiêu chí được thêm). Cần dùng một từ viết tắt mới → **thêm vào `docs/THUAT_NGU.md` trước**. Thuật ngữ và gloss khái niệm cũng tra/cập nhật tại `docs/THUAT_NGU.md`.
 
 ## Quản trị tài liệu (sửa đừng thêm)
 

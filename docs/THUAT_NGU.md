@@ -8,7 +8,7 @@ Tài liệu dự án dùng **nhất quán** các từ dưới đây. Học một
 
 ## 1. Từ viết tắt được phép
 
-Quy ước dự án: **tuyệt đối không viết tắt** (xem `AGENTS.md` mục "Nguyên tắc viết"). **Ngoại lệ duy nhất** là các từ dưới đây — đã quá phổ biến, ai cũng hiểu ngay. Cần dùng một từ viết tắt mới → **thêm vào bảng này trước**.
+Quy ước dự án: **tuyệt đối không viết tắt** (xem `AGENTS.md` mục "Nguyên tắc viết"). Bảng dưới đây là **danh sách duy nhất các từ viết tắt được phép** — muốn dùng một từ viết tắt thì nó phải có trong bảng. **Tiêu chí để được thêm:** từ đã đủ phổ biến để ai cũng hiểu ngay. Cần dùng một từ viết tắt mới → cân nhắc tiêu chí đó rồi **thêm vào bảng này trước khi dùng**.
 
 | Viết tắt | Đầy đủ | Nghĩa | Nguồn chính thống |
 |---|---|---|---|
