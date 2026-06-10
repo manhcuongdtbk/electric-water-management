@@ -1,7 +1,7 @@
 # Hướng dẫn nhanh quy trình làm việc (SDLC)
 
-> **Phiên bản:** 1.0.0
-> **Ngày:** 09/06/2026
+> **Phiên bản:** 1.1.0
+> **Ngày:** 10/06/2026
 > **Đối tượng:** Thành viên mới — kể cả người chưa quen Git, CI, hay Docker.
 > **Cách dùng:** Đọc một lượt (~15 phút) để hiểu *một thay đổi đi từ lúc nhận việc đến khi giao cho khách như thế nào*. Đây là **bản đồ tổng quan** — thao tác từng bước nằm ở [CONTRIBUTING.md](../CONTRIBUTING.md), quyết định kèm lý do nằm trong [docs/superpowers/specs/](superpowers/specs/). Mỗi mục bên dưới đều có link tới nơi chi tiết.
 
@@ -11,29 +11,9 @@
 
 ## 1. Từ vựng (đọc cái này trước)
 
-Tài liệu dùng **nhất quán** các từ dưới đây. Học một lần, rồi các mục sau dùng đúng những từ này (không chế thêm từ đồng nghĩa khác).
+Thuật ngữ, từ viết tắt và các gloss ("canonical", "chủ dự án"…) dùng trong dự án nằm tập trung ở **[`THUAT_NGU.md`](THUAT_NGU.md)** — nguồn **duy nhất**, học một lần dùng mọi nơi. Đọc lướt mục đó trước khi đọc tiếp.
 
-| Từ | Nghĩa đời thường |
-|---|---|
-| **Nhánh** (branch) | Một "đường làm việc" riêng để bạn sửa code mà không đụng người khác. |
-| **Commit** | Một lần "lưu" thay đổi, kèm một câu mô tả ngắn. |
-| **Push** | Đẩy các commit từ máy bạn lên GitHub. |
-| **Merge** | Nhập một nhánh vào nhánh khác (ví dụ nhập việc của bạn vào nhánh chung). *Tài liệu này luôn gọi là "merge".* |
-| **Squash** | Một kiểu merge: dồn mọi commit của một pull request thành **một** commit duy nhất cho lịch sử gọn. |
-| **Rebase** | Dời các commit của nhánh bạn lên trên một "nền" mới — dùng khi cập nhật nhánh theo `develop` mới nhất, hoặc khi dùng "nhánh xếp chồng" (xem mục 5). |
-| **Pull request** | Lời đề nghị merge nhánh của bạn vào nhánh khác, kèm chỗ để người khác xem và bàn trước khi merge. (Trên GitHub hay viết tắt là "PR"; tài liệu này viết đủ "pull request".) |
-| **Tag** | Một cái nhãn cố định ghim vào một bản đã phát hành (ví dụ `v1.1.0`). |
-| **Issue** | Một phiếu trên GitHub ghi một việc cần làm hoặc một lỗi; có số thứ tự `#N`. |
-| **Milestone** | Một nhóm Issue dự kiến cho cùng một bản phát hành (chính là *version đích*). |
-| **Version** (số phiên bản) | Số đánh dấu một bản phát hành, theo **SemVer**. |
-| **SemVer** (Semantic Versioning) | Quy ước đánh số version dạng `MAJOR.MINOR.PATCH` (ví dụ `1.2.0`): thêm tính năng → tăng số giữa (MINOR); sửa lỗi → tăng số cuối (PATCH); thay đổi phá vỡ tương thích → tăng số đầu (MAJOR). |
-| **CI** (Continuous Integration) | Máy chủ của GitHub **tự chạy kiểm tra** (chạy test, rà lỗi) mỗi khi mở/đẩy pull request — báo **xanh** (đạt) hoặc **đỏ** (có lỗi). |
-| **Hotfix** | Bản vá **gấp** cho một lỗi *nghiêm trọng* đang chạy thật ở chỗ khách (xem mục 7). |
-| **Restore** | Khôi phục dữ liệu từ một bản sao lưu. |
-| **Chủ dự án** (project owner) | Người chủ trì kho mã: quyết định ưu tiên và là người **duyệt + merge** mọi pull request. Đây là vai trò người phụ trách, *không phải* tính năng "Projects" của GitHub. |
-| **Canonical** | "Nguồn chuẩn gốc" — nơi **duy nhất** định nghĩa một quy ước; mọi nơi khác **trỏ về** chứ không chép lại (để khỏi lệch nhau). [AGENTS.md](../AGENTS.md) là tài liệu canonical của dự án. |
-
-(Tên các nhánh `develop`, `main`, `feature/*`, `release/*`, `hotfix/*` được giải thích ngay ở mục 2.)
+(Tên các loại nhánh `develop`, `main`, `feature/*`, `release/*`, `hotfix/*` được giải thích ngay ở mục 2.)
 
 ## 2. Mô hình nhánh: Git Flow
 
@@ -92,6 +72,7 @@ Mỗi dòng là một chủ đề → quy tắc cốt lõi → nơi đọc chi t
 | Việc nối tiếp (nhánh xếp chồng) | Việc B cần kết quả việc A mà A **chưa merge** → cắt `feature/B` từ nhánh A; khi A đã merge thì `rebase --onto develop` | [CONTRIBUTING §4](../CONTRIBUTING.md) · [ADR-021](superpowers/specs/2026-06-07-ci-spec-design.md) |
 | Môi trường | Xem mục 6 — ba nghĩa của "môi trường" + bốn nơi chạy (máy bạn, 3 môi trường Railway, Mini PC) | [mục 6](#6-ba-nghĩa-của-môi-trường-environment) · [ADR-005](superpowers/specs/2026-06-07-quy-trinh-release-design.md) |
 | Cộng tác & review | Chạy `/code-review` (Claude Code) trước khi push; chủ dự án duyệt cuối; xem chung app đang chạy qua VS Code Dev Tunnel | [CONTRIBUTING §4, §5](../CONTRIBUTING.md) · [ADR-009, ADR-010](superpowers/specs/2026-06-07-quy-trinh-release-design.md) |
+| Quản trị tài liệu | Mỗi fact một nơi canonical, nơi khác trỏ về; sửa đừng "append mù"; thuật ngữ ở `THUAT_NGU.md`, loại tài liệu ở `BAN_DO_TAI_LIEU.md` | [THUAT_NGU](THUAT_NGU.md) · [BAN_DO_TAI_LIEU](BAN_DO_TAI_LIEU.md) · [ADR-023](superpowers/specs/2026-06-10-quan-tri-tai-lieu-design.md) |
 | Tài liệu | File trong `docs/` có dòng *Phiên bản* → khi sửa phải tăng version + ghi "Lịch sử thay đổi"; file gốc (`README`/`AGENTS`/`CONTRIBUTING`/`CLAUDE`) thì không | [AGENTS.md](../AGENTS.md) · [ADR-002](superpowers/specs/2026-06-07-sdlc-overview-design.md) |
 
 ## 6. Ba nghĩa của "môi trường" (environment)
@@ -126,7 +107,7 @@ Chi tiết: [CONTRIBUTING.md mục 10](../CONTRIBUTING.md) · [ADR-018](superpow
 ## 8. Quy ước sống còn (đừng quên)
 
 - **Ngôn ngữ:** tài liệu và giao diện **tiếng Việt 100%**; commit và tiêu đề pull request **tiếng Anh** (theo Conventional Commits — [CONTRIBUTING.md mục 3](../CONTRIBUTING.md)).
-- **Không viết tắt**, trừ các từ trong bảng *"Từ viết tắt được phép"* ở [AGENTS.md](../AGENTS.md) (hiện gồm CI, ADR, CRUD, UI, SDLC, SemVer). Cần thêm từ viết tắt mới → thêm vào bảng đó trước.
+- **Không viết tắt**, trừ các từ trong bảng *"Từ viết tắt được phép"* ở [`THUAT_NGU.md`](THUAT_NGU.md). Cần thêm từ viết tắt mới → thêm vào bảng đó trước.
 - **Luôn làm trong một git worktree riêng + Docker** (xem [README.md](../README.md)).
 - Sửa file trong `docs/` có dòng *Phiên bản* → nhớ **tăng version + ghi một dòng vào "Lịch sử thay đổi"** trong cùng commit ([ADR-002](superpowers/specs/2026-06-07-sdlc-overview-design.md)).
 
@@ -136,9 +117,10 @@ Tài liệu này cố ý ngắn để nắm nhanh. Khi cần làm thật, mở:
 
 - [CONTRIBUTING.md](../CONTRIBUTING.md) — quy trình **thao tác từng bước** cho người (mục 1–11).
 - [AGENTS.md](../AGENTS.md) — **quy ước** code + dự án (tài liệu canonical).
-- [docs/superpowers/specs/](superpowers/specs/) — **quyết định kèm lý do** (ADR-001..022).
+- [docs/superpowers/specs/](superpowers/specs/) — **quyết định kèm lý do** (các ADR).
 - [README.md](../README.md) — cài đặt, lệnh thường dùng, môi trường.
 
 ## Lịch sử thay đổi
 
+- **1.1.0 (10/06/2026):** §1 "Từ vựng" gom về [`THUAT_NGU.md`](THUAT_NGU.md) (nguồn duy nhất), thay bảng bằng pointer; §8 trỏ từ viết tắt sang `THUAT_NGU.md` (bỏ liệt kê inline cho khỏi lỗi thời); §5 thêm dòng "Quản trị tài liệu"; bỏ dải ADR cứng ("ADR-001..NNN") ở "Cần chi tiết hơn?" cho khỏi phải sửa khi có ADR mới. ADR-023, Issue #310.
 - **1.0.0 (09/06/2026):** Bản đầu — lối vào tổng quan, dễ hiểu cho người mới về quy trình SDLC (ADR-022; spec [2026-06-09-huong-dan-sdlc-onboarding-design.md](superpowers/specs/2026-06-09-huong-dan-sdlc-onboarding-design.md); Issue #307).

@@ -1,6 +1,6 @@
 # AGENTS.md — Hệ thống quản lý điện nội bộ Sư đoàn (Hệ thống v2)
 
-> **Nguồn canonical** (nguồn chuẩn gốc — nơi duy nhất định nghĩa quy ước; mọi nơi khác trỏ về đây thay vì chép lại, để khỏi lệch nhau) cho mọi quy ước của dự án (code + quy trình), dùng chung cho cả người và mọi công cụ AI (Claude Code, Cursor, Copilot, Codex, Gemini, VS Code…).
+> **Nguồn canonical** (định nghĩa "canonical": `docs/THUAT_NGU.md`) cho mọi quy ước của dự án (code + quy trình), dùng chung cho cả người và mọi công cụ AI (Claude Code, Cursor, Copilot, Codex, Gemini, VS Code…).
 >
 > - **Công cụ AI khác** đọc trực tiếp file này.
 > - **Claude Code** đọc qua `CLAUDE.md` (qua dòng `@AGENTS.md`).
@@ -10,16 +10,14 @@
 
 ## Nguyên tắc viết
 
-Tuyệt đối không viết tắt, không rút gọn — áp dụng mọi nơi: tài liệu, code (tên biến, method, cột, i18n, commit message), giao diện, giao tiếp. **Ngoại lệ duy nhất** là các từ trong bảng dưới (đã quá phổ biến, ai cũng hiểu ngay). Cần dùng một từ viết tắt mới → **thêm vào bảng này trước** (đây là danh sách canonical duy nhất các từ viết tắt được phép — mọi tài liệu khác trỏ về đây).
+Tuyệt đối không viết tắt, không rút gọn — áp dụng mọi nơi: tài liệu, code (tên biến, method, cột, i18n, commit message), giao diện, giao tiếp. **Ngoại lệ duy nhất** là các từ viết tắt có trong danh sách được phép ở `docs/THUAT_NGU.md` (danh sách canonical duy nhất, kèm tiêu chí được thêm). Cần dùng một từ viết tắt mới → **thêm vào `docs/THUAT_NGU.md` trước**. Thuật ngữ và gloss khái niệm cũng tra/cập nhật tại `docs/THUAT_NGU.md`.
 
-| Viết tắt | Đầy đủ | Nghĩa | Nguồn chính thống |
-|---|---|---|---|
-| CI | Continuous Integration | Máy chủ tự chạy kiểm tra (test/lint) trên mỗi pull request | [Martin Fowler — Continuous Integration](https://martinfowler.com/articles/continuousIntegration.html) |
-| ADR | Architecture Decision Record | Bản ghi một quyết định kiến trúc kèm lý do (trong `docs/superpowers/specs/`) | [adr.github.io](https://adr.github.io/) |
-| CRUD | Create, Read, Update, Delete | Bốn thao tác cơ bản với dữ liệu | — |
-| UI | User Interface | Giao diện người dùng | — |
-| SDLC | Software Development Life Cycle | Vòng đời phát triển phần mềm (quy trình tổng thể) | — |
-| SemVer | Semantic Versioning | Quy ước đánh số version `MAJOR.MINOR.PATCH` | [semver.org (tiếng Việt)](https://semver.org/lang/vi/) |
+## Quản trị tài liệu (sửa đừng thêm)
+
+- Trước khi cập nhật tài liệu: **đọc lại toàn file và đối chiếu** xem fact đã có chỗ chưa. Thêm hay sửa là **tùy kết quả đánh giá** — đã có thì sửa/tích hợp tại chỗ; thực sự mới thì thêm vào đúng nơi canonical. Cái cần tránh là **"append mù"** (dán thêm khi chưa đọc) tạo trùng lặp/mâu thuẫn.
+- Mỗi fact chỉ **một nơi canonical**; nơi khác **trỏ về**, không chép. Không chắc fact thuộc file nào → tra `docs/BAN_DO_TAI_LIEU.md` (mỗi tài liệu + mục đích + đối tượng + loại canonical/current-state/lịch sử) để biết chỗ để **sửa** thay vì thêm nơi mới.
+- Thuật ngữ và từ viết tắt: nguồn duy nhất là `docs/THUAT_NGU.md`. Gặp thuật ngữ mới, giải thích cũ chưa đủ rõ, **hoặc jargon chưa được định nghĩa trong bất kỳ tài liệu nào — kể cả bản ghi lịch sử không sửa được** → thêm/cập nhật định nghĩa ở đó (bổ sung glossary để bản ghi cũ vẫn đọc hiểu được, **không viết lại** tài liệu lịch sử).
+- Quyết định & lý do đầy đủ: ADR-023 trong `docs/superpowers/specs/2026-06-10-quan-tri-tai-lieu-design.md` (mở rộng ADR-002).
 
 ## Tài liệu nguồn (đọc trước khi làm bất cứ gì)
 
@@ -136,5 +134,7 @@ Hai cái CÓ THỂ khác nhau (ví dụ Acceptance và Mirror đều `rails_envi
 
 - `README.md` — tổng quan, cài đặt, lệnh thường dùng, môi trường.
 - `CONTRIBUTING.md` — quy trình đóng góp cho người.
+- `docs/THUAT_NGU.md` — từ điển thuật ngữ + từ viết tắt + gloss (nguồn duy nhất).
+- `docs/BAN_DO_TAI_LIEU.md` — bản đồ tài liệu (fact nào ở file nào, loại gì).
 - `docs/` — nghiệp vụ, thiết kế, hành vi, kiểm thử, Docker, deploy.
 - `docs/superpowers/specs/` — spec + ADR (quyết định kèm lý do); `docs/superpowers/plans/` — plan triển khai.
