@@ -122,6 +122,8 @@ release-please đã được cấu hình (P3): khi `release/*`/`hotfix/*` vào `
 
 **Đã làm thêm (P4):** ba môi trường Railway `development`/`acceptance`/`mirror` (Acceptance chạy thẳng `main`, không dùng `-rc.N` — xem `README.md` + ADR-005); bốn mảnh SDLC trong Backlog của release spec đã xong. Các quy ước ở mục 2–3 ngoài phần CI ép được vẫn giữ bằng kỷ luật + review thủ công.
 
+**CI guardrail quản trị tài liệu (ADR-024):** một job `doc-governance` chạy trên **mọi** pull request, kiểm: link nội bộ chết, bản đồ tài liệu (`docs/BAN_DO_TAI_LIEU.md`) phủ đủ và không có đường dẫn ma, và 6 viết tắt + 11 jargon còn định nghĩa trong `docs/THUAT_NGU.md`. Đỏ nếu vi phạm (fail-loud). Không quét prose tìm viết tắt mới (bất khả thi cho tiếng Việt) — việc đó vẫn thuộc review người. Chi tiết: ADR-024 trong `docs/superpowers/specs/2026-06-11-guardrail-quan-tri-tai-lieu-design.md`.
+
 ## 9. Quản lý thay đổi & truy vết
 
 Theo ADR-013..015 (chi tiết + lý do: `docs/superpowers/specs/2026-06-08-truy-vet-quan-ly-thay-doi-design.md`). Mục tiêu: yêu cầu khách **không rơi** và truy được **yêu cầu → thiết kế → test → release**.
