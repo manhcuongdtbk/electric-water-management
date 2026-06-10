@@ -92,6 +92,21 @@ jobs:
           HEAD_REF: ${{ github.head_ref }}
         run: bash .github/scripts/check-branch-source.sh
 
+  doc-governance:
+    name: Doc governance (links, map, glossary definitions)
+    runs-on: ubuntu-latest
+    # Chạy LUÔN trên mọi pull request (KHÔNG gate qua `changes`): guardrail tài
+    # liệu cần nhất đúng lúc pull request chỉ sửa tài liệu (ADR-024).
+    steps:
+      - uses: actions/checkout@v6
+      - name: Document-governance guardrails (ADR-024)
+        run: |
+          status=0
+          bash .github/scripts/check-doc-links.sh || status=1
+          bash .github/scripts/check-doc-map.sh || status=1
+          bash .github/scripts/check-glossary-definitions.sh || status=1
+          exit $status
+
   tests:
     name: Tests (rspec incl. system specs, zeitwerk, schema drift)
     runs-on: ubuntu-latest
