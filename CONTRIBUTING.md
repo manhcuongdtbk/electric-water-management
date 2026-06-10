@@ -1,6 +1,6 @@
 # Hướng dẫn đóng góp (CONTRIBUTING)
 
-Tài liệu quy trình làm việc **cho người**. Quy ước code và quy ước chung là `AGENTS.md` (nguồn canonical). Quyết định kèm lý do nằm trong `docs/superpowers/specs/`.
+Tài liệu quy trình làm việc **cho người**. Quy ước code và quy ước chung là `AGENTS.md` (nguồn canonical — nguồn chuẩn gốc của quy ước; nơi khác trỏ về đây, không chép lại). Quyết định kèm lý do nằm trong `docs/superpowers/specs/`. Người mới nên đọc `docs/HUONG_DAN_SDLC.md` trước cho dễ vào.
 
 > Mọi quy ước viết (tuyệt đối không viết tắt), ngôn ngữ (tài liệu/giao diện tiếng Việt; code/commit tiếng Anh) theo `AGENTS.md`.
 

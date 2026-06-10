@@ -1,15 +1,25 @@
 # AGENTS.md — Hệ thống quản lý điện nội bộ Sư đoàn (Hệ thống v2)
 
-> **Nguồn canonical** cho mọi quy ước của dự án (code + quy trình), dùng chung cho cả người và mọi công cụ AI (Claude Code, Cursor, Copilot, Codex, Gemini, VS Code…).
+> **Nguồn canonical** (nguồn chuẩn gốc — nơi duy nhất định nghĩa quy ước; mọi nơi khác trỏ về đây thay vì chép lại, để khỏi lệch nhau) cho mọi quy ước của dự án (code + quy trình), dùng chung cho cả người và mọi công cụ AI (Claude Code, Cursor, Copilot, Codex, Gemini, VS Code…).
 >
 > - **Công cụ AI khác** đọc trực tiếp file này.
 > - **Claude Code** đọc qua `CLAUDE.md` (qua dòng `@AGENTS.md`).
+> - **Công cụ AI hiện dùng:** thực tế đội đang chỉ dùng **Claude Code**; các tự động hoá (hook, lệnh `/code-review`) là tính năng Claude Code (xem `CONTRIBUTING.md` mục 8). File này cố ý viết trung lập để có thể thêm công cụ khác (Antigravity, Codex…) sau — khi đó rà lại các bước gắn với công cụ.
 > - **Người mới tham gia:** đọc `docs/HUONG_DAN_SDLC.md` trước (lối vào nhanh, dễ hiểu cho người chưa quen Git/CI), rồi `CONTRIBUTING.md` (quy trình làm việc) và các spec trong `docs/superpowers/specs/`.
 > - **Giữ file này NGẮN GỌN, mệnh lệnh.** Chi tiết và lý do nằm ở `docs/` — ở đây chỉ nêu quy ước rồi trỏ tới. Đừng nhồi chi tiết quy trình phát triển/phát hành vào đây (theo ADR-002).
 
 ## Nguyên tắc viết
 
-Tuyệt đối không viết tắt, không rút gọn — áp dụng mọi nơi: tài liệu, code (tên biến, method, cột, i18n, commit message), giao diện, giao tiếp. Ngoại trừ thuật ngữ phổ biến ai cũng hiểu ngay: CRUD, UI.
+Tuyệt đối không viết tắt, không rút gọn — áp dụng mọi nơi: tài liệu, code (tên biến, method, cột, i18n, commit message), giao diện, giao tiếp. **Ngoại lệ duy nhất** là các từ trong bảng dưới (đã quá phổ biến, ai cũng hiểu ngay). Cần dùng một từ viết tắt mới → **thêm vào bảng này trước** (đây là danh sách canonical duy nhất các từ viết tắt được phép — mọi tài liệu khác trỏ về đây).
+
+| Viết tắt | Đầy đủ | Nghĩa |
+|---|---|---|
+| CI | Continuous Integration | Máy chủ tự chạy kiểm tra (test/lint) trên mỗi pull request |
+| ADR | Architecture Decision Record | Bản ghi một quyết định kiến trúc kèm lý do (trong `docs/superpowers/specs/`) |
+| CRUD | Create, Read, Update, Delete | Bốn thao tác cơ bản với dữ liệu |
+| UI | User Interface | Giao diện người dùng |
+| SDLC | Software Development Life Cycle | Vòng đời phát triển phần mềm (quy trình tổng thể) |
+| SemVer | Semantic Versioning | Quy ước đánh số version `MAJOR.MINOR.PATCH` |
 
 ## Tài liệu nguồn (đọc trước khi làm bất cứ gì)
 
