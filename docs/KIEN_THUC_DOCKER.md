@@ -1,7 +1,7 @@
 # Kiến thức Docker — Hệ thống quản lý điện nội bộ Sư đoàn
 
-> **Phiên bản:** 1.8.2
-> **Ngày:** 07/06/2026
+> **Phiên bản:** 1.9.0
+> **Ngày:** 10/06/2026
 > **Đối tượng:** Developer hoặc người muốn hiểu hệ thống chạy thế nào ở mọi môi trường.
 > **Tiền đề:** Bạn biết code Rails nhưng chưa biết Docker và chưa từng deploy.
 
@@ -19,7 +19,7 @@
 8. [Biến môi trường](#8-biến-môi-trường)
 9. [Dữ liệu và volume](#9-dữ-liệu-và-volume)
 10. [Sao lưu và khôi phục](#10-sao-lưu-và-khôi-phục)
-11. [4 môi trường](#11-4-môi-trường) (Development, Test, Staging, Production)
+11. [Các môi trường](#11-các-môi-trường) (local dev/test, 3 môi trường Railway, Mini PC production)
 12. [Các khái niệm cần biết](#12-các-khái-niệm-cần-biết)
 13. [Xử lý sự cố](#13-xử-lý-sự-cố)
 
@@ -27,7 +27,7 @@
 
 ## 1. Bức tranh tổng thể
 
-> Mục 1-10 mô tả kiến trúc **production**. Mục 11 mô tả khác biệt giữa 4 môi trường (development, test, staging, production).
+> Mục 1-10 mô tả kiến trúc **production**. Mục 11 mô tả các môi trường khác nhau (máy dev local, môi trường test local, ba môi trường Railway, và Mini PC production).
 
 Hệ thống chạy trên 1 máy tính (Ubuntu) trong mạng LAN nội bộ Sư đoàn, không có internet. Người dùng truy cập bằng trình duyệt từ máy tính khác trong LAN.
 
@@ -103,13 +103,13 @@ Docker đóng gói tất cả vào 1 "image" (ảnh). Image giống file ISO cà
 
 ## 4. Các file liên quan và vai trò
 
-### Files production (staging + production)
+### Files cho Railway + production
 
 | File | Làm gì | Ai đọc |
 |---|---|---|
-| `Dockerfile` | Công thức build image app (Ruby + gems + source code) | Docker (staging + production) |
+| `Dockerfile` | Công thức build image app (Ruby + gems + source code) | Docker (Railway + production) |
 | `compose.yml` | Ghép 3 containers production: env vars, volumes, network | Docker Compose (production) |
-| `railway.json` | Cấu hình Railway: builder, pre-deploy, healthcheck | Railway (staging) |
+| `railway.json` | Cấu hình Railway: builder, pre-deploy, healthcheck | Railway (cả 3 môi trường) |
 | `docker/nginx.conf` | Cấu hình nginx: proxy request, nén, timeout | nginx container |
 | `bin/docker-entrypoint` | Chạy khi container app start: tạo thư mục backup, set port, chạy db:prepare | Container app |
 | `bin/thrust` | Entry point cho Thrust HTTP/2 proxy (Rails 8 mặc định) | Container app |
@@ -140,7 +140,7 @@ Docker đóng gói tất cả vào 1 "image" (ảnh). Image giống file ISO cà
 |---|---|---|
 | `bin/prepare-delivery` | Tạo bản sạch để ship cho khách (xóa dấu vết phát triển) | Developer |
 | `docs/HUONG_DAN_DEPLOY.md` | Hướng dẫn deploy chi tiết từng bước | Người thực hiện deploy |
-| `docs/KIEN_THUC_DOCKER.md` | Kiến thức Docker, 4 môi trường (tài liệu này) | Developer, người deploy |
+| `docs/KIEN_THUC_DOCKER.md` | Kiến thức Docker, các môi trường (tài liệu này) | Developer, người deploy |
 
 ---
 
@@ -340,7 +340,7 @@ Shortcut script cho lệnh Docker development. Bọc `docker compose -f compose.
 
 ### railway.json
 
-Cấu hình cho Railway staging:
+Cấu hình dùng chung cho ba môi trường Railway (development, acceptance, mirror):
 - `builder: DOCKERFILE` — dùng cùng Dockerfile với production
 - `preDeployCommand: db:prepare` — chạy migrations trước khi start
 - `healthcheckPath: /up` — Railway kiểm tra app sẵn sàng
@@ -386,15 +386,16 @@ Development không dùng file `.env` — tất cả giá trị hardcoded trong `
 
 Ngoài bảng trên, hai biến điều khiển cổng host publish ra (KHÔNG hardcode, có giá trị mặc định): `POSTGRES_HOST_PORT` (mặc định `5433`) và `NGINX_HOST_PORT` (mặc định `80`). `bin/docker` tự đặt cổng riêng cho mỗi git worktree — xem mục 11 Development.
 
-### Staging (Railway dashboard)
+### Railway (set trên dashboard)
 
-Biến môi trường set trên Railway dashboard, không trong code:
+Biến môi trường set trên Railway dashboard (cho cả ba môi trường `development`/`acceptance`/`mirror`), không trong code:
 
 | Biến | Nguồn |
 |---|---|
 | `DATABASE_URL` | Railway PostgreSQL add-on tự gán |
 | `SECRET_KEY_BASE` | Tự generate |
 | `PORT` | Railway tự gán (Thrust đọc qua `HTTP_PORT` trong docker-entrypoint) |
+| `APPLICATION_ENVIRONMENT_LABEL` | Đặt tay theo từng môi trường: `Development` / `Acceptance` / `Mirror` (Mini PC đặt `Production`) — phân biệt nơi chạy khi cùng `RAILS_ENV=production`; hiện ở sidebar/đăng nhập/log/`/version` |
 
 ---
 
@@ -459,49 +460,56 @@ graph LR
 
 ---
 
-## 11. 4 môi trường
+## 11. Các môi trường
 
 ### Tổng quan
 
-| | Development | Test | Staging | Production |
+Hệ thống chạy ở nhiều nơi. Có **bốn kiểu** môi trường; riêng trên **Railway** (nền tảng chạy online) có **ba** môi trường khác nhau ở nhánh deploy và ở nhãn `APPLICATION_ENVIRONMENT_LABEL`.
+
+| | Development (local) | Test (local) | Railway (online) | Production |
 |---|---|---|---|---|
-| Hạ tầng | Docker Desktop (Mac) | Docker Desktop (Mac) | Railway | Ubuntu Mini PC (LAN offline) |
+| Hạ tầng | Docker Desktop (Mac/Linux) | Docker Desktop (Mac/Linux) | Railway (bật sleep) | Ubuntu Mini PC (LAN offline) |
 | Dockerfile | Dockerfile.dev | Dockerfile.dev | Dockerfile | Dockerfile |
 | Web server | nginx container | Không | Railway edge proxy | nginx container |
 | Database | PostgreSQL container | PostgreSQL container (cùng server, DB khác) | Railway PostgreSQL | PostgreSQL container |
 | Config | compose.dev.yml | compose.dev.yml | railway.json | compose.yml + .env |
-| Deploy | `bin/docker up` | Tự động khi chạy test | Auto-deploy khi push main | `docker compose up -d` |
-| URL | http://localhost | Không (headless) | https://electric-water-management.up.railway.app | http://\<IP server\> |
+| Deploy | `bin/docker up` | Tự động khi chạy test | Tự động khi push (xem 3 môi trường dưới) | `docker compose up -d` (qua USB) |
+| URL | http://localhost | Không (headless) | …-{development,acceptance,mirror}.up.railway.app | http://\<IP server\> |
 
-Staging và production dùng cùng Dockerfile (production build). Development và test dùng Dockerfile.dev.
+**Ba môi trường Railway** dùng chung `Dockerfile` (production build) + `railway.json`, chỉ khác nhau ở nguồn nhánh và nhãn:
+
+| Môi trường Railway | Deploy từ nhánh | Nhãn `APPLICATION_ENVIRONMENT_LABEL` | Mục đích |
+|---|---|---|---|
+| `development` | `develop` | `Development` | Đội xem nhanh bản đang phát triển |
+| `acceptance` | `main` (bản release mới nhất) | `Acceptance` | Khách nghiệm thu — **không** dùng tag `-rc.N` |
+| `mirror` | `production` (ghim đúng tag đang ở Mini PC) | `Mirror` | Bản sinh đôi online của production để khách đối chiếu |
+
+- `Dockerfile` (production build) dùng cho **ba môi trường Railway + Production**; `Dockerfile.dev` dùng cho Development + Test.
+- **Production** là Mini PC offline thật tại chỗ khách (nhãn `Production`), **không** nằm trên Railway.
+- Từ "environment" có **ba nghĩa** (application / Rails / Railway) — xem [HUONG_DAN_SDLC.md mục 6](HUONG_DAN_SDLC.md) và [AGENTS.md](../AGENTS.md). Lý do mô hình ba môi trường Railway: [ADR-005](superpowers/specs/2026-06-07-quy-trinh-release-design.md).
+
+> **Nhánh theo Git Flow:** `feature/*` và `release/*` cắt từ `develop`; `hotfix/*` cắt từ `main`. Xem `CONTRIBUTING.md` mục 2.
 
 ```mermaid
 graph LR
-    subgraph Dev["Development (Mac)"]
-        D_PG[(PostgreSQL)]
-        D_App["app<br/>Dockerfile.dev<br/>Source mount"]
-        D_Nginx["nginx"]
-        D_Nginx --> D_App --> D_PG
+    subgraph Dev["Development (local)"]
+        D_App["app (Dockerfile.dev)<br/>nginx + PostgreSQL"]
     end
-    subgraph Test["Test (Mac)"]
-        T_DB[(test DB<br/>cùng PG server)]
-        T_App["rspec<br/>trong container app"]
-        T_App --> T_DB
+    subgraph Test["Test (local)"]
+        T_App["rspec trong container app<br/>DB test riêng"]
     end
-    subgraph Staging["Staging (Railway)"]
-        S_PG[(Railway PG)]
-        S_App["app<br/>Dockerfile<br/>Code trong image"]
-        S_Proxy["Railway proxy"]
-        S_Proxy --> S_App --> S_PG
+    subgraph RW["Railway (online, sleep)"]
+        RW_Dev["development ← develop"]
+        RW_Acc["acceptance ← main"]
+        RW_Mir["mirror ← tag production"]
     end
-    subgraph Prod["Production (Ubuntu LAN)"]
-        P_PG[(PostgreSQL)]
-        P_App["app<br/>Dockerfile<br/>Code trong image"]
-        P_Nginx["nginx"]
-        P_Nginx --> P_App --> P_PG
+    subgraph Prod["Production (Mini PC, LAN offline)"]
+        P_App["app (Dockerfile)<br/>nginx + PostgreSQL"]
     end
-    Git["git push main"] -->|auto-deploy| Staging
-    USB["USB copy"] -->|offline deploy| Prod
+    GitDev["push develop"] -->|auto| RW_Dev
+    GitMain["push main"] -->|auto| RW_Acc
+    TagP["tag đã giao"] -->|ghim| RW_Mir
+    USB["USB copy (offline)"] -->|deploy| Prod
 ```
 
 ### Development
@@ -656,15 +664,16 @@ rm -rf ~/.cache/selenium              # Xóa cache để Selenium Manager tải 
 
 Chạy lại, Selenium Manager sẽ tải đúng chromedriver khớp Chrome hiện tại **vào cache riêng theo user** (`~/.cache/selenium`). Nó KHÔNG sửa Chrome, KHÔNG đụng `PATH` hệ thống, KHÔNG cài đặt gì ở mức global — nên xóa thư mục cache đó hoàn toàn an toàn (lần sau Selenium Manager tự tải lại khi cần). (Trong Docker không gặp lỗi này vì `chromium` + `chromium-driver` cùng version do Debian phát hành.)
 
-### Staging (Railway)
+### Các môi trường Railway (development / acceptance / mirror)
 
-Railway là platform cloud (giống Heroku). Dùng cho:
-- Demo cho khách trước khi deploy production
-- Test trên môi trường giống production (RAILS_ENV=production)
+Railway là platform cloud (giống Heroku). Dự án có **ba** môi trường Railway, đều `RAILS_ENV=production`, khác nhau ở nhánh deploy và nhãn:
+- `development` ← nhánh `develop`: đội xem nhanh bản đang phát triển.
+- `acceptance` ← nhánh `main`: khách nghiệm thu bản release mới nhất — **không** dùng tag `-rc.N`.
+- `mirror` ← nhánh `production` (ghim đúng tag đang chạy ở Mini PC): bản sinh đôi online của production để khách đối chiếu.
 
-**Cách hoạt động:** Push code lên branch main → Railway tự build image từ Dockerfile → deploy → URL public.
+**Cách hoạt động:** Push lên nhánh tương ứng → Railway tự build image từ Dockerfile → deploy → URL public.
 
-**Cấu hình:** File `railway.json` trong repo:
+**Cấu hình:** cả ba dùng chung file `railway.json` trong repo:
 
 ```json
 {
@@ -680,10 +689,12 @@ Railway là platform cloud (giống Heroku). Dùng cho:
 - `preDeployCommand` — chạy migrations trước khi start
 - `healthcheckPath` — Railway kiểm tra app sẵn sàng trước khi chuyển traffic
 
-**Khác production:**
+**Khác production (Mini PC):**
 - Railway tự quản lý database (PostgreSQL add-on) và proxy (edge proxy thay nginx)
 - Có internet, có SSL (Railway tự cấp HTTPS)
-- Biến môi trường set trên Railway dashboard (không dùng file .env)
+- Biến môi trường set trên Railway dashboard (không dùng file .env); mỗi môi trường đặt `APPLICATION_ENVIRONMENT_LABEL` riêng (`Development` / `Acceptance` / `Mirror`)
+
+Chi tiết mô hình + lý do: [ADR-005](superpowers/specs/2026-06-07-quy-trinh-release-design.md).
 
 ### Production
 
@@ -831,6 +842,11 @@ docker compose up -d      # Tạo lại (database trống, 2 tài khoản mặc 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.9.0 (10/06/2026)
+
+- Mục 11 (Các môi trường): cập nhật sang mô hình hiện tại — **ba môi trường Railway** `development` (← `develop`), `acceptance` (← `main`), `mirror` (← tag đang ở production) thay cho một "Staging" cũ; đổi tên mục "4 môi trường" → "Các môi trường"; cập nhật bảng + sơ đồ Mermaid; thêm bảng 3 môi trường Railway + nhãn `APPLICATION_ENVIRONMENT_LABEL` + ghi chú nguồn nhánh Git Flow + link ADR-005/HUONG_DAN_SDLC.
+- Đồng bộ các chỗ còn nhắc "Staging" cho khớp: Mục lục, Mục 1 (intro), Mục 4 (danh sách file), Mục 7 (railway.json), Mục 8 (thêm biến `APPLICATION_ENVIRONMENT_LABEL`), Mục 12 (đổi "Staging" → ba môi trường Railway). (Issue #307)
 
 ### v1.8.2 (07/06/2026)
 
