@@ -1,6 +1,6 @@
 ---
 title: Quy trình phát hành (release process) — Mảnh 1 của SDLC
-version: 0.13.0
+version: 0.14.0
 status: draft (chờ duyệt)
 date: 2026-06-07
 governed_by: 2026-06-07-sdlc-overview-design.md
@@ -201,6 +201,7 @@ flowchart LR
 
 - [ ] CI xanh (trên pull request vào `develop`/`main`).
 - [ ] `/code-review` local không còn cảnh báo nghiêm trọng.
+- [ ] Rà tài liệu current-state khớp ADR mới nhất (xem bản đồ tài liệu `docs/BAN_DO_TAI_LIEU.md`).
 - [ ] Ghi chú phát hành tiếng Việt đã biên tập (release-please nháp → biên tập).
 - [ ] Merge Release PR → tag trên `main` (tự deploy **Acceptance**).
 - [ ] Khách xác nhận nghiệm thu trên **Acceptance** (với release thường).
@@ -243,6 +244,7 @@ flowchart LR
 
 ## Changelog
 
+- **0.14.0 (2026-06-10):** Checklist phát hành thêm bước "Rà tài liệu current-state khớp ADR mới nhất" (ADR-023 — quản trị tài liệu; Issue #310).
 - **0.13.0 (2026-06-09):** Hai mục "Cải tiến optional" *cheat-sheet `AGENTS.md`* + *checklist onboarding* → **✅ Đã làm** (Issue #307): tạo lối vào distill `docs/HUONG_DAN_SDLC.md` (ADR-022, spec [`2026-06-09-huong-dan-sdlc-onboarding-design.md`](2026-06-09-huong-dan-sdlc-onboarding-design.md)) + pointer `AGENTS.md`/`CONTRIBUTING.md`; **không** nhồi cheat-sheet vào `AGENTS.md` (giữ ADR-002). Kèm rà soát mạch lạc tài liệu canonical (bỏ drift `-rc.N`/env/nhánh).
 - **0.12.0 (2026-06-09):** "Cải tiến optional" chuyển từ danh sách trần sang **bảng có *verdict* + *trigger* hồi sinh** cho từng mục (cheat-sheet `AGENTS.md`; checklist onboarding; lint định dạng ADR trong CI; DORA metrics; tách ADR ra `docs/adr/`) — để không mục nào bị bỏ lửng, nhất quán với discipline "Điều kiện xem lại" của ADR. Không đổi quyết định nào (vẫn YAGNI tới khi chạm trigger).
 - **0.11.0 (2026-06-09):** Backlog #4 ("Tiếp nhận công việc / ưu tiên") **thiết kế + hiện thực xong** — spec mới [`2026-06-09-tiep-nhan-uu-tien-cong-viec-design.md`](2026-06-09-tiep-nhan-uu-tien-cong-viec-design.md) (ADR-019 cơ chế ưu tiên nhãn `priority-high` trên nền milestone; ADR-020 nhịp ad-hoc + cổng release-readiness); mục 11 `CONTRIBUTING.md` + pointer `AGENTS.md`; Backlog #4 → ✅ (bốn mảnh SDLC tuần tự hoàn tất).
