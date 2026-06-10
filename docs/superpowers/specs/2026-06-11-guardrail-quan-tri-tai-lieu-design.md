@@ -70,7 +70,7 @@ Kiểm bằng: chạy mỗi script trên cây repo hiện tại = **pass** (đã
 
 ## Giới hạn (không phóng đại "đảm bảo")
 
-Guardrail v1 chỉ ép phần **cơ học, không nhập nhằng**: link file nội bộ sống, bản đồ khớp, 6 viết tắt + 11 jargon giữ định nghĩa. **KHÔNG** đảm bảo: (1) bắt viết tắt/jargon **mới lạ** chưa định nghĩa (bất khả thi cho tiếng Việt — cần mắt người + nguyên tắc glossary ADR-023); (2) anchor `#slug` còn trỏ đúng (hoãn v1); (3) prose còn đúng **ngữ nghĩa** với ADR/nghiệp vụ mới (cần review người — checklist phát hành ở #310). Mạnh nhất vẫn là **construct tự-không-lỗi-thời** (vd trỏ thư mục thay vì liệt kê `ADR-001..NNN`) — ưu tiên khi viết.
+Guardrail v1 chỉ ép phần **cơ học, không nhập nhằng**: link file nội bộ sống, bản đồ khớp, 6 viết tắt + 11 jargon giữ định nghĩa. **KHÔNG** đảm bảo: (1) bắt viết tắt/jargon **mới lạ** chưa định nghĩa (bất khả thi cho tiếng Việt — cần mắt người + nguyên tắc glossary ADR-023); (2) anchor `#slug` còn trỏ đúng (hoãn v1); (3) prose còn đúng **ngữ nghĩa** với ADR/nghiệp vụ mới (cần review người — checklist phát hành ở #310); (4) link nằm trong inline code dạng **kép** (``…``) không bị lọc trước khi quét — tránh nhúng link trong span kép (dùng code fence). Mạnh nhất vẫn là **construct tự-không-lỗi-thời** (vd trỏ thư mục thay vì liệt kê `ADR-001..NNN`) — ưu tiên khi viết.
 
 ## Truy vết
 

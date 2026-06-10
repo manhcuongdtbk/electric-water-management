@@ -2,7 +2,9 @@
 # Guardrail quản trị tài liệu (ADR-024): mọi markdown link nội bộ trong docs/ +
 # file meta gốc phải trỏ tới FILE tồn tại. Bắt drift do đổi tên/xóa file (pattern
 # "trỏ về" của ADR-023 dựa vào link sống). Bỏ code fence + inline code trước khi
-# quét (plan/spec nhúng link ví dụ trong khối code). v1 KHÔNG ép anchor #slug.
+# quét (plan/spec nhúng link ví dụ trong khối code). CHỈ bỏ span đơn-backtick
+# (`...`); span kép (``...``) KHÔNG bị bỏ — tránh viết ``[text](path.md)`` trong
+# tài liệu (dùng code fence thay thế). v1 KHÔNG ép anchor #slug.
 # FAIL-LOUD: vi phạm → exit 1.
 set -uo pipefail
 
@@ -28,7 +30,7 @@ while IFS= read -r f; do
     while IFS= read -r target; do
       [[ -z "$target" ]] && continue
       url="${target%%#*}"   # bỏ #anchor (không ép ở v1)
-      url="${url%% *}"      # bỏ phần "title" sau khoảng trắng
+      url="${url%% *}"      # bỏ "title" sau khoảng trắng (phòng xa; grep đã dừng ở space)
       [[ -z "$url" ]] && continue
       case "$url" in
         http://* | https://* | mailto:* | tel:*) continue ;;  # link ngoài

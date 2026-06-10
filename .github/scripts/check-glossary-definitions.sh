@@ -19,6 +19,8 @@ while IFS= read -r term; do
   [[ -z "$term" ]] && continue
   # Hàng bảng có đầu cell là thuật ngữ (có/không **đậm**), không phân biệt hoa/thường.
   # vd: "| CI | ..."  hoặc  "| **Distill** (..) | ..."
+  # Lưu ý: $term nội suy thẳng vào ERE — tránh thêm thuật ngữ có ký tự đặc biệt
+  # regex (. * + ? [ ] ( ) \) vào glossary-terms.txt mà chưa escape.
   if ! grep -qiE "^\|[[:space:]]*\*{0,2}${term}([^[:alnum:]]|$)" "$GLOSSARY"; then
     echo "MẤT ĐỊNH NGHĨA  '$term'  không còn hàng trong $GLOSSARY"
     violations=$((violations + 1))
