@@ -1,7 +1,7 @@
 # Hướng dẫn deploy — Hệ thống quản lý điện nội bộ Sư đoàn
 
-> **Phiên bản:** 1.2.0
-> **Ngày:** 24/05/2026
+> **Phiên bản:** 1.3.0
+> **Ngày:** 10/06/2026
 > **Đối tượng:** Người thực hiện deploy (kỹ thuật viên, cố vấn IT, hoặc developer).
 > **Server:** Ubuntu 24.04, Docker, LAN nội bộ, không có internet.
 > **Thời gian ước tính:** 1-2 giờ (lần đầu).
@@ -260,7 +260,7 @@ docker compose ps
 
 ## Sao lưu dữ liệu
 
-### Sao lưu qua giao diện web (khi cần)
+### Lớp 1 — Sao lưu qua giao diện web (snapshot tạm trước thao tác nguy hiểm)
 
 Dùng khi cần tạo bản sao lưu trước thao tác quan trọng (ví dụ: trước khi cập nhật phiên bản, trước khi khôi phục dữ liệu cũ).
 
@@ -269,9 +269,11 @@ Dùng khi cần tạo bản sao lưu trước thao tác quan trọng (ví dụ: 
 3. Bấm **Tạo bản sao lưu mới**
 4. Hệ thống tạo file backup, lưu trong container
 
-Tối đa 3 bản sao lưu. Muốn tạo bản mới khi đã đủ 3 — xóa bản cũ nhất trước.
+Tối đa 3 bản. Đây là snapshot **tạm thời** trước thao tác nguy hiểm — **không** phải nguồn sao lưu chính (nguồn chính là Lớp 3, tự động sang ổ phụ, bên dưới). Muốn tạo bản mới khi đã đủ 3 — xóa bản cũ nhất trước.
 
 ### Khôi phục từ bản sao lưu
+
+> **Quan trọng — tạo bản sao lưu TRƯỚC khi khôi phục:** restore ghi đè toàn bộ dữ liệu hiện tại. Trước khi chạy, hãy tạo một bản sao lưu Lớp 1 qua giao diện web (mục trên) để còn đường lùi nếu khôi phục hỏng. (Quy ước: `CONTRIBUTING.md` mục 10, ADR-017.)
 
 Khôi phục thực hiện qua dòng lệnh (không có nút trên giao diện vì đây là thao tác nguy hiểm — ghi đè toàn bộ dữ liệu hiện tại):
 
@@ -287,9 +289,9 @@ docker compose exec app bundle exec rails "backups:restore[<tên-file>]"
 
 Hệ thống hỏi xác nhận trước khi khôi phục. Gõ `YES` (chữ hoa) để xác nhận.
 
-### Sao lưu tự động sang ổ cứng phụ (bắt buộc)
+### Lớp 3 — Sao lưu tự động sang ổ cứng phụ (bắt buộc, nguồn cậy chính)
 
-Server phải có ổ cứng phụ để sao lưu tự động. Nếu ổ chính hỏng, dữ liệu vẫn còn trên ổ phụ.
+Đây là **nguồn sao lưu chính** (nằm ngoài máy chạy app): nếu ổ chính hoặc cả máy hỏng, dữ liệu vẫn còn trên ổ phụ. Lớp 1 (giao diện) chỉ là snapshot tạm. Giữ 7 bản gần nhất để có khoảng lùi an toàn.
 
 1. Mount ổ cứng phụ (ví dụ `/mnt/backup`):
 
@@ -320,6 +322,8 @@ Script tự động:
 ---
 
 ## Cập nhật phiên bản
+
+> **Trước khi cập nhật:** trên server, tạo một bản sao lưu Lớp 1 qua giao diện web để có đường lùi nếu bản mới gặp sự cố.
 
 Khi có phiên bản mới từ nhà phát triển:
 
@@ -458,6 +462,10 @@ docker --version
 ---
 
 ## Lịch sử thay đổi
+
+### v1.3.0 (10/06/2026)
+
+- Làm rõ chính sách sao lưu theo ADR-016/017: đặt tên **Lớp 1** (snapshot giao diện, tạm) vs **Lớp 3** (tự động sang ổ phụ, nguồn cậy chính, 7 bản); thêm cảnh báo **tạo bản sao lưu Lớp 1 trước khi khôi phục** và **trước khi cập nhật phiên bản**. (Issue #307)
 
 ### v1.2.0 (24/05/2026)
 
