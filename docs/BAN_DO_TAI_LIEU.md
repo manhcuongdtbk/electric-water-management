@@ -1,6 +1,6 @@
 # Bản đồ tài liệu — Hệ thống quản lý điện nội bộ Sư đoàn
 
-> **Phiên bản:** 1.0.0
+> **Phiên bản:** 1.1.0
 > **Ngày:** 10/06/2026
 > **Tính chất:** Canonical — liệt kê mọi tài liệu của dự án kèm **mục đích, đối tượng, loại**, để người và công cụ AI biết **một fact nằm ở đâu** và **sửa ở đâu** thay vì thêm nơi mới. Hỗ trợ trực tiếp quy tắc "sửa đừng thêm" (`AGENTS.md` mục "Quản trị tài liệu"; ADR-023).
 
@@ -19,6 +19,7 @@
 | `AGENTS.md` | Quy ước canonical (code + quy trình), mệnh lệnh, trỏ tới chi tiết | Người + mọi công cụ AI |
 | `docs/THUAT_NGU.md` | Từ điển thuật ngữ + từ viết tắt + gloss (nguồn duy nhất) | Người + AI |
 | `docs/BAN_DO_TAI_LIEU.md` | Bản đồ tài liệu (file này): fact nào ở đâu, loại gì | Người + AI |
+| `docs/superpowers/ADR-TEMPLATE.md` | Mẫu ADR chuẩn (7 mục, đánh số toàn cục) để viết quyết định mới trong spec | Người + AI |
 | `docs/V2_XAC_NHAN_NGHIEP_VU.md` | Nghiệp vụ — nguồn sự thật duy nhất cho thiết kế & triển khai | Chủ dự án + đội phát triển |
 | `docs/V2_THIET_KE_HE_THONG.md` | Thiết kế hệ thống — nguồn sự thật cho implementation | Đội phát triển |
 | `docs/V2_HANH_VI_HE_THONG.md` | Hành vi runtime (6 vai trò, trạng thái kỳ, `.kept`/`.with_discarded`) | Đội phát triển |
@@ -48,4 +49,5 @@
 
 ## Lịch sử thay đổi
 
+- **1.1.0 (11/06/2026):** Thêm `docs/superpowers/ADR-TEMPLATE.md` vào nhóm canonical (mẫu ADR). Phát hiện khi dựng guardrail ADR-024 (Issue #313).
 - **1.0.0 (10/06/2026):** Bản đầu — phân loại canonical / current-state / lịch sử cho toàn bộ tài liệu dự án. ADR-023, Issue #310.
