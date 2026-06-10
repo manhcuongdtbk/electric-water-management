@@ -260,6 +260,8 @@ docker compose ps
 
 ## Sao lưu dữ liệu
 
+Hệ thống có **3 lớp sao lưu / khôi phục** (theo ADR-017): **Lớp 1** tạo bản sao lưu qua giao diện (snapshot tạm), **Lớp 2** khôi phục qua dòng lệnh, **Lớp 3** tự động sang ổ cứng phụ (nguồn cậy chính). Ba mục dưới đây lần lượt là ba lớp đó.
+
 ### Lớp 1 — Sao lưu qua giao diện web (snapshot tạm trước thao tác nguy hiểm)
 
 Dùng khi cần tạo bản sao lưu trước thao tác quan trọng (ví dụ: trước khi cập nhật phiên bản, trước khi khôi phục dữ liệu cũ).
@@ -271,7 +273,7 @@ Dùng khi cần tạo bản sao lưu trước thao tác quan trọng (ví dụ: 
 
 Tối đa 3 bản. Đây là snapshot **tạm thời** trước thao tác nguy hiểm — **không** phải nguồn sao lưu chính (nguồn chính là Lớp 3, tự động sang ổ phụ, bên dưới). Muốn tạo bản mới khi đã đủ 3 — xóa bản cũ nhất trước.
 
-### Khôi phục từ bản sao lưu
+### Lớp 2 — Khôi phục từ bản sao lưu (qua dòng lệnh)
 
 > **Quan trọng — tạo bản sao lưu TRƯỚC khi khôi phục:** restore ghi đè toàn bộ dữ liệu hiện tại. Trước khi chạy, hãy tạo một bản sao lưu Lớp 1 qua giao diện web (mục trên) để còn đường lùi nếu khôi phục hỏng. (Quy ước: `CONTRIBUTING.md` mục 10, ADR-017.)
 
@@ -465,7 +467,7 @@ docker --version
 
 ### v1.3.0 (10/06/2026)
 
-- Làm rõ chính sách sao lưu theo ADR-016/017: đặt tên **Lớp 1** (snapshot giao diện, tạm) vs **Lớp 3** (tự động sang ổ phụ, nguồn cậy chính, 7 bản); thêm cảnh báo **tạo bản sao lưu Lớp 1 trước khi khôi phục** và **trước khi cập nhật phiên bản**. (Issue #307)
+- Làm rõ chính sách sao lưu theo ADR-016/017: gán nhãn đủ **3 lớp** khớp ADR-017 — **Lớp 1** (snapshot qua giao diện) / **Lớp 2** (khôi phục qua dòng lệnh) / **Lớp 3** (tự động sang ổ phụ, nguồn cậy chính, 7 bản); thêm câu mở đầu giải thích 3 lớp; thêm cảnh báo **tạo bản sao lưu Lớp 1 trước khi khôi phục** và **trước khi cập nhật phiên bản**. (Issue #307)
 
 ### v1.2.0 (24/05/2026)
 
