@@ -117,10 +117,10 @@ Tài liệu này cố ý ngắn để nắm nhanh. Khi cần làm thật, mở:
 
 - [CONTRIBUTING.md](../CONTRIBUTING.md) — quy trình **thao tác từng bước** cho người (mục 1–11).
 - [AGENTS.md](../AGENTS.md) — **quy ước** code + dự án (tài liệu canonical).
-- [docs/superpowers/specs/](superpowers/specs/) — **quyết định kèm lý do** (ADR-001..023).
+- [docs/superpowers/specs/](superpowers/specs/) — **quyết định kèm lý do** (các ADR).
 - [README.md](../README.md) — cài đặt, lệnh thường dùng, môi trường.
 
 ## Lịch sử thay đổi
 
-- **1.1.0 (10/06/2026):** §1 "Từ vựng" gom về [`THUAT_NGU.md`](THUAT_NGU.md) (nguồn duy nhất), thay bảng bằng pointer; §8 trỏ từ viết tắt sang `THUAT_NGU.md` (bỏ liệt kê inline cho khỏi lỗi thời); §5 thêm dòng "Quản trị tài liệu"; cập nhật dải ADR-001..023. ADR-023, Issue #310.
+- **1.1.0 (10/06/2026):** §1 "Từ vựng" gom về [`THUAT_NGU.md`](THUAT_NGU.md) (nguồn duy nhất), thay bảng bằng pointer; §8 trỏ từ viết tắt sang `THUAT_NGU.md` (bỏ liệt kê inline cho khỏi lỗi thời); §5 thêm dòng "Quản trị tài liệu"; bỏ dải ADR cứng ("ADR-001..NNN") ở "Cần chi tiết hơn?" cho khỏi phải sửa khi có ADR mới. ADR-023, Issue #310.
 - **1.0.0 (09/06/2026):** Bản đầu — lối vào tổng quan, dễ hiểu cho người mới về quy trình SDLC (ADR-022; spec [2026-06-09-huong-dan-sdlc-onboarding-design.md](superpowers/specs/2026-06-09-huong-dan-sdlc-onboarding-design.md); Issue #307).
