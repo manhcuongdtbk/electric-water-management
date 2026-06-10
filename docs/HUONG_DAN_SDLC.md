@@ -11,7 +11,7 @@
 
 ## 1. Từ vựng (đọc cái này trước)
 
-Thuật ngữ, từ viết tắt và các gloss ("canonical", "chủ dự án"…) dùng trong dự án nằm tập trung ở **[`docs/THUAT_NGU.md`](THUAT_NGU.md)** — nguồn **duy nhất**, học một lần dùng mọi nơi. Đọc lướt mục đó trước khi đọc tiếp.
+Thuật ngữ, từ viết tắt và các gloss ("canonical", "chủ dự án"…) dùng trong dự án nằm tập trung ở **[`THUAT_NGU.md`](THUAT_NGU.md)** — nguồn **duy nhất**, học một lần dùng mọi nơi. Đọc lướt mục đó trước khi đọc tiếp.
 
 (Tên các loại nhánh `develop`, `main`, `feature/*`, `release/*`, `hotfix/*` được giải thích ngay ở mục 2.)
 
@@ -107,7 +107,7 @@ Chi tiết: [CONTRIBUTING.md mục 10](../CONTRIBUTING.md) · [ADR-018](superpow
 ## 8. Quy ước sống còn (đừng quên)
 
 - **Ngôn ngữ:** tài liệu và giao diện **tiếng Việt 100%**; commit và tiêu đề pull request **tiếng Anh** (theo Conventional Commits — [CONTRIBUTING.md mục 3](../CONTRIBUTING.md)).
-- **Không viết tắt**, trừ các từ trong bảng *"Từ viết tắt được phép"* ở [`docs/THUAT_NGU.md`](THUAT_NGU.md) (hiện gồm CI, ADR, CRUD, UI, SDLC, SemVer). Cần thêm từ viết tắt mới → thêm vào bảng đó trước.
+- **Không viết tắt**, trừ các từ trong bảng *"Từ viết tắt được phép"* ở [`THUAT_NGU.md`](THUAT_NGU.md) (hiện gồm CI, ADR, CRUD, UI, SDLC, SemVer). Cần thêm từ viết tắt mới → thêm vào bảng đó trước.
 - **Luôn làm trong một git worktree riêng + Docker** (xem [README.md](../README.md)).
 - Sửa file trong `docs/` có dòng *Phiên bản* → nhớ **tăng version + ghi một dòng vào "Lịch sử thay đổi"** trong cùng commit ([ADR-002](superpowers/specs/2026-06-07-sdlc-overview-design.md)).
 
@@ -122,5 +122,5 @@ Tài liệu này cố ý ngắn để nắm nhanh. Khi cần làm thật, mở:
 
 ## Lịch sử thay đổi
 
-- **1.1.0 (10/06/2026):** §1 "Từ vựng" gom về [`docs/THUAT_NGU.md`](THUAT_NGU.md) (nguồn duy nhất), thay bảng bằng pointer; §8 trỏ từ viết tắt sang `THUAT_NGU.md`; §5 thêm dòng "Quản trị tài liệu"; cập nhật dải ADR-001..023. ADR-023, Issue #310.
+- **1.1.0 (10/06/2026):** §1 "Từ vựng" gom về [`THUAT_NGU.md`](THUAT_NGU.md) (nguồn duy nhất), thay bảng bằng pointer; §8 trỏ từ viết tắt sang `THUAT_NGU.md`; §5 thêm dòng "Quản trị tài liệu"; cập nhật dải ADR-001..023. ADR-023, Issue #310.
 - **1.0.0 (09/06/2026):** Bản đầu — lối vào tổng quan, dễ hiểu cho người mới về quy trình SDLC (ADR-022; spec [2026-06-09-huong-dan-sdlc-onboarding-design.md](superpowers/specs/2026-06-09-huong-dan-sdlc-onboarding-design.md); Issue #307).
