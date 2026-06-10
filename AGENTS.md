@@ -12,14 +12,14 @@
 
 Tuyệt đối không viết tắt, không rút gọn — áp dụng mọi nơi: tài liệu, code (tên biến, method, cột, i18n, commit message), giao diện, giao tiếp. **Ngoại lệ duy nhất** là các từ trong bảng dưới (đã quá phổ biến, ai cũng hiểu ngay). Cần dùng một từ viết tắt mới → **thêm vào bảng này trước** (đây là danh sách canonical duy nhất các từ viết tắt được phép — mọi tài liệu khác trỏ về đây).
 
-| Viết tắt | Đầy đủ | Nghĩa |
-|---|---|---|
-| CI | Continuous Integration | Máy chủ tự chạy kiểm tra (test/lint) trên mỗi pull request |
-| ADR | Architecture Decision Record | Bản ghi một quyết định kiến trúc kèm lý do (trong `docs/superpowers/specs/`) |
-| CRUD | Create, Read, Update, Delete | Bốn thao tác cơ bản với dữ liệu |
-| UI | User Interface | Giao diện người dùng |
-| SDLC | Software Development Life Cycle | Vòng đời phát triển phần mềm (quy trình tổng thể) |
-| SemVer | Semantic Versioning | Quy ước đánh số version `MAJOR.MINOR.PATCH` |
+| Viết tắt | Đầy đủ | Nghĩa | Nguồn chính thống |
+|---|---|---|---|
+| CI | Continuous Integration | Máy chủ tự chạy kiểm tra (test/lint) trên mỗi pull request | [Martin Fowler — Continuous Integration](https://martinfowler.com/articles/continuousIntegration.html) |
+| ADR | Architecture Decision Record | Bản ghi một quyết định kiến trúc kèm lý do (trong `docs/superpowers/specs/`) | [adr.github.io](https://adr.github.io/) |
+| CRUD | Create, Read, Update, Delete | Bốn thao tác cơ bản với dữ liệu | — |
+| UI | User Interface | Giao diện người dùng | — |
+| SDLC | Software Development Life Cycle | Vòng đời phát triển phần mềm (quy trình tổng thể) | — |
+| SemVer | Semantic Versioning | Quy ước đánh số version `MAJOR.MINOR.PATCH` | [semver.org (tiếng Việt)](https://semver.org/lang/vi/) |
 
 ## Tài liệu nguồn (đọc trước khi làm bất cứ gì)
 
