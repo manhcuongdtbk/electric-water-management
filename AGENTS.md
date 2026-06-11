@@ -55,9 +55,10 @@ Mỗi git worktree dùng bộ cổng host riêng do `bin/docker` tự gán (post
 ## Ngôn ngữ
 
 - Code (tên biến, method, cột, model, controller, test): tiếng Anh
+- Output kỹ thuật cho developer/CI (echo/log/CLI, message lỗi trong code, thông báo của script/hook): tiếng Anh — là một phần của code, KHÔNG phải giao diện
 - Git commits, pull request titles, pull request descriptions: tiếng Anh
 - i18n (config/locales/vi.yml): tiếng Việt 100%
-- Giao diện: tiếng Việt 100%
+- Giao diện **người dùng cuối** (Rails app UI, file xuất cho người dùng): tiếng Việt 100%
 - Tên trong code sát nghiệp vụ nhất có thể, dịch sang tiếng Anh
 
 ## Quy ước đặt tên (nghiệp vụ → code)

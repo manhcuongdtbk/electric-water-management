@@ -25,3 +25,4 @@ grooming
 
 # Jargon khác (ADR-024 follow-up)
 prose
+guardrail
