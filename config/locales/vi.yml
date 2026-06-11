@@ -207,6 +207,10 @@ vi:
           attributes:
             block_id:
               unit_mismatch: "phải thuộc cùng đơn vị với nhóm"
+        other_deduction:
+          attributes:
+            other_type:
+              unit_coefficient_requires_unit: "Cách nhập \"Theo hệ số (đơn vị)\" chỉ dùng cho đầu mối thuộc đơn vị"
   errors:
     access_denied: "Bạn không có quyền truy cập trang này."
     stale_object: "Dữ liệu đã bị thay đổi bởi người khác. Vui lòng kiểm tra lại."
