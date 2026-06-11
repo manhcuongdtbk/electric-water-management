@@ -149,6 +149,8 @@ Mở rộng danh sách đối tượng có thể nhận phân bổ bơm nước:
 | **Nhóm** | — | **Thêm** | **Chia đều theo quân số cho tất cả đầu mối sinh hoạt trong nhóm** |
 | **Đầu mối sinh hoạt thuộc đơn vị** | — | **Thêm** | **Nhận trực tiếp** |
 
+Tổng điện bơm nước toàn khu vực không thay đổi — chỉ tách ra theo từng trạm thay vì gộp chung. Ví dụ: trạm 1 dùng 500 kWh + tổn hao 200 kWh = 700 kWh, trạm 2 dùng 300 kWh + tổn hao 120 kWh = 420 kWh → tổng vẫn là 1.120 kWh như cũ, nhưng 700 kWh chỉ phân bổ cho đối tượng của trạm 1, 420 kWh chỉ phân bổ cho đối tượng của trạm 2.
+
 Cách phân bổ (phần trăm cố định hoặc hệ số nhân quân số) giữ nguyên. Thay đổi chính: phạm vi phân bổ từ "cả khu vực" thành "từng trạm bơm", và thêm đối tượng nhận mới (khối, nhóm, đầu mối thuộc đơn vị).
 
 ### Ví dụ minh họa
