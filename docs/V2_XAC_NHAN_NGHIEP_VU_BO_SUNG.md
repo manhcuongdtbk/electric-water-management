@@ -53,7 +53,7 @@ Cột "Khác" trên trang Cấu hình đơn vị có 2 cách nhập:
 | **Theo hệ số** | Hệ số × quân số **đầu mối đó** | Nhập 2, đầu mối 3 người → trừ 2 × 3 = 6 kWh |
 
 - Phần "mỗi người góp 2 kWh": **làm được** — dùng kiểu "Theo hệ số" với giá trị 2 cho tất cả đầu mối.
-- Phần "bếp nhận lại tổng": **phải nhập tay** — tự tính tổng quân số đơn vị × 2 = 148, rồi nhập số cụ thể -148 cho bếp. Khi quân số thay đổi (người chuyển đi/đến), phải tự tính lại con số này.
+- Phần "bếp nhận lại tổng": **làm được** bằng cách nhập "Số cụ thể" = -148 cho bếp. Tuy nhiên khi quân số thay đổi (người chuyển đi/đến) thì cần tự tính lại con số này.
 
 ### Giải pháp đề xuất
 
@@ -103,7 +103,7 @@ Trong 1 khu vực có nhiều trạm bơm nước. Mỗi trạm bơm phục vụ
 - Trạm bơm 1 bơm nước cho vùng A (ví dụ: Khối 1).
 - Trạm bơm 2 bơm nước cho vùng B (ví dụ: Khối 2).
 
-Nhưng hệ thống hiện tại gộp điện của tất cả trạm bơm thành 1 tổng, rồi chia cho tất cả mọi người. Người ở vùng A phải chịu cả điện trạm 2 (dù không dùng nước từ trạm 2). Không đúng thực tế.
+Hệ thống hiện tại gộp điện của tất cả trạm bơm thành 1 tổng, rồi chia cho tất cả mọi người. Nếu muốn tách riêng trạm nào cho vùng nào thì cần thêm tính năng mới.
 
 ### Hệ thống hiện tại làm được gì
 
@@ -119,7 +119,7 @@ Tất cả trạm bơm trong khu vực
    Tất cả đầu mối sinh hoạt trong đơn vị (theo quân số)
 ```
 
-Không có cách nào tách riêng trạm bơm 1 cho khối 1, trạm bơm 2 cho khối 2.
+Nếu muốn tách riêng trạm bơm 1 cho khối 1, trạm bơm 2 cho khối 2 thì cần thêm tính năng mới.
 
 ### Giải pháp đề xuất
 
