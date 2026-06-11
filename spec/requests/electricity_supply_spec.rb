@@ -124,7 +124,7 @@ RSpec.describe "ElectricitySupply", type: :request do
       patch electricity_supply_path, params: {
         main_meter_readings: { r.id.to_s => { usage: "-1", lock_version: r.lock_version } }
       }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 

@@ -46,7 +46,7 @@ class UsersController < ApplicationController
       redirect_to users_path,
         notice: t("flash.record_created", resource: t("resources.user"), name: @user.username)
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -64,7 +64,7 @@ class UsersController < ApplicationController
       redirect_to users_path,
         notice: t("flash.record_updated", resource: t("resources.user"), name: @user.username)
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

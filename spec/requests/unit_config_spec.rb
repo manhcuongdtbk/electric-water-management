@@ -53,7 +53,7 @@ RSpec.describe "UnitConfig", type: :request do
         }
       }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(uc.reload.unit_public_rate).to eq(original_rate)
     end
   end

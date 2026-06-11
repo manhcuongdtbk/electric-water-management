@@ -1,0 +1,42 @@
+# Dependabot — tự động mở pull request cập nhật dependency.
+# (Cảnh báo CVE + auto security-fix bật riêng ở repo settings — Security & analysis.)
+# PR đích nhánh mặc định (develop); branch-source guard chỉ chặn PR vào main.
+version: 2
+updates:
+  # Gem (Gemfile) — gom minor/patch thành 1 PR/tuần để bớt nhiễu; major tách riêng.
+  - package-ecosystem: bundler
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      ruby-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  # Docker base image (Dockerfile).
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: chore
+      include: scope
+
+  # GitHub Actions trong .github/workflows — gom tất cả thành 1 PR.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: ci
+      include: scope
+    groups:
+      github-actions:
+        patterns: ["*"]

@@ -170,7 +170,7 @@ RSpec.describe "PumpAllocations", type: :request do
           coefficient: "0", fixed_percentage: "30"
         }
       }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("không được vượt quá 100")
     end
   end

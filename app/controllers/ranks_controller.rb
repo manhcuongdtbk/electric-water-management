@@ -45,7 +45,7 @@ class RanksController < ApplicationController
       redirect_to ranks_path,
         notice: t("flash.record_created", resource: t("resources.rank"), name: @rank.name)
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -57,7 +57,7 @@ class RanksController < ApplicationController
       redirect_to ranks_path,
         notice: t("flash.record_updated", resource: t("resources.rank"), name: @rank.name)
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

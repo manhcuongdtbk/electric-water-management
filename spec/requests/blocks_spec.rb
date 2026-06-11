@@ -89,7 +89,7 @@ RSpec.describe "Blocks", type: :request do
     it "update tên trùng → lỗi validation" do
       create(:block, unit: unit, name: "Phòng trùng")
       patch block_path(block), params: { block: { name: "Phòng trùng" } }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 

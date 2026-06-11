@@ -46,7 +46,7 @@ class ElectricitySupplyController < ApplicationController
     if errors_collected.any?
       flash.now[:alert] = errors_collected.map { |e| "#{e[:name]}: #{e[:msgs].join(', ')}" }.join("\n")
       @readings = load_readings
-      render :show, status: :unprocessable_entity
+      render :show, status: :unprocessable_content
     else
       redirect_to electricity_supply_path, notice: t("electricity_supply.flash.saved")
     end

@@ -34,7 +34,7 @@ RSpec.describe "PasswordChanges", type: :request do
       patch password_change_path, params: {
         user: { password: "weak", password_confirmation: "weak" }
       }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       user.reload
       expect(user.valid_password?("weak")).to be false
     end
@@ -93,7 +93,7 @@ RSpec.describe "PasswordChanges", type: :request do
           password_confirmation: "NewSecure@99"
         }
       }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       voluntary_user.reload
       expect(voluntary_user.valid_password?("NewSecure@99")).to be false
       expect(voluntary_user.valid_password?("Current@1")).to be true
@@ -103,7 +103,7 @@ RSpec.describe "PasswordChanges", type: :request do
       patch password_change_path, params: {
         user: { password: "NewSecure@99", password_confirmation: "NewSecure@99" }
       }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       voluntary_user.reload
       expect(voluntary_user.valid_password?("Current@1")).to be true
     end

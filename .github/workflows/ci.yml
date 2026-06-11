@@ -1,14 +1,21 @@
 name: CI
 
-# P2 — minimal STATIC CI (ADR-007, ADR-011). Only checks that need NO Postgres,
-# NO browser, and NO app boot. Test runs (rspec incl. system specs, schema-drift,
-# zeitwerk:check) plus runner/cache/headless tuning are deferred to the "CI spec"
-# piece (Backlog in quy-trinh-release-design.md). Per ADR-007 this CI only SHOWS
-# status (a private repo has no free branch protection) — single-merger discipline
-# enforces the rules.
+# CI on pull requests (ADR-007, ADR-011, ADR-012, ADR-021). Two tiers:
+#   - STATIC checks (no Postgres / no browser / no app boot): rubocop, brakeman,
+#     bundler-audit, commitlint, branch-source guard.
+#   - TEST runs (Postgres service container + headless Chrome): rspec incl. system
+#     specs, a schema-drift check, and zeitwerk:check — see the `tests` job and
+#     docs/superpowers/specs/2026-06-07-ci-spec-design.md (ADR-012).
+# Cost/latency controls (ADR-021): the heavy jobs (`tests`, `ruby-checks`) run
+# only when a pull request touches code — a `changes` job (fail-safe native bash,
+# .github/scripts/detect-code-changes.sh) skips them for docs/meta-only changes.
+# `edited` is intentionally NOT a trigger, so editing a pull request's title or
+# body does not re-run CI.
+# Per ADR-007 this CI only SHOWS status (a private repo has no free branch
+# protection) — single-merger discipline enforces the rules.
 on:
   pull_request:
-    types: [opened, synchronize, reopened, edited]
+    types: [opened, synchronize, reopened]
 
 # Cancel superseded runs on the same pull request (saves Actions minutes).
 concurrency:
@@ -16,17 +23,34 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Fail-safe path filter (ADR-021): decide whether the heavy jobs run.
+  # Skips them only when EVERY changed file is docs/meta; any uncertainty → run.
+  changes:
+    name: Detect code changes
+    runs-on: ubuntu-latest
+    outputs:
+      code_touched: ${{ steps.detect.outputs.code_touched }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # need history to diff base...head
+      - id: detect
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bash .github/scripts/detect-code-changes.sh
+
   ruby-checks:
     name: Ruby static checks (rubocop, brakeman, bundler-audit)
     runs-on: ubuntu-latest
+    needs: changes
+    if: ${{ needs.changes.outputs.code_touched == 'true' }} # ADR-021: skip on docs-only
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: .ruby-version # setup-ruby accepts the filename as a special value
-          bundler-cache: false # caching deferred to the "CI spec" piece
-      - name: Install gems (no cache — cache tuning belongs to the CI-spec piece)
-        run: bundle install --jobs 4
+          bundler-cache: true # gem cache enabled by the CI-spec piece (ADR-012)
       - name: rubocop
         if: ${{ !cancelled() }}
         run: bundle exec rubocop --no-server --format progress
@@ -42,10 +66,10 @@ jobs:
     name: Conventional Commits (commitlint)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0 # need full history to lint the pull request's commit range
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "lts/*" # always the latest Node LTS
       - name: commitlint
@@ -61,9 +85,74 @@ jobs:
     name: Branch-source guard (Git Flow)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Check the pull request source for a main target
         env:
           BASE_REF: ${{ github.base_ref }}
           HEAD_REF: ${{ github.head_ref }}
         run: bash .github/scripts/check-branch-source.sh
+
+  doc-governance:
+    name: Doc governance (links, map, glossary definitions)
+    runs-on: ubuntu-latest
+    # Chạy LUÔN trên mọi pull request (KHÔNG gate qua `changes`): guardrail tài
+    # liệu cần nhất đúng lúc pull request chỉ sửa tài liệu (ADR-024).
+    steps:
+      - uses: actions/checkout@v6
+      - name: Document-governance guardrails (ADR-024)
+        run: |
+          # rc (không phải "status": là biến read-only trong zsh nếu ai chạy tay)
+          rc=0
+          bash .github/scripts/check-doc-links.sh || rc=1
+          bash .github/scripts/check-doc-map.sh || rc=1
+          bash .github/scripts/check-glossary-definitions.sh || rc=1
+          exit $rc
+
+  tests:
+    name: Tests (rspec incl. system specs, zeitwerk, schema drift)
+    runs-on: ubuntu-latest
+    needs: changes
+    if: ${{ needs.changes.outputs.code_touched == 'true' }} # ADR-021: skip on docs-only
+    services:
+      postgres:
+        image: postgres:16-alpine # matches compose.yml
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      RAILS_ENV: test
+      DATABASE_HOST: localhost
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: postgres
+      ELECTRIC_WATER_MANAGEMENT_DATABASE_PASSWORD: postgres
+      # Force the Selenium Manager path: these paths do not exist, so the
+      # File.exist? guards in spec/support/system_test_config.rb both fail and
+      # Selenium Manager resolves the runner's pre-installed Google Chrome plus a
+      # version-matched chromedriver. No app/test code change needed.
+      CHROMIUM_BINARY: /nonexistent/chromium
+      CHROMEDRIVER_BINARY: /nonexistent/chromedriver
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+      - name: Set up test database and check for schema drift
+        if: ${{ !cancelled() }}
+        # Fresh DB + migrate must reproduce the committed db/schema.rb byte-for-byte.
+        run: |
+          bin/rails db:create db:migrate
+          git diff --exit-code db/schema.rb
+      - name: Zeitwerk check (autoloading)
+        if: ${{ !cancelled() }}
+        run: bin/rails zeitwerk:check
+      - name: rspec (model, request, and system specs with headless Chrome)
+        if: ${{ !cancelled() }}
+        run: bundle exec rspec
