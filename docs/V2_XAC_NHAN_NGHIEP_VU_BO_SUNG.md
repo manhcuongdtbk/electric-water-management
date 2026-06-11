@@ -1,8 +1,8 @@
 # Xác nhận nghiệp vụ bổ sung — Hệ thống quản lý điện nội bộ Sư đoàn (Hệ thống v2)
 
 > **Phiên bản:** 2.1.0
-> **Ngày:** 30/05/2026
-> **Bối cảnh:** Quản trị viên hệ thống test trên staging kỳ 4/2026 và đưa ra 2 mong muốn mới.
+> **Ngày:** 06/06/2026
+> **Bối cảnh:** Quản trị viên hệ thống test trên staging kỳ 4/2026 và đưa ra 3 mong muốn mới.
 
 ---
 
@@ -11,7 +11,8 @@
 1. [Xác nhận hệ thống hiện tại hoạt động đúng](#1-xác-nhận-hệ-thống-hiện-tại-hoạt-động-đúng)
 2. [Tính năng mới 1 — Cột "Khác" kiểu hệ số tổng đơn vị](#2-tính-năng-mới-1--cột-khác-kiểu-hệ-số-tổng-đơn-vị)
 3. [Tính năng mới 2 — Phân bổ bơm nước theo từng trạm bơm](#3-tính-năng-mới-2--phân-bổ-bơm-nước-theo-từng-trạm-bơm)
-4. [Tổng hợp cần xác nhận](#4-tổng-hợp-cần-xác-nhận)
+4. [Tính năng mới 3 — Hiển thị chi tiết tổn hao](#4-tính-năng-mới-3--hiển-thị-chi-tiết-tổn-hao)
+5. [Tổng hợp cần xác nhận](#5-tổng-hợp-cần-xác-nhận)
 
 ---
 
@@ -30,11 +31,13 @@ Cụ thể đã kiểm tra:
 
 File kiểm chứng Excel (có công thức từng bước, bấm vào ô bất kỳ để thấy cách tính) đã được gửi kèm.
 
-**2 mong muốn dưới đây là tính năng mới, nằm ngoài phạm vi nghiệp vụ đã thống nhất.**
+**3 mong muốn dưới đây là tính năng mới, nằm ngoài phạm vi nghiệp vụ đã thống nhất.**
 
 ---
 
 ## 2. Tính năng mới 1 — Cột "Khác" kiểu hệ số tổng đơn vị
+
+> **Trạng thái: Đã xác nhận** (phản hồi ngày 31/05/2026, kèm điều chỉnh công thức loại trừ quân số đầu mối đang nhập).
 
 ### Vấn đề thực tế
 
@@ -53,7 +56,7 @@ Cột "Khác" trên trang Cấu hình đơn vị có 2 cách nhập:
 | **Theo hệ số** | Hệ số × quân số **đầu mối đó** | Nhập 2, đầu mối 3 người → trừ 2 × 3 = 6 kWh |
 
 - Phần "mỗi người góp 2 kWh": **làm được** — dùng kiểu "Theo hệ số" với giá trị 2 cho tất cả đầu mối.
-- Phần "bếp nhận lại tổng": **làm được** bằng cách nhập "Số cụ thể" = -148 cho bếp. Tuy nhiên khi quân số thay đổi (người chuyển đi/đến) thì cần tự tính lại con số này.
+- Phần "bếp nhận lại tổng": **làm được** bằng cách nhập "Số cụ thể" = -132 cho bếp. Tuy nhiên khi quân số thay đổi (người chuyển đi/đến) thì cần tự tính lại con số này.
 
 ### Giải pháp đề xuất
 
@@ -63,7 +66,7 @@ Thêm 1 cách nhập thứ 3:
 |---|---|---|
 | Số cụ thể | Dùng đúng số đã nhập | (giữ nguyên) |
 | Theo hệ số | Hệ số × quân số **đầu mối đó** | (giữ nguyên) |
-| **Theo hệ số (đơn vị)** | **Hệ số × tổng quân số toàn đơn vị** | **Nhập -2, đơn vị 74 người → -2 × 74 = -148 kWh (cộng ngược 148 vào tiêu chuẩn bếp)** |
+| **Theo hệ số (đơn vị)** | **Hệ số × (tổng quân số đơn vị − quân số đầu mối đó)** | **Nhập -2, đơn vị 74 người, bếp 8 người → -2 × (74 − 8) = -132 kWh (cộng ngược 132 vào tiêu chuẩn bếp)** |
 
 Chỉ cần nhập hệ số 1 lần. Khi quân số thay đổi, hệ thống tự tính lại.
 
@@ -78,15 +81,15 @@ Chỉ cần nhập hệ số 1 lần. Khi quân số thay đổi, hệ thống t
 | Trưởng ban Doanh trại | 7 | Theo hệ số | 2 | 2 × 7 = **14 kWh bị trừ** |
 | TL-NV | 3 | Theo hệ số | 2 | 2 × 3 = **6 kWh bị trừ** |
 | Trưởng ban | 2 | Theo hệ số | 2 | 2 × 2 = **4 kWh bị trừ** |
-| **Bếp f bộ** | **8** | **Theo hệ số (đơn vị)** | **-2** | **-2 × 74 = -148 kWh (cộng ngược)** |
+| **Bếp f bộ** | **8** | **Theo hệ số (đơn vị)** | **-2** | **-2 × (74 − 8) = -132 kWh (cộng ngược)** |
 
-Kết quả: 5 đầu mối khác bị trừ tổng 132 kWh. Bếp được cộng 148 kWh (vì công thức dùng tổng quân số đơn vị 74 người × 2, gồm cả 8 người bếp).
+Kết quả: 5 đầu mối khác bị trừ tổng 132 kWh. Bếp được cộng 132 kWh. 8 người bếp không bị trừ vì họ ở ngay bếp.
 
-Nếu tháng sau có thêm 5 người mới vào đơn vị (tổng thành 79 người), hệ thống tự tính lại: -2 × 79 = -158 kWh cho bếp. Không cần sửa gì.
+Nếu tháng sau có thêm 5 người mới vào đơn vị (tổng thành 79 người), hệ thống tự tính lại: -2 × (79 − 8) = -142 kWh cho bếp. Không cần sửa gì.
 
 ### Quy tắc
 
-- "Tổng quân số đơn vị" = tổng quân số tất cả đầu mối sinh hoạt trong đơn vị, bao gồm chính đầu mối đang nhập.
+- "Tổng quân số đơn vị" trong công thức = tổng quân số tất cả đầu mối sinh hoạt trong đơn vị, **không bao gồm** quân số của chính đầu mối đang nhập.
 - Giá trị âm: cho phép (âm = cộng ngược vào tiêu chuẩn, tức đầu mối được hưởng thêm).
 - Giá trị dương: cho phép (dương = trừ khỏi tiêu chuẩn, giống 2 cách nhập cũ).
 - Chỉ áp dụng cho đầu mối thuộc đơn vị. Đầu mối thuộc khu vực trực tiếp (không có đơn vị) không dùng cách nhập này.
@@ -95,6 +98,8 @@ Nếu tháng sau có thêm 5 người mới vào đơn vị (tổng thành 79 ng
 ---
 
 ## 3. Tính năng mới 2 — Phân bổ bơm nước theo từng trạm bơm
+
+> **Trạng thái: Đã xác nhận** (phản hồi ngày 31/05/2026, xác nhận cả 3 loại đối tượng nhận mới: khối, nhóm, đầu mối sinh hoạt thuộc đơn vị).
 
 ### Vấn đề thực tế
 
@@ -184,28 +189,72 @@ Khu vực có 2 trạm bơm, 2 đơn vị (mỗi đơn vị có 2 khối):
 
 ---
 
-## 4. Tổng hợp cần xác nhận
+## 4. Tính năng mới 3 — Hiển thị chi tiết tổn hao
+
+### Vấn đề thực tế
+
+Hệ thống tính tổn hao chính xác (đã kiểm chứng ở mục 1), nhưng hiện tại chỉ hiển thị kết quả tổn hao dưới dạng 1 con số ở cột "Tổn hao" trong khoản trừ trên bảng tính tiền. Quản trị viên hệ thống muốn xem được chi tiết cách tính tổn hao để kiểm tra và đối chiếu — tương tự bảng "Tính tổn hao và sử dụng thực tế" trong file Excel cũ.
+
+### Giải pháp đề xuất
+
+Hiển thị thông tin chi tiết tổn hao trên các trang đã có sẵn, không cần tạo trang mới:
+
+**Trang Chỉ số đầu mối** — thêm 2 cột (chỉ đọc, không nhập):
+
+| Cột hiện tại | Cột mới |
+|---|---|
+| Đầu kỳ, Cuối kỳ, Sử dụng | + **Tổn hao**, **Sử dụng thực tế** |
+
+- Tổn hao = phần tổn hao phân bổ cho công tơ đó (kết quả tính toán).
+- Sử dụng thực tế = Sử dụng + Tổn hao.
+- Áp dụng cho tất cả công tơ trên trang (sinh hoạt và công cộng).
+
+**Trang Chỉ số bơm nước** — thêm 2 cột tương tự:
+
+| Cột hiện tại | Cột mới |
+|---|---|
+| Đầu kỳ, Cuối kỳ, Sử dụng | + **Tổn hao**, **Sử dụng thực tế** |
+
+**Trang Bảng tính tiền** — thêm phần tóm tắt tổn hao phía trên bảng (cạnh đơn giá và cảnh báo hiện tại):
+
+| Thông tin | Ý nghĩa |
+|---|---|
+| Công tơ tổng (A) | Số sử dụng trên công tơ tổng − tổng công tơ không tổn hao |
+| Tổng sử dụng (B) | Tổng sử dụng tất cả công tơ có tổn hao |
+| Tổng tổn hao (C = A − B) | Phần điện "mất" trên đường truyền toàn khu vực |
+
+### Quy tắc
+
+- 2 cột mới trên trang Chỉ số đầu mối và Chỉ số bơm nước là **chỉ đọc** — hiển thị kết quả từ lần tính toán gần nhất.
+- Nếu chưa bấm "Tính toán lại" (chưa có kết quả tính toán), 2 cột này để trống.
+- Phần tóm tắt A, B, C trên trang Bảng tính tiền hiển thị theo khu vực đang chọn (quản trị viên hệ thống chọn khu vực nào thì thấy A, B, C của khu vực đó).
 
 ---
 
-**Câu 1 — Cột "Khác" kiểu mới:**
-
-Thêm cách nhập "Theo hệ số (đơn vị)" — hệ số × tổng quân số toàn đơn vị. Cho phép bếp (hoặc đầu mối tương tự) tự động nhận lại tổng phần góp mà không cần tính tay. Khi quân số thay đổi, hệ thống tự cập nhật. Chi tiết và ví dụ ở mục 2.
-
-→ **Đề xuất: thêm tính năng này.** Hiện tại vẫn dùng được cách nhập "Số cụ thể" nhưng phải tự tính tay khi quân số thay đổi — thêm tính năng này sẽ tiện hơn.
+## 5. Tổng hợp cần xác nhận
 
 ---
 
-**Câu 2 — Phân bổ bơm nước theo trạm:**
+**Câu 1 — Cột "Khác" kiểu mới: Đã xác nhận ✓**
 
-Đổi cơ chế từ "gộp tất cả trạm bơm chia chung" sang "mỗi trạm bơm phân bổ riêng cho đối tượng mà trạm đó phục vụ". Chi tiết và ví dụ ở mục 3.
-
-→ **Đề xuất: thêm tính năng này.** Hiện tại tất cả trạm bơm gộp chung — thêm tính năng này sẽ phân bổ chi tiết hơn theo đúng trạm bơm phục vụ vùng nào.
+Thêm cách nhập "Theo hệ số (đơn vị)" — hệ số × (tổng quân số đơn vị − quân số đầu mối đó). Công thức loại trừ quân số của chính đầu mối đang nhập. Chi tiết và ví dụ ở mục 2.
 
 ---
 
-**Câu 3 — Đối tượng nhận bơm nước:**
+**Câu 2 — Phân bổ bơm nước theo trạm: Đã xác nhận ✓**
 
-Hiện tại chỉ phân bổ bơm nước được cho đơn vị, đầu mối sinh hoạt thuộc khu vực, và đầu mối ngoài biên chế. Đề xuất thêm 3 loại: khối, nhóm, và đầu mối sinh hoạt thuộc đơn vị. Chi tiết ở bảng đối tượng trong mục 3.
+Mỗi trạm bơm phân bổ riêng cho đối tượng mà trạm đó phục vụ. Chi tiết và ví dụ ở mục 3.
 
-→ **Đề xuất: thêm cả 3 loại** để linh hoạt nhất. Thực tế có cần cả 3 loại?
+---
+
+**Câu 3 — Đối tượng nhận bơm nước: Đã xác nhận ✓**
+
+Thêm cả 3 loại: khối, nhóm, và đầu mối sinh hoạt thuộc đơn vị. Chi tiết ở bảng đối tượng trong mục 3.
+
+---
+
+**Câu 4 — Hiển thị chi tiết tổn hao:**
+
+Thêm 2 cột "Tổn hao" và "Sử dụng thực tế" trên trang Chỉ số đầu mối và Chỉ số bơm nước. Thêm phần tóm tắt A, B, C trên trang Bảng tính tiền. Giúp kiểm tra và đối chiếu cách tính tổn hao. Chi tiết ở mục 4.
+
+→ **Đề xuất: thêm tính năng này.** Thông tin tổn hao hệ thống đã tính sẵn, hiển thị thêm ra để tiện kiểm tra và đối chiếu.
