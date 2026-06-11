@@ -252,4 +252,71 @@ RSpec.describe "UnitConfig", type: :request do
       end
     end
   end
+
+  describe "unit_coefficient option visibility" do
+    # Reuse outer let!(:zone), let!(:unit), let!(:period), let!(:rank), let!(:cp) (CP-1)
+    # which give us 1 unit residential CP already. Add 2 more unit CPs and 1 zone-direct CP.
+    let!(:cp2) {
+      create(:contact_point, :residential, unit: unit, name: "CP-2",
+             initial_personnel_counts: { rank.id => 1 })
+    }
+    let!(:cp3) {
+      create(:contact_point, :residential, unit: unit, name: "CP-3",
+             initial_personnel_counts: { rank.id => 1 })
+    }
+    let!(:zone_cp) {
+      create(:contact_point, :zone_residential, zone: zone, name: "Zone-CP-UC",
+             initial_personnel_counts: { rank.id => 1 })
+    }
+    let(:system_admin) { create(:user, :system_admin) }
+
+    before do
+      zone.update!(manager_unit: unit)
+      sign_in system_admin
+    end
+
+    it "GET unit config shows unit_coefficient option exactly for unit contact points (3 unit CPs, 0 zone CPs)" do
+      get unit_config_path(unit_id: unit.id)
+      expect(response).to have_http_status(:ok)
+      # 3 unit residential CPs (CP-1, CP-2, CP-3) each get a unit_coefficient option
+      occurrences = response.body.scan('value="unit_coefficient"').length
+      expect(occurrences).to eq(3)
+    end
+
+    it "PATCH updating zone-direct contact point OD to unit_coefficient is rejected by model validation" do
+      # Use unit_admin (zone-manager) for PATCH to avoid SA re-render path issue
+      sign_in admin
+      zone_od = OtherDeduction.find_by!(contact_point: zone_cp, period: period)
+      original_type = zone_od.other_type
+
+      patch unit_config_path, params: {
+        other_deductions: {
+          zone_od.id.to_s => {
+            other_type: "unit_coefficient",
+            other_value: zone_od.other_value.to_s,
+            lock_version: zone_od.lock_version
+          }
+        }
+      }
+
+      expect(zone_od.reload.other_type).to eq(original_type)
+    end
+
+    it "PATCH updating unit contact point OD to unit_coefficient succeeds" do
+      unit_od = OtherDeduction.find_by!(contact_point: cp, period: period)
+
+      patch unit_config_path, params: {
+        unit_id: unit.id,
+        other_deductions: {
+          unit_od.id.to_s => {
+            other_type: "unit_coefficient",
+            other_value: unit_od.other_value.to_s,
+            lock_version: unit_od.lock_version
+          }
+        }
+      }
+
+      expect(unit_od.reload.other_type).to eq("unit_coefficient")
+    end
+  end
 end

@@ -12,8 +12,11 @@
         <td class="px-4 py-2 text-sm text-gray-900"><%= od.contact_point.name %></td>
         <td class="px-4 py-2 text-sm">
           <%= hidden_field_tag "other_deductions[#{od.id}][lock_version]", od.lock_version %>
+          <% type_options = od.contact_point.unit_id.present? ?
+               [["Cố định", "fixed"], ["Theo hệ số", "coefficient"], ["Theo hệ số (đơn vị)", "unit_coefficient"]] :
+               [["Cố định", "fixed"], ["Theo hệ số", "coefficient"]] %>
           <%= select_tag "other_deductions[#{od.id}][other_type]",
-              options_for_select([["Cố định", "fixed"], ["Theo hệ số", "coefficient"]], od.other_type),
+              options_for_select(type_options, od.other_type),
               disabled: !can_edit,
               class: "rounded border border-gray-300 px-2 py-1 text-sm" %>
         </td>
