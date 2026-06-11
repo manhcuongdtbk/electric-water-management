@@ -299,6 +299,7 @@ RSpec.describe "UnitConfig", type: :request do
         }
       }
 
+      expect(response).to have_http_status(:unprocessable_content)
       expect(zone_od.reload.other_type).to eq(original_type)
     end
 
