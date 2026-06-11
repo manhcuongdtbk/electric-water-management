@@ -80,7 +80,7 @@ Chỉ cần nhập hệ số 1 lần. Khi quân số thay đổi, hệ thống t
 | Trưởng ban | 2 | Theo hệ số | 2 | 2 × 2 = **4 kWh bị trừ** |
 | **Bếp f bộ** | **8** | **Theo hệ số (đơn vị)** | **-2** | **-2 × 74 = -148 kWh (cộng ngược)** |
 
-Kết quả: 5 đầu mối khác bị trừ tổng 132 kWh. Bếp được cộng 148 kWh (gồm cả phần 8 người bếp góp 16 kWh).
+Kết quả: 5 đầu mối khác bị trừ tổng 132 kWh. Bếp được cộng 148 kWh (vì công thức dùng tổng quân số đơn vị 74 người × 2, gồm cả 8 người bếp).
 
 Nếu tháng sau có thêm 5 người mới vào đơn vị (tổng thành 79 người), hệ thống tự tính lại: -2 × 79 = -158 kWh cho bếp. Không cần sửa gì.
 
@@ -118,8 +118,6 @@ Tất cả trạm bơm trong khu vực
         ↓ đơn vị chia đều xuống
    Tất cả đầu mối sinh hoạt trong đơn vị (theo quân số)
 ```
-
-Nếu muốn tách riêng trạm bơm 1 cho khối 1, trạm bơm 2 cho khối 2 thì cần thêm tính năng mới.
 
 ### Giải pháp đề xuất
 
@@ -202,7 +200,7 @@ Thêm cách nhập "Theo hệ số (đơn vị)" — hệ số × tổng quân s
 
 Đổi cơ chế từ "gộp tất cả trạm bơm chia chung" sang "mỗi trạm bơm phân bổ riêng cho đối tượng mà trạm đó phục vụ". Chi tiết và ví dụ ở mục 3.
 
-→ **Đề xuất: thêm tính năng này.** Hiện tại tất cả trạm bơm gộp chung nên không tách riêng được trạm nào cho vùng nào — thêm tính năng này sẽ đúng thực tế hơn.
+→ **Đề xuất: thêm tính năng này.** Hiện tại tất cả trạm bơm gộp chung — thêm tính năng này sẽ phân bổ chi tiết hơn theo đúng trạm bơm phục vụ vùng nào.
 
 ---
 
