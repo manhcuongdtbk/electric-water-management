@@ -1,6 +1,6 @@
 # Hướng dẫn nhanh quy trình làm việc (SDLC)
 
-> **Phiên bản:** 1.3.0
+> **Phiên bản:** 1.4.0
 > **Ngày:** 11/06/2026
 > **Đối tượng:** Thành viên mới — kể cả người chưa quen Git, CI, hay Docker.
 > **Cách dùng:** Đọc một lượt (~15 phút) để hiểu *một thay đổi đi từ lúc nhận việc đến khi giao cho khách như thế nào*. Đây là **bản đồ tổng quan** — thao tác từng bước nằm ở [CONTRIBUTING.md](../CONTRIBUTING.md), quyết định kèm lý do nằm trong [docs/superpowers/specs/](superpowers/specs/). Mỗi mục bên dưới đều có link tới nơi chi tiết.
@@ -46,6 +46,8 @@ flowchart LR
 ```
 
 ## 4. Vòng đời một thay đổi (6 bước)
+
+> 🤝 **Cách đội vận hành 6 bước này:** mỗi bước chạy theo nguyên tắc **"trợ lý AI lo phần cơ học — người giữ gate quyết định"** ([ADR-029](superpowers/specs/2026-06-07-sdlc-overview-design.md)). Trợ lý AI (hiện là Claude Code) soạn Issue, draft spec/ADR, tạo nhánh + viết code/test, mở pull request, theo dõi CI, soạn release notes — phần *cơ học*, lặp lại được. **Người (chủ dự án) giữ các "gate" — điểm quyết định:** chốt yêu cầu, **phân loại (milestone + `priority-high`)**, **duyệt thiết kế**, **duyệt + merge**, **quyết cắt release** và duyệt nội dung gửi khách. Trợ lý *đề xuất*, người *chốt* — luôn có người trong vòng lặp ở mỗi gate. Bên dưới, mỗi bước ghi rõ phần nào là cơ học (AI), phần nào là gate (người).
 
 *Ví dụ xuyên suốt: bạn được giao việc "thêm cột so sánh kỳ vào bảng tính tiền".*
 
@@ -123,6 +125,7 @@ Tài liệu này cố ý ngắn để nắm nhanh. Khi cần làm thật, mở:
 
 ## Lịch sử thay đổi
 
+- **1.4.0 (11/06/2026):** §4 thêm khung vận hành "trợ lý AI lo cơ học — người giữ gate quyết định" (ADR-029): trợ lý AI lo phần cơ học mỗi bước, người giữ các gate (chốt yêu cầu, phân loại, duyệt thiết kế, merge, cắt release). Issue #322.
 - **1.3.0 (11/06/2026):** §5 thêm dòng "Xác nhận khách trước build" (ADR-028) — tài liệu xác nhận versioned ở `docs/xac-nhan-khach/`, Issue-first, fold vào nghiệp vụ khi khách chốt. Issue #320.
 - **1.2.0 (11/06/2026):** §5 thêm guardrail tự động (ADR-024) vào dòng "Quản trị tài liệu" — CI kiểm link chết / bản đồ tài liệu / giữ định nghĩa thuật ngữ. Issue #313.
 - **1.1.0 (10/06/2026):** §1 "Từ vựng" gom về [`THUAT_NGU.md`](THUAT_NGU.md) (nguồn duy nhất), thay bảng bằng pointer; §8 trỏ từ viết tắt sang `THUAT_NGU.md` (bỏ liệt kê inline cho khỏi lỗi thời); §5 thêm dòng "Quản trị tài liệu"; bỏ dải ADR cứng ("ADR-001..NNN") ở "Cần chi tiết hơn?" cho khỏi phải sửa khi có ADR mới. ADR-023, Issue #310.
