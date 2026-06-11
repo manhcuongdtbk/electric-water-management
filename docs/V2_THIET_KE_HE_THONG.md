@@ -1,6 +1,6 @@
 # Thiết kế hệ thống quản lý điện nội bộ Sư đoàn — Hệ thống v2
 
-> **Phiên bản tài liệu:** 2.14.0
+> **Phiên bản tài liệu:** 2.14.1
 > **Ngày:** 11/06/2026
 > **Tính chất:** Tài liệu thiết kế hệ thống v2, nguồn sự thật cho implementation.
 > **Nguồn nghiệp vụ:** V2_XAC_NHAN_NGHIEP_VU (phiên bản mới nhất tại thời điểm thiết kế: v2.11.0)
@@ -1231,7 +1231,7 @@ Mọi thao tác trên hệ thống đều được ghi lại (PaperTrail). Syste
 
 ### Cột "Khác" dạng hệ số (đơn vị) — ADR-025
 
-- `OtherDeduction#other_type`: thêm enum value `unit_coefficient` (cùng `fixed`, `coefficient`). Không thêm cột.
+- `OtherDeduction#other_type`: thêm enum value `unit_coefficient` (cùng `fixed`, `coefficient`). Không thêm cột, nhưng `other_type` là PostgreSQL native enum nên cần migration `ALTER TYPE other_deduction_type ADD VALUE 'unit_coefficient'` (`disable_ddl_transaction!`).
 - `SummaryCalculator`: gom tổng quân số residential theo đơn vị cho kỳ; nhánh tính mới = `other_value × (tổng quân số đơn vị − quân số đầu mối)`. Validate `unit_coefficient` chỉ cho đầu mối thuộc đơn vị.
 - Spec: [`superpowers/specs/2026-06-11-cot-khac-he-so-don-vi-design.md`](superpowers/specs/2026-06-11-cot-khac-he-so-don-vi-design.md).
 
@@ -1250,6 +1250,10 @@ Mọi thao tác trên hệ thống đều được ghi lại (PaperTrail). Syste
 ---
 
 ## Lịch sử thay đổi
+
+### v2.14.1 (11/06/2026)
+
+- Sửa lỗi-fact (phát hiện khi triển khai TN1): `OtherDeduction#other_type` là PostgreSQL native enum → cần migration `ALTER TYPE ... ADD VALUE` (không chỉ "không thêm cột"). Khớp spec ADR-025 v0.1.1.
 
 ### v2.14.0 (11/06/2026)
 

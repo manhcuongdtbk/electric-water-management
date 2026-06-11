@@ -4,13 +4,13 @@
 
 **Goal:** Thêm cách nhập thứ ba `unit_coefficient` cho khoản trừ "Khác": khoản trừ = `hệ số × (tổng quân số residential đơn vị − quân số đầu mối đó)`.
 
-**Architecture:** Mở rộng enum `OtherDeduction#other_type` (lưu chuỗi, không migration), thêm một nhánh tính trong `SummaryCalculator` (gom tổng quân số residential theo đơn vị từ dữ liệu đã preload), validate mode mới chỉ cho đầu mối thuộc đơn vị, và thêm option vào select trên trang Cấu hình đơn vị (ẩn cho đầu mối thuộc khu vực trực tiếp).
+**Architecture:** Mở rộng enum `OtherDeduction#other_type` (PostgreSQL native enum — cần migration `ALTER TYPE ADD VALUE`), thêm một nhánh tính trong `SummaryCalculator` (gom tổng quân số residential theo đơn vị từ dữ liệu đã preload), validate mode mới chỉ cho đầu mối thuộc đơn vị, và thêm option vào select trên trang Cấu hình đơn vị (ẩn cho đầu mối thuộc khu vực trực tiếp).
 
 **Tech Stack:** Rails 8, RSpec, FactoryBot, i18n (vi.yml), Hotwire view (ERB). Chạy test: `bin/docker rspec`.
 
 **Nguồn:** spec [`docs/superpowers/specs/2026-06-11-cot-khac-he-so-don-vi-design.md`](../specs/2026-06-11-cot-khac-he-so-don-vi-design.md) (ADR-025); nghiệp vụ `V2_XAC_NHAN_NGHIEP_VU.md` anchor `NV-cot-khac-he-so-don-vi`.
 
-**Không có migration** — `other_type` là cột chuỗi; thêm value enum không đổi schema.
+**Cần một migration** — `other_type` là PostgreSQL native enum (`other_deduction_type`); thêm value bằng `ALTER TYPE other_deduction_type ADD VALUE 'unit_coefficient'` với `disable_ddl_transaction!`. Không thêm bảng/cột.
 
 ---
 
