@@ -36,7 +36,7 @@ while IFS= read -r f; do
         http://* | https://* | mailto:* | tel:*) continue ;;  # link ngoài
       esac
       if [[ ! -e "$dir/$url" ]]; then
-        echo "LINK HỎNG  $f:$lineno  → $url"
+        echo "✗ Broken link  $f:$lineno  → $url"
         violations=$((violations + 1))
       fi
     done < <(printf '%s\n' "$line" | grep -oE '\]\([^) ]+' | sed -E 's/^\]\(//')
@@ -44,7 +44,7 @@ while IFS= read -r f; do
 done < <(list_docs | sort -u)
 
 if (( violations > 0 )); then
-  echo "FAIL (check-doc-links): $violations link nội bộ hỏng."
+  echo "✗ check-doc-links: $violations broken internal link(s)."
   exit 1
 fi
-echo "OK (check-doc-links): link nội bộ đều sống."
+echo "✓ check-doc-links: all internal links resolve."

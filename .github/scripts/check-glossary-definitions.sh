@@ -9,7 +9,7 @@ set -uo pipefail
 GLOSSARY="docs/THUAT_NGU.md"
 TERMS_FILE=".github/dictionaries/glossary-terms.txt"
 for p in "$GLOSSARY" "$TERMS_FILE"; do
-  [[ -f "$p" ]] || { echo "FAIL (check-glossary-definitions): thiếu $p"; exit 1; }
+  [[ -f "$p" ]] || { echo "✗ check-glossary-definitions: missing $p"; exit 1; }
 done
 
 violations=0
@@ -22,13 +22,13 @@ while IFS= read -r term; do
   # Lưu ý: $term nội suy thẳng vào ERE — tránh thêm thuật ngữ có ký tự đặc biệt
   # regex (. * + ? [ ] ( ) \) vào glossary-terms.txt mà chưa escape.
   if ! grep -qiE "^\|[[:space:]]*\*{0,2}${term}([^[:alnum:]]|$)" "$GLOSSARY"; then
-    echo "MẤT ĐỊNH NGHĨA  '$term'  không còn hàng trong $GLOSSARY"
+    echo "✗ Missing definition  '$term'  has no row in $GLOSSARY"
     violations=$((violations + 1))
   fi
 done < "$TERMS_FILE"
 
 if (( violations > 0 )); then
-  echo "FAIL (check-glossary-definitions): $violations thuật ngữ mất định nghĩa."
+  echo "✗ check-glossary-definitions: $violations term(s) lost their definition."
   exit 1
 fi
-echo "OK (check-glossary-definitions): các thuật ngữ canonical đều còn định nghĩa."
+echo "✓ check-glossary-definitions: all listed terms are defined."

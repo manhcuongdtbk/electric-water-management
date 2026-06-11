@@ -7,7 +7,7 @@
 set -uo pipefail
 
 MAP="docs/BAN_DO_TAI_LIEU.md"
-[[ -f "$MAP" ]] || { echo "FAIL (check-doc-map): không thấy $MAP"; exit 1; }
+[[ -f "$MAP" ]] || { echo "✗ check-doc-map: $MAP not found."; exit 1; }
 
 list_docs() {
   find docs -type f -name '*.md'
@@ -35,7 +35,7 @@ while IFS= read -r f; do
     fi
   done < <(list_map_paths)
   if (( ! covered )); then
-    echo "CHƯA PHÂN LOẠI  $f  (thêm vào $MAP)"
+    echo "✗ Unclassified  $f  (add it to $MAP)"
     violations=$((violations + 1))
   fi
 done < <(list_docs | sort -u)
@@ -44,14 +44,14 @@ done < <(list_docs | sort -u)
 while IFS= read -r p; do
   if [[ "$p" == */\* ]]; then
     d="${p%/\*}"
-    [[ -d "$d" ]] || { echo "ĐƯỜNG DẪN MA (thư mục)  $p"; violations=$((violations + 1)); }
+    [[ -d "$d" ]] || { echo "✗ Ghost path (directory)  $p"; violations=$((violations + 1)); }
   else
-    [[ -e "$p" ]] || { echo "ĐƯỜNG DẪN MA (file)  $p"; violations=$((violations + 1)); }
+    [[ -e "$p" ]] || { echo "✗ Ghost path (file)  $p"; violations=$((violations + 1)); }
   fi
 done < <(list_map_paths)
 
 if (( violations > 0 )); then
-  echo "FAIL (check-doc-map): $violations vấn đề bản đồ tài liệu."
+  echo "✗ check-doc-map: $violations document-map issue(s)."
   exit 1
 fi
-echo "OK (check-doc-map): bản đồ tài liệu khớp thực tế."
+echo "✓ check-doc-map: document map matches the tree."
