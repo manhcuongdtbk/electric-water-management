@@ -10,12 +10,12 @@ class OtherDeduction < ApplicationRecord
   validates :other_type, presence: true
   validates :other_value, presence: true, numericality: true
   validates :contact_point_id, uniqueness: { scope: :period_id }
-  validate :unit_coefficient_requires_unit
+  validate :validate_unit_coefficient_requires_unit
 
   private
 
-  def unit_coefficient_requires_unit
+  def validate_unit_coefficient_requires_unit
     return unless other_unit_coefficient?
-    errors.add(:other_type, :unit_coefficient_requires_unit) if contact_point&.unit_id.nil?
+    errors.add(:other_type, :unit_coefficient_requires_unit) if contact_point.unit_id.nil?
   end
 end

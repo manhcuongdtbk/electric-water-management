@@ -45,6 +45,12 @@ RSpec.describe OtherDeduction do
       record = build(:other_deduction, contact_point: cp, other_type: "coefficient", other_value: 2)
       expect(record).to be_valid
     end
+
+    it "persist được với other_type unit_coefficient (chặn lỗi enum DB)" do
+      cp = create(:contact_point, :residential)
+      record = create(:other_deduction, contact_point: cp, other_type: "unit_coefficient", other_value: -2)
+      expect(record.reload.other_type).to eq("unit_coefficient")
+    end
   end
 
   describe "other_value cho phép âm" do
