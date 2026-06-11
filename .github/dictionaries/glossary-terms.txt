@@ -1,0 +1,28 @@
+# Thuật ngữ canonical phải LUÔN có định nghĩa trong docs/THUAT_NGU.md (ADR-024).
+# check-glossary-definitions.sh sẽ đỏ nếu một mục dưới đây mất hàng định nghĩa.
+# Dòng bắt đầu bằng # là comment. Mỗi dòng một thuật ngữ (so khớp không phân biệt hoa/thường).
+
+# Viết tắt được phép (mục 1 của THUAT_NGU.md)
+CI
+ADR
+CRUD
+UI
+SDLC
+SemVer
+
+# Jargon đã định nghĩa (#310 / ADR-023)
+distill
+merge-back
+rollback
+release candidate
+reslot
+supersede
+anchor
+fail-open
+fail-safe
+path filter
+grooming
+
+# Jargon khác (ADR-024 follow-up)
+prose
+guardrail

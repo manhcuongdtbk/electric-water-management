@@ -1,7 +1,7 @@
 # Hướng dẫn nhanh quy trình làm việc (SDLC)
 
-> **Phiên bản:** 1.1.0
-> **Ngày:** 10/06/2026
+> **Phiên bản:** 1.2.0
+> **Ngày:** 11/06/2026
 > **Đối tượng:** Thành viên mới — kể cả người chưa quen Git, CI, hay Docker.
 > **Cách dùng:** Đọc một lượt (~15 phút) để hiểu *một thay đổi đi từ lúc nhận việc đến khi giao cho khách như thế nào*. Đây là **bản đồ tổng quan** — thao tác từng bước nằm ở [CONTRIBUTING.md](../CONTRIBUTING.md), quyết định kèm lý do nằm trong [docs/superpowers/specs/](superpowers/specs/). Mỗi mục bên dưới đều có link tới nơi chi tiết.
 
@@ -72,7 +72,7 @@ Mỗi dòng là một chủ đề → quy tắc cốt lõi → nơi đọc chi t
 | Việc nối tiếp (nhánh xếp chồng) | Việc B cần kết quả việc A mà A **chưa merge** → cắt `feature/B` từ nhánh A; khi A đã merge thì `rebase --onto develop` | [CONTRIBUTING §4](../CONTRIBUTING.md) · [ADR-021](superpowers/specs/2026-06-07-ci-spec-design.md) |
 | Môi trường | Xem mục 6 — ba nghĩa của "môi trường" + bốn nơi chạy (máy bạn, 3 môi trường Railway, Mini PC) | [mục 6](#6-ba-nghĩa-của-môi-trường-environment) · [ADR-005](superpowers/specs/2026-06-07-quy-trinh-release-design.md) |
 | Cộng tác & review | Chạy `/code-review` (Claude Code) trước khi push; chủ dự án duyệt cuối; xem chung app đang chạy qua VS Code Dev Tunnel | [CONTRIBUTING §4, §5](../CONTRIBUTING.md) · [ADR-009, ADR-010](superpowers/specs/2026-06-07-quy-trinh-release-design.md) |
-| Quản trị tài liệu | Mỗi fact một nơi canonical, nơi khác trỏ về; sửa đừng "append mù"; thuật ngữ ở `THUAT_NGU.md`, loại tài liệu ở `BAN_DO_TAI_LIEU.md` | [THUAT_NGU](THUAT_NGU.md) · [BAN_DO_TAI_LIEU](BAN_DO_TAI_LIEU.md) · [ADR-023](superpowers/specs/2026-06-10-quan-tri-tai-lieu-design.md) |
+| Quản trị tài liệu | Mỗi fact một nơi canonical, nơi khác trỏ về; sửa đừng "append mù"; thuật ngữ ở `THUAT_NGU.md`, loại tài liệu ở `BAN_DO_TAI_LIEU.md`; CI tự kiểm link/bản đồ/định nghĩa (ADR-024) | [THUAT_NGU](THUAT_NGU.md) · [BAN_DO_TAI_LIEU](BAN_DO_TAI_LIEU.md) · [ADR-023](superpowers/specs/2026-06-10-quan-tri-tai-lieu-design.md) · [ADR-024](superpowers/specs/2026-06-11-guardrail-quan-tri-tai-lieu-design.md) |
 | Tài liệu | File trong `docs/` có dòng *Phiên bản* → khi sửa phải tăng version + ghi "Lịch sử thay đổi"; file gốc (`README`/`AGENTS`/`CONTRIBUTING`/`CLAUDE`) thì không | [AGENTS.md](../AGENTS.md) · [ADR-002](superpowers/specs/2026-06-07-sdlc-overview-design.md) |
 
 ## 6. Ba nghĩa của "môi trường" (environment)
@@ -122,5 +122,6 @@ Tài liệu này cố ý ngắn để nắm nhanh. Khi cần làm thật, mở:
 
 ## Lịch sử thay đổi
 
+- **1.2.0 (11/06/2026):** §5 thêm guardrail tự động (ADR-024) vào dòng "Quản trị tài liệu" — CI kiểm link chết / bản đồ tài liệu / giữ định nghĩa thuật ngữ. Issue #313.
 - **1.1.0 (10/06/2026):** §1 "Từ vựng" gom về [`THUAT_NGU.md`](THUAT_NGU.md) (nguồn duy nhất), thay bảng bằng pointer; §8 trỏ từ viết tắt sang `THUAT_NGU.md` (bỏ liệt kê inline cho khỏi lỗi thời); §5 thêm dòng "Quản trị tài liệu"; bỏ dải ADR cứng ("ADR-001..NNN") ở "Cần chi tiết hơn?" cho khỏi phải sửa khi có ADR mới. ADR-023, Issue #310.
 - **1.0.0 (09/06/2026):** Bản đầu — lối vào tổng quan, dễ hiểu cho người mới về quy trình SDLC (ADR-022; spec [2026-06-09-huong-dan-sdlc-onboarding-design.md](superpowers/specs/2026-06-09-huong-dan-sdlc-onboarding-design.md); Issue #307).
