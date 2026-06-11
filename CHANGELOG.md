@@ -1,5 +1,48 @@
 # Changelog
 
+## [1.1.1](https://github.com/manhcuongdtbk/electric-water-management/compare/v1.1.0...v1.1.1) (2026-06-11)
+
+
+### Code Refactoring
+
+* use :unprocessable_content for HTTP 422 (Rack deprecation) ([#291](https://github.com/manhcuongdtbk/electric-water-management/issues/291)) ([5bdf72b](https://github.com/manhcuongdtbk/electric-water-management/commit/5bdf72b525469d0a3c6b8774f6dbd70563ca7643))
+
+
+### Documentation
+
+* centralize terminology and add lightweight document governance (ADR-023) ([1842dcb](https://github.com/manhcuongdtbk/electric-water-management/commit/1842dcbcd3391ed9cfcfa0bc775a7757acedb60d))
+* **contributing:** document PR merge methods to keep changelog clean ([#286](https://github.com/manhcuongdtbk/electric-water-management/issues/286)) ([d6c62d6](https://github.com/manhcuongdtbk/electric-water-management/commit/d6c62d6e8705caeed8478f447c188d7f91186da7))
+* **ops:** fix environment + backup drift in ops guides (phase 2) ([#311](https://github.com/manhcuongdtbk/electric-water-management/issues/311)) ([73718f2](https://github.com/manhcuongdtbk/electric-water-management/commit/73718f246789a75b71af55a5b020f381c00eee95))
+* **release:** document release-please setup gotchas from 1.1.0 ([#287](https://github.com/manhcuongdtbk/electric-water-management/issues/287)) ([513c824](https://github.com/manhcuongdtbk/electric-water-management/commit/513c824cde46fbf3966abe279fba1525b8ea583c))
+* **release:** record P4 Railway environments setup (ADR-005) ([#292](https://github.com/manhcuongdtbk/electric-water-management/issues/292)) ([4e69569](https://github.com/manhcuongdtbk/electric-water-management/commit/4e69569cf62e4df4bd1f45e2b19ab0e6145247b7))
+* **sdlc:** add onboarding guide and fix canonical-doc drift (phase 1) ([#308](https://github.com/manhcuongdtbk/electric-water-management/issues/308)) ([62e8334](https://github.com/manhcuongdtbk/electric-water-management/commit/62e83344a0b0a85010f9ad8d12ae163594bb9f5a))
+* **sdlc:** add traceability & change-management process (ADR-013..015) ([#293](https://github.com/manhcuongdtbk/electric-water-management/issues/293)) ([8a3f57a](https://github.com/manhcuongdtbk/electric-water-management/commit/8a3f57a1dae0e463c5ae9fc8611c0a429e70a79c))
+* **sdlc:** give each optional improvement a revisit trigger ([#304](https://github.com/manhcuongdtbk/electric-water-management/issues/304)) ([b5c387b](https://github.com/manhcuongdtbk/electric-water-management/commit/b5c387b45d27653402b3ff7887c71763bc1a944a))
+* **sdlc:** intake & prioritization process (Backlog [#4](https://github.com/manhcuongdtbk/electric-water-management/issues/4), ADR-019..020) ([#303](https://github.com/manhcuongdtbk/electric-water-management/issues/303)) ([42d1a40](https://github.com/manhcuongdtbk/electric-water-management/commit/42d1a40186cd547f2642c9b2c4673c338d3d62e4))
+* **sdlc:** operations & maintenance process (Backlog [#3](https://github.com/manhcuongdtbk/electric-water-management/issues/3), ADR-016..018) ([#294](https://github.com/manhcuongdtbk/electric-water-management/issues/294)) ([6d4ae61](https://github.com/manhcuongdtbk/electric-water-management/commit/6d4ae61a871f86c5355aab146be06b65ba8aaea4))
+
+
+### Continuous Integration
+
+* add Dependabot config for bundler, docker, and github-actions ([#296](https://github.com/manhcuongdtbk/electric-water-management/issues/296)) ([4c68dba](https://github.com/manhcuongdtbk/electric-water-management/commit/4c68dba020827c6e2a8c55be439ed8cd2cb02af2))
+* add team-wide Claude Code hooks (CI monitor + pre-push base guard) ([#295](https://github.com/manhcuongdtbk/electric-water-management/issues/295)) ([258ac43](https://github.com/manhcuongdtbk/electric-water-management/commit/258ac436d78700a7f137b53b0489ec324f263ee3))
+* bump actions to Node 24-compatible versions ([#289](https://github.com/manhcuongdtbk/electric-water-management/issues/289)) ([4ebbe15](https://github.com/manhcuongdtbk/electric-water-management/commit/4ebbe1595084a1f6f96deebc2f31e7b94c835abd))
+* bump release-please-action to Node 24-compatible v5 ([be594ad](https://github.com/manhcuongdtbk/electric-water-management/commit/be594ad73a1d97bcfd00c31d122a555642991c1d))
+* bump release-please-action to Node 24-compatible v5 ([fd28700](https://github.com/manhcuongdtbk/electric-water-management/commit/fd287006059f844b1883e28fac5f65526fd27583))
+* gate heavy jobs on code changes, drop edited trigger (ADR-021) ([#305](https://github.com/manhcuongdtbk/electric-water-management/issues/305)) ([7193db2](https://github.com/manhcuongdtbk/electric-water-management/commit/7193db25a14ebae77bb3b764df40a0b5e7a48725))
+* ignore all merge commits in commitlint ([#302](https://github.com/manhcuongdtbk/electric-water-management/issues/302)) ([61ac252](https://github.com/manhcuongdtbk/electric-water-management/commit/61ac2526be65cacce4fc0de01c6e004de38058b0))
+* ignore Dependabot commits in commitlint (subject-case) ([#306](https://github.com/manhcuongdtbk/electric-water-management/issues/306)) ([240c709](https://github.com/manhcuongdtbk/electric-water-management/commit/240c709372eed585535cf96622e07f68cff95a49))
+* machine-enforce document governance (links, map, glossary) — ADR-024 ([8a5f315](https://github.com/manhcuongdtbk/electric-water-management/commit/8a5f3159147bcfda208007a4fa754edd184d0af6))
+* run tests (rspec, system specs, schema drift, zeitwerk) on pull requests ([#288](https://github.com/manhcuongdtbk/electric-water-management/issues/288)) ([3415798](https://github.com/manhcuongdtbk/electric-water-management/commit/3415798c063af08bf2db72cb23a4f805eed88b03))
+
+
+### Miscellaneous Chores
+
+* **deps-dev:** Bump rspec-rails from 7.1.1 to 8.0.4 ([#301](https://github.com/manhcuongdtbk/electric-water-management/issues/301)) ([9986d8e](https://github.com/manhcuongdtbk/electric-water-management/commit/9986d8e0ca0ab2f8aed5f31ce126c51333c14008))
+* **deps-dev:** Bump shoulda-matchers from 6.5.0 to 7.0.1 ([#298](https://github.com/manhcuongdtbk/electric-water-management/issues/298)) ([dcfa124](https://github.com/manhcuongdtbk/electric-water-management/commit/dcfa124adefd36a389e804b39329fa98f58e27bb))
+* **deps:** Bump the ruby-minor-patch group across 1 directory with 2 updates ([#297](https://github.com/manhcuongdtbk/electric-water-management/issues/297)) ([27d0555](https://github.com/manhcuongdtbk/electric-water-management/commit/27d05556e975216ab301c406f519b001b5676903))
+* merge-back release 1.1.0 into develop ([6af97a1](https://github.com/manhcuongdtbk/electric-water-management/commit/6af97a1ea56d33bfcfda6fd57a3ea4fa4a3e4136))
+
 ## [1.1.0](https://github.com/manhcuongdtbk/electric-water-management/compare/v1.0.1...v1.1.0) (2026-06-07)
 
 
