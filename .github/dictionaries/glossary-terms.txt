@@ -22,3 +22,6 @@ fail-open
 fail-safe
 path filter
 grooming
+
+# Jargon khác (ADR-024 follow-up)
+prose
