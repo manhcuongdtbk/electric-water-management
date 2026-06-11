@@ -148,6 +148,21 @@ RSpec.describe SummaryCalculator do
       end
     end
 
+    describe "Văn thư (Đơn vị A) — cột Khác hệ số (đơn vị)" do
+      before do
+        apply_other_deduction(sample.contact_points[:van_thu], sample.period,
+                              type: "unit_coefficient", value: -2)
+        described_class.new(zone: sample.zone, period: sample.period,
+                            loss_results: loss_results, pump_results: pump_results).call
+      end
+
+      it "khoản trừ = hệ số × (tổng quân số đơn vị − quân số đầu mối)" do
+        # -2 × (10 − 2) = -16
+        calc = calculation_for(:van_thu)
+        expect(calc.other_deduction).to eq_display("-16.00")
+      end
+    end
+
     describe "Chỉ huy khu vực (thuộc khu vực — unit_id null)" do
       let(:calc) { calculation_for(:chi_huy_khu_vuc) }
 
