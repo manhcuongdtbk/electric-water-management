@@ -8,12 +8,12 @@
 # FAIL-LOUD: vi phạm → exit 1.
 set -uo pipefail
 
-list_docs() {
-  find docs -type f -name '*.md'
-  for f in README.md AGENTS.md CONTRIBUTING.md CLAUDE.md; do
-    [[ -f "$f" ]] && echo "$f"
-  done
-}
+# Mọi file markdown tracked trong repo (gồm .github/** template, CHANGELOG.md) —
+# link chết ở đâu cũng bắt, không chỉ docs/. Map + glossary thì giữ phạm vi
+# "documentation" (xem các script kia).
+files="$(git ls-files -- '*.md')"
+# FAIL-LOUD: không liệt kê được file (không phải git repo?) → đỏ, không pass thầm.
+[[ -n "$files" ]] || { echo "✗ check-doc-links: no tracked markdown files (not a git repo?)"; exit 1; }
 
 violations=0
 while IFS= read -r f; do
@@ -41,7 +41,7 @@ while IFS= read -r f; do
       fi
     done < <(printf '%s\n' "$line" | grep -oE '\]\([^) ]+' | sed -E 's/^\]\(//')
   done < "$f"
-done < <(list_docs | sort -u)
+done <<< "$files"
 
 if (( violations > 0 )); then
   echo "✗ check-doc-links: $violations broken internal link(s)."
