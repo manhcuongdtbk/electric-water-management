@@ -1,7 +1,7 @@
 # Thiết kế hệ thống quản lý điện nội bộ Sư đoàn — Hệ thống v2
 
-> **Phiên bản tài liệu:** 2.13.1
-> **Ngày:** 24/05/2026
+> **Phiên bản tài liệu:** 2.14.0
+> **Ngày:** 11/06/2026
 > **Tính chất:** Tài liệu thiết kế hệ thống v2, nguồn sự thật cho implementation.
 > **Nguồn nghiệp vụ:** V2_XAC_NHAN_NGHIEP_VU (phiên bản mới nhất tại thời điểm thiết kế: v2.11.0)
 
@@ -1225,7 +1225,35 @@ Mọi thao tác trên hệ thống đều được ghi lại (PaperTrail). Syste
 
 ---
 
+## Thiết kế bổ sung — milestone 1.2.0 (3 tính năng)
+
+> Đích data model cho 3 tính năng 1.2.0 (chưa triển khai phiên này). Chi tiết + lý do ở các spec tương ứng; nghiệp vụ ở `V2_XAC_NHAN_NGHIEP_VU` (anchor `NV-cot-khac-he-so-don-vi`, `NV-phan-bo-bom-theo-tram`, `NV-hien-thi-chi-tiet-ton-hao`).
+
+### Cột "Khác" dạng hệ số (đơn vị) — ADR-025
+
+- `OtherDeduction#other_type`: thêm enum value `unit_coefficient` (cùng `fixed`, `coefficient`). Không thêm cột.
+- `SummaryCalculator`: gom tổng quân số residential theo đơn vị cho kỳ; nhánh tính mới = `other_value × (tổng quân số đơn vị − quân số đầu mối)`. Validate `unit_coefficient` chỉ cho đầu mối thuộc đơn vị.
+- Spec: [`superpowers/specs/2026-06-11-cot-khac-he-so-don-vi-design.md`](superpowers/specs/2026-06-11-cot-khac-he-so-don-vi-design.md).
+
+### Phân bổ bơm nước theo từng trạm — ADR-026
+
+- Trạm bơm = đầu mối `water_pump`. `pump_allocations`: thêm `pump_contact_point_id` (khóa ngoại trạm, nullable), `block_id`, `group_id`; đối tượng nhận = đúng một trong `{unit_id, block_id, group_id, contact_point_id}`; cho phép `contact_point` cấp đơn vị.
+- `periods`: thêm cờ `pump_allocation_per_station` (boolean). `PumpAllocationCalculator` rẽ nhánh theo cờ (cũ = gộp khu vực; mới = lặp per trạm, D mỗi trạm = Σ usage + loss công tơ của trạm).
+- Spec: [`superpowers/specs/2026-06-11-phan-bo-bom-theo-tram-design.md`](superpowers/specs/2026-06-11-phan-bo-bom-theo-tram-design.md).
+
+### Hiển thị chi tiết tổn hao — ADR-027
+
+- `meter_readings`: thêm cột `loss` (decimal, nullable) — snapshot tổn hao per công tơ, ghi trong transaction `CalculationOrchestrator`. "Sử dụng thực tế" = sử dụng + loss (tính khi render).
+- Bảng mới `loss_summaries` (`zone_id`, `period_id`, `a`, `b`, `c`, unique `(zone_id, period_id)`) — tóm tắt A/B/C per khu vực per kỳ.
+- Spec: [`superpowers/specs/2026-06-11-hien-thi-chi-tiet-ton-hao-design.md`](superpowers/specs/2026-06-11-hien-thi-chi-tiet-ton-hao-design.md).
+
+---
+
 ## Lịch sử thay đổi
+
+### v2.14.0 (11/06/2026)
+
+- Thêm mục "Thiết kế bổ sung — milestone 1.2.0": đích data model cho 3 tính năng (cột Khác hệ số đơn vị — ADR-025; phân bổ bơm theo trạm — ADR-026; hiển thị chi tiết tổn hao — ADR-027). Trỏ tới spec; chưa triển khai. Khớp nghiệp vụ v2.15.0 (Issue #319).
 
 ### v2.13.1 (31/05/2026)
 
