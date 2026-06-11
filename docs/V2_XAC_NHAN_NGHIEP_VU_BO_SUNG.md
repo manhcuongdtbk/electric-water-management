@@ -1,7 +1,7 @@
 # Xác nhận nghiệp vụ bổ sung — Hệ thống quản lý điện nội bộ Sư đoàn (Hệ thống v2)
 
-> **Phiên bản:** 2.1.0
-> **Ngày:** 06/06/2026
+> **Phiên bản:** 2.1.1
+> **Ngày:** 11/06/2026
 > **Bối cảnh:** Quản trị viên hệ thống test trên staging kỳ 4/2026 và đưa ra 3 mong muốn mới.
 
 ---
@@ -191,6 +191,8 @@ Khu vực có 2 trạm bơm, 2 đơn vị (mỗi đơn vị có 2 khối):
 
 ## 4. Tính năng mới 3 — Hiển thị chi tiết tổn hao
 
+> **Trạng thái: Đã xác nhận sơ bộ** (khách yêu cầu xem chi tiết tổn hao, không phản đối phương án đề xuất — xác nhận hoàn toàn khi dùng thử).
+
 ### Vấn đề thực tế
 
 Hệ thống tính tổn hao chính xác (đã kiểm chứng ở mục 1), nhưng hiện tại chỉ hiển thị kết quả tổn hao dưới dạng 1 con số ở cột "Tổn hao" trong khoản trừ trên bảng tính tiền. Quản trị viên hệ thống muốn xem được chi tiết cách tính tổn hao để kiểm tra và đối chiếu — tương tự bảng "Tính tổn hao và sử dụng thực tế" trong file Excel cũ.
@@ -253,8 +255,28 @@ Thêm cả 3 loại: khối, nhóm, và đầu mối sinh hoạt thuộc đơn v
 
 ---
 
-**Câu 4 — Hiển thị chi tiết tổn hao:**
+**Câu 4 — Hiển thị chi tiết tổn hao: Đã xác nhận sơ bộ ✓**
 
-Thêm 2 cột "Tổn hao" và "Sử dụng thực tế" trên trang Chỉ số đầu mối và Chỉ số bơm nước. Thêm phần tóm tắt A, B, C trên trang Bảng tính tiền. Giúp kiểm tra và đối chiếu cách tính tổn hao. Chi tiết ở mục 4.
+Thêm 2 cột "Tổn hao" và "Sử dụng thực tế" trên trang Chỉ số đầu mối và Chỉ số bơm nước. Thêm phần tóm tắt A, B, C trên trang Bảng tính tiền. Giúp kiểm tra và đối chiếu cách tính tổn hao. Chi tiết ở mục 4. Xác nhận hoàn toàn khi dùng thử.
 
-→ **Đề xuất: thêm tính năng này.** Thông tin tổn hao hệ thống đã tính sẵn, hiển thị thêm ra để tiện kiểm tra và đối chiếu.
+---
+
+## Lịch sử thay đổi
+
+### v2.1.1 (11/06/2026)
+
+- Mục 4: cập nhật trạng thái tính năng 3 (hiển thị chi tiết tổn hao) thành "Đã xác nhận sơ bộ" — khách yêu cầu xem chi tiết tổn hao, không phản đối phương án đề xuất, xác nhận hoàn toàn khi dùng thử.
+- Mục 5 câu 4: cập nhật trạng thái tương ứng.
+
+### v2.1.0 (06/06/2026)
+
+- Mục 2: sửa công thức cột Khác từ -148 thành -132 — loại trừ quân số đầu mối đang nhập theo phản hồi khách (31/05/2026).
+- Mục 2, 3: cập nhật trạng thái "Đã xác nhận" theo phản hồi khách (31/05/2026).
+- Mục 4: thêm tính năng mới 3 — hiển thị chi tiết tổn hao trên trang Chỉ số đầu mối, Chỉ số bơm nước, Bảng tính tiền. Dựa trên bảng Excel cũ của khách.
+- Mục 5: cập nhật câu 1-3 đã xác nhận, thêm câu 4 cho tính năng mới 3.
+- Đổi "2 mong muốn" → "3 mong muốn", cập nhật ngày.
+
+### v2.0.0 (30/05/2026)
+
+- Tài liệu ban đầu với 2 tính năng mới: cột Khác kiểu hệ số tổng đơn vị, phân bổ bơm nước theo từng trạm bơm.
+- Mục 1: xác nhận hệ thống hiện tại tính toán đúng, kèm dẫn chứng kiểm tra ngày 26/05/2026.
