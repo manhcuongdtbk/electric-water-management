@@ -132,7 +132,7 @@ Theo ADR-013..015 (chi tiết + lý do: `docs/superpowers/specs/2026-06-08-truy-
 
 1. **Tiếp nhận** — mở **GitHub Issue** bằng template *Yêu cầu thay đổi* (`.github/ISSUE_TEMPLATE/change-request.md`). Yêu cầu đến từ kênh ngoài (lời nói, chat) cũng phải có Issue trước khi vào `feature/*` — đội mở thay khách nếu cần. Số `#N` là mã định danh thay đổi.
 2. **Phân loại** — gắn 1 nhãn loại (`change-request` / `enhancement` / `bug`); chốt mức SemVer (`feat`/`fix`/breaking); xác định có đụng nghiệp vụ không. Cần thiết kế → gắn `needs-design`. Gán **milestone = version đích** khi đã biết.
-3. **Thiết kế** (nếu cần) — brainstorm → spec trong `docs/superpowers/specs/`; nếu đụng nghiệp vụ, cập nhật `docs/V2_XAC_NHAN_NGHIEP_VU.md` + gắn anchor (xem dưới). Gỡ `needs-design`.
+3. **Thiết kế** (nếu cần) — brainstorm → spec trong `docs/superpowers/specs/`; nếu đụng nghiệp vụ, cập nhật `docs/V2_XAC_NHAN_NGHIEP_VU.md` + gắn anchor (xem dưới). Cần khách xác nhận trước khi build → xem **Cổng xác nhận khách trước build** dưới. Gỡ `needs-design`.
 4. **Hiện thực + test** — `feature/*`, pull request `Refs #N`, test cover yêu cầu (mục 4).
 5. **Release** — gom vào `release/*` → bản ứng viên (release candidate) → khách nghiệm thu → release-please tag `X.Y.Z` (mục 6).
 6. **Đóng** — `Closes #N` khi merge; CHANGELOG tự liệt kê `(#N)`.
@@ -140,6 +140,19 @@ Theo ADR-013..015 (chi tiết + lý do: `docs/superpowers/specs/2026-06-08-truy-
 **Trạng thái không gắn nhãn tay** — suy ra từ artifact: Issue mở = đang mở; có pull request liên kết = đang làm; merged = xong; có trong CHANGELOG/tag = đã release.
 
 **Khách thấy trạng thái ở mức release** (môi trường Acceptance + release notes tiếng Việt). Khách không truy cập GitHub → đội trả lời "đang ở đâu" từ Issue/milestone list rồi chuyển tiếp.
+
+### Cổng xác nhận khách trước build (ADR-028)
+
+Khi cần khách **xác nhận yêu cầu/phương án trước khi build** (thường qua nhiều lượt), làm trong bước 3:
+
+1. Đã có Issue `#N` (bước 1). Tài liệu xác nhận mở đầu bằng `#N`.
+2. Soạn **tài liệu xác nhận** ở `docs/xac-nhan-khach/` (tạo thư mục khi lần đầu cần) — KHÔNG để ở `docs/` gốc (tránh trông như nguồn nghiệp vụ).
+3. Mỗi vòng khách phản hồi: cập nhật tài liệu, **bump version + 1 dòng changelog** (ADR-002), ghi vết comment vào Issue (khách duyệt/điều chỉnh gì, ngày).
+4. Khai trong `docs/BAN_DO_TAI_LIEU.md` **per-file**: **current-state** khi đang chốt → **lịch sử** khi đã chốt + đã fold.
+5. **Chỉ khi khách chốt** mới fold yêu cầu vào `docs/V2_XAC_NHAN_NGHIEP_VU.md` (canonical) + anchor `NV-...`; từ đó mới code theo. Trước đó tài liệu xác nhận chỉ là "đang đề xuất".
+6. Trợ lý AI soạn / đánh version / ghi vết / fold; bạn duyệt nội dung gửi khách + duyệt fold (vận hành AI-assisted, ADR-029).
+
+> Ca mẫu: `docs/V2_XAC_NHAN_NGHIEP_VU_BO_SUNG.md` (#264/#319).
 
 ### Mã định danh yêu cầu (anchor `NV-...`)
 

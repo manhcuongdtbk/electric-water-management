@@ -1,6 +1,6 @@
 ---
 title: Truy vết & quản lý thay đổi (yêu cầu → thiết kế → test → release) — Mảnh 2 của SDLC
-version: 0.2.0
+version: 0.3.0
 status: draft (chờ duyệt)
 date: 2026-06-08
 governed_by: 2026-06-07-sdlc-overview-design.md
@@ -12,7 +12,7 @@ Mảnh **thứ hai** của việc chuẩn hoá SDLC (Backlog #2 trong [quy trìn
 
 Mục tiêu: nối **yêu cầu → thiết kế → test → release** thành một chuỗi *truy vết được* và một *luồng thay đổi lặp lại được*, **chỉ dựa trên hạ tầng đã có** (GitHub Issues/pull request, Conventional Commits, release-please, CHANGELOG, Git Flow, tài liệu `docs/` có version). Không dựng quy trình nặng.
 
-> **Cách đọc:** quyết định viết theo **ADR**: Bối cảnh → Quyết định → Lý do → Tradeoff → Phương án đã loại → Điều kiện xem lại → Trạng thái. ADR đánh số toàn cục, tiếp nối ADR-012 (mảnh CI). Mảnh này thêm **ADR-013, ADR-014, ADR-015**.
+> **Cách đọc:** quyết định viết theo **ADR**: Bối cảnh → Quyết định → Lý do → Tradeoff → Phương án đã loại → Điều kiện xem lại → Trạng thái. ADR đánh số toàn cục, tiếp nối ADR-012 (mảnh CI). Mảnh này thêm **ADR-013, ADR-014, ADR-015**; bổ sung sau: **ADR-028** (cổng xác nhận khách trước build).
 
 ## Goals
 
@@ -125,6 +125,25 @@ flowchart LR
   - *GitHub Actions tự kiểm "pull request có Refs #N"* — tự động hoá guardrail; để dành, chưa cần khi một người merge.
 - **Điều kiện xem lại:** template hay bị bỏ trống → cân nhắc Action kiểm tối thiểu; có quy trình sự cố (Backlog #3) → thêm bug/incident template ở mảnh đó.
 
+### ADR-028: Cổng xác nhận khách trước build — tài liệu xác nhận versioned, Issue-anchored
+
+- **Trạng thái:** Proposed · 2026-06-11 (Issue #320)
+- **Bối cảnh:** ADR-013 đặt tương tác khách ở "mức release" (Nghiệm thu **sau** build), nhưng đội còn một bước thực tế: phân tích yêu cầu rồi **trình khách xác nhận TRƯỚC khi build**, thường qua **nhiều lượt** đến khi chốt. Bản trình khách vì thế là một tài liệu có vòng đời version riêng — ví dụ thực: `docs/V2_XAC_NHAN_NGHIEP_VU_BO_SUNG.md` đi v2.0.0 → 2.1.2 qua các vòng phản hồi (#264/#319). Cách cũ (#264) để bản này ở `docs/` gốc như một doc nghiệp vụ, lại có **trước** cả Issue → nguy cơ thành "nguồn canonical thứ hai", trái "sửa đừng thêm" (ADR-023) và đứt truy vết (ADR-013/014).
+- **Quyết định:** Bổ sung "cổng xác nhận khách trước build" như một checkpoint trong **bước 3 (Thiết kế)**:
+  1. **Issue-first.** Phải có Issue `#N` trước; tài liệu xác nhận mở đầu bằng `#N`; mỗi vòng trao đổi ghi vết comment ở Issue (khách duyệt/điều chỉnh gì, ngày nào).
+  2. **Tài liệu xác nhận versioned trong repo**, đặt ở thư mục riêng `docs/xac-nhan-khach/` (tách khỏi `docs/` gốc để không trông như nguồn nghiệp vụ). Tạo thư mục khi lần đầu cần.
+  3. **Version + changelog mỗi lượt** (đúng ADR-002): mỗi vòng khách phản hồi = bump version + một dòng changelog ("điều chỉnh X theo phản hồi ngày Y").
+  4. **Vòng đời phân loại (per-file) trong `BAN_DO_TAI_LIEU.md`:** **current-state** khi đang chốt (tài liệu sống, sửa qua các lượt) → **lịch sử** khi đã chốt + đã fold (đông cứng, không viết lại). Per-file vì phân loại đổi theo vòng đời (không dùng glob).
+  5. **Quy tắc thẩm quyền:** yêu cầu chỉ *ràng buộc* (được code theo) khi đã **fold vào `docs/V2_XAC_NHAN_NGHIEP_VU.md`** (canonical) + anchor `NV-...`. Trước đó tài liệu xác nhận chỉ là "đang đề xuất/đang chốt".
+  6. **Vận hành AI-assisted:** trợ lý AI lo phần cơ học (soạn bản từ Issue/phân tích, đánh version, ghi vết, fold khi chốt); người giữ gate duyệt nội dung gửi khách, chuyển lời khách, duyệt fold. Nguyên tắc AI tổng quát: ADR-029 (Issue #322).
+- **Lý do:** Tách hai vai mà #264 trộn — *nguồn yêu cầu* (Issue + canonical) vs *bản gửi khách* (deliverable phái sinh). "Có version" **không** đồng nghĩa "canonical": git + ADR-002 vốn là công cụ đúng cho tài liệu sửa nhiều lượt, nên giữ trong repo là hợp lý; chỉ cần thư mục riêng + phân loại + Issue-anchor + quy tắc fold để không lặp bẫy #264. Dùng đúng hạ tầng đã có, chi phí gần bằng không.
+- **Tradeoff:** (+) bản gửi khách có version-control + changelog từng vòng, truy vết về Issue, không ô nhiễm canonical. (−) thêm một thư mục docs phải quản trị (doc-map) + thao tác đổi phân loại current-state→lịch sử khi graduate (per-file). (−) bản render đính kèm gửi khách (PDF/Excel) nếu không commit thì nằm ngoài repo — chấp nhận: nguồn chữ là markdown trong repo, render là phái sinh.
+- **Phương án đã loại:**
+  - *Bản gửi khách ad-hoc, không nằm repo (chỉ đính Issue)* — không làm được version + nhiều-lượt-trao-đổi mượt; mất changelog từng vòng. Loại.
+  - *Luôn commit nhưng để `docs/` gốc cạnh nghiệp vụ* — đúng cách #264, dễ lại trông như canonical. Loại.
+  - *Glob `docs/xac-nhan-khach/*` một phân loại trong doc-map* — gọn nhưng không diễn tả được vòng đời current-state→lịch sử của từng file. Loại, chọn per-file.
+- **Điều kiện xem lại:** số tài liệu xác nhận nhiều tới mức per-file gây churn doc-map → cân nhắc glob + quy ước tách nhánh thư mục "đã chốt"; có công cụ render/gửi khách tự động → bổ sung bước sinh deliverable.
+
 ---
 
 ## Vòng đời thay đổi end-to-end (ví dụ thực tế)
@@ -176,5 +195,6 @@ Tổng thao tác *quản lý trạng thái bằng tay*: mở Issue + gắn/gỡ 
 
 ## Changelog
 
+- **0.3.0 (2026-06-11):** Thêm **ADR-028** (cổng xác nhận khách trước build — tài liệu xác nhận versioned trong `docs/xac-nhan-khach/`, Issue-anchored, current-state→lịch sử, fold-mới-ràng-buộc, vận hành AI-assisted). Issue #320; bối cảnh #264/#319.
 - **0.2.0 (2026-06-08):** Hiện thực xong (xem plan `2026-06-08-truy-vet-quan-ly-thay-doi.md`): thêm 3 template (Issue change-request, pull request, ADR), mục 9 `CONTRIBUTING.md`, pointer `AGENTS.md`; cập nhật mục "Truy vết" sang trạng thái đã hiện thực.
 - **0.1.0 (2026-06-08):** Bản thảo đầu — ADR-013 (Hybrid: GitHub Issues cho luồng + repo cho dấu vết bền; vòng đời 6 bước; P1 nhãn tối thiểu + artifact tự mang trạng thái + milestone; lớp khách mức release), ADR-014 (anchor yêu cầu `NV-...` tường minh thêm dần; chuẩn hoá "Truy vết" của spec; chiều ngược grep; test ↔ yêu cầu ở phía spec/pull request không tag test), ADR-015 (template Issue change-request + pull request + ADR). Hiện thực truy vết yêu cầu → thiết kế → test → release (Backlog #2). Chờ duyệt.
