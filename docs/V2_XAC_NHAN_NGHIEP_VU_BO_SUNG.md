@@ -149,7 +149,7 @@ Mở rộng danh sách đối tượng có thể nhận phân bổ bơm nước:
 | **Nhóm** | — | **Thêm** | **Chia đều theo quân số cho tất cả đầu mối sinh hoạt trong nhóm** |
 | **Đầu mối sinh hoạt thuộc đơn vị** | — | **Thêm** | **Nhận trực tiếp** |
 
-Cách phân bổ (phần trăm cố định hoặc hệ số nhân quân số) giữ nguyên như hiện tại — chỉ thay đổi phạm vi từ "cả khu vực" thành "từng trạm bơm" và thêm đối tượng nhận.
+Cách phân bổ (phần trăm cố định hoặc hệ số nhân quân số) giữ nguyên. Thay đổi chính: phạm vi phân bổ từ "cả khu vực" thành "từng trạm bơm", và thêm đối tượng nhận mới (khối, nhóm, đầu mối thuộc đơn vị).
 
 ### Ví dụ minh họa
 
