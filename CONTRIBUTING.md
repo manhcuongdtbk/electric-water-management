@@ -106,6 +106,14 @@ release-please đã được cấu hình (P3): khi `release/*`/`hotfix/*` vào `
 
 ## 8. Trạng thái tự động hoá
 
+**Đây là lớp ánh xạ cụ thể của [ADR-029](docs/superpowers/specs/2026-06-07-sdlc-overview-design.md) (vận hành "trợ lý AI lo cơ học — người giữ gate").** Canonical (`AGENTS.md`, ADR-029) viết **trung lập công cụ** — chỉ nói "trợ lý AI"; mục này gắn nguyên tắc đó vào **công cụ hiện đội dùng: Claude Code**. Nếu sau này đổi/thêm tool (Codex, Antigravity…), chỉ cần cập nhật mục này, không đụng canonical. Ánh xạ phần **cơ học** của ADR-029 sang cơ chế Claude Code có sẵn:
+
+- **Theo dõi CI** sau khi mở/cập nhật PR → `PostToolUse` hook tự chạy `gh pr checks` rồi báo pass/fail (xem dưới).
+- **Soát lỗi trước khi push** → lệnh `/code-review` (review diff hiện tại theo mức effort; có thể `--comment`/`--fix`).
+- **Giữ kỷ luật version tài liệu** (ADR-002) → hook nhắc bump version + changelog khi sửa `docs/`.
+- **Chặn push nhánh cũ hơn base** (Git Flow) → `PreToolUse` hook (fail-open).
+- Còn **các gate quyết định** (triage, merge, cắt release, duyệt nội dung gửi khách) **vẫn do người làm tay** — không hook nào tự quyết thay; CI chỉ *hiện trạng thái* (ADR-007), người merge.
+
 **CI tĩnh đã chạy trên mọi pull request (P2):** `rubocop`, `brakeman`, `bundler-audit`, `commitlint`, và **branch-source guard** (chặn pull request đích `main` đến từ nhánh không phải `release/*`/`hotfix/*`). Theo ADR-007, CI chỉ **hiện trạng thái** đỏ/xanh — chưa khoá cứng ở server (repo private không có branch protection miễn phí); kỷ luật một người merge giữ luật.
 
 **CI chạy test đã chạy trên mọi pull request (mảnh "CI spec chi tiết"):** một job `tests` chạy `rspec` (gồm 12 system spec điều khiển headless Chrome), kiểm `db/schema.rb` không lệch, và `rails zeitwerk:check` — trên runner native `ubuntu-latest` + service container Postgres, Chrome qua Selenium Manager. Vẫn theo ADR-007 (chỉ hiện trạng thái). Chi tiết: ADR-012 trong `docs/superpowers/specs/2026-06-07-ci-spec-design.md`.
