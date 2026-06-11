@@ -163,6 +163,38 @@ RSpec.describe SummaryCalculator do
       end
     end
 
+    describe "Kho vật tư (Đơn vị A) — cột Khác hệ số (đơn vị) dương" do
+      before do
+        apply_other_deduction(sample.contact_points[:kho_vat_tu], sample.period,
+                              type: "unit_coefficient", value: 2)
+        described_class.new(zone: sample.zone, period: sample.period,
+                            loss_results: loss_results, pump_results: pump_results).call
+      end
+
+      it "khoản trừ = hệ số dương × (tổng quân số đơn vị − quân số đầu mối)" do
+        # 2 × (10 − 3) = 14
+        calc = calculation_for(:kho_vat_tu)
+        expect(calc.other_deduction).to eq_display("14.00")
+      end
+    end
+
+    describe "Đại đội 1 (Đơn vị B) — cột Khác hệ số (đơn vị) một đầu mối sinh hoạt" do
+      before do
+        # Đơn vị B chỉ có một đầu mối sinh hoạt (dai_doi_1, 11 người).
+        # unit_coefficient: hệ số × (tổng − bản thân) = hệ số × (11 − 11) = 0
+        apply_other_deduction(sample.contact_points[:dai_doi_1], sample.period,
+                              type: "unit_coefficient", value: -5)
+        described_class.new(zone: sample.zone, period: sample.period,
+                            loss_results: loss_results, pump_results: pump_results).call
+      end
+
+      it "khoản trừ = 0 khi đơn vị chỉ có một đầu mối sinh hoạt" do
+        # -5 × (11 − 11) = 0
+        calc = calculation_for(:dai_doi_1)
+        expect(calc.other_deduction).to eq_display("0.00")
+      end
+    end
+
     describe "Chỉ huy khu vực (thuộc khu vực — unit_id null)" do
       let(:calc) { calculation_for(:chi_huy_khu_vuc) }
 
