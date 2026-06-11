@@ -1,0 +1,222 @@
+# Xác nhận nghiệp vụ bổ sung — Hệ thống quản lý điện nội bộ Sư đoàn (Hệ thống v2)
+
+> **Phiên bản:** 2.1.0
+> **Ngày:** 30/05/2026
+> **Tính chất:** Tài liệu trao đổi giữa chủ dự án và khách hàng. Khi khách hàng xác nhận, nội dung sẽ được gộp vào tài liệu nghiệp vụ chính (V2_XAC_NHAN_NGHIEP_VU).
+> **Bối cảnh:** Quản trị viên hệ thống test trên staging kỳ 4/2026 và đưa ra 2 mong muốn mới.
+
+---
+
+## Mục lục
+
+1. [Xác nhận hệ thống hiện tại hoạt động đúng](#1-xác-nhận-hệ-thống-hiện-tại-hoạt-động-đúng)
+2. [Tính năng mới 1 — Cột "Khác" kiểu hệ số tổng đơn vị](#2-tính-năng-mới-1--cột-khác-kiểu-hệ-số-tổng-đơn-vị)
+3. [Tính năng mới 2 — Phân bổ bơm nước theo từng trạm bơm](#3-tính-năng-mới-2--phân-bổ-bơm-nước-theo-từng-trạm-bơm)
+4. [Tổng hợp cần xác nhận](#4-tổng-hợp-cần-xác-nhận)
+
+---
+
+## 1. Xác nhận hệ thống hiện tại hoạt động đúng
+
+Đội phát triển đã kiểm tra toàn bộ bảng tính tiền kỳ 4/2026 trên staging bằng cách **tính tay từng bước** và so sánh với kết quả hệ thống xuất ra. Kết quả: **tất cả số liệu khớp chính xác**.
+
+Cụ thể đã kiểm tra:
+
+- Tiêu chuẩn điện sinh hoạt (quân số × định mức từng cấp bậc): 6/6 đầu mối đúng.
+- Tiêu chuẩn điện bơm nước (quân số × 9,45): 6/6 đầu mối đúng.
+- Các khoản trừ (tiết kiệm Bộ 5%, công cộng Sư đoàn 10%, công cộng đơn vị 10%, cột Khác): đúng.
+- Tổn hao: tính từ công tơ tổng (20.000 kWh), 12 công tơ con (tổng 5.350 kWh) → tổn hao 14.650 kWh → phân bổ theo tỷ lệ sử dụng từng công tơ. 6/6 đầu mối đúng.
+- Phân bổ bơm nước: 2 trạm bơm (800 kWh thô + 2.190,65 kWh tổn hao = 2.990,65 kWh) → chia đều theo quân số (74 người) → 40,41 kWh/người. 6/6 đầu mối đúng.
+- Thừa/thiếu và thành tiền: 6/6 đầu mối đúng.
+
+File kiểm chứng Excel (có công thức từng bước, bấm vào ô bất kỳ để thấy cách tính) đã được gửi kèm.
+
+**Hai mong muốn dưới đây là tính năng mới, nằm ngoài phạm vi nghiệp vụ đã thống nhất.**
+
+---
+
+## 2. Tính năng mới 1 — Cột "Khác" kiểu hệ số tổng đơn vị
+
+### Vấn đề thực tế
+
+Trong đơn vị có bếp ăn chung phục vụ tất cả mọi người. Bếp dùng điện nấu ăn. Quản trị viên muốn:
+
+- **Mỗi người trong đơn vị góp một phần tiêu chuẩn điện cho bếp** (ví dụ: mỗi người góp 2 kWh).
+- **Bếp được nhận lại tổng số đó** để bù vào tiêu chuẩn (vì bếp nấu cho cả đơn vị, không phải bếp tự dùng).
+
+### Hệ thống hiện tại làm được gì
+
+Cột "Khác" trên trang Cấu hình đơn vị có 2 cách nhập:
+
+| Cách nhập | Hệ thống tính | Ví dụ |
+|---|---|---|
+| **Số cụ thể** | Dùng đúng số quản trị viên nhập | Nhập 10 → trừ 10 kWh |
+| **Theo hệ số** | Hệ số × quân số **đầu mối đó** | Nhập 2, đầu mối 3 người → trừ 2 × 3 = 6 kWh |
+
+- Phần "mỗi người góp 2 kWh": **làm được** — dùng kiểu "Theo hệ số" với giá trị 2 cho tất cả đầu mối.
+- Phần "bếp nhận lại tổng": **phải nhập tay** — quản trị viên tự tính tổng quân số đơn vị × 2 = 148, rồi nhập số cụ thể -148 cho bếp. Khi quân số thay đổi (người chuyển đi/đến), quản trị viên phải tự tính lại con số này.
+
+### Giải pháp đề xuất
+
+Thêm 1 cách nhập thứ 3:
+
+| Cách nhập | Hệ thống tính | Ví dụ |
+|---|---|---|
+| Số cụ thể | Dùng đúng số quản trị viên nhập | (giữ nguyên) |
+| Theo hệ số | Hệ số × quân số **đầu mối đó** | (giữ nguyên) |
+| **Theo hệ số (đơn vị)** | **Hệ số × tổng quân số toàn đơn vị** | **Nhập -2, đơn vị 74 người → -2 × 74 = -148 kWh (cộng ngược 148 vào tiêu chuẩn bếp)** |
+
+Quản trị viên chỉ cần nhập hệ số 1 lần. Khi quân số thay đổi, hệ thống tự tính lại.
+
+### Ví dụ minh họa
+
+Đơn vị có 74 người, chia thành 6 đầu mối. Quản trị viên muốn mỗi người góp 2 kWh cho bếp:
+
+| Đầu mối | Quân số | Cách nhập cột Khác | Giá trị nhập | Hệ thống tính |
+|---|---|---|---|---|
+| Sư trưởng | 3 | Theo hệ số | 2 | 2 × 3 = **6 kWh bị trừ** |
+| nhà ở 20-23 | 51 | Theo hệ số | 2 | 2 × 51 = **102 kWh bị trừ** |
+| Trưởng ban Doanh trại | 7 | Theo hệ số | 2 | 2 × 7 = **14 kWh bị trừ** |
+| TL-NV | 3 | Theo hệ số | 2 | 2 × 3 = **6 kWh bị trừ** |
+| Trưởng ban | 2 | Theo hệ số | 2 | 2 × 2 = **4 kWh bị trừ** |
+| **Bếp f bộ** | **8** | **Theo hệ số (đơn vị)** | **-2** | **-2 × 74 = -148 kWh (cộng ngược)** |
+
+Kết quả: 5 đầu mối khác bị trừ tổng 132 kWh. Bếp được cộng 148 kWh (gồm cả phần 8 người bếp góp 16 kWh).
+
+Nếu tháng sau có thêm 5 người mới vào đơn vị (tổng thành 79 người), hệ thống tự tính lại: -2 × 79 = -158 kWh cho bếp. Quản trị viên không cần sửa gì.
+
+### Quy tắc
+
+- "Tổng quân số đơn vị" = tổng quân số tất cả đầu mối sinh hoạt trong đơn vị, bao gồm chính đầu mối đang nhập.
+- Giá trị âm: cho phép (âm = cộng ngược vào tiêu chuẩn, tức đầu mối được hưởng thêm).
+- Giá trị dương: cho phép (dương = trừ khỏi tiêu chuẩn, giống 2 cách nhập cũ).
+- Chỉ áp dụng cho đầu mối thuộc đơn vị. Đầu mối thuộc khu vực trực tiếp (không có đơn vị) không dùng cách nhập này được.
+- Kế thừa kỳ mới: kế thừa cả cách nhập lẫn hệ số, hệ thống tự tính lại theo quân số mới của kỳ mới.
+
+---
+
+## 3. Tính năng mới 2 — Phân bổ bơm nước theo từng trạm bơm
+
+### Vấn đề thực tế
+
+Trong khu vực quân đội có nhiều trạm bơm nước. Mỗi trạm bơm phục vụ một khu vực vật lý khác nhau:
+
+- Trạm bơm 1 bơm nước cho khu nhà A (ví dụ: Khối 1).
+- Trạm bơm 2 bơm nước cho khu nhà B (ví dụ: Khối 2).
+
+Nhưng hệ thống hiện tại gộp điện của tất cả trạm bơm thành 1 tổng, rồi chia cho tất cả mọi người. Người ở khu A phải chịu cả điện trạm 2 (dù không dùng nước từ trạm 2). Không đúng thực tế.
+
+### Hệ thống hiện tại làm được gì
+
+Hiện tại phân bổ bơm nước hoạt động như sau:
+
+```
+Tất cả trạm bơm trong khu vực
+        ↓ gộp thành 1 tổng
+   Tổng điện bơm nước
+        ↓ chia cho
+   Các đối tượng nhận (đơn vị, đầu mối khu vực, ngoài biên chế)
+        ↓ đơn vị chia đều xuống
+   Tất cả đầu mối sinh hoạt trong đơn vị (theo quân số)
+```
+
+Không có cách nào tách riêng trạm bơm 1 cho khối 1, trạm bơm 2 cho khối 2.
+
+### Giải pháp đề xuất
+
+Thay đổi cơ chế phân bổ: **mỗi trạm bơm có danh sách đối tượng nhận riêng**, thay vì gộp tất cả trạm bơm thành 1 tổng.
+
+```
+Trạm bơm 1 (500 kWh + tổn hao)          Trạm bơm 2 (300 kWh + tổn hao)
+        ↓                                         ↓
+Đối tượng nhận của trạm 1                Đối tượng nhận của trạm 2
+(ví dụ: Khối 1)                          (ví dụ: Khối 2, Đơn vị B)
+        ↓                                         ↓
+Đầu mối trong Khối 1                    Đầu mối trong Khối 2 + Đơn vị B
+```
+
+Trên trang **Phân bổ bơm nước**, thay vì 1 bảng chung cho cả khu vực, hiển thị **1 bảng riêng cho mỗi trạm bơm**. Quản trị viên cấu hình từng trạm bơm phân bổ cho ai.
+
+### Đối tượng nhận phân bổ
+
+Mở rộng danh sách đối tượng có thể nhận phân bổ bơm nước:
+
+| Đối tượng | Đã có | Mới | Khi nhận, hệ thống chia xuống |
+|---|---|---|---|
+| Đơn vị | Có | Giữ | Chia đều theo quân số cho tất cả đầu mối sinh hoạt trong đơn vị |
+| Đầu mối sinh hoạt thuộc khu vực | Có | Giữ | Nhận trực tiếp |
+| Đầu mối ngoài biên chế | Có | Giữ | Nhận trực tiếp |
+| **Khối** | — | **Thêm** | **Chia đều theo quân số cho tất cả đầu mối sinh hoạt trong khối** |
+| **Nhóm** | — | **Thêm** | **Chia đều theo quân số cho tất cả đầu mối sinh hoạt trong nhóm** |
+| **Đầu mối sinh hoạt thuộc đơn vị** | — | **Thêm** | **Nhận trực tiếp** |
+
+Cách phân bổ (phần trăm cố định hoặc hệ số nhân quân số) giữ nguyên như hiện tại — chỉ thay đổi phạm vi từ "cả khu vực" thành "từng trạm bơm" và thêm đối tượng nhận.
+
+### Ví dụ minh họa
+
+Khu vực có 2 trạm bơm, 2 đơn vị (mỗi đơn vị có 2 khối):
+
+**Trạm bơm cấp 1** (điện: 500 kWh + tổn hao) phục vụ:
+
+| Đối tượng | Cách phân bổ | Giá trị |
+|---|---|---|
+| Khối "Phòng Tham mưu" (Đơn vị A) | Theo hệ số | 1 |
+| Khối "Phòng Hậu cần" (Đơn vị A) | Theo hệ số | 1 |
+
+→ Hai khối chia theo tỷ lệ quân số. Các đầu mối trong mỗi khối chia đều theo quân số.
+
+**Trạm bơm cấp 2** (điện: 300 kWh + tổn hao) phục vụ:
+
+| Đối tượng | Cách phân bổ | Giá trị |
+|---|---|---|
+| Đơn vị B | Theo hệ số | 1 |
+| Đầu mối "Chỉ huy khu vực" (thuộc khu vực) | Phần trăm cố định | 10% |
+
+→ Chỉ huy khu vực nhận 10% cố định. Đơn vị B nhận phần còn lại, chia đều theo quân số.
+
+### Quy tắc
+
+- Mỗi trạm bơm phải có ít nhất 1 đối tượng nhận. Trạm bơm chưa cấu hình đối tượng nhận → hệ thống hiển thị cảnh báo.
+- Các ràng buộc hiện tại giữ nguyên cho từng trạm bơm: tổng phần trăm cố định ≤ 100%, phải có đối tượng nhận hệ số nếu chưa đạt 100%, tổng (quân số × hệ số) > 0.
+- Tổn hao vẫn tính chung toàn khu vực (không thay đổi). Tổn hao của từng công tơ bơm nước được gán về trạm bơm tương ứng.
+- Kế thừa kỳ mới: kế thừa cấu hình phân bổ từng trạm bơm (đối tượng nhận, phần trăm, hệ số).
+- Kỳ cũ (trước khi có tính năng mới): giữ nguyên cơ chế cũ (gộp tất cả trạm bơm). Kỳ mới mở sau khi cập nhật hệ thống sẽ dùng cơ chế mới.
+- "Chia đều theo quân số" khi nhận qua đơn vị, khối, hoặc nhóm: đối tượng nhận X kWh → mỗi đầu mối sinh hoạt bên trong nhận X ÷ tổng quân số × quân số đầu mối đó.
+
+---
+
+## 4. Tổng hợp cần xác nhận
+
+Dưới đây là 4 câu hỏi cần phản hồi. Mỗi câu có **đề xuất** (in đậm) — nếu đồng ý chỉ cần trả lời "đồng ý" là đội phát triển triển khai theo đề xuất.
+
+---
+
+**Câu 1 — Hệ thống hiện tại:**
+
+Hệ thống hiện tại tính toán đúng theo nghiệp vụ đã thống nhất. 2 mục dưới đây là tính năng mới nằm ngoài phạm vi ban đầu.
+
+→ **Đề xuất: xác nhận hệ thống đang đúng.** Nếu có vấn đề gì khác cần báo thêm.
+
+---
+
+**Câu 2 — Cột "Khác" kiểu mới:**
+
+Thêm cách nhập "Theo hệ số (đơn vị)" — hệ số × tổng quân số toàn đơn vị. Cho phép bếp (hoặc đầu mối tương tự) tự động nhận lại tổng phần góp của cả đơn vị mà không cần tính tay. Khi quân số thay đổi, hệ thống tự cập nhật. Chi tiết và ví dụ xem mục 2.
+
+→ **Đề xuất: thêm tính năng này.** Nếu không cần thì dùng cách nhập "Số cụ thể" hiện tại (phải tự tính tay khi quân số thay đổi).
+
+---
+
+**Câu 3 — Phân bổ bơm nước theo trạm:**
+
+Đổi cơ chế từ "gộp tất cả trạm bơm chia chung" sang "mỗi trạm bơm phân bổ riêng cho đối tượng mà trạm đó phục vụ". Chi tiết và ví dụ xem mục 3.
+
+→ **Đề xuất: thêm tính năng này.** Nếu không cần thì giữ nguyên cơ chế gộp hiện tại.
+
+---
+
+**Câu 4 — Đối tượng nhận bơm nước:**
+
+Thêm khối, nhóm, và đầu mối sinh hoạt thuộc đơn vị vào danh sách đối tượng có thể nhận phân bổ bơm nước (hiện chỉ có đơn vị, đầu mối sinh hoạt thuộc khu vực, đầu mối ngoài biên chế). Chi tiết xem bảng đối tượng trong mục 3.
+
+→ **Đề xuất: thêm cả 3 loại (khối, nhóm, đầu mối sinh hoạt thuộc đơn vị).** Nếu chỉ cần 1-2 loại thì cho biết cụ thể.
