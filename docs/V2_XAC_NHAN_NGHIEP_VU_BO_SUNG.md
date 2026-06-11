@@ -186,36 +186,26 @@ Khu vực có 2 trạm bơm, 2 đơn vị (mỗi đơn vị có 2 khối):
 
 ## 4. Tổng hợp cần xác nhận
 
-Dưới đây là 4 câu hỏi. Mỗi câu có **đề xuất** (in đậm) — đồng ý thì làm theo đề xuất luôn.
-
 ---
 
-**Câu 1 — Hệ thống hiện tại:**
-
-Hệ thống hiện tại tính toán đúng theo nghiệp vụ đã thống nhất. 2 mục dưới đây là tính năng mới, nằm ngoài phạm vi ban đầu.
-
-→ **Đề xuất: xác nhận hệ thống đang đúng.** Còn phát hiện vấn đề gì không?
-
----
-
-**Câu 2 — Cột "Khác" kiểu mới:**
+**Câu 1 — Cột "Khác" kiểu mới:**
 
 Thêm cách nhập "Theo hệ số (đơn vị)" — hệ số × tổng quân số toàn đơn vị. Cho phép bếp (hoặc đầu mối tương tự) tự động nhận lại tổng phần góp mà không cần tính tay. Khi quân số thay đổi, hệ thống tự cập nhật. Chi tiết và ví dụ ở mục 2.
 
-→ **Đề xuất: thêm tính năng này.** Không thêm thì vẫn dùng được cách nhập "Số cụ thể" hiện tại (nhưng phải tự tính tay khi quân số thay đổi). Có cần thêm không?
+→ **Đề xuất: thêm tính năng này.** Hiện tại vẫn dùng được cách nhập "Số cụ thể" nhưng phải tự tính tay khi quân số thay đổi — thêm tính năng này sẽ tiện hơn.
 
 ---
 
-**Câu 3 — Phân bổ bơm nước theo trạm:**
+**Câu 2 — Phân bổ bơm nước theo trạm:**
 
 Đổi cơ chế từ "gộp tất cả trạm bơm chia chung" sang "mỗi trạm bơm phân bổ riêng cho đối tượng mà trạm đó phục vụ". Chi tiết và ví dụ ở mục 3.
 
-→ **Đề xuất: thêm tính năng này.** Không thêm thì giữ nguyên cơ chế gộp hiện tại. Có cần thêm không?
+→ **Đề xuất: thêm tính năng này.** Hiện tại tất cả trạm bơm gộp chung nên không tách riêng được trạm nào cho vùng nào — thêm tính năng này sẽ đúng thực tế hơn.
 
 ---
 
-**Câu 4 — Đối tượng nhận bơm nước:**
+**Câu 3 — Đối tượng nhận bơm nước:**
 
 Hiện tại chỉ phân bổ bơm nước được cho đơn vị, đầu mối sinh hoạt thuộc khu vực, và đầu mối ngoài biên chế. Đề xuất thêm 3 loại: khối, nhóm, và đầu mối sinh hoạt thuộc đơn vị. Chi tiết ở bảng đối tượng trong mục 3.
 
-→ **Đề xuất: thêm cả 3 loại.** Thực tế có cần cả 3 loại?
+→ **Đề xuất: thêm cả 3 loại** để linh hoạt nhất. Thực tế có cần cả 3 loại?
