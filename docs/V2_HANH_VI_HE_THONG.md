@@ -1,7 +1,7 @@
 # Hành vi hệ thống — Hệ thống quản lý điện nội bộ Sư đoàn (Hệ thống v2)
 
-> **Phiên bản:** 1.2.2
-> **Ngày:** 31/05/2026
+> **Phiên bản:** 1.3.0
+> **Ngày:** 11/06/2026
 > **Tính chất:** Tài liệu mô tả hành vi thực tế của hệ thống đã được verify qua code và test. Bổ sung cho V2_XAC_NHAN_NGHIEP_VU (cái gì) và V2_THIET_KE_HE_THONG (làm thế nào) bằng cách trả lời "hệ thống hành xử ra sao" trong các kịch bản thực tế.
 > **Nguồn:** Kết quả audit toàn diện codebase, 14 đợt page-by-page, 781+ test cases.
 
@@ -349,7 +349,35 @@ Code từ session AI trước có thể thiếu suy nghĩ sâu về edge cases. 
 
 ---
 
+## 9. Hành vi bổ sung — milestone 1.2.0 (3 tính năng)
+
+> Hành vi runtime đích cho 3 tính năng 1.2.0 (chưa triển khai phiên này). Chi tiết + lý do ở spec; data model ở `V2_THIET_KE_HE_THONG` mục "Thiết kế bổ sung — milestone 1.2.0".
+
+### Cột "Khác" dạng hệ số (đơn vị)
+
+- Tính **live** theo quân số kỳ hiện tại: quân số đổi → khoản trừ tự đổi (không snapshot con số). Tổng quân số đơn vị chỉ gồm đầu mối residential, trừ chính đầu mối đang xét.
+- Đầu mối zone-direct không dùng được dạng này (validate chặn + ẩn option). Áp dụng quy tắc `.kept`/`.with_discarded` như các khoản trừ khác (xem mục 7).
+- Spec: [`superpowers/specs/2026-06-11-cot-khac-he-so-don-vi-design.md`](superpowers/specs/2026-06-11-cot-khac-he-so-don-vi-design.md).
+
+### Phân bổ bơm nước theo từng trạm — hành vi xuyên kỳ
+
+- Cờ `Period#pump_allocation_per_station` quyết định cơ chế **theo từng kỳ**: kỳ cũ (đã đóng) giữ gộp toàn khu vực; kỳ mới phân bổ per trạm. Cùng codebase phục vụ cả hai khi xem kỳ cũ/mới.
+- Chuyển tiếp cũ → per-trạm đầu tiên: bắt đầu trống, không kế thừa (cấu hình gộp cũ không ánh xạ được vào trạm). Các kỳ per-trạm sau kế thừa cấu hình từng trạm.
+- Xem kỳ cũ có đối tượng nhận đã xóa: dùng `.with_discarded` (mục 7); trang cấu hình kỳ mở dùng `.kept`.
+- Spec: [`superpowers/specs/2026-06-11-phan-bo-bom-theo-tram-design.md`](superpowers/specs/2026-06-11-phan-bo-bom-theo-tram-design.md).
+
+### Hiển thị chi tiết tổn hao — snapshot, không tính live
+
+- Hai cột Tổn hao / Sử dụng thực tế và tóm tắt A/B/C là **snapshot lần tính gần nhất**: chưa tính → trống; sửa chỉ số sau khi tính (chưa tính lại) → giữ giá trị cũ (nhất quán với toàn bộ bảng tính tiền vốn "cũ tới khi bấm tính lại").
+- Spec: [`superpowers/specs/2026-06-11-hien-thi-chi-tiet-ton-hao-design.md`](superpowers/specs/2026-06-11-hien-thi-chi-tiet-ton-hao-design.md).
+
+---
+
 ## Lịch sử thay đổi
+
+### v1.3.0 (11/06/2026)
+
+- Thêm mục 9 "Hành vi bổ sung — milestone 1.2.0": hành vi runtime đích cho 3 tính năng (cột Khác hệ số đơn vị tính live; phân bổ bơm per-trạm xuyên kỳ qua cờ `pump_allocation_per_station`; tổn hao hiển thị dạng snapshot). Trỏ tới spec ADR-025..027; chưa triển khai. Khớp nghiệp vụ v2.15.0 (Issue #319).
 
 ### v1.2.2 (31/05/2026)
 
