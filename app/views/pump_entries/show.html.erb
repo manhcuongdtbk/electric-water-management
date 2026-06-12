@@ -33,6 +33,8 @@
           <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Đầu kỳ</th>
           <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Cuối kỳ</th>
           <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Sử dụng</th>
+          <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Tổn hao</th>
+          <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Sử dụng thực tế</th>
           <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Ghi chú</th>
         </tr>
       </thead>
@@ -60,6 +62,8 @@
                 <%= number_to_vi(r.usage) %>
               <% end %>
             </td>
+            <td class="px-3 py-2 text-right text-gray-600"><%= number_to_vi(r.loss) %></td>
+            <td class="px-3 py-2 text-right text-gray-600"><%= number_to_vi(r.actual_usage) %></td>
             <td class="px-3 py-2">
               <%= text_field_tag "meter_readings[#{r.id}][manual_usage_note]", r.manual_usage_note,
                   placeholder: "Ghi chú nếu thay công tơ", disabled: !can_edit,

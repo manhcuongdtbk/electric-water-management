@@ -72,6 +72,70 @@ RSpec.describe "PumpEntries", type: :request do
     end
   end
 
+  describe "cột Tổn hao / Sử dụng thực tế (TN3)" do
+    let(:html) { Nokogiri::HTML(response.body) }
+    let(:vi) do
+      Class.new(ActionView::Base.with_empty_template_cache) { include NumberHelperVi }
+        .new(ActionView::LookupContext.new([]), {}, nil)
+    end
+
+    it "luôn hiện 2 header cột" do
+      sample
+      get pump_entries_path
+      expect(response.body).to include("Tổn hao").and include("Sử dụng thực tế")
+    end
+
+    it "D3: sau tính → hiển thị loss và sử dụng thực tế đúng (công tơ bơm nước)" do
+      sample
+      CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
+      get pump_entries_path
+      reading = MeterReading.find_by(meter: sample.meters[:ct_bn1], period: sample.period).reload
+      expect(reading.loss).to be_present
+      expect(response.body).to include(vi.number_to_vi(reading.loss))
+      expect(response.body).to include(vi.number_to_vi(reading.usage + reading.loss))
+    end
+
+    it "D14: 2 cột read-only — không thêm input vào bảng" do
+      sample
+      CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
+      get pump_entries_path
+      inputs = html.css("table tbody tr:first-child td input")
+      # cấu trúc cũ mỗi dòng: hidden lock_version + reading_start + reading_end + manual_usage_note = 4
+      expect(inputs.size).to eq(4)
+    end
+  end
+
+  describe "D12: 6 vai trò thấy 2 cột read-only (pump_entries)" do
+    before { sample; CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call }
+
+    it "SA, UA-ZM, CMD-ZM, CMD thấy 2 cột (có/không data tùy phạm vi)" do
+      [
+        create(:user, :system_admin),                      # SA — thấy data
+        create(:user, :unit_admin, unit: sample.unit_a),   # UA-ZM — thấy data bơm nước (quản lý khu vực)
+        create(:user, :commander, unit: sample.unit_a),    # CMD-ZM
+        create(:user, :commander, unit: sample.unit_b)     # CMD
+      ].each do |u|
+        sign_in u
+        get pump_entries_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Tổn hao").and include("Sử dụng thực tế")
+      end
+    end
+
+    it "UA (không quản lý khu vực) bảng rỗng nhưng vẫn được phép xem + thấy header" do
+      sign_in create(:user, :unit_admin, unit: sample.unit_b)
+      get pump_entries_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Tổn hao").and include("Sử dụng thực tế")
+    end
+
+    it "TECH bị chặn khỏi trang" do
+      sign_in create(:user, :technician)
+      get pump_entries_path
+      expect(response).not_to have_http_status(:ok)
+    end
+  end
+
   describe "PATCH /pump_entries" do
     it "lưu reading_end công tơ bơm nước" do
       sample

@@ -263,6 +263,98 @@ RSpec.describe "MeterEntries", type: :request do
     end
   end
 
+  describe "cột Tổn hao / Sử dụng thực tế (TN3)" do
+    let(:html) { Nokogiri::HTML(response.body) }
+    let(:vi) do
+      Class.new(ActionView::Base.with_empty_template_cache) { include NumberHelperVi }
+        .new(ActionView::LookupContext.new([]), {}, nil)
+    end
+
+    it "luôn hiện 2 header cột" do
+      sample
+      get meter_entries_path
+      expect(response.body).to include("Tổn hao").and include("Sử dụng thực tế")
+    end
+
+    it "D1: chưa tính → loss nil → ô để trống (không có giá trị tổn hao)" do
+      sample
+      get meter_entries_path
+      reading = MeterReading.find_by(meter: sample.meters[:ct_a1], period: sample.period)
+      expect(reading.loss).to be_nil
+      # giá trị xuất hiện sau khi tính KHÔNG được có mặt khi chưa tính:
+      # (kiểm ở ví dụ D3 ta biết chuỗi loss; ở đây chỉ chốt loss nil + cột vẫn render header)
+      expect(response.body).to include("Tổn hao").and include("Sử dụng thực tế")
+    end
+
+    it "D3: sau tính → hiển thị loss và sử dụng thực tế đúng" do
+      sample
+      CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
+      get meter_entries_path
+      reading = MeterReading.find_by(meter: sample.meters[:ct_a1], period: sample.period).reload
+      expect(reading.loss).to be_present
+      expect(response.body).to include(vi.number_to_vi(reading.loss))
+      expect(response.body).to include(vi.number_to_vi(reading.usage + reading.loss))
+    end
+
+    it "D11: công tơ no_loss → loss hiển thị 0,00 (không trống)" do
+      sample
+      CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
+      get meter_entries_path
+      r3 = MeterReading.find_by(meter: sample.meters[:ct_a3], period: sample.period).reload
+      expect(r3.loss).to eq(BigDecimal("0"))
+      expect(response.body).to include("0,00")
+    end
+
+    it "D5: sửa chỉ số sau tính (chưa tính lại) → giữ loss cũ; thực tế = usage mới + loss cũ" do
+      sample
+      CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
+      reading = MeterReading.find_by(meter: sample.meters[:ct_a1], period: sample.period).reload
+      old_loss = reading.loss
+      patch meter_entries_path, params: {
+        meter_readings: { reading.id.to_s => { reading_end: "99999", lock_version: reading.lock_version } }
+      }
+      get meter_entries_path
+      reading.reload
+      expect(reading.loss).to eq(old_loss)
+      expect(response.body).to include(vi.number_to_vi(reading.usage + old_loss))
+    end
+
+    it "D14: 2 cột read-only — không thêm input vào bảng" do
+      sample
+      CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
+      get meter_entries_path
+      # số input ở dòng đầu KHÔNG đổi do 2 cột mới (chúng chỉ render text)
+      inputs = html.css("table tbody tr:first-child td input")
+      # cấu trúc cũ mỗi dòng: hidden lock_version + reading_start + reading_end + manual_usage_note = 4
+      expect(inputs.size).to eq(4)
+    end
+  end
+
+  describe "D12: 6 vai trò thấy 2 cột read-only (meter_entries)" do
+    before { sample; CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call }
+
+    it "SA, UA-ZM, UA, CMD-ZM, CMD đều thấy 2 cột" do
+      [
+        create(:user, :system_admin),
+        create(:user, :unit_admin, unit: sample.unit_a),    # UA-ZM (đơn vị quản lý khu vực)
+        create(:user, :unit_admin, unit: sample.unit_b),    # UA
+        create(:user, :commander, unit: sample.unit_a),     # CMD-ZM
+        create(:user, :commander, unit: sample.unit_b)      # CMD
+      ].each do |u|
+        sign_in u
+        get meter_entries_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Tổn hao").and include("Sử dụng thực tế")
+      end
+    end
+
+    it "TECH bị chặn khỏi trang" do
+      sign_in create(:user, :technician)
+      get meter_entries_path
+      expect(response).not_to have_http_status(:ok)
+    end
+  end
+
   describe "T74: optimistic locking" do
     it "raise StaleObjectError khi lock_version cũ → flash alert + redirect" do
       sample
