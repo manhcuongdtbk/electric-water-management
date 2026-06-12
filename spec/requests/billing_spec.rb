@@ -575,6 +575,23 @@ RSpec.describe "Billing", type: :request do
       expect(response.body).to include("Khu vực không có công tơ có tổn hao")
     end
 
+    it "khu vực trống (có số điện lực, không đầu mối) → A/B/C (B=C=0) + cảnh báo trên billing" do
+      sample
+      empty_zone = create(:zone, name: "Khu vực Trống TN3")
+      main_meter = create(:main_meter, name: "CT-Tổng-Trống", zone: empty_zone)
+      MainMeterReading.find_or_initialize_by(main_meter: main_meter, period: sample.period)
+                      .update!(usage: BigDecimal("500"))
+      CalculationOrchestrator.new(zone: empty_zone, period: sample.period).call
+      sign_in sa
+      get billing_path
+      ls = LossSummary.find_by(zone: empty_zone, period: sample.period)
+      expect(ls.a).to eq(BigDecimal("500")) # A = số điện lực − Σ công tơ không tổn hao (0)
+      expect(ls.b).to eq(BigDecimal("0"))
+      expect(ls.c).to eq(BigDecimal("0"))
+      expect(response.body).to include("Khu vực Trống TN3")        # dòng A/B/C hiện cho khu vực trống
+      expect(response.body).to include("Khu vực chưa có đầu mối")  # cảnh báo zone_empty hiện trên billing
+    end
+
     it "D6: C < 0 → C hiển thị 0,00 + cảnh báo" do
       sample
       # Đặt sử dụng công tơ tổng rất thấp để tổng công tơ con > công tơ tổng (C<0, kẹp 0)
