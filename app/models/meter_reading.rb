@@ -17,4 +17,11 @@ class MeterReading < ApplicationRecord
     return nil if reading_end.nil?
     reading_end - reading_start
   end
+
+  def actual_usage
+    return nil if loss.nil?
+    usage_value = usage
+    return nil if usage_value.nil?
+    usage_value + loss
+  end
 end
