@@ -409,6 +409,23 @@ RSpec.describe "Billing", type: :request do
       expect(response).to redirect_to(billing_path(period_id: sample.period.id))
       expect(flash[:alert]).to include("đã đóng")
     end
+
+    it "bấm Tính toán lại → ghi snapshot tổn hao và hiển thị A/B/C (luồng end-to-end)" do
+      sign_in admin
+      expect {
+        post recalculate_billing_path
+      }.to change { LossSummary.where(period: sample.period).count }.from(0)
+
+      ls = LossSummary.find_by(zone: sample.zone, period: sample.period)
+      expect(ls).to be_present
+      expect(ls.a).to be_present
+
+      reading = MeterReading.find_by(meter: sample.meters[:ct_a1], period: sample.period)
+      expect(reading.reload.loss).to be_present
+
+      get billing_path
+      expect(response.body).to include("Công tơ tổng (A)")
+    end
   end
 
   describe "Chiều 8 — trạng thái tính toán" do
