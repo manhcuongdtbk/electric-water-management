@@ -267,6 +267,25 @@ RSpec.describe "Billing", type: :request do
           expect(all_text).to include("Phiên bản hệ thống")
           expect(all_text).to include("v#{SystemInfo.version}")
         end
+
+        it "D15: A/B/C xuất ra Excel ở cuối sheet sau khi tính" do
+          CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
+          get billing_path(format: :xlsx)
+          xlsx = parse_xlsx(response.body)
+          all_text = xlsx.rows.compact.flatten.compact.map(&:to_s).join(" | ")
+          expect(all_text).to include("Công tơ tổng (A)")
+          expect(all_text).to include("Tổng tổn hao (C = A − B)")
+        end
+
+        it "D2(Excel): chưa tính → không có khối A/B/C trong Excel" do
+          # describe-level before đã chạy CalculationOrchestrator; xóa snapshot để
+          # tái lập trạng thái "chưa tính" (@loss_summaries rỗng).
+          LossSummary.where(period: sample.period).delete_all
+          get billing_path(format: :xlsx)
+          xlsx = parse_xlsx(response.body)
+          all_text = xlsx.rows.compact.flatten.compact.map(&:to_s).join(" | ")
+          expect(all_text).not_to include("Công tơ tổng (A)")
+        end
       end
 
       context "UA (28 cột — ẩn Khu vực + Đơn vị)" do
