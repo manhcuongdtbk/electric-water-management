@@ -11,10 +11,7 @@ class UnitConfigController < ApplicationController
     if current_user.system_admin?
       @zone, @unit = resolve_zone_unit_filter
       @unit ||= @zone ? nil : load_unit_fallback
-      @available_zones = available_zones_for_filter
-      us = unit_filter_scope
-      us = us.where(id: UnitConfig.where(period: @period).pluck(:unit_id)) if reopened_old_period?
-      @available_units = available_units_for_filter(@zone, unit_scope: us)
+      set_sa_filter_dropdowns
     else
       @unit = current_user.unit
     end
@@ -61,6 +58,9 @@ class UnitConfigController < ApplicationController
       @unit_config = UnitConfig.find_by(unit: @unit, period: @period)
       @other_deductions = scope_other_deductions
       @zone_other_deductions = scope_zone_other_deductions
+      # View show.html.erb đọc @available_zones/@available_units vô điều kiện cho SA → phải set lại khi re-render.
+      @zone = @unit&.zone if current_user.system_admin?
+      set_sa_filter_dropdowns
       render :show, status: :unprocessable_content
     else
       redirect_to unit_config_path(unit_id: @unit&.id), notice: t("unit_config.flash.saved")
@@ -68,6 +68,16 @@ class UnitConfigController < ApplicationController
   end
 
   private
+
+  # SA-only: danh sách khu vực/đơn vị cho dropdown filter ở show.html.erb.
+  # Dùng chung giữa #show và nhánh re-render lỗi của #update.
+  def set_sa_filter_dropdowns
+    return unless current_user.system_admin?
+    @available_zones = available_zones_for_filter
+    us = unit_filter_scope
+    us = us.where(id: UnitConfig.where(period: @period).pluck(:unit_id)) if reopened_old_period?
+    @available_units = available_units_for_filter(@zone, unit_scope: us)
+  end
 
   # Safety net cho data cũ: units tạo trước khi có after_create callback (PR #156)
   # có thể thiếu UnitConfig. Lazy create với default 0% khi truy cập trang.

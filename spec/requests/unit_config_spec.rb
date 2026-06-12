@@ -253,6 +253,83 @@ RSpec.describe "UnitConfig", type: :request do
     end
   end
 
+  describe "PATCH gây lỗi validation — re-render an toàn cho cả 6 vai trò" do
+    # Bug gốc: nhánh lỗi của #update render :show mà không set @available_zones/
+    # @available_units → SA gặp 500 (NoMethodError). Test phủ cả 6 vai trò để khẳng
+    # định không vai trò nào bị 500, và fix chỉ tác động đường SA (5 vai trò kia không đổi).
+    #
+    # unit_zm là đơn vị quản lý khu vực, unit_plain thì không → tách bạch ZM/không-ZM.
+    let!(:unit_zm) { create(:unit, zone: zone, name: "Đơn vị ZM") }
+    let!(:unit_plain) { create(:unit, zone: zone, name: "Đơn vị thường") }
+
+    before { zone.update!(manager_unit: unit_zm) }
+
+    # rate > 100 → vi phạm numericality của UnitConfig (mọi vai trò có quyền sửa đều dính)
+    def patch_invalid_rate(unit_id: nil)
+      patch unit_config_path, params: {
+        unit_id: unit_id,
+        unit_config: { unit_public_rate: "150" }
+      }
+    end
+
+    context "vai trò có quyền sửa → 422 + re-render form (không raise)" do
+      it "system_admin (đường có bug, nay đã sửa): dropdown khu vực/đơn vị vẫn render" do
+        sign_in create(:user, :system_admin)
+
+        expect { patch_invalid_rate(unit_id: unit_plain.id) }.not_to raise_error
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.body).to include("Tỷ lệ công cộng đơn vị phải nhỏ hơn hoặc bằng 100")
+        # Dropdown SA đọc @available_zones/@available_units → phải có tên đơn vị
+        expect(response.body).to include(unit_plain.name)
+      end
+
+      it "unit_admin (không quản lý khu vực)" do
+        sign_in create(:user, :unit_admin, unit: unit_plain)
+
+        expect { patch_invalid_rate }.not_to raise_error
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.body).to include("Tỷ lệ công cộng đơn vị phải nhỏ hơn hoặc bằng 100")
+      end
+
+      it "unit_admin (quản lý khu vực)" do
+        sign_in create(:user, :unit_admin, unit: unit_zm)
+
+        expect { patch_invalid_rate }.not_to raise_error
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.body).to include("Tỷ lệ công cộng đơn vị phải nhỏ hơn hoặc bằng 100")
+      end
+    end
+
+    context "vai trò chỉ đọc / ngoài nghiệp vụ → bị chặn, không 500" do
+      it "commander (không quản lý khu vực) → redirect root (AccessDenied)" do
+        sign_in create(:user, :commander, unit: unit_plain)
+
+        expect { patch_invalid_rate }.not_to raise_error
+
+        expect(response).to redirect_to(root_path)
+      end
+
+      it "commander (quản lý khu vực) → redirect root (AccessDenied)" do
+        sign_in create(:user, :commander, unit: unit_zm)
+
+        expect { patch_invalid_rate }.not_to raise_error
+
+        expect(response).to redirect_to(root_path)
+      end
+
+      it "technician → redirect (không phải vai trò nghiệp vụ)" do
+        sign_in create(:user) # role mặc định = technician
+
+        expect { patch_invalid_rate }.not_to raise_error
+
+        expect(response).to redirect_to(users_path)
+      end
+    end
+  end
+
   describe "unit_coefficient option visibility" do
     # Reuse outer let!(:zone), let!(:unit), let!(:period), let!(:rank), let!(:cp) (CP-1)
     # which give us 1 unit residential CP already. Add 2 more unit CPs and 1 zone-direct CP.
