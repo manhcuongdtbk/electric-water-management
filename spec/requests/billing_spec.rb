@@ -493,6 +493,14 @@ RSpec.describe "Billing", type: :request do
       expect(response.body).to include(vi.number_to_vi(ls.c))
     end
 
+    it "kèm chú thích A/B/C tính trên toàn khu vực (gồm công cộng + bơm nước)" do
+      sample
+      CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
+      sign_in sa
+      get billing_path
+      expect(response.body).to include("gồm cả công tơ công cộng và bơm nước")
+    end
+
     it "D9: SA chọn zone → chỉ A/B/C của zone đó" do
       sample
       other = create(:zone, name: "Khu vực Hai TN3")

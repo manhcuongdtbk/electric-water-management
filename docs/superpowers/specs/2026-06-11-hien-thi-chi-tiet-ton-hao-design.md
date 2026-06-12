@@ -1,6 +1,6 @@
 ---
 title: Hiển thị chi tiết tổn hao (cột Tổn hao / Sử dụng thực tế + tóm tắt A/B/C)
-version: 0.2.0
+version: 0.2.1
 status: approved (triển khai 1.2.0)
 date: 2026-06-11
 governed_by: 2026-06-07-sdlc-overview-design.md
@@ -66,6 +66,7 @@ Mã nguồn liên quan hiện tại:
 - Làm tròn chỉ khi hiển thị (2 chữ số thập phân kW), phân cách số tiếng Việt (mục 26 nghiệp vụ).
 - SA xem nhiều khu vực (chưa lọc zone): tóm tắt hiển thị một dòng A/B/C cho mỗi khu vực trong phạm vi (mỗi dòng đọc từ `loss_summaries` của zone đó). Non-SA / SA đã chọn zone = một zone = một dòng.
 - Excel: A/B/C có trong file xuất, đặt ở cuối sheet (dưới hàng TỔNG) để không dịch lưới công thức (`$B$1` đơn giá, dòng dữ liệu bắt đầu ở 6). HTML đặt ở đầu bảng; Excel ở cuối là khác biệt cố ý, an toàn công thức.
+- Chú thích kèm khối A/B/C (HTML): A/B/C tính trên toàn khu vực theo sử dụng thô của mọi công tơ có tổn hao (gồm cả công cộng và bơm nước), nên có thể khác tổng các cột trên bảng — vốn chỉ tính đầu mối sinh hoạt. Tránh hiểu nhầm C/B "lệch" với hàng TỔNG (bảng chỉ có dòng đầu mối sinh hoạt; tổn hao/sử dụng của công cộng + bơm nước nằm trong A/B/C nhưng không thành dòng bảng).
 
 ### Kế thừa kỳ
 
@@ -96,6 +97,10 @@ Mã nguồn liên quan hiện tại:
 - Spec anh em milestone 1.2.0: [cột Khác hệ số đơn vị](2026-06-11-cot-khac-he-so-don-vi-design.md), [phân bổ bơm theo trạm](2026-06-11-phan-bo-bom-theo-tram-design.md).
 
 ## Changelog
+
+### 0.2.1 (2026-06-12)
+
+- Thêm chú thích kèm khối A/B/C (HTML): A/B/C tính trên toàn khu vực (gồm công cộng + bơm nước), nên có thể khác tổng các cột trên bảng — tránh hiểu nhầm C/B "lệch" với hàng TỔNG. Refinement từ review.
 
 ### 0.2.0 (2026-06-12)
 
