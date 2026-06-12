@@ -1,5 +1,6 @@
 class LossCalculator
-  Result = Struct.new(:meter_losses, :contact_point_losses, :total_loss, :total_b, :warnings, keyword_init: true)
+  Result = Struct.new(:meter_losses, :contact_point_losses, :total_loss, :total_a, :total_b, :warnings,
+                      keyword_init: true)
 
   def initialize(zone:, period:)
     @zone = zone
@@ -10,11 +11,13 @@ class LossCalculator
   def call
     warnings = []
 
+    main_total = @query.main_meter_total_usage
+
     meters_in_zone = @query.meters.to_a
     if meters_in_zone.empty?
       warnings << I18n.t("services.loss_calculator.warnings.zone_empty")
       return Result.new(meter_losses: {}, contact_point_losses: {}, total_loss: BigDecimal("0"),
-                        total_b: BigDecimal("0"), warnings: warnings)
+                        total_a: main_total, total_b: BigDecimal("0"), warnings: warnings)
     end
 
     usages = @query.meter_usages
@@ -25,7 +28,6 @@ class LossCalculator
       reading && reading.no_loss
     end
 
-    main_total = @query.main_meter_total_usage
     no_loss_total = no_loss_meters.sum(BigDecimal("0")) { |m| usages[m.id] || BigDecimal("0") }
     a = main_total - no_loss_total
     b = loss_bearing_meters.sum(BigDecimal("0")) { |m| usages[m.id] || BigDecimal("0") }
@@ -33,7 +35,7 @@ class LossCalculator
     if b.zero?
       warnings << I18n.t("services.loss_calculator.warnings.no_loss_bearing_meters")
       return Result.new(meter_losses: zero_losses(meters_in_zone), contact_point_losses: {},
-                        total_loss: BigDecimal("0"), total_b: BigDecimal("0"), warnings: warnings)
+                        total_loss: BigDecimal("0"), total_a: a, total_b: BigDecimal("0"), warnings: warnings)
     end
 
     c_raw = a - b
@@ -61,6 +63,7 @@ class LossCalculator
       meter_losses: meter_losses,
       contact_point_losses: contact_point_losses,
       total_loss: c,
+      total_a: a,
       total_b: b,
       warnings: warnings
     )

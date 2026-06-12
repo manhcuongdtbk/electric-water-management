@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_11_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_12_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -104,6 +104,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_120000) do
     t.index ["unit_id"], name: "index_groups_on_unit_id"
   end
 
+  create_table "loss_summaries", force: :cascade do |t|
+    t.decimal "a", null: false
+    t.decimal "b", null: false
+    t.decimal "c", null: false
+    t.datetime "created_at", null: false
+    t.bigint "period_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "zone_id", null: false
+    t.index ["period_id"], name: "index_loss_summaries_on_period_id"
+    t.index ["zone_id", "period_id"], name: "index_loss_summaries_on_zone_id_and_period_id", unique: true
+    t.index ["zone_id"], name: "index_loss_summaries_on_zone_id"
+  end
+
   create_table "main_meter_readings", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "lock_version", default: 0, null: false
@@ -129,6 +142,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_120000) do
   create_table "meter_readings", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "lock_version", default: 0, null: false
+    t.decimal "loss"
     t.decimal "manual_usage"
     t.text "manual_usage_note"
     t.bigint "meter_id", null: false
@@ -305,6 +319,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_120000) do
   add_foreign_key "contact_points", "zones"
   add_foreign_key "groups", "blocks"
   add_foreign_key "groups", "units"
+  add_foreign_key "loss_summaries", "periods"
+  add_foreign_key "loss_summaries", "zones"
   add_foreign_key "main_meter_readings", "main_meters"
   add_foreign_key "main_meter_readings", "periods"
   add_foreign_key "main_meters", "zones"

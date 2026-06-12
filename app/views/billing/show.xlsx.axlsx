@@ -243,6 +243,18 @@ wb = xlsx_package.workbook
       sheet.add_row total_row, style: total_styles
     end
 
+    # Tóm tắt tổn hao A/B/C per khu vực — đặt CUỐI sheet để không dịch lưới công thức
+    # phía trên ($B$1 đơn giá, data_start_row = 6). Một dòng / khu vực, không merge/không formula.
+    if @loss_summaries.any?
+      sheet.add_row []
+      @loss_summaries.each do |summary|
+        sheet.add_row ["Tổn hao khu vực #{summary.zone&.name} — Công tơ tổng (A):", summary.a.to_f,
+                       "Tổng sử dụng (B):", summary.b.to_f,
+                       "Tổng tổn hao (C = A − B):", summary.c.to_f],
+                      style: [text_style, num_style, text_style, num_style, text_style, num_style]
+      end
+    end
+
     # Đóng dấu phiên bản để truy vết file xuất về đúng bản phát hành.
     # Một ô ở cột A, dưới dòng TỔNG — không merge nên không phá cấu trúc bảng.
     sheet.add_row []

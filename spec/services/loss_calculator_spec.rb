@@ -13,6 +13,10 @@ RSpec.describe LossCalculator do
       expect(result.total_loss).to eq(BigDecimal("60"))
     end
 
+    it "total_a (A) = 1990 (= B + C khi C không bị kẹp)" do
+      expect(result.total_a).to eq(BigDecimal("1990"))
+    end
+
     it "CT-A1 tổn hao = 7,77 (hiển thị)" do
       expect(result.meter_losses[sample.meters[:ct_a1].id]).to eq_display("7.77")
     end
@@ -78,6 +82,19 @@ RSpec.describe LossCalculator do
 
     it "không có cảnh báo" do
       expect(result.warnings).to be_empty
+    end
+  end
+
+  describe "#call — khu vực trống (không có công tơ)" do
+    let(:zone) { create(:zone) }
+    let!(:period) { create(:period, closed: false) }
+    let(:result) { described_class.new(zone: zone, period: period).call }
+
+    it "total_a = 0, total_b = 0, total_loss = 0 + có cảnh báo" do
+      expect(result.total_a).to eq(BigDecimal("0"))
+      expect(result.total_b).to eq(BigDecimal("0"))
+      expect(result.total_loss).to eq(BigDecimal("0"))
+      expect(result.warnings).not_to be_empty
     end
   end
 

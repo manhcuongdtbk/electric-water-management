@@ -1,7 +1,7 @@
 ---
 title: Hiển thị chi tiết tổn hao (cột Tổn hao / Sử dụng thực tế + tóm tắt A/B/C)
-version: 0.1.0
-status: draft (chờ duyệt)
+version: 0.2.2
+status: approved (triển khai 1.2.0)
 date: 2026-06-11
 governed_by: 2026-06-07-sdlc-overview-design.md
 ---
@@ -54,6 +54,7 @@ Mã nguồn liên quan hiện tại:
 
 - Trong transaction tính toán hiện có: sau khi `LossCalculator` chạy, ghi `meter_readings.loss` cho từng công tơ (`meter_losses[meter_id]`) và `find_or_create_by` một `loss_summaries` per `(zone, period)` với `a`, `b`, `c`.
 - Trường hợp đặc biệt (mục 8.2): C < 0 → C = 0; B = 0 → tổn hao = 0. A/B/C lưu đúng giá trị engine dùng (kèm cảnh báo sẵn có).
+- LossCalculator bổ sung trường `total_a` (A) để writer ghi đủ A/B/C; phần persistence tách thành service `LossSnapshotWriter` gọi trong transaction của `CalculationOrchestrator`.
 
 ### Hiển thị
 
@@ -63,6 +64,10 @@ Mã nguồn liên quan hiện tại:
   - Áp dụng cho tất cả công tơ trên trang (sinh hoạt, công cộng, bơm nước).
 - Trang **Bảng tính tiền** (`billing`): thêm tóm tắt A/B/C ở header (cạnh đơn giá + cảnh báo), đọc từ `loss_summaries` theo zone đang chọn. Nhãn: Công tơ tổng (A), Tổng sử dụng (B), Tổng tổn hao (C = A − B).
 - Làm tròn chỉ khi hiển thị (2 chữ số thập phân kW), phân cách số tiếng Việt (mục 26 nghiệp vụ).
+- SA xem nhiều khu vực (chưa lọc zone): tóm tắt hiển thị một dòng A/B/C cho mỗi khu vực trong phạm vi (mỗi dòng đọc từ `loss_summaries` của zone đó). Non-SA / SA đã chọn zone = một zone = một dòng.
+- Excel: A/B/C có trong file xuất, đặt ở cuối sheet (dưới hàng TỔNG) để không dịch lưới công thức (`$B$1` đơn giá, dòng dữ liệu bắt đầu ở 6). HTML đặt ở đầu bảng; Excel ở cuối là khác biệt cố ý, an toàn công thức.
+- Chú thích kèm khối A/B/C (HTML): A/B/C tính trên toàn khu vực theo sử dụng thô của mọi công tơ có tổn hao (gồm cả công cộng và bơm nước), nên có thể khác tổng các cột trên bảng — vốn chỉ tính đầu mối sinh hoạt. Tránh hiểu nhầm C/B "lệch" với hàng TỔNG (bảng chỉ có dòng đầu mối sinh hoạt; tổn hao/sử dụng của công cộng + bơm nước nằm trong A/B/C nhưng không thành dòng bảng). Bổ sung: nêu rõ A (Công tơ tổng) đã trừ điện công tơ không tổn hao nên có thể nhỏ hơn số điện lực (tránh nhầm A = số điện lực).
+- Chú thích trên trang nhập chỉ số (`meter_entries`, `pump_entries`): nêu rõ hai cột Tổn hao / Sử dụng thực tế là kết quả lần tính gần nhất — trống khi chưa tính, có thể chưa cập nhật nếu vừa sửa chỉ số, bấm "Tính toán lại" để làm mới. Thỏa yêu cầu ADR-027 "nêu rõ ở UI để không nhầm là sai" cho hành vi snapshot (tránh tưởng cột bị lỗi khi trống/cũ).
 
 ### Kế thừa kỳ
 
@@ -93,6 +98,19 @@ Mã nguồn liên quan hiện tại:
 - Spec anh em milestone 1.2.0: [cột Khác hệ số đơn vị](2026-06-11-cot-khac-he-so-don-vi-design.md), [phân bổ bơm theo trạm](2026-06-11-phan-bo-bom-theo-tram-design.md).
 
 ## Changelog
+
+### 0.2.2 (2026-06-12)
+
+- Thêm chú thích UI khử khó hiểu (từ review): (1) trên trang nhập chỉ số — hai cột Tổn hao / Sử dụng thực tế là kết quả lần tính gần nhất (trống/cũ → bấm "Tính toán lại"), thỏa yêu cầu ADR-027 "nêu rõ ở UI"; (2) chú thích billing nêu thêm A đã trừ điện công tơ không tổn hao nên có thể nhỏ hơn số điện lực.
+
+### 0.2.1 (2026-06-12)
+
+- Thêm chú thích kèm khối A/B/C (HTML): A/B/C tính trên toàn khu vực (gồm công cộng + bơm nước), nên có thể khác tổng các cột trên bảng — tránh hiểu nhầm C/B "lệch" với hàng TỔNG. Refinement từ review.
+
+### 0.2.0 (2026-06-12)
+
+- Triển khai TN3: thêm cột `meter_readings.loss` + bảng `loss_summaries`, service `LossSnapshotWriter`, trường `LossCalculator#total_a`. Hai cột read-only trên trang nhập chỉ số; tóm tắt A/B/C trên bảng tính tiền (HTML + Excel).
+- Chốt 2 quyết định mở: SA đa khu vực → A/B/C một dòng mỗi khu vực; Excel có A/B/C đặt cuối sheet (an toàn công thức).
 
 ### 0.1.0 (2026-06-11)
 
