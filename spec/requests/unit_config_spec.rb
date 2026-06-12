@@ -253,6 +253,29 @@ RSpec.describe "UnitConfig", type: :request do
     end
   end
 
+  describe "system_admin PATCH gây lỗi validation" do
+    let(:system_admin) { create(:user, :system_admin) }
+
+    before { sign_in system_admin }
+
+    it "re-render form 422 không raise (cần @available_zones/@available_units cho dropdown SA)" do
+      od = OtherDeduction.find_by!(contact_point: cp, period: period)
+
+      expect {
+        patch unit_config_path, params: {
+          unit_id: unit.id,
+          other_deductions: {
+            od.id.to_s => { other_type: "fixed", other_value: "not_a_number", lock_version: od.lock_version }
+          }
+        }
+      }.not_to raise_error
+
+      expect(response).to have_http_status(:unprocessable_content)
+      # View SA render dropdown khu vực/đơn vị (đọc @available_zones/@available_units)
+      expect(response.body).to include(unit.name)
+    end
+  end
+
   describe "unit_coefficient option visibility" do
     # Reuse outer let!(:zone), let!(:unit), let!(:period), let!(:rank), let!(:cp) (CP-1)
     # which give us 1 unit residential CP already. Add 2 more unit CPs and 1 zone-direct CP.
