@@ -359,6 +359,8 @@ RSpec.describe "UnitConfig", type: :request do
 
     it "không hiển thị nút Lưu cấu hình cho chỉ huy đơn vị" do
       get unit_config_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("CP-UC-CMD")
       expect(html.css("input[name='commit']")).to be_empty
     end
   end
