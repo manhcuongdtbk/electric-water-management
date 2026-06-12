@@ -1,9 +1,9 @@
 <table class="min-w-full divide-y divide-gray-200">
   <thead class="bg-gray-50">
     <tr>
-      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Đầu mối</th>
-      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Kiểu</th>
-      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Giá trị</th>
+      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase"><%= t("unit_config.other_deductions.headers.contact_point") %></th>
+      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase"><%= t("unit_config.other_deductions.headers.type") %></th>
+      <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase"><%= t("unit_config.other_deductions.headers.value") %></th>
     </tr>
   </thead>
   <tbody class="divide-y divide-gray-200">
@@ -12,9 +12,9 @@
         <td class="px-4 py-2 text-sm text-gray-900"><%= od.contact_point.name %></td>
         <td class="px-4 py-2 text-sm">
           <%= hidden_field_tag "other_deductions[#{od.id}][lock_version]", od.lock_version %>
-          <% type_options = od.contact_point.unit_id.present? ?
-               [["Cố định", "fixed"], ["Theo hệ số", "coefficient"], ["Theo hệ số (đơn vị)", "unit_coefficient"]] :
-               [["Cố định", "fixed"], ["Theo hệ số", "coefficient"]] %>
+          <% type_keys = %w[fixed coefficient]
+             type_keys << "unit_coefficient" if od.contact_point.unit_id.present?
+             type_options = type_keys.map { |key| [t("unit_config.other_deductions.types.#{key}"), key] } %>
           <%= select_tag "other_deductions[#{od.id}][other_type]",
               options_for_select(type_options, od.other_type),
               disabled: !can_edit,

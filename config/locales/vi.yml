@@ -436,6 +436,15 @@ vi:
   unit_config:
     flash:
       saved: "Đã lưu cấu hình đơn vị."
+    other_deductions:
+      headers:
+        contact_point: "Đầu mối"
+        type: "Kiểu"
+        value: "Giá trị"
+      types:
+        fixed: "Cố định"
+        coefficient: "Theo hệ số"
+        unit_coefficient: "Theo hệ số (đơn vị)"
   pricing:
     flash:
       updated: "Đã cập nhật đơn giá và các thông số kỳ."
