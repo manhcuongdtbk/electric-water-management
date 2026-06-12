@@ -360,10 +360,7 @@ RSpec.describe SummaryCalculator do
         sample.contact_points[:kho_vat_tu].discard
 
         # Tính lại cho kỳ cũ (period N)
-        loss = LossCalculator.new(zone: sample.zone, period: period_n).call
-        pump = PumpAllocationCalculator.new(zone: sample.zone, period: period_n, loss_results: loss).call
-        described_class.new(zone: sample.zone, period: period_n,
-                            loss_results: loss, pump_results: pump).call
+        run_summary(period_n)
 
         calc = Calculation.find_by!(contact_point: sample.contact_points[:van_thu],
                                     period: period_n)

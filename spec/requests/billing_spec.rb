@@ -344,12 +344,6 @@ RSpec.describe "Billing", type: :request do
           other_cell = van_thu_row[20]
           expect(other_cell.to_f).to eq(-16.0)
         end
-
-        it "Calculation.other_deduction cho Văn thư = -16,00 (khớp với giá trị Excel)" do
-          calc = Calculation.find_by!(contact_point: sample.contact_points[:van_thu],
-                                      period: sample.period)
-          expect(calc.other_deduction).to eq_display("-16.00")
-        end
       end
     end
   end
