@@ -139,6 +139,37 @@ RSpec.describe PeriodService do
       result = service.open_new_period
       expect(Calculation.where(period: result.period)).to be_empty
     end
+
+    it "unit_coefficient kế thừa sang kỳ mới và tính lại đúng khoản trừ" do
+      # Gán unit_coefficient -2 cho Văn thư ở kỳ 5 (Đơn vị A tổng 10, Văn thư 2)
+      van_thu = sample.contact_points[:van_thu]
+      van_thu.other_deductions.find_by!(period: sample.period)
+             .update!(other_type: "unit_coefficient", other_value: BigDecimal("-2"))
+
+      sample.period.update!(closed: true)
+      result = service.open_new_period
+      new_period = result.period
+
+      # (a) kế thừa: other_type và other_value giống kỳ trước
+      new_deduction = van_thu.other_deductions.find_by!(period: new_period)
+      expect(new_deduction.other_type).to eq("unit_coefficient")
+      expect(new_deduction.other_value).to eq(BigDecimal("-2"))
+
+      # (b) tính lại SummaryCalculator cho kỳ mới → khoản trừ vẫn = -2 × (10 − 2) = -16,00
+      # Kỳ mới kế thừa meter_readings nhưng reading_end chưa nhập → meter usages = 0.
+      # LossCalculator vẫn chạy được (main_meter_reading cần tạo để có total_usage).
+      sample.main_meter.main_meter_readings.create!(period: new_period, usage: BigDecimal("2100"))
+
+      loss = LossCalculator.new(zone: sample.zone, period: new_period).call
+      pump = PumpAllocationCalculator.new(zone: sample.zone, period: new_period,
+                                         loss_results: loss).call
+      SummaryCalculator.new(zone: sample.zone, period: new_period,
+                            loss_results: loss, pump_results: pump).call
+
+      calc = Calculation.find_by!(contact_point: van_thu, period: new_period)
+      # Quân số kế thừa nguyên: Đơn vị A vẫn 10, Văn thư vẫn 2 → -2 × (10 − 2) = -16
+      expect(calc.other_deduction).to eq_display("-16.00")
+    end
   end
 
   describe "#open_new_period — chặn khi có kỳ đang mở (T21)" do

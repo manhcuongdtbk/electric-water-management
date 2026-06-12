@@ -1,6 +1,6 @@
 ---
 title: Cột "Khác" kiểu hệ số tổng đơn vị (cách nhập thứ ba cho khoản trừ Khác)
-version: 0.1.0
+version: 0.1.1
 status: draft (chờ duyệt)
 date: 2026-06-11
 governed_by: 2026-06-07-sdlc-overview-design.md
@@ -34,9 +34,9 @@ Mã nguồn liên quan hiện tại:
 
 - **Trạng thái:** Proposed · 2026-06-11
 - **Bối cảnh:** Cần một cách nhập khoản trừ "Khác" tự tính theo quân số toàn đơn vị (trừ chính đầu mối), để mô hình hóa "mỗi người góp một phần, bếp nhận lại tổng" mà không phải sửa tay khi quân số đổi. Đã có sẵn enum `other_type` với hai value và đường tính trong `SummaryCalculator`.
-- **Quyết định:** Thêm value thứ ba `unit_coefficient` vào enum `OtherDeduction#other_type`. Khoản trừ = `other_value × (Σ quân số residential của đơn vị − quân số đầu mối đang xét)`. Tổng quân số đơn vị tính **live** theo `PersonnelEntry` của kỳ (chỉ đầu mối loại `residential`, **không** gồm ngoài biên chế / công cộng), trừ đi quân số của chính đầu mối đang xét. Cho phép `other_value` âm hoặc dương. Chỉ hợp lệ cho đầu mối **thuộc đơn vị**; đầu mối thuộc khu vực trực tiếp không dùng (validate chặn ở model, ẩn option ở UI). Không thêm bảng/cột mới.
+- **Quyết định:** Thêm value thứ ba `unit_coefficient` vào enum `OtherDeduction#other_type`. Khoản trừ = `other_value × (Σ quân số residential của đơn vị − quân số đầu mối đang xét)`. Tổng quân số đơn vị tính **live** theo `PersonnelEntry` của kỳ (chỉ đầu mối loại `residential`, **không** gồm ngoài biên chế / công cộng), trừ đi quân số của chính đầu mối đang xét. Cho phép `other_value` âm hoặc dương. Chỉ hợp lệ cho đầu mối **thuộc đơn vị**; đầu mối thuộc khu vực trực tiếp không dùng (validate chặn ở model, ẩn option ở UI). Không thêm bảng/cột; vì `other_type` là **PostgreSQL native enum** (`other_deduction_type`) nên cần một migration `ALTER TYPE ... ADD VALUE` để bổ sung giá trị.
 - **Lý do:** Tái dùng đúng cấu trúc sẵn có (enum + một nhánh tính), thay đổi nhỏ nhất, kế thừa kỳ tự hoạt động (đã kế thừa `other_type` + `other_value`). Tính live khớp yêu cầu "quân số đổi thì tự tính lại".
-- **Tradeoff:** (+) Không migration cấu trúc, ít bề mặt lỗi, nhất quán với hai cách cũ. (−) `SummaryCalculator` cần biết tổng quân số đơn vị (đang xử lý theo từng đầu mối) → thêm một bước gom quân số theo đơn vị cho kỳ.
+- **Tradeoff:** (+) Chỉ một migration `ALTER TYPE ADD VALUE` (không thêm bảng/cột), ít bề mặt lỗi, nhất quán với hai cách cũ. (−) `SummaryCalculator` cần biết tổng quân số đơn vị (đang xử lý theo từng đầu mối) → thêm một bước gom quân số theo đơn vị cho kỳ.
 - **Phương án đã loại:**
   - *Một bảng cấu hình bếp riêng:* phức tạp, thêm khái niệm mới ngoài thiết kế, không cần thiết khi enum đã mô hình hóa đủ.
   - *Tính số cụ thể tự động rồi lưu vào `fixed`:* phải tái tính và ghi đè mỗi lần quân số đổi → đúng cái đang muốn tránh.
@@ -49,7 +49,7 @@ Mã nguồn liên quan hiện tại:
 ### Data model
 
 - `OtherDeduction#other_type`: thêm value `unit_coefficient: "unit_coefficient"` vào enum (cùng prefix `:other` → `other_unit_coefficient?`). Không đổi cột `other_value`.
-- Không migration cấu trúc (enum lưu chuỗi). Bản ghi cũ giữ nguyên `fixed`/`coefficient`.
+- `other_type` là **PostgreSQL native enum** (`other_deduction_type`, không phải cột chuỗi) → cần migration `ALTER TYPE other_deduction_type ADD VALUE 'unit_coefficient'` (dùng `disable_ddl_transaction!` vì `ADD VALUE` không chạy trong transaction). Không thêm bảng/cột. Bản ghi cũ giữ nguyên `fixed`/`coefficient`.
 
 ### Tính toán (`SummaryCalculator`)
 
@@ -98,6 +98,10 @@ Mã nguồn liên quan hiện tại:
 - Spec anh em milestone 1.2.0: [phân bổ bơm theo trạm](2026-06-11-phan-bo-bom-theo-tram-design.md), [hiển thị chi tiết tổn hao](2026-06-11-hien-thi-chi-tiet-ton-hao-design.md).
 
 ## Changelog
+
+### 0.1.1 (2026-06-11)
+
+- Sửa lỗi-fact phát hiện khi triển khai: `other_type` là **PostgreSQL native enum** (`other_deduction_type`), không phải cột chuỗi — nên cần migration `ALTER TYPE ... ADD VALUE` (dùng `disable_ddl_transaction!`), không phải "không migration". Cập nhật mục Quyết định, Tradeoff, Data model.
 
 ### 0.1.0 (2026-06-11)
 
