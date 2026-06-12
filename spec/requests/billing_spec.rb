@@ -302,6 +302,55 @@ RSpec.describe "Billing", type: :request do
           expect(header_texts).not_to include("Khu vực")
         end
       end
+
+      # Test 3: Xuất Excel chứa đúng giá trị cột "Khác" cho unit_coefficient
+      context "SA — cột Khác xuất đúng giá trị unit_coefficient (T3)" do
+        # SA: show_zone=true, show_unit=true → 30 cột
+        # col_zone=0, col_unit=1, col_block=2, col_group=3, col_name=4
+        # col_rank_first=5 (7 ranks) → col_rank_last=11
+        # col_total_personnel=12, col_residential_std=13, col_water_pump_std=14, col_total_std=15
+        # col_savings=16, col_loss=17, col_division_public=18, col_unit_public=19
+        # col_other=20 → cột "U" (0-indexed)
+        #
+        # SORT_ORDER: zone name, unit name NULLS LAST, block name NULLS LAST, group name NULLS LAST, cp name
+        # Khu vực 1 → Đơn vị A → Phòng Tham mưu/Ban Tác huấn → idx 0 (row 6)
+        #           → Đơn vị A → Phòng Tham mưu/Văn thư      → idx 1 (row 7)
+        # → cell U7
+        #
+        # Văn thư unit_coefficient -2 → -2 × (10 − 2) = -16
+
+        let(:user) { create(:user, :system_admin) }
+
+        before do
+          apply_other_deduction(sample.contact_points[:van_thu], sample.period,
+                                type: "unit_coefficient", value: -2)
+          CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
+        end
+
+        it "cell U7 (Khác của Văn thư) = -16" do
+          get billing_path(format: :xlsx)
+          xlsx = parse_xlsx(response.body)
+
+          # Xác nhận header row 4 (index 3) có cột "Khác" tại index 20
+          header_row = xlsx.rows[3]
+          expect(header_row[20]).to eq("Khác")
+
+          # Xác nhận Văn thư có mặt ở row 7 (index 6) cột name (index 4)
+          van_thu_row = xlsx.rows[6]
+          expect(van_thu_row[4]).to eq("Văn thư")
+
+          # Giá trị cột Khác (index 20) của hàng Văn thư = -16
+          # caxlsx lưu numeric value dưới dạng float → "-16.0"
+          other_cell = van_thu_row[20]
+          expect(other_cell.to_f).to eq(-16.0)
+        end
+
+        it "Calculation.other_deduction cho Văn thư = -16,00 (khớp với giá trị Excel)" do
+          calc = Calculation.find_by!(contact_point: sample.contact_points[:van_thu],
+                                      period: sample.period)
+          expect(calc.other_deduction).to eq_display("-16.00")
+        end
+      end
     end
   end
 

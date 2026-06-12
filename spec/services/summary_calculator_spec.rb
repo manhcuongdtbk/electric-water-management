@@ -292,5 +292,84 @@ RSpec.describe SummaryCalculator do
         expect(Calculation.where(contact_point: cp, period: sample.period)).to be_present
       end
     end
+
+    # Test 1: Discard ở kỳ đang mở loại quân số khỏi tổng đơn vị cho unit_coefficient
+    describe "unit_coefficient — discard đầu mối ở kỳ đang mở cập nhật tổng quân số đơn vị" do
+      # Đơn vị A: Ban Tác huấn 5 + Văn thư 2 + Kho vật tư 3 = 10
+      # Văn thư: unit_coefficient -2 → -2 × (10 − 2) = -16,00
+      # Sau khi discard Kho vật tư (3 người) trong kỳ đang mở:
+      #   delete_current_period_records xóa personnel_entries của Kho vật tư
+      #   → tổng Đơn vị A = 7 (5 + 2)
+      #   → Văn thư: -2 × (7 − 2) = -10,00
+
+      before do
+        apply_other_deduction(sample.contact_points[:van_thu], sample.period,
+                              type: "unit_coefficient", value: -2)
+        run_summary(sample.period)
+      end
+
+      it "baseline: Văn thư other_deduction = -16,00 (trước khi discard)" do
+        calc = Calculation.find_by!(contact_point: sample.contact_points[:van_thu],
+                                    period: sample.period)
+        expect(calc.other_deduction).to eq_display("-16.00")
+      end
+
+      it "sau khi discard Kho vật tư, other_deduction Văn thư = -10,00" do
+        sample.contact_points[:kho_vat_tu].discard
+
+        run_summary(sample.period)
+
+        calc = Calculation.find_by!(contact_point: sample.contact_points[:van_thu],
+                                    period: sample.period)
+        # tổng đơn vị A = 10 − 3 = 7; -2 × (7 − 2) = -10
+        expect(calc.other_deduction).to eq_display("-10.00")
+      end
+
+      it "quân số và hệ số Văn thư không thay đổi sau khi discard Kho vật tư" do
+        sample.contact_points[:kho_vat_tu].discard
+        run_summary(sample.period)
+
+        calc = Calculation.find_by!(contact_point: sample.contact_points[:van_thu],
+                                    period: sample.period)
+        expect(calc.total_personnel).to eq(2)
+      end
+    end
+
+    # Test 2: Kỳ cũ giữ quân số đầu mối đã xóa (historical fidelity)
+    describe "unit_coefficient — kỳ cũ giữ nguyên quân số đầu mối đã discard sau đó" do
+      # Kỳ N (sample.period): Văn thư unit_coefficient -2 → -2 × (10 − 2) = -16,00
+      # Đóng N, mở N+1. Trong N+1, discard Kho vật tư:
+      #   → xóa personnel_entries của N+1 (không ảnh hưởng N)
+      # Tính lại SummaryCalculator cho kỳ N:
+      #   ZoneQuery dùng with_discarded → vẫn thấy Kho vật tư, tổng N = 10
+      #   → Văn thư kỳ N: -2 × (10 − 2) = -16,00 (không đổi)
+
+      let(:period_n) { sample.period }
+
+      before do
+        apply_other_deduction(sample.contact_points[:van_thu], period_n,
+                              type: "unit_coefficient", value: -2)
+        run_summary(period_n)
+
+        # Đóng kỳ N và mở N+1
+        PeriodService.new.close_period(period_n)
+        PeriodService.new.open_new_period
+      end
+
+      it "kỳ cũ: other_deduction Văn thư vẫn = -16,00 sau khi discard Kho vật tư ở kỳ mới" do
+        sample.contact_points[:kho_vat_tu].discard
+
+        # Tính lại cho kỳ cũ (period N)
+        loss = LossCalculator.new(zone: sample.zone, period: period_n).call
+        pump = PumpAllocationCalculator.new(zone: sample.zone, period: period_n, loss_results: loss).call
+        described_class.new(zone: sample.zone, period: period_n,
+                            loss_results: loss, pump_results: pump).call
+
+        calc = Calculation.find_by!(contact_point: sample.contact_points[:van_thu],
+                                    period: period_n)
+        # with_discarded → Kho vật tư vẫn đóng góp 3 người vào tổng kỳ N
+        expect(calc.other_deduction).to eq_display("-16.00")
+      end
+    end
   end
 end
