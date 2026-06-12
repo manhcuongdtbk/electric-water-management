@@ -1,7 +1,7 @@
 # Thiết kế hệ thống quản lý điện nội bộ Sư đoàn — Hệ thống v2
 
-> **Phiên bản tài liệu:** 2.14.1
-> **Ngày:** 11/06/2026
+> **Phiên bản tài liệu:** 2.15.0
+> **Ngày:** 12/06/2026
 > **Tính chất:** Tài liệu thiết kế hệ thống v2, nguồn sự thật cho implementation.
 > **Nguồn nghiệp vụ:** V2_XAC_NHAN_NGHIEP_VU (phiên bản mới nhất tại thời điểm thiết kế: v2.11.0)
 
@@ -422,6 +422,7 @@ Thêm nhóm cấp bậc mới khi kỳ đang mở: hệ thống tạo rank mới
 | manual_usage | decimal | Nullable. Nhập thủ công khi cuối kỳ < đầu kỳ (thay công tơ) |
 | manual_usage_note | text | Nullable. Ghi chú kèm manual_usage |
 | no_loss | boolean | Snapshot từ meters.no_loss khi mở kỳ |
+| loss | decimal | Nullable. Tổn hao phân bổ cho công tơ ở kỳ đó — snapshot ghi bởi engine khi tính. Null = chưa tính |
 | lock_version | integer | Mặc định: 0. Optimistic locking |
 
 Sử dụng = manual_usage nếu có, ngược lại = reading_end − reading_start. Tính ở tầng model method, không lưu cột thừa.
@@ -436,6 +437,18 @@ Sử dụng = manual_usage nếu có, ngược lại = reading_end − reading_s
 | lock_version | integer | Mặc định: 0. Optimistic locking |
 
 Công tơ tổng chỉ nhập 1 con số (số sử dụng), không có đầu kỳ/cuối kỳ.
+
+#### loss_summaries (tóm tắt tổn hao A/B/C per khu vực per kỳ)
+
+| Cột | Kiểu | Ràng buộc |
+|---|---|---|
+| zone_id | foreign key → zones | Bắt buộc, unique cùng period_id |
+| period_id | foreign key → periods | Bắt buộc |
+| a | decimal | Công tơ tổng − Σ công tơ không tổn hao |
+| b | decimal | Σ sử dụng công tơ có tổn hao |
+| c | decimal | A − B (tổng tổn hao khu vực, đã kẹp ≥ 0) |
+
+Snapshot kết quả tính (mục 8.5 nghiệp vụ). Chỉ engine ghi (`LossSnapshotWriter`), không kế thừa kỳ — kỳ mới chưa tính thì không có dòng.
 
 #### personnel_entries (quân số per đầu mối sinh hoạt per nhóm cấp bậc per kỳ)
 
@@ -685,17 +698,18 @@ Output: lưu vào bảng `calculations`. Ghi `calculated_at`.
 Input: zone, period.
 
 Flow:
-1. LossCalculator.new(zone:, period:).call → loss_results
-2. PumpAllocationCalculator.new(zone:, period:, loss_results:).call → pump_results
-3. SummaryCalculator.new(zone:, period:, loss_results:, pump_results:).call → persist calculations
+1. LossCalculator.new(zone:, period:).call → loss_results (gồm A/B/C + tổn hao per công tơ)
+2. LossSnapshotWriter.new(zone:, period:, loss_results:).call → ghi meter_readings.loss + upsert loss_summaries
+3. PumpAllocationCalculator.new(zone:, period:, loss_results:).call → pump_results
+4. SummaryCalculator.new(zone:, period:, loss_results:, pump_results:).call → persist calculations
 
-Collect warnings từ cả 3 bước, trả về cho UI hiển thị.
+Collect warnings từ các bước tính toán (LossCalculator + PumpAllocationCalculator + SummaryCalculator; LossSnapshotWriter chỉ ghi snapshot, không sinh cảnh báo), trả về cho UI hiển thị.
 
 Tính toán lần đầu khi mở bảng tính tiền hoặc trang tổng quan, cache trong bảng calculations. Bấm "Tính toán lại" → gọi orchestrator lại, ghi đè calculations.
 
 Orchestrator luôn tính toàn zone (vì tổn hao và bơm nước tính trên toàn zone). Nếu 1 đơn vị trong zone chưa nhập liệu → engine vẫn chạy với data hiện có, nhưng trả cảnh báo "đơn vị X chưa nhập liệu" hiển thị trên bảng tính tiền và trang tổng quan. Kết quả tổn hao và bơm nước sẽ không chính xác cho đến khi tất cả đơn vị nhập xong — cảnh báo giúp system_admin biết vấn đề ở đâu.
 
-Toàn bộ thao tác tính toán (3 bước + persist calculations) thực hiện trong 1 ActiveRecord transaction. Nếu bất kỳ bước nào lỗi → rollback, giữ calculations cũ (hoặc trống nếu chưa tính lần nào).
+Toàn bộ thao tác tính toán (4 bước: tổn hao → ghi snapshot tổn hao → bơm nước → persist calculations) thực hiện trong 1 ActiveRecord transaction. Nếu bất kỳ bước nào lỗi → rollback, giữ calculations cũ (hoặc trống nếu chưa tính lần nào).
 
 Kỳ đã đóng: nút "Tính toán lại" vẫn hiển thị và hoạt động (idempotent computation, không phải data entry). Recalculate dùng snapshot data của kỳ đó, không dùng data hiện tại.
 
@@ -1250,6 +1264,10 @@ Mọi thao tác trên hệ thống đều được ghi lại (PaperTrail). Syste
 ---
 
 ## Lịch sử thay đổi
+
+### v2.15.0 (12/06/2026)
+
+- TN3 hiển thị chi tiết tổn hao: thêm cột `meter_readings.loss`, bảng `loss_summaries` (A/B/C per khu vực-kỳ), service `LossSnapshotWriter` ghi snapshot trong transaction orchestrator, trường `LossCalculator#total_a`. Snapshot là kết quả tính, không kế thừa kỳ.
 
 ### v2.14.1 (11/06/2026)
 
