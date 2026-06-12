@@ -276,6 +276,13 @@ RSpec.describe "MeterEntries", type: :request do
       expect(response.body).to include("Tổn hao").and include("Sử dụng thực tế")
     end
 
+    it "có chú thích giải thích 2 cột là kết quả lần tính gần nhất (trống/cũ → bấm Tính toán lại)" do
+      sample
+      get meter_entries_path
+      expect(response.body).to include("kết quả lần tính gần nhất")
+      expect(response.body).to include("Tính toán lại")
+    end
+
     it "D1: chưa tính → loss nil → ô để trống (không có giá trị tổn hao)" do
       sample
       get meter_entries_path

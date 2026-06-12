@@ -20,6 +20,12 @@
      search_placeholder: "Tìm theo tên đầu mối...",
      show_per_page: false %>
 
+<p class="mb-3 text-xs text-gray-500">
+  Hai cột <strong>Tổn hao</strong> và <strong>Sử dụng thực tế</strong> là kết quả lần tính gần nhất —
+  để trống khi chưa tính, và có thể chưa cập nhật nếu vừa sửa chỉ số.
+  Bấm "Tính toán lại" ở Bảng tính tiền để làm mới.
+</p>
+
 <%= form_with url: pump_entries_path, method: :patch, local: true do %>
   <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden mb-4">
     <table class="min-w-full divide-y divide-gray-200 text-sm">

@@ -516,6 +516,7 @@ RSpec.describe "Billing", type: :request do
       sign_in sa
       get billing_path
       expect(response.body).to include("gồm cả công tơ công cộng và bơm nước")
+      expect(response.body).to include("đã trừ điện công tơ không tổn hao")
     end
 
     it "D9: SA chọn zone → chỉ A/B/C của zone đó" do

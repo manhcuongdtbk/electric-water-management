@@ -92,6 +92,13 @@ RSpec.describe "PumpEntries", type: :request do
       expect(reading.loss).to be_nil
     end
 
+    it "có chú thích giải thích 2 cột là kết quả lần tính gần nhất" do
+      sample
+      get pump_entries_path
+      expect(response.body).to include("kết quả lần tính gần nhất")
+      expect(response.body).to include("Tính toán lại")
+    end
+
     it "D3: sau tính → hiển thị loss và sử dụng thực tế đúng (công tơ bơm nước)" do
       sample
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
