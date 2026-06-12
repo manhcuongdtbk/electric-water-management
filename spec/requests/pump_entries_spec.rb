@@ -85,6 +85,13 @@ RSpec.describe "PumpEntries", type: :request do
       expect(response.body).to include("Tổn hao").and include("Sử dụng thực tế")
     end
 
+    it "D1: chưa tính → loss nil (ô tổn hao để trống)" do
+      sample
+      get pump_entries_path
+      reading = MeterReading.find_by(meter: sample.meters[:ct_bn1], period: sample.period)
+      expect(reading.loss).to be_nil
+    end
+
     it "D3: sau tính → hiển thị loss và sử dụng thực tế đúng (công tơ bơm nước)" do
       sample
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call

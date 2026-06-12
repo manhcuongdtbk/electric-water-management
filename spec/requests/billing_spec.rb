@@ -541,16 +541,37 @@ RSpec.describe "Billing", type: :request do
       expect(response.body).to include(sample.zone.name).and include("Khu vực Hai TN3")
     end
 
-    it "D13: vai trò nghiệp vụ thấy A/B/C; TECH bị chặn" do
+    it "D13: cả 5 vai trò nghiệp vụ thấy A/B/C; TECH bị chặn" do
       sample
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
-      sign_in create(:user, :unit_admin, unit: sample.unit_a) # UA-ZM
-      get billing_path
-      expect(response.body).to include("Công tơ tổng (A)")
+      [
+        create(:user, :system_admin),                      # SA
+        create(:user, :unit_admin, unit: sample.unit_a),   # UA-ZM
+        create(:user, :unit_admin, unit: sample.unit_b),   # UA
+        create(:user, :commander, unit: sample.unit_a),    # CMD-ZM
+        create(:user, :commander, unit: sample.unit_b)     # CMD
+      ].each do |u|
+        sign_in u
+        get billing_path
+        expect(response.body).to include("Công tơ tổng (A)")
+      end
 
       sign_in create(:user, :technician)
       get billing_path
       expect(response).not_to have_http_status(:ok)
+    end
+
+    it "B = 0 (mọi công tơ không tổn hao) → A/B/C hiển thị (B=C=0) + cảnh báo" do
+      sample
+      MeterReading.where(period: sample.period).update_all(no_loss: true)
+      CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
+      sign_in sa
+      get billing_path
+      ls = LossSummary.find_by(zone: sample.zone, period: sample.period)
+      expect(ls.b).to eq(BigDecimal("0"))
+      expect(ls.c).to eq(BigDecimal("0"))
+      expect(response.body).to include("Công tơ tổng (A)")
+      expect(response.body).to include("Khu vực không có công tơ có tổn hao")
     end
 
     it "D6: C < 0 → C hiển thị 0,00 + cảnh báo" do
