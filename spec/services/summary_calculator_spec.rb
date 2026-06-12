@@ -178,6 +178,41 @@ RSpec.describe SummaryCalculator do
       end
     end
 
+    describe "Văn thư (Đơn vị A) — unit_coefficient tự tính lại khi đổi quân số đầu mối khác" do
+      # Ban Tác huấn: tieu_doan_dai_doi=2, ha_si_quan=3 → 5 người ban đầu
+      # Văn thư: co_quan=1, ha_si_quan=1 → 2 người (không đổi)
+      # Kho vật tư: chi_huy_dai_doi=1, ha_si_quan=2 → 3 người (không đổi)
+      # Đơn vị A tổng = 10; sau khi tăng Ban Tác huấn +3 → 13
+
+      let(:ban) { sample.contact_points[:ban_tac_huan] }
+      let(:van_thu) { sample.contact_points[:van_thu] }
+      let(:ha_si_quan_rank) { sample.ranks[:ha_si_quan] }
+
+      before do
+        apply_other_deduction(van_thu, sample.period, type: "unit_coefficient", value: -2)
+      end
+
+      it "khoản trừ ban đầu = -2 × (10 − 2) = -16,00" do
+        described_class.new(zone: sample.zone, period: sample.period,
+                            loss_results: loss_results, pump_results: pump_results).call
+        calc = calculation_for(:van_thu)
+        expect(calc.other_deduction).to eq_display("-16.00")
+      end
+
+      it "khoản trừ tự cập nhật = -2 × (13 − 2) = -22,00 sau khi quân số Ban Tác huấn tăng thêm 3" do
+        # Tăng ha_si_quan của Ban Tác huấn từ 3 → 6 (đơn vị A: 10 → 13)
+        entry = PersonnelEntry.find_by!(contact_point: ban, period: sample.period,
+                                       rank: ha_si_quan_rank)
+        entry.update!(count: 6)
+
+        described_class.new(zone: sample.zone, period: sample.period,
+                            loss_results: loss_results, pump_results: pump_results).call
+        calc = calculation_for(:van_thu)
+        # -2 × (13 − 2) = -22
+        expect(calc.other_deduction).to eq_display("-22.00")
+      end
+    end
+
     describe "Đại đội 1 (Đơn vị B) — cột Khác hệ số (đơn vị) một đầu mối sinh hoạt" do
       before do
         # Đơn vị B chỉ có một đầu mối sinh hoạt (dai_doi_1, 11 người).

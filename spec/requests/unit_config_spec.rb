@@ -319,5 +319,47 @@ RSpec.describe "UnitConfig", type: :request do
 
       expect(unit_od.reload.other_type).to eq("unit_coefficient")
     end
+
+    it "GET unit config hiển thị nhãn i18n 'Theo hệ số (đơn vị)' cho đầu mối thuộc đơn vị" do
+      # Xác nhận khoá i18n unit_config.other_deductions.types.unit_coefficient hiển thị đúng nhãn
+      # (không chỉ kiểm tra value="unit_coefficient" mà kiểm tra cả text nhãn render ra)
+      get unit_config_path(unit_id: unit.id)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Theo hệ số (đơn vị)")
+    end
+  end
+
+  describe "unit_coefficient — chỉ huy đơn vị xem trang cấu hình" do
+    # Test 4: commander viewing unit config cannot edit — select is disabled, no submit button.
+    # Mirrors pattern from "view permission guards" context but scoped to unit_coefficient feature.
+    let!(:cp_unit_coeff) {
+      create(:contact_point, :residential, unit: unit, name: "CP-UC-CMD",
+             initial_personnel_counts: { rank.id => 2 })
+    }
+    let!(:commander) { create(:user, :commander, unit: unit) }
+    let(:html) { Nokogiri::HTML(response.body) }
+
+    before do
+      # Set the CP's OtherDeduction to unit_coefficient so the select is rendered with that type
+      od = OtherDeduction.find_by!(contact_point: cp_unit_coeff, period: period)
+      od.update!(other_type: "unit_coefficient", other_value: BigDecimal("-1"))
+      sign_in commander
+    end
+
+    it "select kiểu khoản trừ bị disabled cho chỉ huy đơn vị" do
+      get unit_config_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("CP-UC-CMD")
+      html.css("select").each do |sel|
+        next if sel["id"]&.match?(/zone_id|unit_id/)  # toolbar dropdowns
+        expect(sel["disabled"]).to be_present,
+          "Expected select '#{sel['name']}' to be disabled for commander"
+      end
+    end
+
+    it "không hiển thị nút Lưu cấu hình cho chỉ huy đơn vị" do
+      get unit_config_path
+      expect(html.css("input[name='commit']")).to be_empty
+    end
   end
 end
