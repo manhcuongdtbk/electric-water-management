@@ -447,4 +447,79 @@ RSpec.describe "Billing", type: :request do
       end
     end
   end
+
+  describe "tóm tắt tổn hao A/B/C (TN3)" do
+    let(:vi) do
+      Class.new(ActionView::Base.with_empty_template_cache) { include NumberHelperVi }
+        .new(ActionView::LookupContext.new([]), {}, nil)
+    end
+    let(:sa) { create(:user, :system_admin) }
+
+    it "D2: chưa tính → không có khối A/B/C" do
+      sample
+      sign_in sa
+      get billing_path
+      expect(response.body).not_to include("Công tơ tổng (A)")
+    end
+
+    it "D4: sau tính → A/B/C khớp LossCalculator (HTML)" do
+      sample
+      CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
+      sign_in sa
+      get billing_path
+      ls = LossSummary.find_by(zone: sample.zone, period: sample.period)
+      expect(response.body).to include("Công tơ tổng (A)")
+      expect(response.body).to include(vi.number_to_vi(ls.a))
+      expect(response.body).to include(vi.number_to_vi(ls.b))
+      expect(response.body).to include(vi.number_to_vi(ls.c))
+    end
+
+    it "D9: SA chọn zone → chỉ A/B/C của zone đó" do
+      sample
+      other = create(:zone, name: "Khu vực Hai TN3")
+      CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
+      LossSummary.create!(zone: other, period: sample.period,
+                          a: BigDecimal("500"), b: BigDecimal("480"), c: BigDecimal("20"))
+      sign_in sa
+      get billing_path(zone_id: sample.zone.id)
+      expect(response.body).to include(sample.zone.name)
+      expect(response.body).not_to include("Khu vực Hai TN3")
+    end
+
+    it "D10: SA không chọn zone → mỗi zone một dòng A/B/C" do
+      sample
+      other = create(:zone, name: "Khu vực Hai TN3")
+      CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
+      LossSummary.create!(zone: other, period: sample.period,
+                          a: BigDecimal("500"), b: BigDecimal("480"), c: BigDecimal("20"))
+      sign_in sa
+      get billing_path
+      expect(response.body).to include(sample.zone.name).and include("Khu vực Hai TN3")
+    end
+
+    it "D13: vai trò nghiệp vụ thấy A/B/C; TECH bị chặn" do
+      sample
+      CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
+      sign_in create(:user, :unit_admin, unit: sample.unit_a) # UA-ZM
+      get billing_path
+      expect(response.body).to include("Công tơ tổng (A)")
+
+      sign_in create(:user, :technician)
+      get billing_path
+      expect(response).not_to have_http_status(:ok)
+    end
+
+    it "D6: C < 0 → C hiển thị 0,00 + cảnh báo" do
+      sample
+      # Đặt sử dụng công tơ tổng rất thấp để tổng công tơ con > công tơ tổng (C<0, kẹp 0)
+      sample.main_meter_reading.update!(usage: BigDecimal("1"))
+      CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
+      sign_in sa
+      get billing_path
+      ls = LossSummary.find_by(zone: sample.zone, period: sample.period)
+      expect(ls.c).to eq(BigDecimal("0"))
+      expect(response.body).to include("Công tơ tổng (A)")
+      expect(response.body).to include("Tổng sử dụng các công tơ con lớn hơn công tơ tổng")
+    end
+  end
 end

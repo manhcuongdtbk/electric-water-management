@@ -1,0 +1,12 @@
+<% if @loss_summaries.any? %>
+  <div class="mb-3 flex flex-wrap gap-2">
+    <% @loss_summaries.each do |s| %>
+      <div class="rounded border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+        <span class="font-semibold"><%= s.zone&.name %></span> —
+        Công tơ tổng (A): <strong><%= number_to_vi(s.a) %></strong> kW;
+        Tổng sử dụng (B): <strong><%= number_to_vi(s.b) %></strong> kW;
+        Tổng tổn hao (C = A − B): <strong><%= number_to_vi(s.c) %></strong> kW
+      </div>
+    <% end %>
+  </div>
+<% end %>

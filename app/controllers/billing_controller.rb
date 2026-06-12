@@ -27,6 +27,8 @@ class BillingController < ApplicationController
     @total_count = scope.count
     @summary = Billing::Query.summary(scope, period: @period)
     @warnings = collect_warnings_for_zones(zones_in_scope(@period))
+    @loss_summaries = LossSummary.where(period_id: @period.id, zone_id: zones_in_scope(@period).select(:id))
+                                 .includes(:zone).to_a.sort_by { |s| s.zone&.name.to_s }
 
     respond_to do |format|
       format.html do
