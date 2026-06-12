@@ -112,4 +112,23 @@ RSpec.describe CalculationOrchestrator do
         .to include(I18n.t("services.pump_allocation_calculator.warnings.no_pump_meter"))
     end
   end
+
+  describe "loss snapshot persistence" do
+    let(:sample) { setup_zone_one_full_sample }
+
+    it "ghi meter_readings.loss và LossSummary trong cùng transaction" do
+      expect(LossSummary.where(period: sample.period)).to be_empty
+      described_class.new(zone: sample.zone, period: sample.period).call
+
+      reading = MeterReading.find_by(meter: sample.meters[:ct_a1], period: sample.period)
+      expect(reading.reload.loss).to be_present
+      expect(LossSummary.find_by(zone: sample.zone, period: sample.period)).to be_present
+    end
+
+    it "kế thừa kỳ: kỳ mới chưa tính → reading.loss nil, không có LossSummary" do
+      reading = MeterReading.find_by(meter: sample.meters[:ct_a1], period: sample.period)
+      expect(reading.loss).to be_nil
+      expect(LossSummary.where(period: sample.period)).to be_empty
+    end
+  end
 end
