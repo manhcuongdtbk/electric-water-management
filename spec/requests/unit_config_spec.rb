@@ -426,6 +426,21 @@ RSpec.describe "UnitConfig", type: :request do
       # Không có @unit → section "thuộc đơn vị" bị ẩn.
       expect(response.body).not_to include("thuộc đơn vị")
     end
+
+    it "CHIEU-khac-zone-direct-sua-duoc: PATCH zone-context cập nhật 'Khác' của đầu mối zone-direct (BigDecimal)" do
+      od = OtherDeduction.find_by!(contact_point: orphan_zone_cp, period: period)
+
+      patch unit_config_path, params: {
+        zone_id: orphan_zone.id,
+        other_deductions: {
+          od.id.to_s => { other_type: "fixed", other_value: "12.34", lock_version: od.lock_version }
+        }
+      }
+
+      expect(response).to redirect_to(unit_config_path(zone_id: orphan_zone.id))
+      expect(od.reload.other_value).to eq(BigDecimal("12.34"))
+      expect(od.reload.other_type).to eq("fixed")
+    end
   end
 
   describe "unit_coefficient — chỉ huy đơn vị xem trang cấu hình" do
