@@ -16,6 +16,12 @@ RSpec.describe "Unit config", type: :system do
     let(:unit_blank_text) { "— Chọn đơn vị —" }
     def path_with_params(**params) = unit_config_path(**params)
 
+    let!(:rank_for_zone_cp) { create(:rank, period: period, name: "R1", position: 1) }
+    let!(:zone1_direct_cp) {
+      create(:contact_point, :zone_residential, zone: zone1, name: "Zone-CP-Alpha",
+             initial_personnel_counts: { rank_for_zone_cp.id => 1 })
+    }
+
     it_behaves_like "zone-unit cascade filter behavior"
 
     it "chọn đơn vị → hiện form cấu hình" do
@@ -40,6 +46,18 @@ RSpec.describe "Unit config", type: :system do
       unit_options = all("select#unit_id option").map(&:text)
       expect(unit_options).to include("— Chọn đơn vị —")
       expect(unit_options).not_to include("Tất cả")
+    end
+
+    it "CHIEU-khac-zone-direct-sua-duoc: chọn khu vực (không chọn đơn vị) → hiện bảng sửa 'Khác' thuộc khu vực" do
+      visit unit_config_path(zone_id: zone1.id)
+      expect(page).to have_content("thuộc khu vực")
+      expect(page).to have_content("Zone-CP-Alpha")
+      expect(page).to have_button("Lưu cấu hình")
+    end
+
+    it "CHIEU-khac-zone-direct-trang-trong: chọn khu vực không có đầu mối zone-direct → hiện gợi ý" do
+      visit unit_config_path(zone_id: zone2.id)
+      expect(page).to have_content(I18n.t("unit_config.zone_context.empty"))
     end
   end
 
