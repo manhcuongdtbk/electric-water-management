@@ -66,6 +66,41 @@ RSpec.describe "Billing", type: :request do
         expect(headers).not_to include(a_string_matching(/\AĐơn vị\z/))
       end
 
+      it "CHIEU-breakdown-tong-theo-loai: bảng đối chiếu hiện đủ dòng + tiêu đề" do
+        get billing_path(zone_id: sample.zone.id)
+        expect(response.body).to include("Đối chiếu tổn hao/sử dụng theo loại đầu mối")
+        expect(response.body).to include("Cộng (công tơ có tổn hao)")
+        expect(response.body).to include("Không tổn hao")
+        expect(response.body).to include("Tổng cộng")
+      end
+
+      it "khớp ví dụ mẫu #332 (số làm tròn tiếng Việt)" do
+        get billing_path(zone_id: sample.zone.id)
+        body = response.body
+        expect(body).to include("38,24")
+        expect(body).to include("12,44")
+        expect(body).to include("9,33")
+        expect(body).to include("2.100,00")
+      end
+
+      it "CHIEU-breakdown-lam-tron: có chú thích lệch ±0,01 do làm tròn" do
+        get billing_path(zone_id: sample.zone.id)
+        expect(response.body).to include("±0,01")
+      end
+
+      it "CHIEU-breakdown-i18n: nhãn breakdown tiếng Việt (không lẫn tiếng Anh)" do
+        get billing_path(zone_id: sample.zone.id)
+        expect(response.body).to include("Sử dụng thực tế")
+        expect(response.body).not_to include("loss_bearing_total")
+        expect(response.body).not_to include("grand_total")
+      end
+
+      it "CHIEU-breakdown-chua-tinh: chưa tính → không hiện bảng breakdown" do
+        LossSummary.where(period: sample.period).delete_all
+        get billing_path(zone_id: sample.zone.id)
+        expect(response.body).not_to include("Đối chiếu tổn hao/sử dụng theo loại đầu mối")
+      end
+
       # Dropdown chọn kỳ, filter/cascade, đổi kỳ auto-submit, nút Tính toán lại/Xuất Excel,
       # non-SA dropdown visibility: cover bởi system specs (spec/system/billing_filter_spec.rb).
 
