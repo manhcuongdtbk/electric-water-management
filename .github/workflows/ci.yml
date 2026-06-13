@@ -71,7 +71,7 @@ jobs:
           fetch-depth: 0 # need full history to lint the pull request's commit range
       - uses: actions/setup-node@v6
         with:
-          node-version: "lts/*" # always the latest Node LTS
+          node-version-file: .node-version # single source shared with Dockerfile.dev
       - name: commitlint
         run: >
           npx --yes

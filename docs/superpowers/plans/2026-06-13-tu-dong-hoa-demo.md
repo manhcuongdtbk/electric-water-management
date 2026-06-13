@@ -210,7 +210,7 @@ git commit -am "test(demo): verify demo specs excluded from the default suite" -
 
 - [ ] **Step 1: Add Node + Playwright to `Dockerfile.dev`**
 
-Read `Dockerfile.dev` first (match its base distro/user). Add: install Node.js LTS; copy `package.json` (+ lockfile if present); run `npm install`; run `npx playwright install --with-deps chromium`. Place it so layer caching is sensible (copy package.json before bulk app copy). Keep the existing Chromium/chromedriver (Selenium suite still needs them).
+Read `Dockerfile.dev` first (match its base distro/user). Add: install Node.js with the major version read from **`.node-version`** (single source shared with CI's `actions/setup-node` via `node-version-file`) — e.g. `COPY .node-version ./` then `setup_$(cat .node-version).x` from NodeSource; copy `package.json` (+ lockfile if present); run `npm install`; run `npx playwright install --with-deps chromium`. Place it so layer caching is sensible (copy package.json before bulk app copy). Keep the existing Chromium/chromedriver (Selenium suite still needs them).
 
 - [ ] **Step 2: Drop the impermanent CLI-path default in the driver config**
 
@@ -640,7 +640,7 @@ Add to `.github/workflows/ci.yml` under `jobs:` (sibling of `tests`; gated on `c
           bundler-cache: true
       - uses: actions/setup-node@v6
         with:
-          node-version: "lts/*"
+          node-version-file: .node-version # single source shared with Dockerfile.dev
       - name: Install Playwright Chromium + ffmpeg
         run: |
           npx --yes playwright install --with-deps chromium

@@ -1,5 +1,5 @@
 {
-  "name": "electric-water-management-demo-tooling",
+  "name": "electric-water-management",
   "private": true,
   "devDependencies": {
     "playwright": "^1.49.0"
