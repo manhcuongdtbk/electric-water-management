@@ -149,7 +149,7 @@ flowchart LR
 - **Mảnh #3:** [Vận hành & bảo trì](2026-06-09-van-hanh-bao-tri-design.md) — ADR-018 (`severity-critical`); #4 đặt `severity-critical` **ngoài** thang planned-priority.
 - **Đã hiện thực** (plan [`2026-06-09-tiep-nhan-uu-tien-cong-viec.md`](../plans/2026-06-09-tiep-nhan-uu-tien-cong-viec.md)): mục 11 "Ưu tiên công việc (backlog)" trong `CONTRIBUTING.md` + sửa câu trỏ cuối mục 9; pointer trong `AGENTS.md`; Backlog #4 trong release spec → ✅ + bump version; nhãn `priority-high` (tạo lười — lệnh trong `CONTRIBUTING.md` mục 11). **0 thay đổi code/test.**
 
-## Changelog
+## Lịch sử thay đổi
 
 - **0.2.1 (2026-06-13):** Theo ADR-033 (#339): bỏ field frontmatter `status:` (nguồn duy nhất = inline `**Trạng thái:**`); lật trạng thái các ADR đã merge sang `Accepted`.
 - **0.2.0 (2026-06-09):** Hiện thực xong (xem plan `2026-06-09-tiep-nhan-uu-tien-cong-viec.md`): mục 11 `CONTRIBUTING.md` + sửa câu trỏ mục 9; pointer `AGENTS.md`; Backlog #4 trong release spec → ✅; nhãn `priority-high` (tạo lười). Cập nhật mục "Truy vết" sang trạng thái đã hiện thực.

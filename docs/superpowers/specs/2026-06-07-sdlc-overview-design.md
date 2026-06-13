@@ -45,7 +45,7 @@ Tài liệu **đứng đầu** loạt spec chuẩn hoá SDLC. Mỗi mảnh (rele
 
   **Quy ước version & changelog cho tài liệu (hệ quả của 4 lớp trên):**
   - **File meta ở gốc repo** (`README.md`, `AGENTS.md`, `CONTRIBUTING.md`, `CLAUDE.md`): **KHÔNG** có version/changelog riêng — theo dõi qua git history; lịch sử cấp dự án do `CHANGELOG.md` sinh tự động từ Conventional Commits (release-please, xem ADR-008).
-  - **Tài liệu trong `docs/`** (thiết kế, nghiệp vụ, hành vi, kiểm thử, `KIEN_THUC_*`, `HUONG_DAN_*`, `hdsd/*`, `superpowers/specs/*`): **CÓ** version + lịch sử thay đổi riêng (`> **Phiên bản:**` + `## Lịch sử thay đổi`, hoặc frontmatter `version:` + `## Changelog`). Sửa file loại này → **bump version + thêm entry trong cùng commit**.
+  - **Tài liệu trong `docs/`** (thiết kế, nghiệp vụ, hành vi, kiểm thử, `KIEN_THUC_*`, `HUONG_DAN_*`, `hdsd/*`, `superpowers/specs/*`): **CÓ** version + lịch sử thay đổi riêng. Version ghi bằng `> **Phiên bản:**` (tài liệu prose) **hoặc** frontmatter `version:` (spec) — nhưng **header lịch sử luôn là `## Lịch sử thay đổi`** (một cách viết duy nhất, không dùng `## Changelog`). Sửa file loại này → **bump version + thêm entry trong cùng commit**.
   - **Vì sao tách vậy:** khớp quy ước ngành (file meta ở gốc không versioned; versioning diễn ra ở cấp dự án/bản phát hành), còn tài liệu thiết kế/tri thức cần version riêng vì ghi nhận quyết định tiến hoá theo thời gian (kiểu ADR/RFC).
 - **Lý do:** Repo = thứ duy nhất vừa bền, vừa chia sẻ được cả team, vừa cải tiến qua PR. AGENTS.md là chuẩn sẵn cho "tương thích mọi AI". `@import` thay symlink để an toàn Windows mà vẫn DRY.
 - **Tradeoff:**
@@ -93,9 +93,9 @@ Tài liệu **đứng đầu** loạt spec chuẩn hoá SDLC. Mỗi mảnh (rele
 
 ---
 
-## Changelog
+## Lịch sử thay đổi
 
-- **0.4.1 (2026-06-13):** Theo ADR-033 (#339): bỏ field frontmatter `status:` (nguồn duy nhất = inline `**Trạng thái:**`); lật trạng thái các ADR đã merge sang `Accepted`.
+- **0.4.1 (2026-06-13):** Theo ADR-033 (#339): bỏ field frontmatter `status:` (nguồn duy nhất = inline `**Trạng thái:**`); lật trạng thái các ADR đã merge sang `Accepted`. Đồng thời **chuẩn hoá header lịch sử thay đổi**: quy ước doc-versioning ở mục trên chỉ còn **một** header `## Lịch sử thay đổi` (bỏ biến thể `## Changelog`) — khớp `AGENTS.md`; đổi tên header ở các spec đang dùng `## Changelog`.
 - **0.4.0 (2026-06-11):** Thêm **ADR-029** (vận hành vòng đời với trợ lý AI — "AI lo cơ học, người giữ gate quyết định"; ranh giới theo 6 bước; ba gate cứng triage/merge/release luôn human-in-the-loop; trung lập công cụ ở canonical, chi tiết Claude Code ở `CONTRIBUTING.md` §8). Mở rộng ADR-001, tổng quát hoá ADR-028. Issue #322.
 - **0.3.0 (2026-06-10):** ADR-002 ghi chú được **mở rộng bởi ADR-023** (quản trị tài liệu — spec `2026-06-10-quan-tri-tai-lieu-design.md`; Issue #310).
 - **0.2.0 (2026-06-07):** ADR-002: thêm quy ước version & changelog cho tài liệu — file meta ở gốc repo (`README.md`, `AGENTS.md`, `CONTRIBUTING.md`, `CLAUDE.md`) không versioned; tài liệu trong `docs/` có version + lịch sử thay đổi, bump khi sửa.

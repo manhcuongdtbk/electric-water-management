@@ -143,7 +143,7 @@ flowchart LR
 - `CONTRIBUTING.md`: §2 — `release/*` **không** deploy Railway / **không** `-rc.N` (Acceptance chạy `main`); §6 — tóm tắt bỏ *"deploy Nghiệm thu (`-rc.N`)"* → *merge `main` → release-please tag → Acceptance (chạy `main`) cho khách nghiệm thu*; §8 — *"rc/UAT để dành P4"* → *"không dùng rc/UAT; Acceptance deploy `main` (ADR-005/008)"* + đánh dấu **✅ đã làm / ⏳ hoãn** cho từng automation; §4 — thêm dòng trỏ cổng "release-readiness" (§11).
 - `README.md`: dòng ~43 — `# tách nhánh mới từ main` → **từ `develop`** (Git Flow); rà nhanh phần còn lại đã khớp mô hình mới.
 
-**D. Cập nhật release spec + bump.** `docs/superpowers/specs/2026-06-07-quy-trinh-release-design.md` — 2 dòng bảng "Cải tiến optional" (verdict Hoãn → **✅ Đã làm**, ghi rõ giải bằng `HUONG_DAN_SDLC.md` + pointer + rà soát mạch lạc, **vẫn tôn trọng ADR-002**) + **bump version** + entry `## Changelog`. *File NÓNG: fetch `develop` lại trước khi tạo pull request; develop di chuyển thì merge vào rồi đẩy version/changelog mình lên trên.*
+**D. Cập nhật release spec + bump.** `docs/superpowers/specs/2026-06-07-quy-trinh-release-design.md` — 2 dòng bảng "Cải tiến optional" (verdict Hoãn → **✅ Đã làm**, ghi rõ giải bằng `HUONG_DAN_SDLC.md` + pointer + rà soát mạch lạc, **vẫn tôn trọng ADR-002**) + **bump version** + entry `## Lịch sử thay đổi`. *File NÓNG: fetch `develop` lại trước khi tạo pull request; develop di chuyển thì merge vào rồi đẩy version/changelog mình lên trên.*
 
 ### Giai đoạn 2 — pull request 2 (rà soát guide ops versioned)
 
@@ -167,7 +167,7 @@ flowchart LR
 - **Test:** không — *docs-only*; CI path filter (ADR-021) bỏ qua job test.
 - **Anchor `NV-...`:** không — không đụng tài liệu nghiệp vụ.
 
-## Changelog
+## Lịch sử thay đổi
 
 - **0.4.1 (2026-06-13):** Theo ADR-033 (#339): bỏ field frontmatter `status:` (nguồn duy nhất = inline `**Trạng thái:**`); lật trạng thái các ADR đã merge sang `Accepted`.
 - **0.4.0 (2026-06-09):** Sau review của chủ dự án trên `docs/HUONG_DAN_SDLC.md` (PR1) — tinh chỉnh guide cho dễ hiểu hơn nữa: (1) **link** tới mọi file/spec/ADR được nhắc; (2) **đồng nhất thuật ngữ** với GitHub — luôn dùng "merge" (bỏ "gộp"), giải nghĩa thuật ngữ trước khi dùng; (3) **bỏ từ "distill"** trong guide (khó hiểu) — dùng "lối vào/tổng quan"; (4) thêm mục **"Mô hình nhánh: Git Flow"** (làm rõ Git Flow là mô hình nhánh cụ thể + link bài gốc nvie); (5) thêm mục **"Ba nghĩa của môi trường"** (application/Rails/Railway + mặc định = application environment); (6) thêm mục **"Lỗi thường vs lỗi nghiêm trọng"** dạng bảng so sánh; (7) định nghĩa **"chủ dự án"** (project owner, không phải GitHub Projects) + **rebase**; (8) **ghi chú công cụ**: hiện chỉ dùng Claude Code, các tự động hoá là tính năng Claude Code. Kèm rà soát canonical: thêm **bảng "Từ viết tắt được phép"** (nguồn tập trung duy nhất: CI/ADR/CRUD/UI/SDLC/SemVer) + giải thích **"canonical"** + ghi chú công cụ vào `AGENTS.md`; gloss "canonical" + pointer guide ở `CONTRIBUTING.md`. Không đổi quyết định nào.

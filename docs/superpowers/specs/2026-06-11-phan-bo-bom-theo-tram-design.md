@@ -107,7 +107,7 @@ Tính năng **chưa triển khai** — mọi chiều `DEFERRED #319` cho tới k
 - Issue: [`#319`](https://github.com/manhcuongdtbk/electric-water-management/issues/319).
 - Spec anh em milestone 1.2.0: [cột Khác hệ số đơn vị](2026-06-11-cot-khac-he-so-don-vi-design.md), [hiển thị chi tiết tổn hao](2026-06-11-hien-thi-chi-tiet-ton-hao-design.md).
 
-## Changelog
+## Lịch sử thay đổi
 
 ### 0.2.1 (2026-06-13)
 

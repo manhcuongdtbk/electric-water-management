@@ -192,7 +192,7 @@ Tổng thao tác *quản lý trạng thái bằng tay*: mở Issue + gắn/gỡ 
 - **Issue/thay đổi liên quan khi nghiệm thu thiết kế:** pull request #264 ("bổ sung yêu cầu nghiệp vụ cho khách xem") là *nội dung yêu cầu mẫu* mà luồng này sẽ quản lý — dùng để đối chiếu thiết kế; **không phải điều kiện chặn**.
 - **Đã hiện thực** (plan [`2026-06-08-truy-vet-quan-ly-thay-doi.md`](../plans/2026-06-08-truy-vet-quan-ly-thay-doi.md)): `.github/ISSUE_TEMPLATE/change-request.md`, `.github/pull_request_template.md`, `docs/superpowers/ADR-TEMPLATE.md`; mục 9 "Quản lý thay đổi & truy vết" trong `CONTRIBUTING.md`; pointer trong `AGENTS.md`; Backlog #2 trong release spec đã chốt ✅.
 
-## Changelog
+## Lịch sử thay đổi
 
 - **0.3.1 (2026-06-13):** Theo ADR-033 (#339): bỏ field frontmatter `status:` (nguồn duy nhất = inline `**Trạng thái:**`); lật trạng thái các ADR đã merge sang `Accepted`.
 - **0.3.0 (2026-06-11):** Thêm **ADR-028** (cổng xác nhận khách trước build — tài liệu xác nhận versioned trong `docs/xac-nhan-khach/`, Issue-anchored, current-state→lịch sử, fold-mới-ràng-buộc, vận hành AI-assisted). Issue #320; bối cảnh #264/#319.

@@ -182,7 +182,7 @@ flowchart LR
 - **Tính năng + how-to liên quan (đã có, chỉ trỏ — không lặp lại):** sao lưu `app/models/backup.rb`, `app/services/backup_service.rb`, `lib/backup_restore_runner.rb`, `script/setup-auto-backup`; nhật ký `app/controllers/audit_logs_controller.rb`; version reporting spec `2026-06-07-app-version-reporting-design.md`; deploy guide `docs/HUONG_DAN_DEPLOY.md` (§Vận hành hàng ngày, §Sao lưu dữ liệu, §Xử lý sự cố); docker guide `docs/KIEN_THUC_DOCKER.md` §10.
 - **Đã hiện thực** (plan [`2026-06-09-van-hanh-bao-tri.md`](../plans/2026-06-09-van-hanh-bao-tri.md)): `.github/ISSUE_TEMPLATE/bug-report.md` + nhãn `severity-critical`; anchor `NV-nhat-ky-he-thong`/`NV-sao-luu-phuc-hoi` trong `docs/V2_XAC_NHAN_NGHIEP_VU.md`; mục 10 "Vận hành & xử lý sự cố" trong `CONTRIBUTING.md`; pointer trong `AGENTS.md`; Backlog #3 trong release spec → ✅.
 
-## Changelog
+## Lịch sử thay đổi
 
 - **0.2.1 (2026-06-13):** Theo ADR-033 (#339): bỏ field frontmatter `status:` (nguồn duy nhất = inline `**Trạng thái:**`); lật trạng thái các ADR đã merge sang `Accepted`.
 - **0.2.0 (2026-06-09):** Hiện thực xong (xem plan `2026-06-09-van-hanh-bao-tri.md`): template `bug-report` + nhãn `severity-critical`; anchor `NV-nhat-ky-he-thong`/`NV-sao-luu-phuc-hoi`; mục 10 `CONTRIBUTING.md`; pointer `AGENTS.md`; Backlog #3 → ✅. Cập nhật mục "Truy vết" sang trạng thái đã hiện thực.

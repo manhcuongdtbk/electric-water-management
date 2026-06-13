@@ -241,7 +241,7 @@ flowchart LR
 
 *(Template ADR/pull request/issue đã chuyển vào Backlog #2 — ADR-015.)*
 
-## Changelog
+## Lịch sử thay đổi
 
 - **0.14.1 (2026-06-13):** Theo ADR-033 (#339): bỏ field frontmatter `status:` (nguồn duy nhất = inline `**Trạng thái:**`); lật trạng thái các ADR đã merge sang `Accepted`.
 - **0.14.0 (2026-06-10):** Checklist phát hành thêm bước "Rà tài liệu current-state khớp ADR mới nhất" (ADR-023 — quản trị tài liệu; Issue #310).

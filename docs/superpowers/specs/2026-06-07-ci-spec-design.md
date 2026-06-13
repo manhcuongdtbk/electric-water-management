@@ -174,7 +174,7 @@ Bật cache: **`bundler-cache: true`** ở job `tests`, và **đổi luôn job `
 - Mảnh cha: [Quy trình phát hành](2026-06-07-quy-trinh-release-design.md) — **ADR-011** (nội dung CI) + Backlog #1 (mảnh này). ADR-012 ở đây hiện thực phần test mà ADR-011 hoãn.
 - Code liên quan: `.github/workflows/ci.yml` (workflow), `config/database.yml` (ENV-driven DB), `spec/support/system_test_config.rb` (driver `:headless_chromium`).
 
-## Changelog
+## Lịch sử thay đổi
 
 - **0.2.1 (2026-06-13):** Theo ADR-033 (#339): bỏ field frontmatter `status:` (nguồn duy nhất = inline `**Trạng thái:**`); lật trạng thái các ADR đã merge sang `Accepted`.
 - **0.2.0 (2026-06-09):** Thêm **ADR-021** (cắt chi phí & độ trễ CI) — path filter fail-safe native bash (`.github/scripts/detect-code-changes.sh` + job `changes`) bỏ qua `tests`/`ruby-checks` cho pull request chỉ sửa docs/meta; bỏ trigger `edited`; giữ `concurrency` + KHÔNG split job `tests` (tối ưu phút, không wall-clock). Hiện thực ở `.github/workflows/ci.yml` + script; ghi chú CONTRIBUTING §8 + mục "nhánh xếp chồng". Kích hoạt từ Điều kiện xem lại của ADR-012.

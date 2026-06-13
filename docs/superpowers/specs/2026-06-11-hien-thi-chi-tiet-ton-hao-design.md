@@ -98,7 +98,7 @@ Mã `CHIEU-<slug>` khai chiều test; test mang mã ở mô tả `it` (CI đối
 - Issue: [`#319`](https://github.com/manhcuongdtbk/electric-water-management/issues/319).
 - Spec anh em milestone 1.2.0: [cột Khác hệ số đơn vị](2026-06-11-cot-khac-he-so-don-vi-design.md), [phân bổ bơm theo trạm](2026-06-11-phan-bo-bom-theo-tram-design.md).
 
-## Changelog
+## Lịch sử thay đổi
 
 ### 0.3.1 (2026-06-13)
 

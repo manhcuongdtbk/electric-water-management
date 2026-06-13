@@ -78,7 +78,7 @@ Một pull request, nhánh `feature/document-governance` ← `develop`, docs-onl
 - **Lên:** [`2026-06-07-sdlc-overview-design.md`](2026-06-07-sdlc-overview-design.md) ADR-002 (chiến lược tài liệu/tri thức) — ADR-023 mở rộng; ADR-001 (mô hình ít nghi thức). Phụ thuộc: làm **sau** Issue #307 (onboarding) đã merge để tránh xung đột file.
 - **Test:** không — *docs-only*; CI path filter (ADR-021) bỏ qua job test.
 
-## Changelog
+## Lịch sử thay đổi
 
 - **0.1.1 (2026-06-13):** Theo ADR-033 (#339): bỏ field frontmatter `status:` (nguồn duy nhất = inline `**Trạng thái:**`); lật trạng thái các ADR đã merge sang `Accepted`.
 - **0.1.0 (2026-06-10):** Bản thảo đầu — ADR-023 (quản trị tài liệu: `THUAT_NGU.md` + `BAN_DO_TAI_LIEU.md` + quy tắc "sửa đừng thêm" + dòng rà soát trong checklist phát hành), mở rộng ADR-002. Chờ duyệt.
