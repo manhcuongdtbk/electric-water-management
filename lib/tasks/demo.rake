@@ -63,8 +63,9 @@ namespace :demo do
     # Authoritative clip→spec→NV mapping written by the recorder sidecar.
     manifest_jsonl = video_dir.join("manifest.jsonl")
     clips = manifest_jsonl.exist? ? DemoBundle.parse_manifest(File.read(manifest_jsonl)) : []
-    # Keep only clips whose transcoded mp4 actually exists.
-    clips = clips.select { |clip| video_dir.join(clip[:video].to_s).exist? }
+    # Keep only clips whose transcoded mp4 actually exists; one entry per video
+    # (a spec re-run within one rspec invocation would append a second line).
+    clips = clips.select { |clip| video_dir.join(clip[:video].to_s).exist? }.uniq { |clip| clip[:video] }
 
     # Demo specs that rendered but produced no clip (e.g. all examples pending).
     produced_files = clips.map { |clip| clip[:file].to_s.sub(%r{\A\./}, "") }.uniq

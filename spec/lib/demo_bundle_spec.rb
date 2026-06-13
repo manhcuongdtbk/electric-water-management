@@ -70,24 +70,32 @@ RSpec.describe DemoBundle do
 
   describe ".manifest_markdown" do
     let(:clips) do
-      [{ video: "login.mp4", description: "Đăng nhập", file: "./spec/demo/login_demo_spec.rb", nv: "NV-02" }]
+      [{ video: "login.mp4", description: "Đăng nhập", file: "./spec/demo/login_demo_spec.rb", nv: %w[NV-02 NV-03] }]
     end
 
-    it "lists each clip with its feature and business anchor" do
+    it "lists each clip with its feature and business anchors (joined)" do
       markdown = described_class.manifest_markdown(range: "v1.1.0..HEAD", clips: clips, missing: [])
 
       expect(markdown).to include("Khoảng release: `v1.1.0..HEAD`")
       expect(markdown).to include("`login.mp4`")
       expect(markdown).to include("Đăng nhập")
       expect(markdown).to include("`spec/demo/login_demo_spec.rb`")
-      expect(markdown).to include("NV-02")
+      expect(markdown).to include("NV-02, NV-03")
       expect(markdown).not_to include("Demo spec không sinh ra clip")
     end
 
-    it "renders a dash when a clip has no NV anchor" do
-      anchorless = [{ video: "x.mp4", description: "X", file: "./spec/demo/x_demo_spec.rb", nv: nil }]
+    it "renders a dash when a clip has no NV anchor (nil, empty array, or blanks)" do
+      [nil, [], [""], "  "].each do |blank|
+        anchorless = [{ video: "x.mp4", description: "X", file: "./spec/demo/x_demo_spec.rb", nv: blank }]
 
-      expect(described_class.manifest_markdown(range: "r", clips: anchorless, missing: [])).to include("| — |")
+        expect(described_class.manifest_markdown(range: "r", clips: anchorless, missing: [])).to include("| — |")
+      end
+    end
+
+    it "accepts a single anchor string as well as an array" do
+      single = [{ video: "y.mp4", description: "Y", file: "./spec/demo/y_demo_spec.rb", nv: "NV-09" }]
+
+      expect(described_class.manifest_markdown(range: "r", clips: single, missing: [])).to include("NV-09")
     end
 
     it "surfaces demo specs that produced no clip" do

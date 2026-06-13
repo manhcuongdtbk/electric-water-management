@@ -54,7 +54,9 @@ module DemoBundle
       lines << "|---|---|---|"
       clips.each do |clip|
         spec_file = clip[:file].to_s.sub(%r{\A\./}, "")
-        nv = clip[:nv].to_s.empty? ? "—" : clip[:nv]
+        # `nv` is the `demo_nv:` array (may be a single string, nil, or blanks).
+        anchors = Array(clip[:nv]).map { |anchor| anchor.to_s.strip }.reject(&:empty?)
+        nv = anchors.empty? ? "—" : anchors.join(", ")
         lines << "| `#{clip[:video]}` | #{clip[:description]} <br/>`#{spec_file}` | #{nv} |"
       end
     end
