@@ -39,6 +39,16 @@ class BillingController < ApplicationController
         preload_personnel(@calculations)
       end
       format.xlsx do
+        # Layer 2 guard: refuse to generate a file from stale derived data unless the
+        # caller explicitly acknowledged (defends against direct-URL bypass of the JS
+        # confirm). @export_stale is reused by the in-file warning stamp (Layer 3).
+        @export_stale = @period.open? && CalculationFreshness.new(
+          period: @period, zones: freshness_zones(@period, selected_zone: @zone)
+        ).any_stale?
+        if @export_stale && params[:acknowledged_stale].blank?
+          next redirect_to(billing_path(redirect_filter_params),
+                           alert: t("billing.export.stale_blocked"))
+        end
         @calculations = scope.to_a
         preload_personnel(@calculations)
         response.headers["Content-Disposition"] =
