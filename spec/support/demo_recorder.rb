@@ -19,7 +19,7 @@ class DemoRecorder
 
   def click(locator, caption:)
     show_caption(caption)
-    el = page.find_link_or_button(locator)
+    el = page.find(:link_or_button, locator)
     point_and_pause(el)
     page.execute_script("window.__demo.ripple();")
     el.click
