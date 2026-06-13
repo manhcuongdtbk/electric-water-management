@@ -149,6 +149,8 @@ Bề mặt ép: (1) cop `Decimal/*` máy-ép phần BigDecimal; (2) hook `UserPr
 
 **CI guardrail trạng thái ADR (ADR-033):** script thứ 5 của job `doc-governance` (`check-adr-status.sh`, native bash fail-loud) ép quy ước trạng thái ADR trên `docs/superpowers/specs/*.md`: **R1** — frontmatter **không** mang field `status:` (nguồn duy nhất là dòng inline `**Trạng thái:**` per-ADR); **R2** — dòng `**Trạng thái:** Proposed` phải kèm deferred-marker `chờ quyết #<issue>` (một trích provenance `(Issue #N)` **không** tính là hoãn), nếu không → đỏ. Quy ước: **merge = Accepted** (tác giả ghi `Accepted · <ngày>` ngay trong pull request — merge là hành động duyệt, ADR-007); `Proposed (chờ quyết #<issue>)` chỉ khi cố ý hoãn. Script bỏ code fence + inline-code trước khi soi nên ví dụ prose (bọc backtick) không báo nhầm; không đụng `**Trạng thái khách:**`. Chi tiết + lý do: ADR-033 trong `docs/superpowers/specs/2026-06-13-trang-thai-adr-lifecycle-design.md`.
 
+**CI guardrail header changelog (#339):** script thứ 6 của job `doc-governance` (`check-changelog-header.sh`, native bash fail-loud) ép tài liệu spec dùng **một** header lịch sử duy nhất `## Lịch sử thay đổi` (khớp `AGENTS.md` mục version/changelog), **không** dùng biến thể `## Changelog` → đỏ nếu gặp heading `## Changelog`. Bỏ qua khối code fence (ví dụ minh hoạ không tính) và prose nhắc tới (bọc backtick không phải heading). Phạm vi: `docs/superpowers/specs/*.md` (plans là bản ghi lịch sử, ngoài phạm vi).
+
 ## 9. Quản lý thay đổi & truy vết
 
 Theo ADR-013..015 (chi tiết + lý do: `docs/superpowers/specs/2026-06-08-truy-vet-quan-ly-thay-doi-design.md`). Mục tiêu: yêu cầu khách **không rơi** và truy được **yêu cầu → thiết kế → test → release**.
