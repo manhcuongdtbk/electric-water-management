@@ -26,7 +26,10 @@ module ElectricWaterManagement
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
     # Common ones are `templates`, `generators`, or `middleware`, for example.
-    config.autoload_lib(ignore: %w[assets tasks rubocop])
+    # `generators` holds Rails generators (lib/generators/**) loaded by the
+    # generators lookup, not zeitwerk — ignore so `rails zeitwerk:check` stays
+    # green (their constants do not match the lib autoload root). See ADR-051.
+    config.autoload_lib(ignore: %w[assets tasks rubocop generators])
 
     # Configuration for the application, engines, and railties goes here.
     #

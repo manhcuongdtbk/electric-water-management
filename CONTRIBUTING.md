@@ -112,6 +112,7 @@ release-please đã được cấu hình (P3): khi `release/*`/`hotfix/*` vào `
 - **Soát lỗi trước khi push** → lệnh `/code-review` (review diff hiện tại theo mức effort; có thể `--comment`/`--fix`).
 - **Giữ kỷ luật version tài liệu** (ADR-002) → hook nhắc bump version + changelog khi sửa `docs/`.
 - **Chặn push nhánh cũ hơn base** (Git Flow) → `PreToolUse` hook (fail-open).
+- **Soạn nháp demo spec cho tính năng hướng-khách** → trợ lý AI soạn hành trình + caption tiếng Việt từ acceptance criteria `NV-...` + UI thật, cùng nhịp với code/test; dùng `rails g demo:spec <feature>` lấy khung rỗng. Người **duyệt video** trước khi tới khách; demo vẫn xanh-mới-merge (ADR-050/051; quy trình tool-neutral ở mục 9 dưới).
 - Còn **các gate quyết định** (triage, merge, cắt release, duyệt nội dung gửi khách) **vẫn do người làm tay** — không hook nào tự quyết thay; CI chỉ *hiện trạng thái* (ADR-007), người merge.
 
 **CI tĩnh đã chạy trên mọi pull request (P2):** `rubocop`, `brakeman`, `bundler-audit`, `commitlint`, và **branch-source guard** (chặn pull request đích `main` đến từ nhánh không phải `release/*`/`hotfix/*`). Theo ADR-007, CI chỉ **hiện trạng thái** đỏ/xanh — chưa khoá cứng ở server (repo private không có branch protection miễn phí); kỷ luật một người merge giữ luật.
@@ -164,13 +165,24 @@ Theo ADR-013..015 (chi tiết + lý do: `docs/superpowers/specs/2026-06-08-truy-
 1. **Tiếp nhận** — mở **GitHub Issue** bằng template *Yêu cầu thay đổi* (`.github/ISSUE_TEMPLATE/change-request.md`). Yêu cầu đến từ kênh ngoài (lời nói, chat) cũng phải có Issue trước khi vào `feature/*` — đội mở thay khách nếu cần. Số `#N` là mã định danh thay đổi.
 2. **Phân loại** — gắn 1 nhãn loại (`change-request` / `enhancement` / `bug`); chốt mức SemVer (`feat`/`fix`/breaking); xác định có đụng nghiệp vụ không. Cần thiết kế → gắn `needs-design`. Gán **milestone = version đích** khi đã biết.
 3. **Thiết kế** (nếu cần) — brainstorm → spec trong `docs/superpowers/specs/`; nếu đụng nghiệp vụ, cập nhật `docs/V2_XAC_NHAN_NGHIEP_VU.md` + gắn anchor (xem dưới). Cần khách xác nhận trước khi build → xem **Cổng xác nhận khách trước build** dưới. Gỡ `needs-design`.
-4. **Hiện thực + test** — `feature/*`, pull request `Refs #N`, test cover yêu cầu (mục 4).
+4. **Hiện thực + test** — `feature/*`, pull request `Refs #N`, test cover yêu cầu (mục 4). Tính năng **hướng-khách** soạn thêm **demo spec** cùng nhịp (xem *Demo spec cho tính năng hướng-khách* dưới).
 5. **Release** — gom vào `release/*` → merge `main` → release-please tag `X.Y.Z`; khách nghiệm thu trên môi trường **Acceptance** (chạy `main`, không dùng `-rc.N` — ADR-005/008) (mục 6).
 6. **Đóng** — `Closes #N` khi merge; CHANGELOG tự liệt kê `(#N)`.
 
 **Trạng thái không gắn nhãn tay** — suy ra từ artifact: Issue mở = đang mở; có pull request liên kết = đang làm; merged = xong; có trong CHANGELOG/tag = đã release.
 
 **Khách thấy trạng thái ở mức release** (môi trường Acceptance + release notes tiếng Việt). Khách không truy cập GitHub → đội trả lời "đang ở đâu" từ Issue/milestone list rồi chuyển tiếp.
+
+### Demo spec cho tính năng hướng-khách (ADR-050/051)
+
+Khi làm một tính năng **hướng-khách** (PR gắn nhãn `customer-facing`), soạn **demo spec** trong `spec/demo/` **cùng nhịp với code/test** — coi như một phần của việc làm feature, giống viết test. Cách làm (vận hành AI-assisted, ADR-029 — viết trung lập công cụ; ánh xạ Claude Code ở mục 8):
+
+1. **Lấy khung:** chạy `rails g demo:spec <feature>` → đẻ `spec/demo/<feature>_demo_spec.rb` rỗng nhưng chạy được (boilerplate DSL `DemoRecorder`, `include_context "demo seeded world"`, caption TODO, placeholder `demo_nv: %w[NV-TODO]`). Generator **không** đọc acceptance criteria — không sinh mù (ADR-051).
+2. **Soạn nháp:** trợ lý AI điền hành trình + **caption tiếng Việt** suy từ acceptance criteria (`NV-...` trong `docs/V2_XAC_NHAN_NGHIEP_VU.md`) + UI thật; thay `NV-TODO` bằng anchor thật để giữ truy vết xuôi.
+3. **Người giữ gate:** demo là spec **xanh-mới-merge** (máy bắt selector/bước sai → anti-drift); **người duyệt video** (chất lượng caption/nghiệp vụ) trước khi tới khách. **Không** có đường CI tự-soạn-rồi-gửi (ADR-050).
+4. **Guardrail (ADR-040):** PR `customer-facing` mà thiếu file `spec/demo/**` → CI đỏ. Guardrail ép *sự tồn tại*; các bước trên lo *nội dung*.
+
+> Hạ tầng + lý do đầy đủ: ADR-036..041 (`docs/superpowers/specs/2026-06-13-tu-dong-hoa-demo-design.md`); thói quen soạn + scaffold: ADR-050/051 (`docs/superpowers/specs/2026-06-14-ai-soan-demo-scaffold-design.md`).
 
 ### Cổng xác nhận khách trước build (ADR-028)
 
