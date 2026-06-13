@@ -44,7 +44,7 @@ app/views/billing/_warnings.html.erb	<p class="font-semibold mb-1">Cảnh báo d
 app/views/billing/show.html.erb	<% page_title "Bảng tính tiền" %>
 app/views/billing/show.html.erb	<span class="ml-2 px-2 py-0.5 rounded bg-gray-200 text-gray-700 text-xs">Đã đóng</span>
 app/views/billing/show.html.erb	concat(button_to("Tính toán lại", recalculate_billing_path(billing_filter_params),
-app/views/billing/show.html.erb	concat(link_to("Xuất Excel",
+app/views/billing/show.html.erb	concat(link_to("Xuất Excel", export_url,
 app/views/billing/show.html.erb	form: { data: { turbo_confirm: "Xác nhận tính toán lại bảng tính tiền?" } },
 app/views/billing/show.html.erb	options: @available_periods.map { |p| ["Tháng #{p.month}/#{p.year}", p.id] },
 app/views/billing/show.html.erb	total_label: "Tổng: #{@total_count} đầu mối",
