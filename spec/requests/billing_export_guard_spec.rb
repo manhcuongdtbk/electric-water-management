@@ -48,4 +48,40 @@ RSpec.describe "Billing Excel export guard", type: :request do
     xlsx = parse_xlsx(response.body)
     expect(xlsx.rows.first.first).to include("CẢNH BÁO")
   end
+
+  it "CHIEU-do-tuoi-excel-stamp: stamped file keeps formulas/totals correct (shifted down by 2 rows)" do
+    make_stale!
+    get billing_path(period_id: period.id, format: :xlsx, acknowledged_stale: "1")
+    expect(response).to have_http_status(:ok)
+    xlsx = parse_xlsx(response.body)
+
+    # 2 stamp rows (warning + blank spacer) shift every absolute reference down by 2:
+    # unit price B1 → B3, data band that started at row 6 → row 8.
+    # The single-sheet export must be numerically identical to the unstamped one,
+    # just relocated; assert the shifted anchors instead of the original B1 / row 6.
+
+    # (a) Unit price now sits at B3 (was B1), and amount formulas multiply by $B$3.
+    expect(xlsx.rows[2][1].to_f).to eq(period.unit_price.to_f)
+    amount_formulas = xlsx.formulas.select { |_ref, f| f.include?("$B$3") }
+    expect(amount_formulas.size).to be >= 2
+    # The OLD anchor must NOT leak through — proves the shift actually happened.
+    expect(xlsx.formulas.values).to all(satisfy { |f| !f.include?("$B$1") })
+
+    # (b) Per-row formulas reference the shifted data band (row 8), not row 6.
+    row8_formulas = xlsx.formulas.select { |ref, _f| ref =~ /8$/ }
+    expect(row8_formulas).not_to be_empty
+    expect(xlsx.formulas.select { |_ref, f| f =~ /SUM\([A-Z]+8:[A-Z]+8\)/ }).not_to be_empty
+
+    # (c) Grand-total SUM ranges start at the shifted data row (row 8), never row 6.
+    total_formulas = xlsx.formulas.select { |_ref, f| f =~ /SUM\([A-Z]+8:[A-Z]+\d+\)/ }
+    expect(total_formulas).not_to be_empty
+    expect(xlsx.formulas.values).to all(satisfy { |f| f !~ /SUM\([A-Z]+6:/ })
+
+    # (d) Header band merges follow the shift to rows 5/6/7 (were 3/4/5): the
+    # "nhóm lớn" merges anchor on the shifted top header (row 5), and nothing
+    # merges the now-empty old header rows 3/4.
+    merge_start_row = ->(m) { m[/\A[A-Z]+(\d+):/, 1].to_i }
+    expect(xlsx.merges.any? { |m| merge_start_row.call(m) == 5 }).to be(true)
+    expect(xlsx.merges.none? { |m| [3, 4].include?(merge_start_row.call(m)) }).to be(true)
+  end
 end
