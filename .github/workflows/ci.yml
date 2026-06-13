@@ -71,7 +71,7 @@ jobs:
           fetch-depth: 0 # need full history to lint the pull request's commit range
       - uses: actions/setup-node@v6
         with:
-          node-version: "lts/*" # always the latest Node LTS
+          node-version-file: .node-version # single source shared with Dockerfile.dev
       - name: commitlint
         run: >
           npx --yes
@@ -122,6 +122,22 @@ jobs:
       - name: Check views for new hard-coded Vietnamese literals (ADR-032)
         run: bash .github/scripts/check-view-i18n.sh
 
+  demo-guardrail:
+    name: Demo guardrail (customer-facing PR needs a demo spec)
+    runs-on: ubuntu-latest
+    # Chạy LUÔN trên mọi pull request (KHÔNG gate qua `changes`): guardrail nhẹ,
+    # cần bắt đúng lúc pull request được gán nhãn customer-facing (ADR-040).
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Require a demo spec for customer-facing pull requests (ADR-040)
+        env:
+          LABELS_JSON: ${{ toJSON(github.event.pull_request.labels) }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bash .github/scripts/check-demo-spec.sh
+
   tests:
     name: Tests (rspec incl. system specs, zeitwerk, schema drift)
     runs-on: ubuntu-latest
@@ -170,3 +186,79 @@ jobs:
       - name: rspec (model, request, and system specs with headless Chrome)
         if: ${{ !cancelled() }}
         run: bundle exec rspec
+
+  demo:
+    name: Demo recordings (Playwright)
+    runs-on: ubuntu-latest
+    needs: changes
+    if: ${{ needs.changes.outputs.code_touched == 'true' }} # ADR-021: skip on docs-only
+    # The final step posts the demo-artifact link as a PR comment, which needs
+    # write access to the pull request (default GITHUB_TOKEN is read-only here).
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      RAILS_ENV: test
+      DATABASE_HOST: localhost
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: postgres
+      ELECTRIC_WATER_MANAGEMENT_DATABASE_PASSWORD: postgres
+      DEMO: "1"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+      - name: Install JS deps + Playwright Chromium + ffmpeg
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
+          sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Prepare database
+        run: bin/rails db:create db:schema:load
+      - name: Build Tailwind CSS so recordings are styled
+        # app/assets/builds/ is gitignored, so a fresh CI checkout has no built
+        # CSS — without this the recorded pages render unstyled. (Local dev gets
+        # this from the tailwindcss:watch process in Procfile.dev.)
+        run: bin/rails tailwindcss:build
+      - name: Record demo specs
+        run: bundle exec rspec spec/demo
+      - name: Transcode to mp4
+        if: ${{ !cancelled() }}
+        run: bin/rails demo:transcode
+      - name: Upload demo videos
+        id: upload
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: demo-videos
+          path: tmp/demo_videos/*.mp4
+          if-no-files-found: warn
+      - name: Comment on the PR with the demo artifact link
+        if: ${{ !cancelled() }}
+        continue-on-error: true # auxiliary: a comment hiccup must not fail the recording job
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          # Direct link to the uploaded artifact (upload-artifact output); RUN_URL is a fallback.
+          ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: bash .github/scripts/post-demo-comment.sh

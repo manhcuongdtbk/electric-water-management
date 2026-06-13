@@ -84,6 +84,9 @@ group :test do
   gem "capybara"
   gem "selenium-webdriver"
   gem "ostruct"
+  # Playwright-backed Capybara driver — used ONLY by spec/demo (type: :demo) to
+  # record native WebM video. The main suite stays on Selenium. See ADR-036.
+  gem "capybara-playwright-driver"
 end
 
 group :development do
