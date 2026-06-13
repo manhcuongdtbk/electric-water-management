@@ -1,0 +1,36 @@
+name: close-traceability
+
+# ADR-035: khi một pull request mang Closes/Fixes/Resolves #N được MERGE, post
+# comment kết cơ học vào mỗi issue và copy milestone PR→issue khi issue chưa có
+# (copy-only — không chặn, không ghi đè). Phần phán đoán để người/AI (ADR-029).
+# Điểm ép dời sang PR vì `Closes #N` đóng issue như hệ quả merge (không có sự
+# kiện chặn ở issue). Chạy hậu-merge: đỏ chỉ để LỘ lỗi, không chặn được merge
+# đã xong. Mọi PR là same-repo (Git Flow, không fork) → GITHUB_TOKEN mặc định
+# đủ quyền; KHÔNG dùng pull_request_target (tránh bề mặt bảo mật của event đó).
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  issues: write
+  contents: read
+  pull-requests: read
+
+jobs:
+  close-traceability:
+    name: Post close-traceability comment + reconcile milestone
+    runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.merged == true }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Post close-traceability comment and copy milestone (ADR-035)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          MERGED_AT: ${{ github.event.pull_request.merged_at }}
+          PR_MILESTONE: ${{ github.event.pull_request.milestone.title }}
+        run: bash .github/scripts/post-close-traceability.sh
