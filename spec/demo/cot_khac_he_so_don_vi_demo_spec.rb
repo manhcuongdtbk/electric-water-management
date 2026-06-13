@@ -56,9 +56,16 @@ RSpec.describe "Demo: cột Khác hệ số đơn vị", type: :demo do
     # Show the EFFECT on the billing table, not just the setting.
     demo.visit("/billing?zone_id=#{zone.id}", caption: "Mở bảng tính tiền của khu vực")
     demo.click("Tính toán lại", caption: "Tính toán lại theo cấu hình vừa lưu")
-    demo.narrate(%(Cột "Khác" của Ban Chỉ huy giờ là −32 kW — hệ số × (quân số đơn vị − đầu mối đó)))
+    # Wait for the recalculation to finish before reading the result, then re-open
+    # billing with a fresh GET so the just-committed calculations render reliably
+    # (the recorder drives a real browser over separate Puma connections).
+    expect(page).to have_content("Đã tính toán lại bảng tính tiền.", wait: 15)
+    demo.visit(
+      "/billing?zone_id=#{zone.id}",
+      caption: %(Cột "Khác" của Ban Chỉ huy giờ là −32 kW — hệ số × (quân số đơn vị − đầu mối đó))
+    )
 
-    expect(page).to have_content("Ban Chỉ huy Tiểu đoàn Alpha", wait: 10)
+    expect(page).to have_content("Ban Chỉ huy Tiểu đoàn Alpha", wait: 15)
     calculation = Calculation.find_by!(contact_point_id: other_deduction.contact_point_id, period_id: period.id)
     expect(calculation.other_deduction).to eq(BigDecimal("-32"))
   end
