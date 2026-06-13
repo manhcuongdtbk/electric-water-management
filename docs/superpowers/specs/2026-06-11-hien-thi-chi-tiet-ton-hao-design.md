@@ -100,7 +100,10 @@ Mã `CHIEU-<slug>` khai chiều test; test mang mã ở mô tả `it` (CI đối
 
 ## Changelog
 
-- **0.3.1 (2026-06-13):** Theo ADR-033 (#339): bỏ field frontmatter `status:` (nguồn duy nhất = inline `**Trạng thái:**`); lật trạng thái các ADR đã merge sang `Accepted`.
+### 0.3.1 (2026-06-13)
+
+- Theo ADR-033 (#339): bỏ field frontmatter `status:` (nguồn duy nhất = inline `**Trạng thái:**`); lật trạng thái các ADR đã merge sang `Accepted`.
+
 ### 0.3.0 (2026-06-13)
 
 - Chuyển danh sách chiều test → bảng `## Truy vết chiều test` với anchor `CHIEU-<slug>` (ADR-030, Issue #329); gắn anchor vào mô tả test (chuyển mã `Dn:` cũ → `CHIEU-` chuẩn). CI đối chiếu bảng ↔ test.
