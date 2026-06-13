@@ -30,6 +30,25 @@ RSpec.describe TouchesCalculationState do
     }.to change { changed_at(zone, period) }
   end
 
+  it "CHIEU-do-tuoi-bump-khi-xoa: discard makes the zone stale (destroy_all path)" do
+    contact_point = create(:contact_point, :residential, unit: unit)
+    create(:meter, contact_point: contact_point)
+    # Establish a calculated baseline in the past so a later input bump is strictly greater.
+    baseline = 1.minute.ago
+    CalculationState.mark_calculated!(zone_id: zone.id, period_id: period.id, at: baseline)
+
+    # Discard hard-deletes current-period input rows via destroy_all, which fires
+    # TouchesCalculationState#after_commit and bumps inputs_changed_at.
+    contact_point.discard
+
+    state = CalculationState.find_by(zone_id: zone.id, period_id: period.id)
+    expect(state.inputs_changed_at).to be_present
+    expect(state.inputs_changed_at).to be > state.last_calculated_at
+
+    entry = CalculationFreshness.new(period: period, zones: Zone.where(id: zone.id)).call.first
+    expect(entry.status).to eq(:stale)
+  end
+
   it "CHIEU-do-tuoi-nguon-input: bumps on pump_allocation create" do
     expect {
       create(:pump_allocation, zone: zone, period: period)

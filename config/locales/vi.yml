@@ -465,9 +465,7 @@ vi:
       manager_reassigned: "Đã chuyển đơn vị quản lý sang \"%{name}\"."
       manager_removed: "Đã xóa đơn vị quản lý."
   calculation_states:
-    stale: "Cần tính toán lại — dữ liệu đã thay đổi sau lần tính gần nhất"
     stale_zone: "Khu vực %{zone}: cần tính toán lại (dữ liệu đã đổi sau lần tính gần nhất)"
-    never_calculated: "Khu vực %{zone}: chưa tính toán lần nào cho kỳ này"
     recalculate_hint: "Vào Bảng tính tiền và bấm \"Tính toán lại\" để cập nhật."
   billing:
     flash:

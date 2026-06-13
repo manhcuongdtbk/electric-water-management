@@ -155,6 +155,7 @@ class ContactPoint < ApplicationRecord
   # (dùng .with_discarded) không cảnh báo/tính toán sai cho đầu mối đã xóa. Dữ liệu kỳ
   # cũ (đã đóng) giữ nguyên. Dùng meters.with_discarded để không bỏ sót reading của công
   # tơ đã discard.
+  # Uses destroy_all (not delete_all) so TouchesCalculationState fires and marks the zone stale on discard (#334).
   def delete_current_period_records
     period = Period.current
     return unless period
