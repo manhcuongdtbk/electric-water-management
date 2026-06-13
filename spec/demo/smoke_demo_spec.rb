@@ -7,30 +7,12 @@ RSpec.describe "Demo recording smoke", type: :demo do
     expect(page).to have_css("#demo-caption", text: "Mở trang đăng nhập")
   end
 
-  # Seeded login journey. This example drives a real Playwright browser and
-  # requires committed data visible to Puma's DB connections. Transactional
-  # fixtures wrap each example in a savepoint on the spec process's connection —
-  # data committed there is NOT visible to Puma's separate connections. We
-  # disable transactional tests for this nested group and seed in before(:each)
-  # so that committed seed rows are visible to both the spec body and Puma.
+  # Seeded login journey. Setup (commit seed so Puma's separate connections can
+  # see it, disable transactional fixtures, teardown) lives in the shared
+  # "demo seeded world" context — the same one the `rails g demo:spec` scaffold
+  # wires into generated specs. See spec/support/shared_contexts/demo_seeded_world.rb.
   describe "seeded journey" do
-    self.use_transactional_tests = false
-
-    before(:each) do
-      # Load curated demo dataset — commits data so Puma can read it.
-      load Rails.root.join("db", "seeds", "demo.rb")
-    end
-
-    after(:each) do
-      # Minimal teardown so the test DB stays predictable across re-runs within
-      # the same rspec invocation. A full `db:reset && demo:seed` is the
-      # canonical setup for each demo recording session.
-      [MeterReading, MainMeterReading, PersonnelEntry, OtherDeduction,
-       UnitConfig, NonEstablishmentSnapshot, Calculation, PumpAllocation,
-       Meter, ContactPoint, Block, Group, Rank, Period, Unit, MainMeter,
-       Zone].each { |model| model.unscoped.delete_all rescue nil }
-      User.where(username: "demo_admin").delete_all
-    end
+    include_context "demo seeded world"
 
     it "logs in as demo_admin and shows seeded zone on the dashboard" do
       demo = DemoRecorder.new(self)
