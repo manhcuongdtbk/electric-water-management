@@ -8,7 +8,7 @@
 
 **Tech Stack:** Rails 8, PostgreSQL, RSpec + Capybara (system + request + demo), Hotwire/Stimulus, caxlsx, CanCanCan, Discard, i18n (vi.yml).
 
-**Spec:** `docs/superpowers/specs/2026-06-14-do-tuoi-du-lieu-dan-xuat-design.md` (ADR-048, v1.1.0).
+**Spec:** `docs/superpowers/specs/2026-06-14-do-tuoi-du-lieu-dan-xuat-design.md` (ADR-049, v1.2.1).
 
 ---
 
@@ -256,7 +256,7 @@ Expected: FAIL (`uninitialized constant TouchesCalculationState`).
 
 ```ruby
 # Bump CalculationState#inputs_changed_at mỗi khi một input model thay đổi
-# (create/update/destroy), để chỉ báo độ tươi (#334, ADR-048) phát hiện được
+# (create/update/destroy), để chỉ báo độ tươi (#334, ADR-049) phát hiện được
 # "dữ liệu dẫn xuất đã cũ". Mỗi model include phải định nghĩa
 # #calculation_state_targets trả mảng [[zone_id, period_id], ...] (thường 1 phần tử).
 #
@@ -492,7 +492,7 @@ Expected: FAIL (`uninitialized constant CalculationFreshness`).
 - [ ] **Step 2: Viết query object**
 
 ```ruby
-# Suy trạng thái độ tươi per khu vực cho một kỳ (#334, ADR-048). Chỉ trả các zone
+# Suy trạng thái độ tươi per khu vực cho một kỳ (#334, ADR-049). Chỉ trả các zone
 # có dòng calculation_states (zone chưa từng có input/tính → bỏ qua, bảng trống tự nói).
 class CalculationFreshness
   Entry = Struct.new(:zone, :status, keyword_init: true)
@@ -1254,9 +1254,13 @@ git commit -m "test(calculation-state): cover freshness indicator across the six
 - Create: `spec/demo/freshness_demo_spec.rb`
 - (Có thể) Modify: `db/seeds/demo.rb` nếu cần dữ liệu thể hiện stale.
 
-- [ ] **Step 1: Đọc demo có sẵn + seed demo**
+- [ ] **Step 1: Scaffold qua generator + đọc mẫu demo có sẵn**
 
-Đọc `spec/demo/smoke_demo_spec.rb` (mẫu `DemoRecorder`, `type: :demo`, seed `db/seeds/demo.rb`) và `db/seeds/demo.rb` để biết zone/đầu mối seed sẵn (để kịch bản chạy được).
+`develop` đã có generator `rails g demo:spec` (#352) và shared context `spec/support/shared_contexts/demo_seeded_world.rb`. Ưu tiên:
+```bash
+bin/docker bash -c "bin/rails g demo:spec freshness"
+```
+rồi đọc `spec/demo/cot_khac_he_so_don_vi_demo_spec.rb` (ví dụ demo THẬT, mới hơn `smoke_demo_spec.rb`) + `lib/generators/demo/spec/templates/demo_spec.rb.tt` + `db/seeds/demo.rb` để biết khung `DemoRecorder`, shared context seed, và zone/đầu mối seed sẵn. Dùng đúng khung generator sinh ra thay vì viết tay từ đầu (template dưới chỉ là tham chiếu nội dung kịch bản).
 
 - [ ] **Step 2: Viết demo spec theo kịch bản spec**
 
