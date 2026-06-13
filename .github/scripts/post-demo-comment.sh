@@ -9,9 +9,12 @@ set -uo pipefail
 }
 
 MARKER="<!-- demo-recordings -->"
+# Prefer the direct artifact URL (upload-artifact output); fall back to the run page.
+artifact_link="${ARTIFACT_URL:-${RUN_URL}}"
 body="${MARKER}
 🎬 **Bản demo tự động** cho pull request này đã được ghi hình.
-Tải video (mp4) ở **Artifacts → demo-videos** của [lần chạy CI này](${RUN_URL}).
+👉 **Tải video (mp4):** [demo-videos](${artifact_link})
+(hoặc mở [lần chạy CI](${RUN_URL}) → cuối trang, mục **Artifacts**)
 > Chặng owner: xem để xác nhận tính năng ổn trước khi merge (ADR-036)."
 
 # Delete the previous marker comment (best-effort) so the PR keeps one fresh link.

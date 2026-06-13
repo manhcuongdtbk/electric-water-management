@@ -234,12 +234,18 @@ jobs:
           sudo apt-get update && sudo apt-get install -y ffmpeg
       - name: Prepare database
         run: bin/rails db:create db:schema:load
+      - name: Build Tailwind CSS so recordings are styled
+        # app/assets/builds/ is gitignored, so a fresh CI checkout has no built
+        # CSS — without this the recorded pages render unstyled. (Local dev gets
+        # this from the tailwindcss:watch process in Procfile.dev.)
+        run: bin/rails tailwindcss:build
       - name: Record demo specs
         run: bundle exec rspec spec/demo
       - name: Transcode to mp4
         if: ${{ !cancelled() }}
         run: bin/rails demo:transcode
       - name: Upload demo videos
+        id: upload
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
@@ -252,5 +258,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          # Direct link to the uploaded artifact (upload-artifact output); RUN_URL is a fallback.
+          ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: bash .github/scripts/post-demo-comment.sh
