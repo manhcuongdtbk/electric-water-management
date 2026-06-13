@@ -241,7 +241,7 @@ jobs:
         run: bin/rails demo:transcode
       - name: Upload demo videos
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: demo-videos
           path: tmp/demo_videos/*.mp4
