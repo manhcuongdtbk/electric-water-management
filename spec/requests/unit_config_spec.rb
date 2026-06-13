@@ -406,6 +406,28 @@ RSpec.describe "UnitConfig", type: :request do
     end
   end
 
+  describe "system_admin sửa 'Khác' đầu mối zone-direct theo ngữ cảnh khu vực (#328)" do
+    let(:system_admin) { create(:user, :system_admin) }
+    # orphan_zone không có đơn vị nào → manager_unit_id nil (không auto-assign).
+    let!(:orphan_zone) { create(:zone, name: "Khu vực mồ côi") }
+    let!(:orphan_zone_cp) {
+      create(:contact_point, :zone_residential, zone: orphan_zone, name: "Zone-CP-Orphan",
+             initial_personnel_counts: { rank.id => 1 })
+    }
+
+    before { sign_in system_admin }
+
+    it "CHIEU-khac-zone-direct-orphan: GET zone-context surface đầu mối zone-direct dù khu vực không có manager" do
+      expect(orphan_zone.reload.manager_unit_id).to be_nil
+      get unit_config_path(zone_id: orphan_zone.id)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Zone-CP-Orphan")
+      expect(response.body).to include("thuộc khu vực")
+      # Không có @unit → section "thuộc đơn vị" bị ẩn.
+      expect(response.body).not_to include("thuộc đơn vị")
+    end
+  end
+
   describe "unit_coefficient — chỉ huy đơn vị xem trang cấu hình" do
     # Test 4: commander viewing unit config cannot edit — select is disabled, no submit button.
     # Mirrors pattern from "view permission guards" context but scoped to unit_coefficient feature.

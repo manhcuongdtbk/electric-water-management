@@ -110,15 +110,28 @@ class UnitConfigController < ApplicationController
   end
 
   def scope_zone_other_deductions
-    return OtherDeduction.none unless @period && @unit
-    managed_zone_ids = Zone.kept.where(manager_unit_id: @unit.id).pluck(:id)
-    return OtherDeduction.none if managed_zone_ids.empty?
+    return OtherDeduction.none unless @period
+    zone_ids = zone_other_deduction_zone_ids
+    return OtherDeduction.none if zone_ids.empty?
     OtherDeduction.joins(:contact_point).includes(:contact_point)
                   .where(period: @period,
-                         contact_points: { zone_id: managed_zone_ids,
+                         contact_points: { zone_id: zone_ids,
                                            unit_id: nil,
                                            contact_point_type: "residential" })
                   .accessible_by(current_ability)
                   .order("contact_points.name")
+  end
+
+  # Nguồn zone_ids cho khoản trừ "Khác" của đầu mối zone-direct:
+  # - @unit có → các khu vực do đơn vị này quản lý (đường manager-unit, gồm non-SA).
+  # - @unit nil & @zone có & SA → đúng khu vực đang chọn (ngữ cảnh khu vực, ADR-034).
+  def zone_other_deduction_zone_ids
+    if @unit
+      Zone.kept.where(manager_unit_id: @unit.id).pluck(:id)
+    elsif @zone && current_user.system_admin?
+      [@zone.id]
+    else
+      []
+    end
   end
 end

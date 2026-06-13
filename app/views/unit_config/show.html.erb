@@ -24,10 +24,10 @@
         ] %>
 <% end %>
 
-<% if @unit && current_period %>
-  <% can_edit = !no_open_period? && (@unit_config ? can?(:update, @unit_config) : can?(:update, UnitConfig.new(unit: @unit, period: current_period))) %>
+<% if (@unit || @zone) && current_period %>
+  <% can_edit = !no_open_period? && (@unit ? (@unit_config ? can?(:update, @unit_config) : can?(:update, UnitConfig.new(unit: @unit, period: current_period))) : can?(:update, OtherDeduction)) %>
   <%= form_with url: unit_config_path, method: :patch, local: true, class: "space-y-6" do |f| %>
-    <%= hidden_field_tag :unit_id, @unit.id %>
+    <%= hidden_field_tag(@unit ? :unit_id : :zone_id, @unit ? @unit.id : @zone.id) %>
 
     <!-- Phần 1: unit_public_rate -->
     <% if @unit_config %>
@@ -44,17 +44,19 @@
       </div>
     <% end %>
 
-    <!-- Phần 2: other_deductions per CP (đơn vị) -->
-    <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
-      <div class="p-4 border-b border-gray-200">
-        <h3 class="text-base font-semibold text-gray-900">Cột "Khác" cho từng đầu mối sinh hoạt thuộc đơn vị</h3>
+    <!-- Phần 2: other_deductions per CP (đơn vị) — chỉ khi có đơn vị -->
+    <% if @unit %>
+      <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+        <div class="p-4 border-b border-gray-200">
+          <h3 class="text-base font-semibold text-gray-900">Cột "Khác" cho từng đầu mối sinh hoạt thuộc đơn vị</h3>
+        </div>
+        <% if @other_deductions.any? %>
+          <%= render "unit_config/other_deductions_table", other_deductions: @other_deductions, can_edit: can_edit %>
+        <% else %>
+          <p class="px-4 py-3 text-sm text-gray-500">Chưa có đầu mối sinh hoạt nào trong đơn vị.</p>
+        <% end %>
       </div>
-      <% if @other_deductions.any? %>
-        <%= render "unit_config/other_deductions_table", other_deductions: @other_deductions, can_edit: can_edit %>
-      <% else %>
-        <p class="px-4 py-3 text-sm text-gray-500">Chưa có đầu mối sinh hoạt nào trong đơn vị.</p>
-      <% end %>
-    </div>
+    <% end %>
 
     <!-- Phần 3: other_deductions per CP (khu vực) -->
     <% if @zone_other_deductions.any? %>
@@ -66,7 +68,12 @@
       </div>
     <% end %>
 
-    <% if can_edit %>
+    <!-- Empty-state: SA chọn khu vực mà không có đầu mối zone-direct -->
+    <% if @unit.nil? && @zone && @zone_other_deductions.empty? %>
+      <p class="bg-gray-50 border border-gray-200 rounded p-3 text-sm text-gray-600"><%= t("unit_config.zone_context.empty") %></p>
+    <% end %>
+
+    <% if can_edit && (@unit || @zone_other_deductions.any?) %>
       <div class="flex space-x-2">
         <%= submit_tag "Lưu cấu hình",
             class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 cursor-pointer" %>

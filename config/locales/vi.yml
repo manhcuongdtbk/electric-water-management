@@ -436,6 +436,8 @@ vi:
   unit_config:
     flash:
       saved: "Đã lưu cấu hình đơn vị."
+    zone_context:
+      empty: "Chọn đơn vị để xem cấu hình đơn vị, hoặc khu vực này chưa có đầu mối thuộc khu vực."
     other_deductions:
       headers:
         contact_point: "Đầu mối"
