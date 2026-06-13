@@ -32,7 +32,8 @@ RUN apt-get update -qq && \
 # chữ đầy đủ.
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y \
-      chromium chromium-driver fonts-liberation && \
+      chromium chromium-driver fonts-liberation \
+      ffmpeg && \  # ffmpeg for demo:transcode (WebM->MP4, ADR-041)
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 # Node.js + npm-managed Playwright for demo recording (spec/demo, ADR-038).
