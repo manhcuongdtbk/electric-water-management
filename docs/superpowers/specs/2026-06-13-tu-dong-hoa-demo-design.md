@@ -1,6 +1,6 @@
 ---
 title: Tự động hoá demo (walkthrough cho chủ dự án trước merge + khách trước release)
-version: 0.1.0
+version: 0.1.1
 date: 2026-06-13
 ---
 
@@ -30,6 +30,7 @@ Liên quan: cổng xác nhận khách trước build (ADR-028 trong [truy vết 
 - **Migrate toàn bộ system spec sang Playwright/Cuprite** — Playwright chỉ phạm vi `spec/demo`; tốc-độ suite là **việc riêng [#344](https://github.com/manhcuongdtbk/electric-water-management/issues/344)** (ADR-036).
 - **Slideshow / GIF** — đã loại; khách muốn video "thật" (ADR-037).
 - **Bắt mọi PR có thay đổi UI phải có demo** — chỉ bắt buộc PR hướng-khách (ADR-038).
+- **Thay nghiệm thu hands-on trên Acceptance** — demo là vòng phản hồi sớm *trước* khâu hands-on, không thay nó (xem "Hai vòng phản hồi của khách").
 
 ## Glossary (khoá nghĩa — không viết tắt; bổ sung vào `docs/THUAT_NGU.md` khi triển khai)
 
@@ -55,13 +56,29 @@ flowchart TD
   SPEC --> CI["CI job 'demo' (sibling system-spec)<br/>Playwright record + seed demo"]
   CI --> VID["Video walkthrough (.mp4)<br/>caption tiếng Việt + diễn hoạt thao tác"]
   CI --> GUARD["Guardrail: PR nhãn hướng-khách<br/>mà thiếu demo spec → đỏ"]
-  VID --> PRC["PR comment: link video<br/>(chặng owner — xem/duyệt trước merge)"]
-  PRC -->|merge squash → develop| DEV2["..."]
-  VID -->|gom ở release| REL["release/*: lọc clip hướng-khách"]
-  REL --> APPROVE["Chủ dự án duyệt (gate người)"]
-  APPROVE --> FWD["Forward qua kênh sẵn có<br/>(Zalo/email/USB) cho khách"]
-  FWD --> FEEDBACK["Khách phản hồi sớm<br/>trước khi deploy Production Mini PC"]
+  VID --> PRC["Chặng OWNER — PR comment: link video<br/>chủ dự án/đội xem & duyệt trước merge"]
+  PRC -->|merge squash → develop| RELCUT["release/*: release candidate"]
+  RELCUT --> DEMOSEL["Lọc clip hướng-khách (đã sinh từ PR)"]
+  RELCUT --> ACCDEP["Deploy release candidate → Acceptance (Railway)"]
+  DEMOSEL --> APPROVE["Chủ dự án duyệt clip (gate người · ADR-028)"]
+  APPROVE --> FWD["Forward demo qua kênh sẵn có<br/>(Zalo/email/USB)"]
+  FWD --> L1["Chặng KHÁCH ① — xem demo:<br/>phản hồi sớm + duyệt sơ bộ<br/>(async, trước khi tự chạm Acceptance)"]
+  ACCDEP --> L2
+  L1 --> L2["Chặng KHÁCH ② — nghiệm thu hands-on<br/>trên Acceptance: phản hồi + duyệt"]
+  L1 -. có vấn đề .-> ITER["Sửa → develop → release (lặp)"]
+  L2 -. có vấn đề .-> ITER
+  L2 -->|đạt nghiệm thu| PROD["Deploy Production<br/>(Mini PC offline)"]
 ```
+
+### Hai vòng phản hồi của khách (đọc kèm sơ đồ)
+
+Demo **không thay** nghiệm thu hands-on trên Acceptance — nó là **vòng phản hồi sớm đứng trước**:
+
+1. **Vòng ① — xem demo (sớm, async).** Demo render trong CI từ **seed** (ADR-039) nên *không phụ thuộc* việc đã deploy Acceptance — có thể gửi khách **trước cả khi khách tự chạm Acceptance**. Khách xem clip → phản hồi/duyệt sơ bộ. Lỗi/hiểu-nhầm lộ ở đây được sửa sớm, trước khi khách tốn công ngồi thử.
+2. **Vòng ② — nghiệm thu hands-on trên Acceptance.** Release candidate deploy lên Acceptance; khách (đã được demo định hướng) tự thao tác, nghiệm thu thật → phản hồi/duyệt.
+3. **Chỉ khi đạt nghiệm thu ②** → deploy **Production (Mini PC)**.
+
+Cả ① và ② đều **lặp ngược** về `develop`→`release` nếu phát hiện vấn đề. Giá trị của demo là **rút ngắn vòng lặp**: bắt lỗi/định hướng *trước* khâu hands-on tốn công, đúng tinh thần cổng xác nhận khách (ADR-028).
 
 ## Bối cảnh & hiện trạng
 
@@ -178,3 +195,4 @@ flowchart TD
 | Phiên bản | Ngày | Thay đổi |
 |---|---|---|
 | 0.1.0 | 2026-06-13 | Bản đầu: thiết kế tự động hoá demo (#343). Thêm ADR-034..039. |
+| 0.1.1 | 2026-06-13 | Sửa sơ đồ luồng: tách rõ hai vòng phản hồi khách (① xem demo sớm → ② nghiệm thu hands-on Acceptance → Production); thêm mục "Hai vòng phản hồi" + Non-Goal "không thay nghiệm thu Acceptance". |
