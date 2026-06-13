@@ -1,7 +1,6 @@
 ---
 title: Cột "Khác" kiểu hệ số tổng đơn vị (cách nhập thứ ba cho khoản trừ Khác)
-version: 0.2.0
-status: draft (chờ duyệt)
+version: 0.2.1
 date: 2026-06-11
 governed_by: 2026-06-07-sdlc-overview-design.md
 ---
@@ -32,7 +31,7 @@ Mã nguồn liên quan hiện tại:
 
 ## ADR-025: Cách nhập thứ ba `unit_coefficient` cho khoản trừ "Khác"
 
-- **Trạng thái:** Proposed · 2026-06-11
+- **Trạng thái:** Accepted · 2026-06-11
 - **Bối cảnh:** Cần một cách nhập khoản trừ "Khác" tự tính theo quân số toàn đơn vị (trừ chính đầu mối), để mô hình hóa "mỗi người góp một phần, bếp nhận lại tổng" mà không phải sửa tay khi quân số đổi. Đã có sẵn enum `other_type` với hai value và đường tính trong `SummaryCalculator`.
 - **Quyết định:** Thêm value thứ ba `unit_coefficient` vào enum `OtherDeduction#other_type`. Khoản trừ = `other_value × (Σ quân số residential của đơn vị − quân số đầu mối đang xét)`. Tổng quân số đơn vị tính **live** theo `PersonnelEntry` của kỳ (chỉ đầu mối loại `residential`, **không** gồm ngoài biên chế / công cộng), trừ đi quân số của chính đầu mối đang xét. Cho phép `other_value` âm hoặc dương. Chỉ hợp lệ cho đầu mối **thuộc đơn vị**; đầu mối thuộc khu vực trực tiếp không dùng (validate chặn ở model, ẩn option ở UI). Không thêm bảng/cột; vì `other_type` là **PostgreSQL native enum** (`other_deduction_type`) nên cần một migration `ALTER TYPE ... ADD VALUE` để bổ sung giá trị.
 - **Lý do:** Tái dùng đúng cấu trúc sẵn có (enum + một nhánh tính), thay đổi nhỏ nhất, kế thừa kỳ tự hoạt động (đã kế thừa `other_type` + `other_value`). Tính live khớp yêu cầu "quân số đổi thì tự tính lại".
@@ -101,6 +100,7 @@ Mã `CHIEU-<slug>` khai chiều test; test mang mã ở mô tả `it` (CI đối
 
 ## Changelog
 
+- **0.2.1 (2026-06-13):** Theo ADR-033 (#339): bỏ field frontmatter `status:` (nguồn duy nhất = inline `**Trạng thái:**`); lật trạng thái các ADR đã merge sang `Accepted`.
 ### 0.2.0 (2026-06-13)
 
 - Chuyển danh sách chiều test → bảng `## Truy vết chiều test` với anchor `CHIEU-<slug>` (ADR-030, Issue #329); gắn anchor vào mô tả các test sẵn có. CI đối chiếu bảng ↔ test.

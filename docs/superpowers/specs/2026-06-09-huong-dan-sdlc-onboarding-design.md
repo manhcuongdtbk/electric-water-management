@@ -1,7 +1,6 @@
 ---
 title: Hướng dẫn onboarding SDLC (lối vào distill) + rà soát mạch lạc tài liệu canonical
-version: 0.4.0
-status: draft (chờ duyệt)
+version: 0.4.1
 date: 2026-06-09
 governed_by: 2026-06-07-sdlc-overview-design.md
 ---
@@ -93,7 +92,7 @@ flowchart LR
 ## Quyết định (ADR)
 
 ### ADR-022: Lối vào onboarding distill cho SDLC + rà soát mạch lạc tài liệu canonical
-- **Trạng thái:** Proposed · 2026-06-09
+- **Trạng thái:** Accepted · 2026-06-09
 - **Bối cảnh:** Tri thức SDLC trải trên 6 spec + `CONTRIBUTING.md` + `AGENTS.md`; người đọc chính là intern/junior rất non. Bảng "Cải tiến optional" treo "cheat-sheet" + "checklist onboarding" ở Hoãn (sợ phình/lệch `AGENTS.md`, ADR-002); trigger đã chạm. Audit còn cho thấy nhiều doc current-state lệch ADR (mô hình `-rc.N`, "Staging", cắt nhánh từ `main`).
 - **Quyết định:** (1) Tạo **một** lối vào distill `docs/HUONG_DAN_SDLC.md` (versioned), viết **cho người rất non**, distill + trỏ. (2) **Không** cheat-sheet trong `AGENTS.md`: chỉ **pointer** + **checklist onboarding ngắn** ở `CONTRIBUTING.md §1`. (3) **Rà soát mạch lạc** các doc current-state lệch (sửa drift cho khớp ADR hiện tại, giữ `AGENTS.md` ngắn) — **không** đụng bản ghi versioned/lịch sử. (4) Nguyên tắc "viết dễ hiểu cho người non" áp cho mọi file human-facing động đến (ngoại lệ `AGENTS.md` giữ ngắn). (5) Giao **hai giai đoạn / hai pull request** để dễ duyệt.
 - **Lý do:** Giải nhu cầu "lối vào dễ hiểu" mà không vi phạm lý do Hoãn cũ (distill ở `docs/`, không ở `AGENTS.md`); pointer giữ file gốc ngắn. Rà soát kèm theo là bắt buộc — vô nghĩa nếu lối vào trỏ tới tài liệu đang lệch. Tách current-state vs lịch sử để sửa đúng chỗ, không nhiễu bản ghi thời điểm. Hai pull request giữ mỗi lần review gọn cho người (đội non).
@@ -170,6 +169,7 @@ flowchart LR
 
 ## Changelog
 
+- **0.4.1 (2026-06-13):** Theo ADR-033 (#339): bỏ field frontmatter `status:` (nguồn duy nhất = inline `**Trạng thái:**`); lật trạng thái các ADR đã merge sang `Accepted`.
 - **0.4.0 (2026-06-09):** Sau review của chủ dự án trên `docs/HUONG_DAN_SDLC.md` (PR1) — tinh chỉnh guide cho dễ hiểu hơn nữa: (1) **link** tới mọi file/spec/ADR được nhắc; (2) **đồng nhất thuật ngữ** với GitHub — luôn dùng "merge" (bỏ "gộp"), giải nghĩa thuật ngữ trước khi dùng; (3) **bỏ từ "distill"** trong guide (khó hiểu) — dùng "lối vào/tổng quan"; (4) thêm mục **"Mô hình nhánh: Git Flow"** (làm rõ Git Flow là mô hình nhánh cụ thể + link bài gốc nvie); (5) thêm mục **"Ba nghĩa của môi trường"** (application/Rails/Railway + mặc định = application environment); (6) thêm mục **"Lỗi thường vs lỗi nghiêm trọng"** dạng bảng so sánh; (7) định nghĩa **"chủ dự án"** (project owner, không phải GitHub Projects) + **rebase**; (8) **ghi chú công cụ**: hiện chỉ dùng Claude Code, các tự động hoá là tính năng Claude Code. Kèm rà soát canonical: thêm **bảng "Từ viết tắt được phép"** (nguồn tập trung duy nhất: CI/ADR/CRUD/UI/SDLC/SemVer) + giải thích **"canonical"** + ghi chú công cụ vào `AGENTS.md`; gloss "canonical" + pointer guide ở `CONTRIBUTING.md`. Không đổi quyết định nào.
 - **0.3.0 (2026-06-09):** Sau phản hồi chủ dự án — (1) nguyên tắc "dễ hiểu cho người non" thành **cross-cutting** cho mọi file human-facing động đến (ngoại lệ `AGENTS.md` giữ ngắn, đã chốt); (2) **mở rộng rà soát toàn bộ `.md`**: thêm verified drift ở `README.md` (cắt nhánh từ `main`), `KIEN_THUC_DOCKER.md` (mô hình "Staging" cũ), `HUONG_DAN_DEPLOY.md` (sao lưu/khôi phục); tách *doc current-state* vs *bản ghi versioned/lịch sử* (loại plans/spec/V2_*/hdsd/CHANGELOG); (3) chia phạm vi **hai giai đoạn / hai pull request**; (4) thêm nguyên tắc bump version cho guide versioned. ADR-022 cập nhật.
 - **0.2.0 (2026-06-09):** Audience đổi sang intern/junior rất non (bỏ ràng buộc ≤1 trang, thêm Từ vựng + Nguyên tắc viết); mở rộng phạm vi rà soát `AGENTS.md` + `CONTRIBUTING.md` theo audit (drift `-rc.N` verify với ADR-004/005/008); gắn Issue `#307`.

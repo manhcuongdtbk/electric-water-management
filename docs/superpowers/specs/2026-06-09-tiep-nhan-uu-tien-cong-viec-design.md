@@ -1,7 +1,6 @@
 ---
 title: Tiếp nhận & ưu tiên công việc (intake & backlog priority) — Mảnh 4 của SDLC
-version: 0.2.0
-status: draft (chờ duyệt)
+version: 0.2.1
 date: 2026-06-09
 governed_by: 2026-06-07-sdlc-overview-design.md
 ---
@@ -72,7 +71,7 @@ flowchart LR
 
 ### ADR-019: Cơ chế ưu tiên — nhãn `priority-high` tối thiểu trên nền milestone
 
-- **Trạng thái:** Proposed · 2026-06-09
+- **Trạng thái:** Accepted · 2026-06-09
 - **Bối cảnh:** Đội 2–3 người, chủ dự án quyết & phát hành; Kanban "ít nghi thức" (ADR-001); nguồn sự thật trong repo, **đừng sinh sổ song song giữ tay** (ADR-002). Đã dùng nặng Issue + milestone (#2); #3 đã có `severity-critical` cho sự cố. Khoảng trống: thiếu tín hiệu *phải-có / làm-trước* trong cùng tập Issue/milestone.
 - **Quyết định:**
   1. Đúng **một nhãn cờ `priority-high`** (kebab-case khớp `severity-critical`; tiếng Anh như mọi nhãn vận hành; **tạo lười** — `gh label create` lần đầu cần). Mọi Issue **không** gắn = backlog thường.
@@ -90,7 +89,7 @@ flowchart LR
 
 ### ADR-020: Nhịp ưu tiên ad-hoc + cổng "release đủ nội dung"
 
-- **Trạng thái:** Proposed · 2026-06-09
+- **Trạng thái:** Accepted · 2026-06-09
 - **Bối cảnh:** ADR-001 chọn Kanban "ít nghi thức", chủ dự án là người quyết duy nhất. Vòng đời thay đổi #2 đã có **bước 2 "Phân loại"** — nơi gán nhãn + milestone. Quy trình phát hành bước 2 nói *"Đủ nội dung → `release/*`"* nhưng **"đủ" chưa định nghĩa** → rủi ro cắt thiếu việc phải-có hoặc chờ vô hạn việc phụ.
 - **Quyết định:**
   1. **Ưu tiên là việc ad-hoc, gộp vào bước Phân loại đã có của #2** — chủ dự án gán `priority-high` (+ milestone) ngay lúc triage; xem lại cơ hội khi cắt release. **Không** thêm bước mới, **không** họp grooming định kỳ.
@@ -152,5 +151,6 @@ flowchart LR
 
 ## Changelog
 
+- **0.2.1 (2026-06-13):** Theo ADR-033 (#339): bỏ field frontmatter `status:` (nguồn duy nhất = inline `**Trạng thái:**`); lật trạng thái các ADR đã merge sang `Accepted`.
 - **0.2.0 (2026-06-09):** Hiện thực xong (xem plan `2026-06-09-tiep-nhan-uu-tien-cong-viec.md`): mục 11 `CONTRIBUTING.md` + sửa câu trỏ mục 9; pointer `AGENTS.md`; Backlog #4 trong release spec → ✅; nhãn `priority-high` (tạo lười). Cập nhật mục "Truy vết" sang trạng thái đã hiện thực.
 - **0.1.0 (2026-06-09):** Bản thảo đầu — ADR-019 (cơ chế ưu tiên: nhãn `priority-high` tối thiểu trên nền milestone; `severity-critical` ngoài thang), ADR-020 (nhịp ad-hoc gộp vào bước Phân loại của #2; cổng release-readiness = mọi `priority-high` của milestone đã xong, việc không cờ reslot; một backlog một thứ tự). Backlog #4. Chờ duyệt.

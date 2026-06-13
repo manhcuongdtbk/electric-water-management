@@ -1,7 +1,6 @@
 ---
 title: Chiều review "tuân AGENTS" (custom RuboCop cop cho BigDecimal + hook/checklist cho phần phán đoán)
-version: 0.1.1
-status: draft (chờ duyệt)
+version: 0.1.2
 date: 2026-06-13
 governed_by: 2026-06-07-sdlc-overview-design.md
 ---
@@ -41,7 +40,7 @@ Triage (chủ dự án) đã chốt: thứ tự **B → A**; B **không** `prior
 
 ## ADR-031: Chiều review "tuân AGENTS" hai lớp — máy ép tối đa (RuboCop cop) + hook/checklist cho phần phán đoán (mở rộng ADR-002/024/029)
 
-- **Trạng thái:** Proposed · 2026-06-13 · mở rộng [ADR-002](2026-06-07-sdlc-overview-design.md) (máy ép luật kiểm được), [ADR-024](2026-06-11-guardrail-quan-tri-tai-lieu-design.md) (pattern guardrail), [ADR-029](2026-06-07-sdlc-overview-design.md) (review là phần "cơ học" của vận hành AI-assisted).
+- **Trạng thái:** Accepted · 2026-06-13 · mở rộng [ADR-002](2026-06-07-sdlc-overview-design.md) (máy ép luật kiểm được), [ADR-024](2026-06-11-guardrail-quan-tri-tai-lieu-design.md) (pattern guardrail), [ADR-029](2026-06-07-sdlc-overview-design.md) (review là phần "cơ học" của vận hành AI-assisted).
 - **Bối cảnh:** xem trên.
 - **Quyết định:**
 
@@ -127,5 +126,6 @@ Mạnh nhất là phần Lớp 1: anti-pattern float/làm-tròn **mới thêm** 
 
 ## Lịch sử thay đổi
 
+- **0.1.2 (2026-06-13):** Theo ADR-033 (#339): bỏ field frontmatter `status:` (nguồn duy nhất = inline `**Trạng thái:**`); lật trạng thái các ADR đã merge sang `Accepted`.
 - **0.1.1 (2026-06-13):** Tinh chỉnh hành vi `Decimal/ExplicitRoundingMode` (phát hiện lúc viết plan, khảo sát code): scope **cùng tầng tính toán** (`app/models`, `app/services`) như cop float — bỏ "ROUND_HALF_EVEN mọi nơi"; cop bắt **mọi** `.round` thiếu mode half-up tường minh (subsume cả missing-mode lẫn banker's-mode trong tầng đó). Lý do: tầng tính toán hiện 0 `.round`/0 `.to_f` (mọi làm tròn ở helper hiển thị, đã `ROUND_HALF_UP` — Exclude); scope đồng nhất mỗi cop, false-positive thấp; khe hở banker's ở tầng hiển thị do review người + §8 phủ. Bỏ unit-test "escape-comment"/"ngoài-scope" (do RuboCop framework lo; scope chứng minh qua lần chạy `rubocop` xanh toàn repo).
 - **0.1.0 (2026-06-13):** Bản thảo đầu — ADR-031 (chiều review "tuân AGENTS" hai lớp). Lớp 1: custom RuboCop cop `Decimal/NoFloatInCalculation` + `Decimal/ExplicitRoundingMode` (job `ruby-checks`, scope theo thư mục, inline-disable làm escape). Lớp 2: hook `UserPromptSubmit` bơm `additionalContext` khi gõ `/code-review` + checklist canonical `CONTRIBUTING.md` §8 + checkbox PR template. Khảo sát code: `.to_f` chỉ ở tầng xuất Excel/helper (hợp lệ), tầng tính toán sạch → cop là lưới chống regression. Loại: sửa-prompt-plugin-toàn-cục, bash-grep, project-subagent, checklist-thuần, ép-i18n-trong-B, hook-bơm-PR-create/simplify. Giới hạn: i18n thuộc mục A; không-viết-tắt bất-khả-thi-máy (ADR-024); phủ-6-vai phần lớn ADR-030; Lớp 2 không chặn. Chờ duyệt.

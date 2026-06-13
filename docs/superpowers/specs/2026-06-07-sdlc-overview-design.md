@@ -1,7 +1,6 @@
 ---
 title: SDLC Overview — Mô hình phát triển & chiến lược tài liệu
-version: 0.4.0
-status: draft (chờ duyệt)
+version: 0.4.1
 date: 2026-06-07
 ---
 
@@ -15,7 +14,7 @@ Tài liệu **đứng đầu** loạt spec chuẩn hoá SDLC. Mỗi mảnh (rele
 
 ## ADR-001: Mô hình phát triển & cách quản lý dự án
 
-- **Trạng thái:** Proposed · 2026-06-07
+- **Trạng thái:** Accepted · 2026-06-07
 - **Bối cảnh:** Hệ thống nội bộ (điện sư đoàn), domain cần đúng & truy vết. Tài liệu thiết kế dày, làm trước (`docs/V2_*`). Phát hành theo phiên bản rời rạc, có khách nghiệm thu (UAT), giao bản chạy offline. Team 2–3 người, một người (chủ dự án) duyệt & phát hành.
 - **Quyết định:** Đặt tên tường minh mô hình đang theo:
   - **Quản lý dự án:** *Hybrid* (predictive + adaptive) — theo nghĩa PMI.
@@ -35,7 +34,7 @@ Tài liệu **đứng đầu** loạt spec chuẩn hoá SDLC. Mỗi mảnh (rele
 
 ## ADR-002: Chiến lược tài liệu & tri thức (bền + chia sẻ + tự động + tool-agnostic)
 
-- **Trạng thái:** Proposed · 2026-06-07 · **mở rộng bởi [ADR-023](2026-06-10-quan-tri-tai-lieu-design.md)** (quản trị tài liệu: từ điển thuật ngữ + bản đồ tài liệu + quy tắc "sửa đừng thêm").
+- **Trạng thái:** Accepted · 2026-06-07 · **mở rộng bởi [ADR-023](2026-06-10-quan-tri-tai-lieu-design.md)** (quản trị tài liệu: từ điển thuật ngữ + bản đồ tài liệu + quy tắc "sửa đừng thêm").
 - **Bối cảnh:** Cần giữ kiến thức/quyết định không bị quên qua các session; cả team (người + nhiều loại AI: Claude Code, Cursor, …, có thể cả Windows) thừa hưởng và cải tiến được.
 - **Quyết định:** Kiến trúc **4 lớp**, nguồn sự thật nằm trong **repo** (version-control), không nằm ở trí nhớ:
   1. **Guardrails tự động** — luật nào máy kiểm được thì để máy ép: CI, release-please, commitlint, branch-guard, AI review PR. *(Không viết prose rồi mong người nhớ.)*
@@ -64,7 +63,7 @@ Tài liệu **đứng đầu** loạt spec chuẩn hoá SDLC. Mỗi mảnh (rele
 
 ## ADR-029: Vận hành vòng đời với trợ lý AI — "AI lo cơ học, người giữ gate quyết định"
 
-- **Trạng thái:** Proposed · 2026-06-11 · **mở rộng [ADR-001](#adr-001-mô-hình-phát-triển--cách-quản-lý-dự-án)** (ADR-001 đặt tên *mô hình vận hành*; ADR-029 đặt tên *cách vận hành hằng ngày* mô hình đó cùng một trợ lý AI). Tổng quát hoá [ADR-028](2026-06-08-truy-vet-quan-ly-thay-doi-design.md) (cổng xác nhận khách trước build — một áp dụng cụ thể của nguyên tắc này).
+- **Trạng thái:** Accepted · 2026-06-11 · **mở rộng [ADR-001](#adr-001-mô-hình-phát-triển--cách-quản-lý-dự-án)** (ADR-001 đặt tên *mô hình vận hành*; ADR-029 đặt tên *cách vận hành hằng ngày* mô hình đó cùng một trợ lý AI). Tổng quát hoá [ADR-028](2026-06-08-truy-vet-quan-ly-thay-doi-design.md) (cổng xác nhận khách trước build — một áp dụng cụ thể của nguyên tắc này).
 - **Bối cảnh:** Tài liệu SDLC (`HUONG_DAN_SDLC.md`, `CONTRIBUTING.md`) mô tả thao tác kiểu **thủ công cho người**. Thực tế đội (2–3 người, một chủ dự án duyệt & phát hành) vận hành **xuyên suốt vòng đời bằng một trợ lý AI** (hiện là Claude Code): trợ lý soạn Issue, draft spec/ADR, fold canonical, tạo nhánh/PR, theo dõi CI, soạn release notes. Cần đặt tên tường minh **nguyên tắc vận hành** này — vừa để onboarding hiểu đúng cách làm, vừa để giữ kỷ luật *ai quyết cái gì*. Đây là **mô hình vận hành** + tài liệu SDLC, **không đụng nghiệp vụ app**.
 - **Quyết định:** Mỗi bước vòng đời chạy theo mô hình **"trợ lý AI lo phần cơ học — người giữ các gate quyết định"** (định nghĩa **gate**, **human-in-the-loop**, **dogfood**, **vận hành AI-assisted**: `docs/THUAT_NGU.md`). Ranh giới đi theo **6 bước vòng đời** đã dùng ở `HUONG_DAN_SDLC.md` mục 4 (intake → triage → design → implement → release → close) để canonical + onboarding + `CONTRIBUTING.md` cùng mô tả **một** khung 6 bước:
 
@@ -96,6 +95,7 @@ Tài liệu **đứng đầu** loạt spec chuẩn hoá SDLC. Mỗi mảnh (rele
 
 ## Changelog
 
+- **0.4.1 (2026-06-13):** Theo ADR-033 (#339): bỏ field frontmatter `status:` (nguồn duy nhất = inline `**Trạng thái:**`); lật trạng thái các ADR đã merge sang `Accepted`.
 - **0.4.0 (2026-06-11):** Thêm **ADR-029** (vận hành vòng đời với trợ lý AI — "AI lo cơ học, người giữ gate quyết định"; ranh giới theo 6 bước; ba gate cứng triage/merge/release luôn human-in-the-loop; trung lập công cụ ở canonical, chi tiết Claude Code ở `CONTRIBUTING.md` §8). Mở rộng ADR-001, tổng quát hoá ADR-028. Issue #322.
 - **0.3.0 (2026-06-10):** ADR-002 ghi chú được **mở rộng bởi ADR-023** (quản trị tài liệu — spec `2026-06-10-quan-tri-tai-lieu-design.md`; Issue #310).
 - **0.2.0 (2026-06-07):** ADR-002: thêm quy ước version & changelog cho tài liệu — file meta ở gốc repo (`README.md`, `AGENTS.md`, `CONTRIBUTING.md`, `CLAUDE.md`) không versioned; tài liệu trong `docs/` có version + lịch sử thay đổi, bump khi sửa.

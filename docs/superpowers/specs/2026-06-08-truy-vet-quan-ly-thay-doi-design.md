@@ -1,7 +1,6 @@
 ---
 title: Truy vết & quản lý thay đổi (yêu cầu → thiết kế → test → release) — Mảnh 2 của SDLC
-version: 0.3.0
-status: draft (chờ duyệt)
+version: 0.3.1
 date: 2026-06-08
 governed_by: 2026-06-07-sdlc-overview-design.md
 ---
@@ -76,7 +75,7 @@ flowchart LR
 
 ### ADR-013: Mô hình quản lý thay đổi — Hybrid (GitHub Issues cho luồng, repo cho dấu vết bền)
 
-- **Trạng thái:** Proposed · 2026-06-08
+- **Trạng thái:** Accepted · 2026-06-08
 - **Bối cảnh:** Đội 2–3 người, chủ dự án duyệt & phát hành; Kanban "ít nghi thức" (ADR-001); nguồn sự thật trong repo (ADR-002). Khách chạy Mini PC offline, bối cảnh an ninh → **không có quyền truy cập repo private trên GitHub**. Đã dùng nặng GitHub pull request + release-please.
 - **Quyết định:**
   1. **Hybrid.** *Luồng sống* của một thay đổi (tiếp nhận, phân loại, thảo luận) sống ở **GitHub Issue**; số `#N` là mã định danh thay đổi, tự liên kết pull request/commit. *Dấu vết bền* **không giữ tay** mà tự rơi vào repo: Conventional Commit body ghi `Refs #N`/`Closes #N` → `CHANGELOG.md` (release-please) → mục "Truy vết" của spec. **Không có bảng ma trận giữ tay.**
@@ -94,7 +93,7 @@ flowchart LR
 
 ### ADR-014: Truy vết — mã định danh yêu cầu + liên kết
 
-- **Trạng thái:** Proposed · 2026-06-08
+- **Trạng thái:** Accepted · 2026-06-08
 - **Bối cảnh:** `#N` định danh *thay đổi*, nhưng *yêu cầu gốc* sống trong `docs/V2_XAC_NHAN_NGHIEP_VU.md` (nguồn sự thật nghiệp vụ) — cần neo riêng để spec/test/Issue trỏ tới **bền**. Tài liệu này chỉ có mục đánh số, không có mã; sẽ bị sửa khi khách bổ sung yêu cầu. Test corpus hiện tại (85 spec) đã được map độ phủ trong `docs/V2_KICH_BAN_TEST.md` + `docs/V2_CHIEU_TEST.md`.
 - **Quyết định:**
   1. **Anchor yêu cầu tường minh, thêm dần (lazy).** Gắn `<a id="NV-<slug-chủ-đề>"></a>` ngay trước heading yêu cầu trong tài liệu nghiệp vụ, **chỉ khi lần đầu cần link tới** nó (thường là khi một thay đổi đụng tới). Slug **không dấu, theo chủ đề** (ví dụ `NV-phan-bo-bom-nuoc`), **không buộc vào số mục** để bền khi tài liệu chèn/đánh số lại. Granularity **cấp mục/tiểu mục**, không tới từng câu.
@@ -112,7 +111,7 @@ flowchart LR
 
 ### ADR-015: Artifact guardrail — template Issue / pull request / ADR
 
-- **Trạng thái:** Proposed · 2026-06-08
+- **Trạng thái:** Accepted · 2026-06-08
 - **Bối cảnh:** Luồng Hybrid (ADR-013) + quy ước truy vết (ADR-014) chỉ sống nếu **người làm nhớ áp dụng**. ADR-002 dạy: việc nào checklist/máy nhắc được thì đừng mong trí nhớ.
 - **Quyết định:** Thêm 3 artifact mẫu (chỉ là file tĩnh, không thêm phụ thuộc):
   1. **`.github/ISSUE_TEMPLATE/change-request.md`** — form intake: ai yêu cầu (khách/nội bộ), mô tả, **có đụng nghiệp vụ không**, mức SemVer dự kiến (`feat`/`fix`/breaking), tiêu chí chấp nhận. Chuẩn hoá tiếp nhận → yêu cầu không rơi + đủ thông tin triage.
@@ -195,6 +194,7 @@ Tổng thao tác *quản lý trạng thái bằng tay*: mở Issue + gắn/gỡ 
 
 ## Changelog
 
+- **0.3.1 (2026-06-13):** Theo ADR-033 (#339): bỏ field frontmatter `status:` (nguồn duy nhất = inline `**Trạng thái:**`); lật trạng thái các ADR đã merge sang `Accepted`.
 - **0.3.0 (2026-06-11):** Thêm **ADR-028** (cổng xác nhận khách trước build — tài liệu xác nhận versioned trong `docs/xac-nhan-khach/`, Issue-anchored, current-state→lịch sử, fold-mới-ràng-buộc, vận hành AI-assisted). Issue #320; bối cảnh #264/#319.
 - **0.2.0 (2026-06-08):** Hiện thực xong (xem plan `2026-06-08-truy-vet-quan-ly-thay-doi.md`): thêm 3 template (Issue change-request, pull request, ADR), mục 9 `CONTRIBUTING.md`, pointer `AGENTS.md`; cập nhật mục "Truy vết" sang trạng thái đã hiện thực.
 - **0.1.0 (2026-06-08):** Bản thảo đầu — ADR-013 (Hybrid: GitHub Issues cho luồng + repo cho dấu vết bền; vòng đời 6 bước; P1 nhãn tối thiểu + artifact tự mang trạng thái + milestone; lớp khách mức release), ADR-014 (anchor yêu cầu `NV-...` tường minh thêm dần; chuẩn hoá "Truy vết" của spec; chiều ngược grep; test ↔ yêu cầu ở phía spec/pull request không tag test), ADR-015 (template Issue change-request + pull request + ADR). Hiện thực truy vết yêu cầu → thiết kế → test → release (Backlog #2). Chờ duyệt.

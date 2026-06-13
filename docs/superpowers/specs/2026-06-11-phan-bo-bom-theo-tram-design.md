@@ -1,7 +1,6 @@
 ---
 title: Phân bổ điện bơm nước theo từng trạm bơm (mở rộng đối tượng nhận)
-version: 0.2.0
-status: draft (chờ duyệt)
+version: 0.2.1
 date: 2026-06-11
 governed_by: 2026-06-07-sdlc-overview-design.md
 ---
@@ -29,7 +28,7 @@ Mã nguồn liên quan hiện tại:
 
 ## ADR-026: Trạm bơm = đầu mối `water_pump`; recipient khóa ngoại rời; cờ kỳ phân biệt cơ chế
 
-- **Trạng thái:** Proposed · 2026-06-11
+- **Trạng thái:** Accepted · 2026-06-11
 - **Bối cảnh:** Cần phân bổ điện bơm nước theo từng trạm bơm thay vì gộp khu vực, thêm ba loại đối tượng nhận (khối, nhóm, đầu mối sinh hoạt thuộc đơn vị), đồng thời **giữ nguyên hành vi kỳ cũ** (đã đóng) là gộp toàn khu vực. Hệ thống chưa có model trạm bơm; công tơ bơm nước nằm dưới đầu mối `water_pump`.
 - **Quyết định:**
   1. **Trạm bơm = đầu mối `water_pump`.** Mỗi đầu mối `water_pump` là một trạm; `D` của trạm = Σ (sử dụng thô + tổn hao) các công tơ của đầu mối đó. Σ `D` các trạm = `D` toàn khu vực (bất biến cũ giữ nguyên).
@@ -110,6 +109,7 @@ Tính năng **chưa triển khai** — mọi chiều `DEFERRED #319` cho tới k
 
 ## Changelog
 
+- **0.2.1 (2026-06-13):** Theo ADR-033 (#339): bỏ field frontmatter `status:` (nguồn duy nhất = inline `**Trạng thái:**`); lật trạng thái các ADR đã merge sang `Accepted`.
 ### 0.2.0 (2026-06-13)
 
 - Chuyển danh sách chiều test → bảng `## Truy vết chiều test` với anchor `CHIEU-<slug>`, mọi hàng `DEFERRED #319` (chưa triển khai) — ADR-030, Issue #329. Khi build TN2: đổi trạng thái từng hàng sang "có test" + gắn anchor vào test.
