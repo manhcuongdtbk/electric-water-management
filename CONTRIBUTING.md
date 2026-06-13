@@ -153,6 +153,8 @@ Bề mặt ép: (1) cop `Decimal/*` máy-ép phần BigDecimal; (2) hook `UserPr
 
 **CI guardrail header changelog (#339):** script thứ 6 của job `doc-governance` (`check-changelog-header.sh`, native bash fail-loud) ép tài liệu spec dùng **một** header lịch sử duy nhất `## Lịch sử thay đổi` (khớp `AGENTS.md` mục version/changelog), **không** dùng biến thể `## Changelog` → đỏ nếu gặp heading `## Changelog`. Bỏ qua khối code fence (ví dụ minh hoạ không tính) và prose nhắc tới (bọc backtick không phải heading). Phạm vi: `docs/superpowers/specs/*.md` (plans là bản ghi lịch sử, ngoài phạm vi).
 
+**CI guardrail chống trùng số ADR (ADR-046):** script thứ 7 của job `doc-governance` (`check-adr-numbering.sh`, native bash fail-loud) đối chiếu mọi dòng định nghĩa ADR trong `docs/superpowers/specs/*.md` — heading `## ADR-NNN` **hoặc** `### ADR-NNN` (bắt cả hai cấp; chỉ `###` sẽ bỏ sót) — và **đỏ** nếu một số `ADR-NNN` xuất hiện ở >1 heading (cùng file hoặc khác file). Bỏ code fence nên ví dụ minh hoạ không tính. Bắt cả trùng đang tồn tại lẫn va chạm giữa hai nhánh song song khi nhánh sau đồng bộ `develop` (single-merger renumber nhánh gộp sau — ADR-007). Việc "đặt đúng số kế tiếp" vẫn cần kiểm nhánh/PR đang mở thủ công (số chưa merge vô hình với `develop`). Chi tiết + lý do: ADR-046 trong `docs/superpowers/specs/2026-06-13-adr-numbering-collision-design.md`.
+
 ## 9. Quản lý thay đổi & truy vết
 
 Theo ADR-013..015 (chi tiết + lý do: `docs/superpowers/specs/2026-06-08-truy-vet-quan-ly-thay-doi-design.md`). Mục tiêu: yêu cầu khách **không rơi** và truy được **yêu cầu → thiết kế → test → release**.
