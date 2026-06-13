@@ -97,4 +97,75 @@ RSpec.describe CalculationState, type: :model do
       end
     end
   end
+
+  describe "upsert writers (persistence)" do
+    def row
+      described_class.find_by(zone: zone, period: period)
+    end
+
+    it "merges touch_inputs! and mark_calculated! into one row with both timestamps set" do
+      touched_at = 2.minutes.ago
+      calculated_at = Time.current
+
+      described_class.touch_inputs!(zone_id: zone.id, period_id: period.id, at: touched_at)
+      described_class.mark_calculated!(zone_id: zone.id, period_id: period.id, at: calculated_at)
+
+      expect(described_class.where(zone: zone, period: period).count).to eq(1)
+      expect(row.inputs_changed_at).to be_within(1.second).of(touched_at)
+      expect(row.last_calculated_at).to be_within(1.second).of(calculated_at)
+    end
+
+    it "does not reset last_calculated_at when touch_inputs! runs after mark_calculated! (clobber protection)" do
+      calculated_at = 2.minutes.ago
+      touched_at = Time.current
+
+      described_class.mark_calculated!(zone_id: zone.id, period_id: period.id, at: calculated_at)
+      described_class.touch_inputs!(zone_id: zone.id, period_id: period.id, at: touched_at)
+
+      expect(row.last_calculated_at).to be_within(1.second).of(calculated_at)
+      expect(row.inputs_changed_at).to be_within(1.second).of(touched_at)
+    end
+
+    it "does not reset inputs_changed_at when mark_calculated! runs after touch_inputs! (clobber protection)" do
+      touched_at = 2.minutes.ago
+      calculated_at = Time.current
+
+      described_class.touch_inputs!(zone_id: zone.id, period_id: period.id, at: touched_at)
+      described_class.mark_calculated!(zone_id: zone.id, period_id: period.id, at: calculated_at)
+
+      expect(row.inputs_changed_at).to be_within(1.second).of(touched_at)
+      expect(row.last_calculated_at).to be_within(1.second).of(calculated_at)
+    end
+
+    it "is idempotent for repeated touch_inputs! calls (still exactly one row)" do
+      3.times do
+        described_class.touch_inputs!(zone_id: zone.id, period_id: period.id, at: Time.current)
+      end
+
+      expect(described_class.where(zone: zone, period: period).count).to eq(1)
+    end
+
+    it "is idempotent for repeated mark_calculated! calls (still exactly one row)" do
+      3.times do
+        described_class.mark_calculated!(zone_id: zone.id, period_id: period.id, at: Time.current)
+      end
+
+      expect(described_class.where(zone: zone, period: period).count).to eq(1)
+    end
+
+    it "preserves created_at on a second call while advancing updated_at" do
+      first_at = 2.minutes.ago
+      second_at = Time.current
+
+      described_class.touch_inputs!(zone_id: zone.id, period_id: period.id, at: first_at)
+      original_created_at = row.created_at
+
+      described_class.mark_calculated!(zone_id: zone.id, period_id: period.id, at: second_at)
+      reloaded = row
+
+      expect(reloaded.created_at).to be_within(1.second).of(original_created_at)
+      expect(reloaded.updated_at).to be > original_created_at
+      expect(reloaded.updated_at).to be_within(1.second).of(second_at)
+    end
+  end
 end
