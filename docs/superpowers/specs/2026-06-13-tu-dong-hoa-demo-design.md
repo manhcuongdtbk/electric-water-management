@@ -1,6 +1,6 @@
 ---
 title: Tự động hoá demo (walkthrough cho chủ dự án trước merge + khách trước release)
-version: 0.1.3
+version: 0.1.4
 date: 2026-06-13
 ---
 
@@ -54,7 +54,7 @@ flowchart TD
   SPEC --> CI["CI trên PR → develop (sibling system-spec)<br/>Playwright record + seed demo"]
   CI --> VID["Video walkthrough (.mp4)<br/>caption tiếng Việt + diễn hoạt thao tác"]
   CI --> GUARD["Guardrail: PR nhãn hướng-khách<br/>thiếu demo spec → đỏ"]
-  VID --> PRC["Chặng OWNER — PR comment: link video<br/>chủ dự án/đội xem & duyệt trước merge"]
+  VID --> PRC["Chặng OWNER — PR comment: link video<br/>chủ dự án/đội xem và duyệt trước merge"]
   PRC -->|squash| DEV["develop (tự deploy env Development)"]
   DEV --> REL["release/* ← develop<br/>(ổn định nội bộ, KHÔNG deploy Railway)"]
   REL --> BUNDLE["Gom clip hướng-khách của release"]
@@ -64,8 +64,8 @@ flowchart TD
   MAIN -->|tự deploy| ACC["env Acceptance (Railway) = main"]
   ACC --> L2["Chặng KHÁCH ② — nghiệm thu hands-on<br/>trên Acceptance (ADR-013)"]
   L2 -->|đạt nghiệm thu| PROD["Giao bản đã tag → Production (Mini PC offline)<br/>+ ff nhánh production → env Mirror"]
-  L1 -. chưa ưng: sửa & lặp lại từ đầu .-> SPEC
-  L2 -. chưa ưng: ra bản vá kế tiếp (vd 1.1.1), lặp .-> SPEC
+  L1 -.->|"chưa ưng: sửa và lặp lại từ đầu"| SPEC
+  L2 -.->|"chưa ưng: ra bản vá kế tiếp (vd 1.1.1), lặp"| SPEC
 ```
 
 ### Hai vòng phản hồi của khách (đọc kèm sơ đồ)
@@ -196,3 +196,4 @@ Cả ① và ② nếu phát hiện vấn đề đều **lặp lại từ đầu
 | 0.1.1 | 2026-06-13 | Sửa sơ đồ luồng: tách rõ hai vòng phản hồi khách (① xem demo sớm → ② nghiệm thu hands-on Acceptance → Production); thêm mục "Hai vòng phản hồi" + Non-Goal "không thay nghiệm thu Acceptance". |
 | 0.1.2 | 2026-06-13 | Vòng phản hồi ①/② quay về đầu pipeline (nhánh fix → PR → demo lại → owner duyệt → release), không vá tắt trên release; làm rõ bản vá vẫn qua đúng các cổng. |
 | 0.1.3 | 2026-06-13 | Sửa sơ đồ/prose cho khớp SDLC canonical: bỏ "release candidate" (ADR-008 không dùng rc), Acceptance = `main` sau tag (ADR-005), vòng ① đặt ở cửa sổ `release/*` trước merge `main`; dẫn đúng ADR (ADR-013 nghiệm thu hands-on, ADR-029 gate người) và phân biệt với ADR-028 (xác nhận yêu cầu trước build). |
+| 0.1.4 | 2026-06-13 | Sửa lỗi cú pháp mermaid: nhãn cạnh nét đứt chuyển sang dạng `-.->\|"..."\|` (bọc nháy kép) để nuốt được ký tự đặc biệt (dấu chấm trong 1.1.1, ngoặc, dấu hai chấm). |
