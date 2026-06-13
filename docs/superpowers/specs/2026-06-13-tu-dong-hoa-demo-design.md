@@ -1,6 +1,6 @@
 ---
 title: Tự động hoá demo (walkthrough cho chủ dự án trước merge + khách trước release)
-version: 0.1.6
+version: 0.2.0
 date: 2026-06-13
 ---
 
@@ -199,3 +199,4 @@ Cả ① và ② nếu phát hiện vấn đề đều **lặp lại từ đầu
 | 0.1.4 | 2026-06-13 | Sửa lỗi cú pháp mermaid: nhãn cạnh nét đứt chuyển sang dạng `-.->\|"..."\|` (bọc nháy kép) để nuốt được ký tự đặc biệt (dấu chấm trong 1.1.1, ngoặc, dấu hai chấm). |
 | 0.1.5 | 2026-06-13 | Tinh chỉnh Glossary "Chặng khách" cho khớp vị trí đã sửa (cửa sổ `release/*` trước merge `main`, đứng trước nghiệm thu hands-on ②). |
 | 0.1.6 | 2026-06-13 | Đánh số lại ADR của spec này: 034..039 → **036..041**, tránh trùng — ADR-034 đã thuộc #328 (merged `develop`, spec `khac-zone-direct-sua-duoc`), ADR-035 đang ở PR #346 (#342). Cập nhật mọi tham chiếu trong spec/plan/code. |
+| 0.2.0 | 2026-06-13 | Hiện thực MVP (xem plan 2026-06-13-tu-dong-hoa-demo.md): demo spec + recorder Playwright + caption/diễn hoạt + seed + transcode + CI job + guardrail. Thuật ngữ demo (Demo spec, Recorder, Caption banner, Diễn hoạt thao tác) bổ sung vào `docs/THUAT_NGU.md` v1.8.0. |
