@@ -64,6 +64,26 @@ assert "fail: orphan" 1 \
 it "CHIEU-ghost: orphan" do; end' \
   "Orphan"
 
+# 5. FAIL: collision — cùng anchor khai ở hai spec khác nhau (make_case chỉ tạo 1
+# spec nên case này dựng fixture 2-spec riêng).
+collision_case() {
+  local tmp out rc
+  tmp="$(mktemp -d)"; mkdir -p "$tmp/specs" "$tmp/spec"
+  printf '## Truy vết chiều test\n| Mã | M | T |\n|---|---|---|\n| `CHIEU-dup` | x | có test |\n## Giới hạn\n' > "$tmp/specs/a-design.md"
+  printf '## Truy vết chiều test\n| Mã | M | T |\n|---|---|---|\n| `CHIEU-dup` | y | có test |\n## Giới hạn\n' > "$tmp/specs/b-design.md"
+  printf 'it "CHIEU-dup: ok" do; end\n' > "$tmp/spec/x_spec.rb"
+  out="$(bash "$SCRIPT" "$tmp/specs" "$tmp/spec" 2>&1)"; rc=$?
+  if [[ "$rc" -ne 1 ]]; then
+    echo "✗ fail: collision — expected exit 1, got $rc"; echo "$out" | sed 's/^/    /'; fails=$((fails + 1))
+  elif ! printf '%s' "$out" | grep -qF "Đụng tên"; then
+    echo "✗ fail: collision — output missing \"Đụng tên\""; echo "$out" | sed 's/^/    /'; fails=$((fails + 1))
+  else
+    echo "✓ fail: collision"
+  fi
+  rm -rf "$tmp"
+}
+collision_case
+
 echo "----"
 if [[ "$fails" -gt 0 ]]; then echo "✗ $fails case(s) failed"; exit 1; fi
 echo "✓ all cases passed"

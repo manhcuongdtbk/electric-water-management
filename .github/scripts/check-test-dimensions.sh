@@ -38,12 +38,16 @@ while IFS= read -r spec; do
     (( insection )) || continue
     case "$raw" in '|'*) : ;; *) continue ;; esac           # chỉ hàng bảng
     case "$raw" in *CHIEU-*) : ;; *) continue ;; esac        # có token CHIEU-
+    # Một anchor mỗi hàng theo convention (cột Mã); đa-anchor là chuyện ở test.
     anchor="$(printf '%s' "$raw" | grep -oE 'CHIEU-[a-z0-9-]+' | head -n1)"
     [[ -z "$anchor" ]] && continue
+    # Cột trạng thái = cell cuối: bỏ một dấu | cuối (nếu có) rồi lấy phần sau dấu |
+    # cuối — để '#<số>' ở cột mô tả KHÔNG vô tình thoả luật DEFERRED.
+    status="${raw%|}"; status="${status##*|}"
     deferred=0
-    if printf '%s' "$raw" | grep -qE 'DEFERRED'; then
+    if printf '%s' "$status" | grep -qE 'DEFERRED'; then
       deferred=1
-      if ! printf '%s' "$raw" | grep -qE '#[0-9]+'; then
+      if ! printf '%s' "$status" | grep -qE '#[0-9]+'; then
         echo "✗ Deferred thiếu Issue  $spec  → $anchor  (cần dạng 'DEFERRED #<số>')"
         violations=$((violations + 1))
       fi
