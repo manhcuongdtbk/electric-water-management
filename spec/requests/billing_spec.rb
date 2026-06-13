@@ -412,6 +412,45 @@ RSpec.describe "Billing", type: :request do
     end
   end
 
+  describe "GET /billing — breakdown role + multi-zone (#332)" do
+    let(:sample) { setup_zone_one_full_sample }
+    before { CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call }
+
+    let(:breakdown_title) { "Đối chiếu tổn hao/sử dụng theo loại đầu mối" }
+
+    it "CHIEU-breakdown-vai-tro: unit_admin thấy breakdown khu vực mình" do
+      sign_in create(:user, :unit_admin, unit: sample.unit_b)
+      get billing_path
+      expect(response.body).to include(breakdown_title)
+    end
+
+    it "CHIEU-breakdown-vai-tro: unit_admin quản lý khu vực (UA-ZM) thấy breakdown" do
+      sign_in create(:user, :unit_admin, unit: sample.unit_a)
+      get billing_path
+      expect(response.body).to include(breakdown_title)
+    end
+
+    it "CHIEU-breakdown-vai-tro: commander thấy breakdown (read-only)" do
+      sign_in create(:user, :commander, unit: sample.unit_a)
+      get billing_path
+      expect(response.body).to include(breakdown_title)
+    end
+
+    it "CHIEU-breakdown-vai-tro: technician bị chặn khỏi bảng tính tiền" do
+      sign_in create(:user, :technician)
+      get billing_path
+      expect(response).to redirect_to(users_path)
+    end
+
+    it "CHIEU-breakdown-theo-zone: SA đa khu vực → mỗi zone một bảng breakdown" do
+      sample2 = setup_zone_two_full_sample(period: sample.period)
+      CalculationOrchestrator.new(zone: sample2.zone, period: sample.period).call
+      sign_in create(:user, :system_admin)
+      get billing_path
+      expect(response.body.scan(breakdown_title).size).to be >= 2
+    end
+  end
+
   describe "POST /billing/recalculate" do
     let(:admin) { create(:user, :system_admin) }
     let(:unit_admin_b) { create(:user, :unit_admin, unit: sample.unit_b) }
