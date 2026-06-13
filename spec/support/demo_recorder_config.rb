@@ -2,26 +2,28 @@
 # to record a native WebM per example. The main suite keeps :headless_chromium
 # (Selenium) — see spec/support/system_test_config.rb and ADR-036.
 #
-# Node.js is NOT required: a standalone Playwright driver bundle (node binary +
-# cli.js) is downloaded from playwright.azureedge.net during env setup and a
-# wrapper shell script is placed at /usr/local/bin/playwright-driver. CI will
-# replicate this step. See ADR-036.
+# Node.js + Playwright are provisioned in the dev Docker image (Dockerfile.dev)
+# via NodeSource + npm install + npx playwright install. The driver auto-detects
+# node_modules/.bin/playwright. Set PLAYWRIGHT_CLI_EXECUTABLE_PATH to override.
 require "capybara-playwright-driver"
 
 # Directory where recorded videos are collected (gitignored; CI uploads them).
 DEMO_VIDEO_DIR = Rails.root.join("tmp", "demo_videos").freeze
 
 Capybara.register_driver :playwright_demo do |app|
-  Capybara::Playwright::Driver.new(
-    app,
-    playwright_cli_executable_path: ENV.fetch("PLAYWRIGHT_CLI_EXECUTABLE_PATH", "/usr/local/bin/playwright-driver"),
+  driver_args = {
     browser_type: :chromium,
     headless: true,
     # Passing record_video_dir here ensures the Playwright browser context is
     # created with video recording enabled regardless of when on_save_screenrecord
     # is registered. The callback renames the raw temp file to a descriptive name.
     record_video_dir: DEMO_VIDEO_DIR.to_s
-  )
+  }
+  # Allow an explicit override (e.g. CI with a custom Playwright binary path).
+  # When unset, capybara-playwright-driver auto-detects node_modules/.bin/playwright.
+  cli = ENV["PLAYWRIGHT_CLI_EXECUTABLE_PATH"]
+  driver_args[:playwright_cli_executable_path] = cli if cli.present?
+  Capybara::Playwright::Driver.new(app, **driver_args)
 end
 
 RSpec.configure do |config|
