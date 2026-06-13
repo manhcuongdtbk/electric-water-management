@@ -1,6 +1,6 @@
 ---
 title: Tự động hoá demo (walkthrough cho chủ dự án trước merge + khách trước release)
-version: 0.1.2
+version: 0.1.3
 date: 2026-06-13
 ---
 
@@ -8,7 +8,7 @@ date: 2026-06-13
 
 Thiết kế cho [#343](https://github.com/manhcuongdtbk/electric-water-management/issues/343). Mục tiêu: thay việc **test tay rồi quay màn hình thủ công** bằng một **engine demo** chạy theo quy trình, phục vụ hai chặng — chủ dự án xem/duyệt **trước merge**, và khách (đơn vị quân đội) xem **trước khi release deploy vào Production (Mini PC)** để phản hồi sớm.
 
-Liên quan: cổng xác nhận khách trước build (ADR-028 trong [truy vết & quản lý thay đổi](2026-06-08-truy-vet-quan-ly-thay-doi-design.md)); môi trường Acceptance/Production và mô hình promotion (ADR-005 trong [quy trình release](2026-06-07-quy-trinh-release-design.md)); anchor `NV-...` và dấu vết bền trong repo (ADR-013/014); tốc-độ system spec trên CI tách ở [#344](https://github.com/manhcuongdtbk/electric-water-management/issues/344).
+Liên quan: tương tác khách mức release & nghiệm thu hands-on trên Acceptance (ADR-013 trong [truy vết & quản lý thay đổi](2026-06-08-truy-vet-quan-ly-thay-doi-design.md)); Acceptance = nhánh `main`, **không** dùng `-rc.N`, promotion (ADR-005/008 trong [quy trình release](2026-06-07-quy-trinh-release-design.md)); **phân biệt** với cổng xác nhận *yêu cầu* trước build (ADR-028 — duyệt tài liệu, chưa có phần mềm; demo thì xem phần mềm đã build); anchor `NV-...` và dấu vết bền trong repo (ADR-013/014); tốc-độ system spec trên CI tách ở [#344](https://github.com/manhcuongdtbk/electric-water-management/issues/344).
 
 > **Cách đọc:** quyết định viết theo **ADR** (Trạng thái → Bối cảnh → Quyết định → Lý do → Tradeoff → Phương án đã loại → Điều kiện xem lại). ADR đánh số toàn cục, tiếp nối **ADR-033**; spec này thêm **ADR-034 … ADR-039**.
 
@@ -18,7 +18,7 @@ Liên quan: cổng xác nhận khách trước build (ADR-028 trong [truy vết 
 - **Một artifact, hai chặng**: cùng một walkthrough phục vụ chủ dự án (trước merge) và khách (trước release); chặng khách = bản đã-duyệt của chặng owner.
 - **Không lệch (anti-drift)**: demo là spec CI **xanh-mới-merge** — feature đổi mà demo không khớp thì CI đỏ.
 - **Khách xem hiểu được**: video tiếng Việt, **thấy rõ máy đang thao tác cái gì** (diễn hoạt con trỏ/tô sáng), dữ liệu trông thật.
-- **Người giữ gate**: AI/CI lo phần cơ học (sản xuất); chủ dự án duyệt rồi mới gửi khách (khớp ADR-029, ADR-028).
+- **Người giữ gate**: AI/CI lo phần cơ học (sản xuất); chủ dự án duyệt rồi mới gửi khách (khớp ADR-029).
 - **Tận dụng cái đã có**: dựng trên hạ tầng Capybara/system spec + CI sẵn có; không dựng quy trình nặng.
 
 ## Non-Goals (cố ý KHÔNG làm ở vòng này)
@@ -50,35 +50,33 @@ Liên quan: cổng xác nhận khách trước build (ADR-028 trong [truy vết 
 
 ```mermaid
 flowchart TD
-  subgraph DEV["Phát triển một tính năng hướng-khách"]
-    SPEC["spec/demo/&lt;feature&gt;_demo_spec.rb<br/>kịch bản + caption + anchor NV-..."]
-  end
-  SPEC --> CI["CI job 'demo' (sibling system-spec)<br/>Playwright record + seed demo"]
+  SPEC["spec/demo/&lt;feature&gt;_demo_spec.rb<br/>kịch bản + caption + anchor NV-..."]
+  SPEC --> CI["CI trên PR → develop (sibling system-spec)<br/>Playwright record + seed demo"]
   CI --> VID["Video walkthrough (.mp4)<br/>caption tiếng Việt + diễn hoạt thao tác"]
-  CI --> GUARD["Guardrail: PR nhãn hướng-khách<br/>mà thiếu demo spec → đỏ"]
+  CI --> GUARD["Guardrail: PR nhãn hướng-khách<br/>thiếu demo spec → đỏ"]
   VID --> PRC["Chặng OWNER — PR comment: link video<br/>chủ dự án/đội xem & duyệt trước merge"]
-  PRC -->|merge squash → develop| RELCUT["release/*: release candidate"]
-  RELCUT --> DEMOSEL["Lọc clip hướng-khách (đã sinh từ PR)"]
-  RELCUT --> ACCDEP["Deploy release candidate → Acceptance (Railway)"]
-  DEMOSEL --> APPROVE["Chủ dự án duyệt clip (gate người · ADR-028)"]
-  APPROVE --> FWD["Forward demo qua kênh sẵn có<br/>(Zalo/email/USB)"]
-  FWD --> L1["Chặng KHÁCH ① — xem demo:<br/>phản hồi sớm + duyệt sơ bộ<br/>(async, trước khi tự chạm Acceptance)"]
-  ACCDEP --> L2
-  L1 --> L2["Chặng KHÁCH ② — nghiệm thu hands-on<br/>trên Acceptance: phản hồi + duyệt"]
-  L1 -. có vấn đề: sửa & lặp lại từ đầu .-> SPEC
-  L2 -. có vấn đề: sửa & lặp lại từ đầu .-> SPEC
-  L2 -->|đạt nghiệm thu| PROD["Deploy Production<br/>(Mini PC offline)"]
+  PRC -->|squash| DEV["develop (tự deploy env Development)"]
+  DEV --> REL["release/* ← develop<br/>(ổn định nội bộ, KHÔNG deploy Railway)"]
+  REL --> BUNDLE["Gom clip hướng-khách của release"]
+  BUNDLE --> APPROVE["Chủ dự án duyệt clip (gate người · ADR-029)"]
+  APPROVE --> L1["Chặng KHÁCH ① — gửi demo qua kênh sẵn có:<br/>khách xem, phản hồi sớm (async,<br/>TRƯỚC merge main / trước khi chạm Acceptance)"]
+  L1 -->|khách ưng| MAIN["merge release/* → main<br/>release-please tag X.Y.Z + GitHub Release"]
+  MAIN -->|tự deploy| ACC["env Acceptance (Railway) = main"]
+  ACC --> L2["Chặng KHÁCH ② — nghiệm thu hands-on<br/>trên Acceptance (ADR-013)"]
+  L2 -->|đạt nghiệm thu| PROD["Giao bản đã tag → Production (Mini PC offline)<br/>+ ff nhánh production → env Mirror"]
+  L1 -. chưa ưng: sửa & lặp lại từ đầu .-> SPEC
+  L2 -. chưa ưng: ra bản vá kế tiếp (vd 1.1.1), lặp .-> SPEC
 ```
 
 ### Hai vòng phản hồi của khách (đọc kèm sơ đồ)
 
-Demo **không thay** nghiệm thu hands-on trên Acceptance — nó là **vòng phản hồi sớm đứng trước**:
+Theo SDLC dự án, khách vốn có **hai mốc** tương tác: xác nhận *yêu cầu* **TRƯỚC build** (ADR-028 — duyệt tài liệu trong `docs/xac-nhan-khach/`, chưa có phần mềm) và **nghiệm thu hands-on SAU build** trên **Acceptance** (ADR-013). Lưu ý mốc thứ hai bám đúng cơ chế release: Acceptance = nhánh **`main`** đã tag, **không** dùng `-rc.N`, `release/*` **không** deploy Railway (ADR-005/008). Demo **chèn một mốc ở giữa** — xem phần mềm *đã build* nhưng *trước* khi nghiệm thu hands-on — và **không thay** nghiệm thu:
 
-1. **Vòng ① — xem demo (sớm, async).** Demo render trong CI từ **seed** (ADR-039) nên *không phụ thuộc* việc đã deploy Acceptance — có thể gửi khách **trước cả khi khách tự chạm Acceptance**. Khách xem clip → phản hồi/duyệt sơ bộ. Lỗi/hiểu-nhầm lộ ở đây được sửa sớm, trước khi khách tốn công ngồi thử.
-2. **Vòng ② — nghiệm thu hands-on trên Acceptance.** Release candidate deploy lên Acceptance; khách (đã được demo định hướng) tự thao tác, nghiệm thu thật → phản hồi/duyệt.
-3. **Chỉ khi đạt nghiệm thu ②** → deploy **Production (Mini PC)**.
+1. **Vòng ① — xem demo (sớm, async, ở cửa sổ `release/*`).** Clip render trong CI từ **seed** ngay khi feature vào `develop` (ADR-039), *không phụ thuộc* Acceptance. Trong lúc `release/*` ổn định nội bộ (chưa lên Railway), chủ dự án duyệt rồi gửi bộ clip → khách xem, phản hồi **trước khi merge `main` / trước khi chạm Acceptance**. Lỗi/hiểu-nhầm lộ ở đây sửa sớm, *trước cả khi tag release*.
+2. **Vòng ② — nghiệm thu hands-on (ADR-013).** Khách ưng demo → merge `release/* → main`, release-please tag `X.Y.Z`, `main` **tự deploy Acceptance**; khách (đã được demo định hướng) tự thao tác nghiệm thu. Chưa ưng → **ra bản vá kế tiếp** (vd `1.1.1`) cùng luồng (ADR-005 §P4).
+3. **Đạt nghiệm thu ②** → giao bản đã tag xuống **Production (Mini PC)**; fast-forward nhánh `production` → env **Mirror**.
 
-Cả ① và ② nếu phát hiện vấn đề đều **lặp lại từ đầu pipeline**, *không* vá tắt trên `release`: nhánh fix từ `develop` → PR (demo **tự chạy lại** + owner duyệt) → `develop` → `release` → deploy Acceptance lại → gửi demo lại. Tức bản vá cũng đi qua đúng các cổng (ADR-038 guardrail vẫn áp). Giá trị của demo là **rút ngắn vòng lặp**: bắt lỗi/định hướng *trước* khâu hands-on tốn công, đúng tinh thần cổng xác nhận khách (ADR-028).
+Cả ① và ② nếu phát hiện vấn đề đều **lặp lại từ đầu**, *không* vá tắt trên `release`: nhánh fix ← `develop` → PR (demo **tự chạy lại** + owner duyệt; guardrail ADR-038 vẫn áp) → `develop` → `release/*` (→ tag bản vá nếu đã tới ②). Giá trị của demo: **rút ngắn vòng lặp** — bắt lỗi/định hướng *trước* khâu hands-on tốn công và *trước* khi tag, đúng tinh thần "người giữ gate" (ADR-029).
 
 ## Bối cảnh & hiện trạng
 
@@ -126,7 +124,7 @@ Cả ① và ② nếu phát hiện vấn đề đều **lặp lại từ đầu
 
 ### 7. Đóng gói & giao (chặng khách)
 - Release lọc các tính năng hướng-khách kể từ release trước → **bộ clip rời theo tính năng** (không ghép).
-- Chủ dự án **duyệt** (gate người, khớp ADR-028) → **forward** qua kênh đang dùng với khách (Zalo/email/USB).
+- Chủ dự án **duyệt** (gate người, khớp ADR-029) → **forward** qua kênh đang dùng với khách (Zalo/email/USB). Đặt ở **cửa sổ `release/*`** (trước merge `main`) để khách phản hồi sớm.
 
 ## Quyết định (ADR)
 
@@ -179,7 +177,7 @@ Cả ① và ② nếu phát hiện vấn đề đều **lặp lại từ đầu
 - **Trạng thái:** Accepted · 2026-06-13
 - **Bối cảnh:** Cần quyết (a) gói release thế nào, (b) quay ở đâu/dữ liệu gì, (c) tới tay khách thế nào.
 - **Quyết định:** (a) **Bộ clip rời theo tính năng**, không ghép reel; (b) render **trong CI từ seed demo riêng** (không trên Acceptance); (c) chủ dự án **duyệt** rồi **forward** qua kênh sẵn có với khách.
-- **Lý do:** Clip rời đơn giản nhất, async-friendly (khách tua từng mục), hợp capability-levels. Seed riêng cho nhất quán/trông thật; render CI tái lập được. Forward thủ công khớp "AI lo cơ học, người giữ gate" (ADR-028/029) — bước gửi là gate có chủ đích.
+- **Lý do:** Clip rời đơn giản nhất, async-friendly (khách tua từng mục), hợp capability-levels. Seed riêng cho nhất quán/trông thật; render CI tái lập được. Forward thủ công khớp "AI lo cơ học, người giữ gate" (ADR-029) — bước gửi là gate có chủ đích.
 - **Tradeoff:** (+) Ít build, ít rủi ro, modular. (−) Chưa có một-file-gọn để gửi; bước forward thủ công.
 - **Phương án đã loại:** *Ghép release reel* — cần lớp ghép/manifest, để dành. *Trang demo trong app Acceptance* — phải build trang + host. *Quay trên Acceptance thật* — data biến động, không nhất quán. *Gắn GitHub Release* — khách không dùng GitHub.
 - **Điều kiện xem lại:** Khi số tính năng/release lớn, khách muốn một video gọn → mở cấp ghép reel; hoặc dựng trang demo trong app.
@@ -197,3 +195,4 @@ Cả ① và ② nếu phát hiện vấn đề đều **lặp lại từ đầu
 | 0.1.0 | 2026-06-13 | Bản đầu: thiết kế tự động hoá demo (#343). Thêm ADR-034..039. |
 | 0.1.1 | 2026-06-13 | Sửa sơ đồ luồng: tách rõ hai vòng phản hồi khách (① xem demo sớm → ② nghiệm thu hands-on Acceptance → Production); thêm mục "Hai vòng phản hồi" + Non-Goal "không thay nghiệm thu Acceptance". |
 | 0.1.2 | 2026-06-13 | Vòng phản hồi ①/② quay về đầu pipeline (nhánh fix → PR → demo lại → owner duyệt → release), không vá tắt trên release; làm rõ bản vá vẫn qua đúng các cổng. |
+| 0.1.3 | 2026-06-13 | Sửa sơ đồ/prose cho khớp SDLC canonical: bỏ "release candidate" (ADR-008 không dùng rc), Acceptance = `main` sau tag (ADR-005), vòng ① đặt ở cửa sổ `release/*` trước merge `main`; dẫn đúng ADR (ADR-013 nghiệm thu hands-on, ADR-029 gate người) và phân biệt với ADR-028 (xác nhận yêu cầu trước build). |
