@@ -126,7 +126,7 @@ flowchart LR
 
 ### ADR-028: Cổng xác nhận khách trước build — tài liệu xác nhận versioned, Issue-anchored
 
-- **Trạng thái:** Proposed · 2026-06-11 (Issue #320)
+- **Trạng thái:** Accepted · 2026-06-11 (Issue #320)
 - **Bối cảnh:** ADR-013 đặt tương tác khách ở "mức release" (Nghiệm thu **sau** build), nhưng đội còn một bước thực tế: phân tích yêu cầu rồi **trình khách xác nhận TRƯỚC khi build**, thường qua **nhiều lượt** đến khi chốt. Bản trình khách vì thế là một tài liệu có vòng đời version riêng — ví dụ thực: `docs/V2_XAC_NHAN_NGHIEP_VU_BO_SUNG.md` đi v2.0.0 → 2.1.2 qua các vòng phản hồi (#264/#319). Cách cũ (#264) để bản này ở `docs/` gốc như một doc nghiệp vụ, lại có **trước** cả Issue → nguy cơ thành "nguồn canonical thứ hai", trái "sửa đừng thêm" (ADR-023) và đứt truy vết (ADR-013/014).
 - **Quyết định:** Bổ sung "cổng xác nhận khách trước build" như một checkpoint trong **bước 3 (Thiết kế)**:
   1. **Issue-first.** Phải có Issue `#N` trước; tài liệu xác nhận mở đầu bằng `#N`; mỗi vòng trao đổi ghi vết comment ở Issue (khách duyệt/điều chỉnh gì, ngày nào).

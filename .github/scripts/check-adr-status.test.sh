@@ -46,9 +46,15 @@ assert "fail: R2 undeferred proposed" 1 \
   "$CLEAN_FM"$'\n- **Trạng thái:** Proposed · 2026-06-13' \
   "R2 undeferred"
 
-# 4. PASS: Proposed WITH a deferred-marker #issue.
+# 4. PASS: Proposed WITH a genuine deferred-marker ("chờ quyết" + #issue).
 assert "pass: deferred proposed" 0 \
   "$CLEAN_FM"$'\n- **Trạng thái:** Proposed (chờ quyết #42)'
+
+# 4b. FAIL R2: Proposed with a mere provenance "(Issue #N)" — NOT a deferral.
+#     A merged ADR that cites its origin issue must still be Accepted.
+assert "fail: R2 provenance not deferral" 1 \
+  "$CLEAN_FM"$'\n- **Trạng thái:** Proposed · 2026-06-11 (Issue #320)' \
+  "R2 undeferred"
 
 # 5. PASS: '**Trạng thái khách:**' is a different field, never flagged.
 assert "pass: trang thai khach ignored" 0 \
