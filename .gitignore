@@ -48,3 +48,4 @@
 .DS_Store
 /chromedriver/
 node_modules/
+/tmp/demo_videos/
