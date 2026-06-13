@@ -352,7 +352,7 @@ RSpec.describe "UnitConfig", type: :request do
       sign_in system_admin
     end
 
-    it "GET unit config shows unit_coefficient option exactly for unit contact points (3 unit CPs, 0 zone CPs)" do
+    it "CHIEU-khac-don-vi-zone-direct: GET unit config shows unit_coefficient option exactly for unit contact points (3 unit CPs, 0 zone CPs)" do
       get unit_config_path(unit_id: unit.id)
       expect(response).to have_http_status(:ok)
       # 3 unit residential CPs (CP-1, CP-2, CP-3) each get a unit_coefficient option
@@ -360,7 +360,7 @@ RSpec.describe "UnitConfig", type: :request do
       expect(occurrences).to eq(3)
     end
 
-    it "PATCH updating zone-direct contact point OD to unit_coefficient is rejected by model validation" do
+    it "CHIEU-khac-don-vi-zone-direct: PATCH updating zone-direct contact point OD to unit_coefficient is rejected by model validation" do
       # Use unit_admin (zone-manager) for PATCH to avoid SA re-render path issue
       sign_in admin
       zone_od = OtherDeduction.find_by!(contact_point: zone_cp, period: period)
@@ -423,7 +423,7 @@ RSpec.describe "UnitConfig", type: :request do
       sign_in commander
     end
 
-    it "select kiểu khoản trừ bị disabled cho chỉ huy đơn vị" do
+    it "CHIEU-khac-don-vi-vai-tro: select kiểu khoản trừ bị disabled cho chỉ huy đơn vị" do
       get unit_config_path
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("CP-UC-CMD")

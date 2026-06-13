@@ -33,7 +33,7 @@ RSpec.describe OtherDeduction do
       expect(record).to be_valid
     end
 
-    it "invalid khi đầu mối thuộc khu vực trực tiếp (unit_id null)" do
+    it "CHIEU-khac-don-vi-zone-direct: invalid khi đầu mối thuộc khu vực trực tiếp (unit_id null)" do
       cp = create(:contact_point, :zone_residential)
       record = build(:other_deduction, contact_point: cp, other_type: "unit_coefficient", other_value: -2)
       expect(record).not_to be_valid

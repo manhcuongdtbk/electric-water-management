@@ -1,6 +1,6 @@
 ---
 title: Phân bổ điện bơm nước theo từng trạm bơm (mở rộng đối tượng nhận)
-version: 0.1.0
+version: 0.2.0
 status: draft (chờ duyệt)
 date: 2026-06-11
 governed_by: 2026-06-07-sdlc-overview-design.md
@@ -81,18 +81,20 @@ Mã nguồn liên quan hiện tại:
 - **Chuyển tiếp cũ → per-trạm đầu tiên:** **không** kế thừa allocation qua ranh giới này. Kỳ per-trạm đầu tiên bắt đầu **trống**; admin cấu hình lại từng trạm; trạm chưa cấu hình → cảnh báo. (Cấu hình cũ kỳ-gộp không gắn được vào trạm cụ thể, kế thừa sẽ tạo trạng thái lỗi.)
 - `period_service.copy_pump_allocations` cập nhật: chỉ copy khi cả kỳ nguồn lẫn kỳ đích đều `per_station = true`.
 
-## Chiều test cần bổ sung
+## Truy vết chiều test
 
-Đưa vào [`V2_CHIEU_TEST.md`](../../V2_CHIEU_TEST.md) (chiều "phân bổ bơm nước") và [`V2_HANH_VI_HE_THONG.md`](../../V2_HANH_VI_HE_THONG.md):
+Tính năng **chưa triển khai** — mọi chiều `DEFERRED #319` cho tới khi build (ADR-030). Khi build: đổi trạng thái từng hàng sang "có test" + gắn anchor vào mô tả test. Liên quan [`V2_CHIEU_TEST.md`](../../V2_CHIEU_TEST.md) (chiều "phân bổ bơm nước") và [`V2_HANH_VI_HE_THONG.md`](../../V2_HANH_VI_HE_THONG.md).
 
-- Kỳ cũ (`per_station = false`): hành vi gộp toàn khu vực **không đổi** (regression).
-- Kỳ mới: hai trạm, mỗi trạm danh sách recipient riêng; Σ per-trạm = `D` toàn khu vực (khớp ví dụ nghiệp vụ).
-- Bốn loại recipient: đơn vị / khối / nhóm / đầu mối sinh hoạt thuộc đơn vị — chia xuống đúng.
-- Ràng buộc per-trạm: tổng fixed% ≤ 100 theo trạm; trạm thiếu recipient hệ số khi < 100% → chặn; Σ(quân số×hệ số) = 0 → chặn.
-- Trạm chưa cấu hình recipient → cảnh báo trên bảng tính tiền.
-- Chuyển tiếp: kỳ per-trạm đầu tiên bắt đầu trống; kỳ per-trạm sau kế thừa đúng.
-- Đối tượng nhận đã xóa (Discard) khi xem kỳ cũ: dùng `.with_discarded` đúng chỗ (mục 7 hành vi hệ thống).
-- Sáu vai trò + đơn vị quản lý khu vực cấu hình được, chỉ huy chỉ xem.
+| Mã | Chiều test (mô tả) | Trạng thái |
+|---|---|---|
+| `CHIEU-phan-bo-tram-ky-cu` | Kỳ cũ (`per_station = false`): gộp toàn khu vực **không đổi** (regression) | DEFERRED #319 |
+| `CHIEU-phan-bo-tram-tong` | Kỳ mới: hai trạm, recipient riêng; Σ per-trạm = `D` toàn khu vực | DEFERRED #319 |
+| `CHIEU-phan-bo-tram-bon-recipient` | Bốn loại recipient (đơn vị / khối / nhóm / đầu mối sinh hoạt thuộc đơn vị) chia xuống đúng | DEFERRED #319 |
+| `CHIEU-phan-bo-tram-rang-buoc` | Ràng buộc per-trạm: Σ fixed% ≤ 100; thiếu recipient hệ số khi < 100% → chặn; Σ(quân số×hệ số) = 0 → chặn | DEFERRED #319 |
+| `CHIEU-phan-bo-tram-chua-cau-hinh` | Trạm chưa cấu hình recipient → cảnh báo trên bảng tính tiền | DEFERRED #319 |
+| `CHIEU-phan-bo-tram-chuyen-tiep` | Chuyển tiếp: kỳ per-trạm đầu tiên bắt đầu trống; kỳ per-trạm sau kế thừa đúng | DEFERRED #319 |
+| `CHIEU-phan-bo-tram-da-xoa` | Recipient đã xóa (Discard) khi xem kỳ cũ → dùng `.with_discarded` đúng chỗ (mục 7 hành vi hệ thống) | DEFERRED #319 |
+| `CHIEU-phan-bo-tram-vai-tro` | Sáu vai trò + đơn vị quản lý khu vực cấu hình được, chỉ huy chỉ xem | DEFERRED #319 |
 
 ## Giới hạn
 
@@ -107,6 +109,10 @@ Mã nguồn liên quan hiện tại:
 - Spec anh em milestone 1.2.0: [cột Khác hệ số đơn vị](2026-06-11-cot-khac-he-so-don-vi-design.md), [hiển thị chi tiết tổn hao](2026-06-11-hien-thi-chi-tiet-ton-hao-design.md).
 
 ## Changelog
+
+### 0.2.0 (2026-06-13)
+
+- Chuyển danh sách chiều test → bảng `## Truy vết chiều test` với anchor `CHIEU-<slug>`, mọi hàng `DEFERRED #319` (chưa triển khai) — ADR-030, Issue #329. Khi build TN2: đổi trạng thái từng hàng sang "có test" + gắn anchor vào test.
 
 ### 0.1.0 (2026-06-11)
 

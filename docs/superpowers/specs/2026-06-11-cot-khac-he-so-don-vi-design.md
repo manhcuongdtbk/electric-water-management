@@ -1,6 +1,6 @@
 ---
 title: Cột "Khác" kiểu hệ số tổng đơn vị (cách nhập thứ ba cho khoản trừ Khác)
-version: 0.1.1
+version: 0.2.0
 status: draft (chờ duyệt)
 date: 2026-06-11
 governed_by: 2026-06-07-sdlc-overview-design.md
@@ -74,17 +74,19 @@ Mã nguồn liên quan hiện tại:
 
 - Không đổi: `snapshot_residential_contact_points` đã kế thừa `other_type` + `other_value`. Value mới kế thừa tự nhiên; tổng quân số kỳ mới tự tính lại.
 
-## Chiều test cần bổ sung
+## Truy vết chiều test
 
-Đưa vào [`V2_CHIEU_TEST.md`](../../V2_CHIEU_TEST.md) (chiều "cách nhập khoản trừ Khác") và spec test:
+Mã `CHIEU-<slug>` khai chiều test; test mang mã ở mô tả `it` (CI đối chiếu — ADR-030).
 
-- `unit_coefficient` với `other_value` dương (đầu mối bị trừ) và âm (đầu mối được cộng ngược, ví dụ bếp).
-- Khớp ví dụ số liệu nghiệp vụ: đơn vị 74 người, bếp 8 người, `other_value = −2` → −132 kW.
-- Quân số đổi giữa kỳ → khoản trừ tự tính lại (không phải sửa tay).
-- Đơn vị chỉ có một đầu mối (tổng − chính nó = 0) → khoản trừ = 0.
-- Đầu mối zone-direct chọn `unit_coefficient` → bị validate chặn (request spec) + option bị ẩn (system spec).
-- Kế thừa sang kỳ mới giữ `unit_coefficient` + hệ số, tính lại theo quân số kỳ mới.
-- Sáu vai trò: ai sửa được cột Khác giữ nguyên (quản trị viên đơn vị; chỉ huy chỉ xem).
+| Mã | Chiều test (mô tả) | Trạng thái |
+|---|---|---|
+| `CHIEU-khac-don-vi-dau` | `unit_coefficient` với `other_value` dương (đầu mối bị trừ) và âm (đầu mối được cộng ngược, ví dụ bếp) | có test |
+| `CHIEU-khac-don-vi-vi-du` | Khớp ví dụ số liệu nghiệp vụ (đơn vị, bếp, `other_value` âm → giá trị đúng) | có test |
+| `CHIEU-khac-don-vi-tu-tinh-lai` | Quân số đổi giữa kỳ → khoản trừ tự tính lại (không sửa tay) | có test |
+| `CHIEU-khac-don-vi-mot-dau-moi` | Đơn vị chỉ có một đầu mối (tổng − chính nó = 0) → khoản trừ = 0 | có test |
+| `CHIEU-khac-don-vi-zone-direct` | Đầu mối zone-direct chọn `unit_coefficient` → validate chặn (request) + option bị ẩn (UI) | có test |
+| `CHIEU-khac-don-vi-ke-thua` | Kế thừa sang kỳ mới giữ `unit_coefficient` + hệ số, tính lại theo quân số kỳ mới | có test |
+| `CHIEU-khac-don-vi-vai-tro` | Sáu vai trò: ai sửa được cột Khác giữ nguyên (quản trị viên đơn vị; chỉ huy chỉ xem) | có test |
 
 ## Giới hạn
 
@@ -98,6 +100,10 @@ Mã nguồn liên quan hiện tại:
 - Spec anh em milestone 1.2.0: [phân bổ bơm theo trạm](2026-06-11-phan-bo-bom-theo-tram-design.md), [hiển thị chi tiết tổn hao](2026-06-11-hien-thi-chi-tiet-ton-hao-design.md).
 
 ## Changelog
+
+### 0.2.0 (2026-06-13)
+
+- Chuyển danh sách chiều test → bảng `## Truy vết chiều test` với anchor `CHIEU-<slug>` (ADR-030, Issue #329); gắn anchor vào mô tả các test sẵn có. CI đối chiếu bảng ↔ test.
 
 ### 0.1.1 (2026-06-11)
 

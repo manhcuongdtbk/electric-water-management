@@ -1,6 +1,6 @@
 ---
 title: Hiển thị chi tiết tổn hao (cột Tổn hao / Sử dụng thực tế + tóm tắt A/B/C)
-version: 0.2.2
+version: 0.3.0
 status: approved (triển khai 1.2.0)
 date: 2026-06-11
 governed_by: 2026-06-07-sdlc-overview-design.md
@@ -73,17 +73,19 @@ Mã nguồn liên quan hiện tại:
 
 - `loss` và `loss_summaries` là **kết quả tính**, không kế thừa. Kỳ mới: `loss` null cho tới khi tính; không có `loss_summaries` cho tới khi tính.
 
-## Chiều test cần bổ sung
+## Truy vết chiều test
 
-Đưa vào [`V2_CHIEU_TEST.md`](../../V2_CHIEU_TEST.md) (chiều "trạng thái tính toán / hiển thị tổn hao"):
+Mã `CHIEU-<slug>` khai chiều test; test mang mã ở mô tả `it` (CI đối chiếu — ADR-030).
 
-- Chưa bấm tính toán → hai cột Tổn hao / Sử dụng thực tế **trống**; chưa có tóm tắt A/B/C.
-- Sau khi tính → hai cột hiển thị đúng `meter_losses`; "Sử dụng thực tế" = sử dụng + loss; A/B/C khớp `LossCalculator`.
-- Sửa chỉ số sau khi tính (chưa tính lại) → hai cột **giữ** giá trị lần tính gần nhất.
-- Trường hợp đặc biệt: C < 0, B = 0, khu vực trống → giá trị + cảnh báo đúng.
-- A/B/C hiển thị theo zone đang chọn (quản trị viên hệ thống đổi zone → đổi A/B/C).
-- Công tơ không tổn hao (`no_loss`) → loss = 0.
-- Sáu vai trò: hai cột read-only cho mọi vai trò; ai thấy bảng tính tiền nào thì thấy A/B/C tương ứng.
+| Mã | Chiều test (mô tả) | Trạng thái |
+|---|---|---|
+| `CHIEU-ton-hao-chua-tinh` | Chưa bấm tính → hai cột Tổn hao / Sử dụng thực tế **trống**; chưa có tóm tắt A/B/C | có test |
+| `CHIEU-ton-hao-sau-tinh` | Sau khi tính → hai cột đúng `meter_losses`; "Sử dụng thực tế" = sử dụng + loss; A/B/C khớp `LossCalculator` (HTML + Excel) | có test |
+| `CHIEU-ton-hao-sua-giu-cu` | Sửa chỉ số sau khi tính (chưa tính lại) → hai cột **giữ** giá trị lần tính gần nhất | có test |
+| `CHIEU-ton-hao-bien` | Trường hợp đặc biệt: C < 0, B = 0, khu vực trống → giá trị + cảnh báo đúng | có test |
+| `CHIEU-ton-hao-theo-zone` | A/B/C theo zone đang chọn (quản trị viên hệ thống đổi zone → đổi A/B/C; nhiều zone → mỗi zone một dòng) | có test |
+| `CHIEU-ton-hao-khong-ton-hao` | Công tơ không tổn hao (`no_loss`) → loss = 0 | có test |
+| `CHIEU-ton-hao-vai-tro` | Sáu vai trò: hai cột read-only cho mọi vai trò; ai thấy bảng tính tiền nào thì thấy A/B/C tương ứng (TECH bị chặn) | có test |
 
 ## Giới hạn
 
@@ -98,6 +100,10 @@ Mã nguồn liên quan hiện tại:
 - Spec anh em milestone 1.2.0: [cột Khác hệ số đơn vị](2026-06-11-cot-khac-he-so-don-vi-design.md), [phân bổ bơm theo trạm](2026-06-11-phan-bo-bom-theo-tram-design.md).
 
 ## Changelog
+
+### 0.3.0 (2026-06-13)
+
+- Chuyển danh sách chiều test → bảng `## Truy vết chiều test` với anchor `CHIEU-<slug>` (ADR-030, Issue #329); gắn anchor vào mô tả test (chuyển mã `Dn:` cũ → `CHIEU-` chuẩn). CI đối chiếu bảng ↔ test.
 
 ### 0.2.2 (2026-06-12)
 

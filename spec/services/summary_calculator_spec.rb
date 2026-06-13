@@ -156,7 +156,7 @@ RSpec.describe SummaryCalculator do
                             loss_results: loss_results, pump_results: pump_results).call
       end
 
-      it "khoản trừ = hệ số × (tổng quân số đơn vị − quân số đầu mối)" do
+      it "CHIEU-khac-don-vi-dau: khoản trừ = hệ số × (tổng quân số đơn vị − quân số đầu mối)" do
         # -2 × (10 − 2) = -16
         calc = calculation_for(:van_thu)
         expect(calc.other_deduction).to eq_display("-16.00")
@@ -171,7 +171,7 @@ RSpec.describe SummaryCalculator do
                             loss_results: loss_results, pump_results: pump_results).call
       end
 
-      it "khoản trừ = hệ số dương × (tổng quân số đơn vị − quân số đầu mối)" do
+      it "CHIEU-khac-don-vi-dau: khoản trừ = hệ số dương × (tổng quân số đơn vị − quân số đầu mối)" do
         # 2 × (10 − 3) = 14
         calc = calculation_for(:kho_vat_tu)
         expect(calc.other_deduction).to eq_display("14.00")
@@ -199,7 +199,7 @@ RSpec.describe SummaryCalculator do
         expect(calc.other_deduction).to eq_display("-16.00")
       end
 
-      it "khoản trừ tự cập nhật = -2 × (13 − 2) = -22,00 sau khi quân số Ban Tác huấn tăng thêm 3" do
+      it "CHIEU-khac-don-vi-tu-tinh-lai: khoản trừ tự cập nhật = -2 × (13 − 2) = -22,00 sau khi quân số Ban Tác huấn tăng thêm 3" do
         # Tăng ha_si_quan của Ban Tác huấn từ 3 → 6 (đơn vị A: 10 → 13)
         entry = PersonnelEntry.find_by!(contact_point: ban, period: sample.period,
                                        rank: ha_si_quan_rank)
@@ -223,7 +223,7 @@ RSpec.describe SummaryCalculator do
                             loss_results: loss_results, pump_results: pump_results).call
       end
 
-      it "khoản trừ = 0 khi đơn vị chỉ có một đầu mối sinh hoạt" do
+      it "CHIEU-khac-don-vi-mot-dau-moi: khoản trừ = 0 khi đơn vị chỉ có một đầu mối sinh hoạt" do
         # -5 × (11 − 11) = 0
         calc = calculation_for(:dai_doi_1)
         expect(calc.other_deduction).to eq_display("0.00")
