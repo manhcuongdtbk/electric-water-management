@@ -73,6 +73,14 @@ RSpec.configure do |config|
   config.include SampleData
   config.include ActiveSupport::Testing::TimeHelpers
 
+  # Start every run from a clean database. Transactional fixtures roll back each
+  # example's own data, but cannot undo rows COMMITTED outside that transaction
+  # (e.g. an interrupted demo run, which is non-transactional, leaving an open
+  # Period). A single stray open Period trips the global partial-unique index
+  # idx_periods_only_one_open and makes unrelated specs fail order-dependently.
+  # Purging once up front makes the suite resilient to such leftovers. See #362.
+  config.before(:suite) { DatabaseCleanup.purge! }
+
   # spec/demo/** are demo recordings, not part of the normal suite. Auto-tag them
   # type: :demo and exclude them from `bundle exec rspec` unless DEMO=1 (the CI
   # `demo` job sets DEMO=1 and targets spec/demo explicitly). See ADR-037/038.
