@@ -17,10 +17,33 @@ class DemoRecorder
     show_caption(caption)
   end
 
+  def click(locator, caption:)
+    show_caption(caption)
+    el = page.find_link_or_button(locator)
+    point_and_pause(el)
+    page.execute_script("window.__demo.ripple();")
+    el.click
+    page.execute_script("window.__demo.unpoint();")
+  end
+
+  def fill(field, with:, caption:)
+    show_caption(caption)
+    el = page.find_field(field)
+    point_and_pause(el)
+    el.set(with)
+    page.execute_script("window.__demo.unpoint();")
+  end
+
   private
 
   def page
     @spec.page
+  end
+
+  def point_and_pause(element)
+    selector = element[:id].present? ? "##{element[:id]}" : nil
+    page.execute_script("window.__demo.point(arguments[0]);", selector) if selector
+    sleep STEP_PAUSE
   end
 
   def show_caption(text)
