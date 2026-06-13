@@ -1,0 +1,458 @@
+# i18n view guardrail baseline (ADR-032) — grandfathered hard-coded
+# Vietnamese literals outside t(...) in app/views/**/*.erb.
+# Regenerate: UPDATE_BASELINE=1 bash .github/scripts/check-view-i18n.sh
+# Format: <relpath><TAB><whitespace-normalized offending text>
+app/views/billing/_loss_summary.html.erb	(gồm cả công tơ công cộng và bơm nước), nên có thể khác tổng các cột trên bảng —
+app/views/billing/_loss_summary.html.erb	A/B/C tính trên toàn khu vực theo sử dụng thô của mọi công tơ có tổn hao
+app/views/billing/_loss_summary.html.erb	Công tơ tổng (A): <strong><%= number_to_vi(s.a) %></strong> kW;
+app/views/billing/_loss_summary.html.erb	Tổng sử dụng (B): <strong><%= number_to_vi(s.b) %></strong> kW;
+app/views/billing/_loss_summary.html.erb	Tổng tổn hao (C = A − B): <strong><%= number_to_vi(s.c) %></strong> kW
+app/views/billing/_loss_summary.html.erb	nên có thể nhỏ hơn số điện lực.
+app/views/billing/_loss_summary.html.erb	vốn chỉ tính đầu mối sinh hoạt. Riêng A (Công tơ tổng) đã trừ điện công tơ không tổn hao
+app/views/billing/_summary_row.html.erb	<td class="<%= text_cell %>">TỔNG</td>
+app/views/billing/_table.html.erb	Chưa có dữ liệu tính toán. Bấm "Tính toán lại" để tính toán kỳ này.
+app/views/billing/_table_header.html.erb	<% if @show_unit_column %><th rowspan="2" class="<%= header_cell %>">Đơn vị</th><% end %>
+app/views/billing/_table_header.html.erb	<% if @show_zone_column %><th rowspan="2" class="<%= header_cell %>">Khu vực</th><% end %>
+app/views/billing/_table_header.html.erb	<th colspan="3" class="<%= header_cell %>">Sử dụng</th>
+app/views/billing/_table_header.html.erb	<th colspan="3" class="<%= header_cell %>">Tiêu chuẩn</th>
+app/views/billing/_table_header.html.erb	<th colspan="4" class="<%= header_cell %>">Kết quả</th>
+app/views/billing/_table_header.html.erb	<th colspan="6" class="<%= header_cell %>">Khoản trừ</th>
+app/views/billing/_table_header.html.erb	<th colspan="<%= @ranks.size %>" class="<%= header_cell %>">Quân số theo nhóm cấp bậc</th>
+app/views/billing/_table_header.html.erb	<th colspan="<%= info_colspan %>" class="<%= header_cell %>">Thông tin đầu mối</th>
+app/views/billing/_table_header.html.erb	<th rowspan="2" class="<%= header_cell %>">Công cộng dùng chung Sư đoàn</th>
+app/views/billing/_table_header.html.erb	<th rowspan="2" class="<%= header_cell %>">Công cộng dùng chung đơn vị</th>
+app/views/billing/_table_header.html.erb	<th rowspan="2" class="<%= header_cell %>">Khác</th>
+app/views/billing/_table_header.html.erb	<th rowspan="2" class="<%= header_cell %>">Khối</th>
+app/views/billing/_table_header.html.erb	<th rowspan="2" class="<%= header_cell %>">Nhóm</th>
+app/views/billing/_table_header.html.erb	<th rowspan="2" class="<%= header_cell %>">Sử dụng điện bơm nước</th>
+app/views/billing/_table_header.html.erb	<th rowspan="2" class="<%= header_cell %>">Sử dụng điện sinh hoạt</th>
+app/views/billing/_table_header.html.erb	<th rowspan="2" class="<%= header_cell %>">Thiếu (kW)</th>
+app/views/billing/_table_header.html.erb	<th rowspan="2" class="<%= header_cell %>">Thành tiền thiếu</th>
+app/views/billing/_table_header.html.erb	<th rowspan="2" class="<%= header_cell %>">Thành tiền thừa</th>
+app/views/billing/_table_header.html.erb	<th rowspan="2" class="<%= header_cell %>">Thừa (kW)</th>
+app/views/billing/_table_header.html.erb	<th rowspan="2" class="<%= header_cell %>">Tiêu chuẩn điện bơm nước</th>
+app/views/billing/_table_header.html.erb	<th rowspan="2" class="<%= header_cell %>">Tiêu chuẩn điện sinh hoạt</th>
+app/views/billing/_table_header.html.erb	<th rowspan="2" class="<%= header_cell %>">Tiết kiệm của Bộ</th>
+app/views/billing/_table_header.html.erb	<th rowspan="2" class="<%= header_cell %>">Tên đầu mối</th>
+app/views/billing/_table_header.html.erb	<th rowspan="2" class="<%= header_cell %>">Tổn hao</th>
+app/views/billing/_table_header.html.erb	<th rowspan="2" class="<%= header_cell %>">Tổng quân số</th>
+app/views/billing/_table_header.html.erb	<th rowspan="2" class="<%= header_cell %>">Tổng sử dụng</th>
+app/views/billing/_table_header.html.erb	<th rowspan="2" class="<%= header_cell %>">Tổng tiêu chuẩn</th>
+app/views/billing/_table_header.html.erb	<th rowspan="2" class="<%= header_cell %>">Tổng trừ</th>
+app/views/billing/_table_header.html.erb	<th rowspan="3" class="<%= header_cell %>">Tiêu chuẩn còn lại</th>
+app/views/billing/_warnings.html.erb	<p class="font-semibold mb-1">Cảnh báo dữ liệu:</p>
+app/views/billing/show.html.erb	<% page_title "Bảng tính tiền" %>
+app/views/billing/show.html.erb	<span class="ml-2 px-2 py-0.5 rounded bg-gray-200 text-gray-700 text-xs">Đã đóng</span>
+app/views/billing/show.html.erb	concat(button_to("Tính toán lại", recalculate_billing_path(billing_filter_params),
+app/views/billing/show.html.erb	concat(link_to("Xuất Excel",
+app/views/billing/show.html.erb	form: { data: { turbo_confirm: "Xác nhận tính toán lại bảng tính tiền?" } },
+app/views/billing/show.html.erb	options: @available_periods.map { |p| ["Tháng #{p.month}/#{p.year}", p.id] },
+app/views/billing/show.html.erb	total_label: "Tổng: #{@total_count} đầu mối",
+app/views/billing/show.html.erb	{ label: "Khu vực:", param: :zone_id,
+app/views/billing/show.html.erb	{ label: "Kỳ:", param: :period_id,
+app/views/billing/show.html.erb	{ label: "Đơn vị:", param: :unit_id,
+app/views/billing/show.html.erb	Đơn giá điện: <strong><%= unit_price_to_vi(@period.unit_price) %> đ/kW</strong>
+app/views/blocks/_form.html.erb	<%= f.label :name, "Tên khối", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/blocks/_form.html.erb	<%= f.label :unit_id, "Đơn vị", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/blocks/_form.html.erb	<%= f.submit "Lưu", class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 cursor-pointer" %>
+app/views/blocks/_form.html.erb	<%= link_to "Hủy", blocks_path, class: "text-gray-600 px-4 py-2 hover:text-gray-800" %>
+app/views/blocks/_form.html.erb	{ include_blank: "— Chọn đơn vị —" },
+app/views/blocks/edit.html.erb	<% page_title "Sửa khối: #{@block.name}" %>
+app/views/blocks/index.html.erb	<%= sortable_header :name, "Khối",
+app/views/blocks/index.html.erb	<%= sortable_header :unit, "Đơn vị",
+app/views/blocks/index.html.erb	<%= sortable_header :zone, "Khu vực",
+app/views/blocks/index.html.erb	search_placeholder: "Tìm theo tên khối...",
+app/views/blocks/index.html.erb	{ label: "Khu vực:", param: :zone_id,
+app/views/blocks/index.html.erb	{ label: "Đơn vị:", param: :unit_id,
+app/views/blocks/new.html.erb	<% page_title "Thêm khối" %>
+app/views/blocks/show.html.erb	<% page_title "Khối: #{@block.name}" %>
+app/views/blocks/show.html.erb	<%= link_to "Quay lại", blocks_path, class: "text-gray-600 hover:text-gray-800" %>
+app/views/blocks/show.html.erb	<%= link_to "Sửa", edit_block_path(@block), class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700" %>
+app/views/blocks/show.html.erb	<div><strong>Tên:</strong> <%= @block.name %></div>
+app/views/blocks/show.html.erb	<div><strong>Đơn vị:</strong> <%= @block.unit.name %></div>
+app/views/contact_points/_form.html.erb	<%= f.label :contact_point_type, "Loại đầu mối", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/contact_points/_form.html.erb	<%= f.label :name, "Tên đầu mối", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/contact_points/_form.html.erb	<label class="block text-sm font-medium text-gray-700 mb-1">Loại đầu mối</label>
+app/views/contact_points/_form.html.erb	<p class="text-xs text-gray-500 mt-1">Đang mở lại kỳ cũ. Chỉ được sửa quân số và thuộc tính không tổn hao.</p>
+app/views/contact_points/_form.html.erb	Loại đầu mối không thể thay đổi sau khi tạo.
+app/views/contact_points/_form.html.erb	available_types += [["Bơm nước", "water_pump"], ["Ngoài biên chế", "non_establishment"]]
+app/views/contact_points/_form.html.erb	available_types = [["Sinh hoạt", "residential"], ["Công cộng", "public"]]
+app/views/contact_points/_form.html.erb	Đổi loại sẽ tải lại form để hiển thị đúng các trường tương ứng.
+app/views/contact_points/_form_non_establishment.html.erb	<%= f.label :personnel_count, "Quân số (tổng)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/contact_points/_form_non_establishment.html.erb	<%= f.label :zone_id, "Khu vực", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/contact_points/_form_non_establishment.html.erb	<p class="text-xs text-gray-500 mt-1">Sửa quân số cho kỳ này (không ảnh hưởng kỳ khác).</p>
+app/views/contact_points/_form_non_establishment.html.erb	<p class="text-xs text-gray-500 mt-1">Đầu mối ngoài biên chế không phân theo nhóm cấp bậc.</p>
+app/views/contact_points/_form_non_establishment.html.erb	{ include_blank: "— Chọn khu vực —" },
+app/views/contact_points/_form_public.html.erb	<%= f.label :unit_id, "Đơn vị", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/contact_points/_form_public.html.erb	<%= f.label :zone_id, "Khu vực", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/contact_points/_form_public.html.erb	<legend class="text-sm font-medium text-gray-700 px-1">Đầu mối thuộc về</legend>
+app/views/contact_points/_form_public.html.erb	<p class="text-xs text-gray-500 mt-2">Không thể đổi nơi thuộc về sau khi tạo.</p>
+app/views/contact_points/_form_public.html.erb	<span>Khu vực (cấp khu vực, không thuộc đơn vị nào)</span>
+app/views/contact_points/_form_public.html.erb	<span>Đơn vị</span>
+app/views/contact_points/_form_public.html.erb	{ include_blank: "— Chọn khu vực —" },
+app/views/contact_points/_form_public.html.erb	{ include_blank: "— Chọn đơn vị —" },
+app/views/contact_points/_form_public.html.erb	Đầu mối công cộng cấp khu vực. Không thuộc đơn vị nào.
+app/views/contact_points/_form_residential.html.erb	<%= f.label :block_id, "Khối (tùy chọn)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/contact_points/_form_residential.html.erb	<%= f.label :group_id, "Nhóm (tùy chọn)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/contact_points/_form_residential.html.erb	<%= f.label :unit_id, "Đơn vị", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/contact_points/_form_residential.html.erb	<%= f.label :zone_id, "Khu vực", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/contact_points/_form_residential.html.erb	<h3 class="text-sm font-semibold text-gray-700 mb-2">Quân số theo nhóm cấp bậc (kỳ tháng <%= current_period.month %>/<%= current_period.year %>)</h3>
+app/views/contact_points/_form_residential.html.erb	<legend class="text-sm font-medium text-gray-700 px-1">Đầu mối thuộc về</legend>
+app/views/contact_points/_form_residential.html.erb	<p class="text-xs text-gray-500 mt-2">Không thể đổi nơi thuộc về sau khi tạo.</p>
+app/views/contact_points/_form_residential.html.erb	<p class="text-xs text-gray-500 mt-2">Tổng quân số phải ≥ 1.</p>
+app/views/contact_points/_form_residential.html.erb	<span>Khu vực (cấp khu vực, không thuộc đơn vị nào)</span>
+app/views/contact_points/_form_residential.html.erb	<span>Đơn vị</span>
+app/views/contact_points/_form_residential.html.erb	Không có kỳ đang mở. Không thể nhập quân số. Đầu mối sẽ được tạo nhưng cần kỳ mở để có hiệu lực tính toán.
+app/views/contact_points/_form_residential.html.erb	{ include_blank: "— Chọn khu vực —" },
+app/views/contact_points/_form_residential.html.erb	{ include_blank: "— Chọn đơn vị —" },
+app/views/contact_points/_form_residential.html.erb	{ include_blank: "— Không thuộc khối —" },
+app/views/contact_points/_form_residential.html.erb	{ include_blank: "— Không thuộc nhóm —" },
+app/views/contact_points/_form_residential.html.erb	Đầu mối sinh hoạt cấp khu vực (vd: "Chỉ huy khu vực"). Không thuộc đơn vị, không có khối/nhóm.
+app/views/contact_points/_form_water_pump.html.erb	<%= f.label :zone_id, "Khu vực", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/contact_points/_form_water_pump.html.erb	{ include_blank: "— Chọn khu vực —" },
+app/views/contact_points/_meters_fields.html.erb	+ Thêm công tơ
+app/views/contact_points/_meters_fields.html.erb	<h3 class="text-sm font-semibold text-gray-700">Công tơ</h3>
+app/views/contact_points/_meters_fields.html.erb	<p class="text-xs text-gray-500 mb-2">Đầu mối phải có ít nhất 1 công tơ.</p>
+app/views/contact_points/_meters_fields.html.erb	<span>Không tổn hao</span>
+app/views/contact_points/_meters_fields.html.erb	Xóa
+app/views/contact_points/_meters_fields.html.erb	placeholder="Tên công tơ (VD: CT-A1)"
+app/views/contact_points/edit.html.erb	<% page_title "Sửa đầu mối: #{@contact_point.name}" %>
+app/views/contact_points/index.html.erb	<%= sortable_header :block, "Khối",
+app/views/contact_points/index.html.erb	<%= sortable_header :contact_point_type, "Loại",
+app/views/contact_points/index.html.erb	<%= sortable_header :group, "Nhóm",
+app/views/contact_points/index.html.erb	<%= sortable_header :name, "Đầu mối",
+app/views/contact_points/index.html.erb	<%= sortable_header :unit, "Đơn vị",
+app/views/contact_points/index.html.erb	<%= sortable_header :zone, "Khu vực",
+app/views/contact_points/index.html.erb	search_placeholder: "Tìm theo tên đầu mối...",
+app/views/contact_points/index.html.erb	{ label: "Khu vực:", param: :zone_id,
+app/views/contact_points/index.html.erb	{ label: "Loại:", param: :type, options: type_options, selected: @filter_type }
+app/views/contact_points/index.html.erb	{ label: "Đơn vị:", param: :unit_id,
+app/views/contact_points/new.html.erb	<% page_title "Thêm đầu mối" %>
+app/views/contact_points/show.html.erb	<% page_title "Đầu mối: #{@contact_point.name}" %>
+app/views/contact_points/show.html.erb	<%= link_to "Quay lại", contact_points_path, class: "text-gray-600 hover:text-gray-800" %>
+app/views/contact_points/show.html.erb	<%= link_to "Sửa", edit_contact_point_path(@contact_point),
+app/views/contact_points/show.html.erb	<div><strong>Công tơ:</strong> <%= @contact_point.meters.kept.pluck(:name).join(", ") %></div>
+app/views/contact_points/show.html.erb	<div><strong>Khối / Nhóm:</strong> <%= [@contact_point.block&.name, @contact_point.group&.name].compact.join(" / ") %></div>
+app/views/contact_points/show.html.erb	<div><strong>Loại:</strong>
+app/views/contact_points/show.html.erb	<div><strong>Quân số:</strong> <%= @contact_point.personnel_count %></div>
+app/views/contact_points/show.html.erb	<div><strong>Tên:</strong> <%= @contact_point.name %></div>
+app/views/contact_points/show.html.erb	<div><strong>Đơn vị / Khu vực:</strong> <%= @contact_point.unit&.name || @contact_point.zone&.name %></div>
+app/views/dashboard/_no_period.html.erb	<h2 class="font-semibold text-lg mb-2">Không có kỳ đang mở</h2>
+app/views/dashboard/_system_admin.html.erb	<h3 class="text-sm font-semibold text-gray-900">Sử dụng điện công cộng và bơm nước theo khu vực</h3>
+app/views/dashboard/_system_admin.html.erb	<h3 class="text-sm font-semibold text-gray-900">Thâm điện và trạng thái nhập liệu theo đơn vị</h3>
+app/views/dashboard/_system_admin.html.erb	<span class="inline-block px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs">Đã nhập</span>
+app/views/dashboard/_system_admin.html.erb	<span class="inline-block px-2 py-0.5 rounded bg-yellow-100 text-yellow-800 text-xs">Chưa nhập</span>
+app/views/dashboard/_system_admin.html.erb	<td colspan="5" class="px-4 py-6 text-center text-gray-500">Chưa có đơn vị nào.</td>
+app/views/dashboard/_system_admin.html.erb	<th class="px-4 py-2 text-center text-xs font-semibold text-gray-700">Trạng thái nhập liệu</th>
+app/views/dashboard/_system_admin.html.erb	<th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Khu vực</th>
+app/views/dashboard/_system_admin.html.erb	<th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Đơn vị</th>
+app/views/dashboard/_system_admin.html.erb	<th class="px-4 py-2 text-right text-xs font-semibold text-gray-700">Thành tiền phải thu</th>
+app/views/dashboard/_system_admin.html.erb	<th class="px-4 py-2 text-right text-xs font-semibold text-gray-700">Tổng thâm điện (kW)</th>
+app/views/dashboard/_system_admin.html.erb	<th class="px-4 py-2 text-right text-xs font-semibold text-gray-700">Điện bơm nước (kW)</th>
+app/views/dashboard/_system_admin.html.erb	<th class="px-4 py-2 text-right text-xs font-semibold text-gray-700">Điện công cộng (kW)</th>
+app/views/dashboard/_system_admin.html.erb	<tr><td colspan="3" class="px-4 py-6 text-center text-gray-500">Chưa có khu vực nào.</td></tr>
+app/views/dashboard/_unit_view.html.erb	<h3 class="text-xs font-semibold text-gray-500 uppercase mb-1">Số đầu mối thiếu</h3>
+app/views/dashboard/_unit_view.html.erb	<h3 class="text-xs font-semibold text-gray-500 uppercase mb-1">Số đầu mối thừa</h3>
+app/views/dashboard/_unit_view.html.erb	<h3 class="text-xs font-semibold text-gray-500 uppercase mb-1">Thành tiền phải thu</h3>
+app/views/dashboard/_unit_view.html.erb	<h3 class="text-xs font-semibold text-gray-500 uppercase mb-1">Tổng thâm điện</h3>
+app/views/dashboard/_unit_view.html.erb	<h3 class="text-xs font-semibold text-gray-500 uppercase mb-2">Trạng thái nhập liệu kỳ hiện tại</h3>
+app/views/dashboard/_unit_view.html.erb	<span class="inline-block px-3 py-1 rounded bg-green-100 text-green-700 font-medium">Đã nhập</span>
+app/views/dashboard/_unit_view.html.erb	<span class="inline-block px-3 py-1 rounded bg-yellow-100 text-yellow-800 font-medium">Chưa nhập</span>
+app/views/dashboard/_unit_view.html.erb	Tài khoản chưa được gán đơn vị.
+app/views/dashboard/_warnings.html.erb	<p class="font-semibold mb-1">Cảnh báo dữ liệu:</p>
+app/views/dashboard/show.html.erb	<% page_title "Tổng quan" %>
+app/views/dashboard/show.html.erb	Đơn giá điện: <strong><%= unit_price_to_vi(@period.unit_price) %> đ/kW</strong>
+app/views/devise/sessions/new.html.erb	<%= f.label :password, "Mật khẩu", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/devise/sessions/new.html.erb	<%= f.label :username, "Tên đăng nhập", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/devise/sessions/new.html.erb	<%= f.submit "Đăng nhập",
+app/views/devise/sessions/new.html.erb	<h1 class="text-2xl font-semibold mb-4 text-gray-900">Đăng nhập</h1>
+app/views/devise/sessions/new.html.erb	<p class="text-sm text-gray-600 mb-1">Hệ thống quản lý điện nội bộ Sư đoàn</p>
+app/views/electricity_supply/show.html.erb	<% page_title "Nhập số điện lực" %>
+app/views/electricity_supply/show.html.erb	<%= submit_tag "Lưu toàn bộ",
+app/views/electricity_supply/show.html.erb	<td class="px-4 py-2 text-sm text-gray-600"><%= mm.name %> <span class="text-xs text-yellow-600">(Chưa nhập)</span></td>
+app/views/electricity_supply/show.html.erb	<th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Công tơ tổng</th>
+app/views/electricity_supply/show.html.erb	<th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Khu vực</th>
+app/views/electricity_supply/show.html.erb	<th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Số sử dụng (kWh)</th>
+app/views/groups/_form.html.erb	<%= f.label :block_id, "Khối (tùy chọn)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/groups/_form.html.erb	<%= f.label :name, "Tên nhóm", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/groups/_form.html.erb	<%= f.label :unit_id, "Đơn vị", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/groups/_form.html.erb	<%= f.submit "Lưu", class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 cursor-pointer" %>
+app/views/groups/_form.html.erb	<%= link_to "Hủy", groups_path, class: "text-gray-600 px-4 py-2 hover:text-gray-800" %>
+app/views/groups/_form.html.erb	{ include_blank: "— Chọn đơn vị —" },
+app/views/groups/_form.html.erb	{ include_blank: "— Không thuộc khối —" },
+app/views/groups/edit.html.erb	<% page_title "Sửa nhóm: #{@group.name}" %>
+app/views/groups/index.html.erb	<%= sortable_header :block, "Khối",
+app/views/groups/index.html.erb	<%= sortable_header :name, "Nhóm",
+app/views/groups/index.html.erb	<%= sortable_header :unit, "Đơn vị",
+app/views/groups/index.html.erb	<%= sortable_header :zone, "Khu vực",
+app/views/groups/index.html.erb	search_placeholder: "Tìm theo tên nhóm...",
+app/views/groups/index.html.erb	{ label: "Khu vực:", param: :zone_id,
+app/views/groups/index.html.erb	{ label: "Đơn vị:", param: :unit_id,
+app/views/groups/new.html.erb	<% page_title "Thêm nhóm" %>
+app/views/groups/show.html.erb	<% page_title "Nhóm: #{@group.name}" %>
+app/views/groups/show.html.erb	<%= link_to "Quay lại", groups_path, class: "text-gray-600 hover:text-gray-800" %>
+app/views/groups/show.html.erb	<%= link_to "Sửa", edit_group_path(@group), class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700" %>
+app/views/groups/show.html.erb	<div><strong>Khối:</strong> <%= @group.block&.name || "—" %></div>
+app/views/groups/show.html.erb	<div><strong>Tên:</strong> <%= @group.name %></div>
+app/views/groups/show.html.erb	<div><strong>Đơn vị:</strong> <%= @group.unit.name %></div>
+app/views/history/_compare.html.erb	# Metric groups — nhóm giống billing (3-row header)
+app/views/history/_compare.html.erb	# Rowspan — dùng RowspanComputer giống billing
+app/views/history/_compare.html.erb	# Đơn giá 2 kỳ
+app/views/history/_compare.html.erb	<strong><%= a_label %>: <%= unit_price_to_vi(price_a) %> đ/kW</strong>
+app/views/history/_compare.html.erb	<strong><%= b_label %>: <%= unit_price_to_vi(price_b) %> đ/kW</strong>
+app/views/history/_compare.html.erb	<td colspan="<%= info_cols %>" class="<%= cell %> text-right">TỔNG</td>
+app/views/history/_compare.html.erb	<th colspan="3" class="<%= header_cell %>">Quân số</th>
+app/views/history/_compare.html.erb	<th colspan="<%= info_cols %>" class="<%= header_cell %>">Thông tin đầu mối</th>
+app/views/history/_compare.html.erb	<th rowspan="2" class="<%= header_cell %>">Khu vực</th>
+app/views/history/_compare.html.erb	<th rowspan="2" class="<%= header_cell %>">Khối</th>
+app/views/history/_compare.html.erb	<th rowspan="2" class="<%= header_cell %>">Nhóm</th>
+app/views/history/_compare.html.erb	<th rowspan="2" class="<%= header_cell %>">Tên đầu mối</th>
+app/views/history/_compare.html.erb	<th rowspan="2" class="<%= header_cell %>">Đơn vị</th>
+app/views/history/_compare.html.erb	<th rowspan="3" class="<%= header_cell %>">Ghi chú</th>
+app/views/history/_compare.html.erb	["Sử dụng điện bơm nước", :water_pump_usage, :num],
+app/views/history/_compare.html.erb	["Sử dụng điện sinh hoạt", :residential_usage, :num],
+app/views/history/_compare.html.erb	["Thiếu (kW)", :deficit, :num, :deficit],
+app/views/history/_compare.html.erb	["Thành tiền thiếu", :deficit_amount, :money, :deficit]
+app/views/history/_compare.html.erb	["Thành tiền thừa", :surplus_amount, :money, :surplus],
+app/views/history/_compare.html.erb	["Thừa (kW)", :surplus, :num, :surplus],
+app/views/history/_compare.html.erb	["Tiêu chuẩn còn lại", :remaining_standard, :num]
+app/views/history/_compare.html.erb	["Tiêu chuẩn điện bơm nước", :water_pump_standard, :num],
+app/views/history/_compare.html.erb	["Tiêu chuẩn điện sinh hoạt", :residential_standard, :num],
+app/views/history/_compare.html.erb	["Tổng sử dụng", :total_usage, :num]
+app/views/history/_compare.html.erb	["Tổng tiêu chuẩn", :total_standard, :num]
+app/views/history/_compare.html.erb	["Tổng trừ", :total_deduction, :num]
+app/views/history/_compare.html.erb	info_cols = 5 # Khu vực, Đơn vị, Khối, Nhóm, Tên
+app/views/history/_compare.html.erb	{ name: "Khoản trừ", metrics: [
+app/views/history/_compare.html.erb	{ name: "Kết quả", metrics: [
+app/views/history/_compare.html.erb	{ name: "Sử dụng", metrics: [
+app/views/history/_compare.html.erb	{ name: "Tiêu chuẩn còn lại", metrics: [
+app/views/history/_compare.html.erb	{ name: "Tiêu chuẩn", metrics: [
+app/views/history/_compare.html.erb	Đơn giá điện:
+app/views/history/show.html.erb	<% page_title "Tra cứu lịch sử" %>
+app/views/history/show.html.erb	<% tabs = [["compare", "So sánh 2 kỳ"], ["range", "Theo khoảng thời gian"]] %>
+app/views/layouts/_topbar.html.erb	<%= t("dashboard.no_period.title", default: "Không có kỳ đang mở") %>
+app/views/layouts/application.html.erb	<meta name="application-name" content="Hệ thống quản lý điện">
+app/views/layouts/application.html.erb	<title><%= content_for(:title).presence || "Hệ thống quản lý điện nội bộ Sư đoàn" %></title>
+app/views/meter_entries/show.html.erb	<% page_title "Chỉ số đầu mối" %>
+app/views/meter_entries/show.html.erb	<%= submit_tag "Lưu toàn bộ",
+app/views/meter_entries/show.html.erb	<th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Công tơ</th>
+app/views/meter_entries/show.html.erb	<th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Ghi chú</th>
+app/views/meter_entries/show.html.erb	<th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Khu vực</th>
+app/views/meter_entries/show.html.erb	<th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Đơn vị</th>
+app/views/meter_entries/show.html.erb	<th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Đầu mối</th>
+app/views/meter_entries/show.html.erb	<th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Cuối kỳ</th>
+app/views/meter_entries/show.html.erb	<th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Sử dụng thực tế</th>
+app/views/meter_entries/show.html.erb	<th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Sử dụng</th>
+app/views/meter_entries/show.html.erb	<th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Tổn hao</th>
+app/views/meter_entries/show.html.erb	<th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Đầu kỳ</th>
+app/views/meter_entries/show.html.erb	Bấm "Tính toán lại" ở Bảng tính tiền để làm mới.
+app/views/meter_entries/show.html.erb	Hai cột <strong>Tổn hao</strong> và <strong>Sử dụng thực tế</strong> là kết quả lần tính gần nhất —
+app/views/meter_entries/show.html.erb	placeholder: "Ghi chú nếu thay công tơ", disabled: !can_edit,
+app/views/meter_entries/show.html.erb	search_placeholder: "Tìm theo tên đầu mối...",
+app/views/meter_entries/show.html.erb	{ label: "Khu vực:", param: :zone_id,
+app/views/meter_entries/show.html.erb	{ label: "Đơn vị:", param: :unit_id,
+app/views/meter_entries/show.html.erb	để trống khi chưa tính, và có thể chưa cập nhật nếu vừa sửa chỉ số.
+app/views/pricing/show.html.erb	(kế tiếp kỳ tháng <%= @latest_period.month %>/<%= @latest_period.year %>).
+app/views/pricing/show.html.erb	<% page_title "Đơn giá điện" %>
+app/views/pricing/show.html.erb	<%= button_to "Mở lại", reopen_period_pricing_path, method: :post,
+app/views/pricing/show.html.erb	<%= button_to "Đóng kỳ hiện tại", close_period_pricing_path,
+app/views/pricing/show.html.erb	<%= f.label :division_public_rate, "Công cộng Sư đoàn (%)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/pricing/show.html.erb	<%= f.label :savings_rate, "Tỷ lệ tiết kiệm của Bộ (%)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/pricing/show.html.erb	<%= f.label :unit_price, "Đơn giá (VND/kWh)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/pricing/show.html.erb	<%= f.label :water_pump_standard, "Tiêu chuẩn bơm nước (kWh/người)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/pricing/show.html.erb	<%= f.submit "Lưu cập nhật", class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 cursor-pointer" %>
+app/views/pricing/show.html.erb	<%= submit_tag "Mở kỳ mới",
+app/views/pricing/show.html.erb	<%= submit_tag "Mở kỳ tháng #{@next_month}/#{@next_year}",
+app/views/pricing/show.html.erb	<div><span class="font-medium text-gray-700">Công cộng Sư đoàn:</span> <%= @current_period.division_public_rate %>%</div>
+app/views/pricing/show.html.erb	<div><span class="font-medium text-gray-700">Tiêu chuẩn bơm nước:</span> <%= @current_period.water_pump_standard %> kWh/người</div>
+app/views/pricing/show.html.erb	<div><span class="font-medium text-gray-700">Tỷ lệ tiết kiệm của Bộ:</span> <%= @current_period.savings_rate %>%</div>
+app/views/pricing/show.html.erb	<div><span class="font-medium text-gray-700">Đơn giá:</span> <%= unit_price_to_vi(@current_period.unit_price) %> đ/kW</div>
+app/views/pricing/show.html.erb	<h2 class="text-lg font-semibold mb-4">Kỳ đang mở: <%= period_label(@current_period) %></h2>
+app/views/pricing/show.html.erb	<h2 class="text-lg font-semibold mb-4">Mở kỳ mới</h2>
+app/views/pricing/show.html.erb	<label class="block text-sm font-medium text-gray-700 mb-1">Năm</label>
+app/views/pricing/show.html.erb	<label class="block text-sm font-medium text-gray-700 mb-1">Tháng</label>
+app/views/pricing/show.html.erb	<label class="block text-sm font-medium text-gray-700 mb-1">Đơn giá (đồng/kWh)</label>
+app/views/pricing/show.html.erb	<li>Hãy đảm bảo đã hoàn tất cả nhập liệu lẫn cấu trúc trước khi đóng kỳ.</li>
+app/views/pricing/show.html.erb	<li>Không thể thay đổi cấu trúc: khu vực, đơn vị, đầu mối, công tơ, công tơ tổng, khối, nhóm, nhóm cấp bậc.</li>
+app/views/pricing/show.html.erb	<li>Nếu sau này cần mở lại kỳ đã đóng (phải đóng hết các kỳ đang mở trước):
+app/views/pricing/show.html.erb	<li>Sau khi đóng, toàn bộ số liệu của kỳ này sẽ bị khóa — không ai có thể chỉnh sửa.</li>
+app/views/pricing/show.html.erb	<li>Được phép sửa nhập liệu: số điện lực, chỉ số công tơ, tổn hao công tơ, chỉ số bơm nước, quân số đầu mối theo nhóm cấp bậc, quân số đầu mối ngoài biên chế, khấu trừ khác, tỷ lệ công cộng đơn vị, phân bổ bơm nước.</li>
+app/views/pricing/show.html.erb	<span class="text-gray-700 bg-gray-100 px-2 py-1 rounded text-xs">Đã đóng</span>
+app/views/pricing/show.html.erb	<span class="text-green-700 bg-green-100 px-2 py-1 rounded text-xs">Đang mở</span>
+app/views/pricing/show.html.erb	<strong>Lưu ý khi đóng kỳ:</strong>
+app/views/pricing/show.html.erb	<td class="px-4 py-2 text-sm text-gray-900">Tháng <%= p.month %>/<%= p.year %></td>
+app/views/pricing/show.html.erb	<td class="px-4 py-2 text-sm text-right text-gray-600"><%= unit_price_to_vi(p.unit_price) %> đ/kW</td>
+app/views/pricing/show.html.erb	<th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Kỳ</th>
+app/views/pricing/show.html.erb	<th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Trạng thái</th>
+app/views/pricing/show.html.erb	<th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Thao tác</th>
+app/views/pricing/show.html.erb	<th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Đơn giá</th>
+app/views/pricing/show.html.erb	Bạn có thể chỉnh các giá trị này sau khi mở kỳ.
+app/views/pricing/show.html.erb	Hệ thống tự kế thừa đơn giá, các tỷ lệ và phân bổ bơm nước từ kỳ trước.
+app/views/pricing/show.html.erb	Kỳ mới sẽ là <strong>Tháng <%= @next_month %>/<%= @next_year %></strong>
+app/views/pricing/show.html.erb	data: { turbo_confirm: "Mở kỳ tháng #{@next_month}/#{@next_year}?" } do %>
+app/views/pricing/show.html.erb	form: { class: "inline", data: { turbo_confirm: "Mở lại kỳ tháng #{p.month}/#{p.year}?" } },
+app/views/pricing/show.html.erb	form: { data: { turbo_confirm: "Đóng kỳ tháng #{@current_period.month}/#{@current_period.year}?\n\nToàn bộ số liệu sẽ bị khóa. Vui lòng đọc kỹ lưu ý trước khi xác nhận." } },
+app/views/pricing/show.html.erb	{ label: "Năm:", param: :year,
+app/views/pricing/show.html.erb	Đây là kỳ đầu tiên của hệ thống. Vui lòng nhập đầy đủ năm, tháng và đơn giá.
+app/views/pump_allocations/_form.html.erb	<%= f.label :coefficient, "Hệ số", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/pump_allocations/_form.html.erb	<%= f.label :contact_point_id, "Chọn đầu mối", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/pump_allocations/_form.html.erb	<%= f.label :fixed_percentage, "% cố định", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/pump_allocations/_form.html.erb	<%= f.label :unit_id, "Chọn đơn vị", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/pump_allocations/_form.html.erb	<%= f.label :zone_id, "Khu vực", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/pump_allocations/_form.html.erb	<legend class="text-sm font-medium text-gray-700 px-1">Chế độ phân bổ</legend>
+app/views/pump_allocations/_form.html.erb	<legend class="text-sm font-medium text-gray-700 px-1">Đối tượng nhận phân bổ</legend>
+app/views/pump_allocations/_form.html.erb	<p class="text-xs text-gray-500 mt-1">Trọng số phân bổ = hệ số × quân số. Mặc định: 1.</p>
+app/views/pump_allocations/_form.html.erb	<p class="text-xs text-gray-500 mt-1">Đối tượng nhận đúng X% của tổng bơm nước. Tổng % cố định trong khu vực không quá 100.</p>
+app/views/pump_allocations/_form.html.erb	<span>Theo hệ số</span>
+app/views/pump_allocations/_form.html.erb	<span>Theo phần trăm cố định</span>
+app/views/pump_allocations/_form.html.erb	<span>Đơn vị</span>
+app/views/pump_allocations/_form.html.erb	<span>Đầu mối</span>
+app/views/pump_allocations/_form.html.erb	{ include_blank: "— Chọn khu vực —" },
+app/views/pump_allocations/_form.html.erb	{ include_blank: "— Chọn đơn vị —" },
+app/views/pump_allocations/_form.html.erb	{ include_blank: "— Chọn đầu mối —" },
+app/views/pump_allocations/edit.html.erb	<% page_title "Sửa phân bổ bơm nước" %>
+app/views/pump_allocations/index.html.erb	<%= sortable_header :coefficient, "Hệ số",
+app/views/pump_allocations/index.html.erb	<%= sortable_header :percentage, "% cố định",
+app/views/pump_allocations/index.html.erb	<%= sortable_header :target, "Đối tượng",
+app/views/pump_allocations/index.html.erb	<%= sortable_header :target_type, "Loại",
+app/views/pump_allocations/index.html.erb	<%= sortable_header :zone, "Khu vực",
+app/views/pump_allocations/index.html.erb	search_placeholder: "Tìm theo tên đối tượng...",
+app/views/pump_allocations/index.html.erb	{ label: "Khu vực:", param: :zone_id,
+app/views/pump_allocations/new.html.erb	<% page_title "Thêm phân bổ bơm nước" %>
+app/views/pump_entries/show.html.erb	<% page_title "Chỉ số bơm nước" %>
+app/views/pump_entries/show.html.erb	<%= submit_tag "Lưu toàn bộ",
+app/views/pump_entries/show.html.erb	<th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Công tơ</th>
+app/views/pump_entries/show.html.erb	<th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Ghi chú</th>
+app/views/pump_entries/show.html.erb	<th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Khu vực</th>
+app/views/pump_entries/show.html.erb	<th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Đầu mối</th>
+app/views/pump_entries/show.html.erb	<th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Cuối kỳ</th>
+app/views/pump_entries/show.html.erb	<th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Sử dụng thực tế</th>
+app/views/pump_entries/show.html.erb	<th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Sử dụng</th>
+app/views/pump_entries/show.html.erb	<th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Tổn hao</th>
+app/views/pump_entries/show.html.erb	<th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Đầu kỳ</th>
+app/views/pump_entries/show.html.erb	Bấm "Tính toán lại" ở Bảng tính tiền để làm mới.
+app/views/pump_entries/show.html.erb	Hai cột <strong>Tổn hao</strong> và <strong>Sử dụng thực tế</strong> là kết quả lần tính gần nhất —
+app/views/pump_entries/show.html.erb	placeholder: "Ghi chú nếu thay công tơ", disabled: !can_edit,
+app/views/pump_entries/show.html.erb	search_placeholder: "Tìm theo tên đầu mối...",
+app/views/pump_entries/show.html.erb	{ label: "Khu vực:", param: :zone_id,
+app/views/pump_entries/show.html.erb	để trống khi chưa tính, và có thể chưa cập nhật nếu vừa sửa chỉ số.
+app/views/ranks/_form.html.erb	(ví dụ: 1 = Đại tá, 7 = Hạ sĩ quan). Không được trùng số trong cùng kỳ.
+app/views/ranks/_form.html.erb	<%= f.label :name, "Tên nhóm cấp bậc", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/ranks/_form.html.erb	<%= f.label :position, "Thứ tự hiển thị", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/ranks/_form.html.erb	<%= f.label :quota, "Định mức (kWh/người)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/ranks/_form.html.erb	Số nhỏ hiển thị trước. Dùng để sắp xếp các nhóm cấp bậc theo cấp bậc giảm dần
+app/views/ranks/edit.html.erb	<% page_title "Sửa nhóm cấp bậc: #{@rank.name}" %>
+app/views/ranks/index.html.erb	<%= sortable_header :name, "Nhóm cấp bậc",
+app/views/ranks/index.html.erb	<%= sortable_header :quota, "Định mức (kWh/người)",
+app/views/ranks/index.html.erb	search_placeholder: "Tìm theo tên nhóm cấp bậc...",
+app/views/ranks/new.html.erb	<% page_title "Thêm nhóm cấp bậc" %>
+app/views/ranks/show.html.erb	<% page_title "Nhóm cấp bậc: #{@rank.name}" %>
+app/views/ranks/show.html.erb	<%= link_to "Quay lại", ranks_path, class: "text-gray-600 hover:text-gray-800" %>
+app/views/ranks/show.html.erb	<%= link_to "Sửa", edit_rank_path(@rank), class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700" %>
+app/views/ranks/show.html.erb	<div><strong>Kỳ:</strong> Tháng <%= @rank.period.month %>/<%= @rank.period.year %></div>
+app/views/ranks/show.html.erb	<div><strong>Thứ tự:</strong> <%= @rank.position %></div>
+app/views/ranks/show.html.erb	<div><strong>Tên:</strong> <%= @rank.name %></div>
+app/views/ranks/show.html.erb	<div><strong>Định mức:</strong> <%= number_to_vi(@rank.quota) %> kWh/người</div>
+app/views/shared/_list_toolbar.html.erb	# Bao gồm: ô tìm kiếm, dropdown filters (nếu có), chọn số dòng/trang, tổng bản ghi, nút thêm mới.
+app/views/shared/_list_toolbar.html.erb	# Khi không truyền filters (mặc định []), không render filter nào.
+app/views/shared/_list_toolbar.html.erb	# Locals (bắt buộc):
+app/views/shared/_list_toolbar.html.erb	# Locals (tùy chọn):
+app/views/shared/_list_toolbar.html.erb	# Mỗi trang nên truyền key riêng để per_page không ảnh hưởng trang khác.
+app/views/shared/_list_toolbar.html.erb	# Toolbar dùng chung cho các trang danh sách (index).
+app/views/shared/_list_toolbar.html.erb	# Tất cả controls nằm trong 1 form duy nhất — submit bất kỳ control nào đều gửi toàn bộ giá trị hiện tại.
+app/views/shared/_list_toolbar.html.erb	# action_links: HTML — các nút hành động bổ sung bên phải (vd: Xuất Excel, Tính toán lại).
+app/views/shared/_list_toolbar.html.erb	# add_link: HTML — link_to nút thêm mới (nil nếu không có quyền).
+app/views/shared/_list_toolbar.html.erb	# blank_text: (tùy chọn) text option đầu tiên (mặc định "Tất cả").
+app/views/shared/_list_toolbar.html.erb	# blank_text: nil → không có option trống. Không truyền hoặc truyền string → có option trống.
+app/views/shared/_list_toolbar.html.erb	# children: (tùy chọn) Array of param names — cascade reset.
+app/views/shared/_list_toolbar.html.erb	# extra_hidden: Hash — hidden fields tĩnh giữ lại khi submit (vd: {type: @filter_type}).
+app/views/shared/_list_toolbar.html.erb	# filters: Array of Hash — dropdown hoặc date filters. Mỗi item:
+app/views/shared/_list_toolbar.html.erb	# per_page_storage_key: String — localStorage key cho per_page (mặc định "list_per_page").
+app/views/shared/_list_toolbar.html.erb	# search_placeholder: String — placeholder ô tìm kiếm (mặc định: "Tìm kiếm...").
+app/views/shared/_list_toolbar.html.erb	# show_per_page: Boolean — hiển thị dropdown số dòng/trang (mặc định true).
+app/views/shared/_list_toolbar.html.erb	# show_search: Boolean — hiển thị ô tìm kiếm (mặc định true).
+app/views/shared/_list_toolbar.html.erb	# show_total: Boolean — hiển thị tổng bản ghi (mặc định true).
+app/views/shared/_list_toolbar.html.erb	# total_count: Integer — tổng số bản ghi (sau khi lọc).
+app/views/shared/_list_toolbar.html.erb	# total_label: String — label tùy chỉnh cho tổng (mặc định: "Tổng: X bản ghi").
+app/views/shared/_list_toolbar.html.erb	blank_option = filter.key?(:blank_text) && filter[:blank_text].nil? ? [] : [[filter[:blank_text] || "Tất cả", ""]]
+app/views/unit_config/show.html.erb	<% page_title "Cấu hình đơn vị" %>
+app/views/unit_config/show.html.erb	<%= submit_tag "Lưu cấu hình",
+app/views/unit_config/show.html.erb	<h3 class="text-base font-semibold text-gray-900 mb-3">Tỷ lệ công cộng đơn vị</h3>
+app/views/unit_config/show.html.erb	<h3 class="text-base font-semibold text-gray-900">Cột "Khác" cho từng đầu mối sinh hoạt thuộc khu vực</h3>
+app/views/unit_config/show.html.erb	<h3 class="text-base font-semibold text-gray-900">Cột "Khác" cho từng đầu mối sinh hoạt thuộc đơn vị</h3>
+app/views/unit_config/show.html.erb	<p class="px-4 py-3 text-sm text-gray-500">Chưa có đầu mối sinh hoạt nào trong đơn vị.</p>
+app/views/unit_config/show.html.erb	<p class="text-xs text-gray-500 mt-2">Tỷ lệ trừ cho phần công cộng đơn vị (áp dụng cho mọi đầu mối sinh hoạt trong đơn vị).</p>
+app/views/unit_config/show.html.erb	Bạn chưa được gán đơn vị nào. Vui lòng liên hệ quản trị viên hệ thống.
+app/views/unit_config/show.html.erb	blank_text: "— Chọn đơn vị —" }
+app/views/unit_config/show.html.erb	children: [:unit_id], blank_text: "— Chọn khu vực —" },
+app/views/unit_config/show.html.erb	{ label: "Khu vực:", param: :zone_id,
+app/views/unit_config/show.html.erb	{ label: "Đơn vị:", param: :unit_id,
+app/views/units/_form.html.erb	<%= f.label :name, "Tên đơn vị", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/units/_form.html.erb	<%= f.label :zone_id, "Khu vực", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/units/_form.html.erb	<%= f.submit "Lưu", class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 cursor-pointer" %>
+app/views/units/_form.html.erb	<%= link_to "Hủy", units_path, class: "text-gray-600 px-4 py-2 hover:text-gray-800" %>
+app/views/units/_form.html.erb	<p class="text-xs text-gray-500 mt-1">Khu vực không thể thay đổi sau khi tạo đơn vị.</p>
+app/views/units/_form.html.erb	{ include_blank: "— Chọn khu vực —" },
+app/views/units/edit.html.erb	<% page_title "Sửa đơn vị: #{@unit.name}" %>
+app/views/units/index.html.erb	<%= sortable_header :is_manager, "Quản lý khu vực",
+app/views/units/index.html.erb	<%= sortable_header :name, "Đơn vị",
+app/views/units/index.html.erb	<%= sortable_header :zone, "Khu vực",
+app/views/units/index.html.erb	confirm_msg += " Đơn vị này đang quản lý khu vực — khu vực sẽ không còn đơn vị quản lý." if u.managed_zones.any?
+app/views/units/index.html.erb	search_placeholder: "Tìm theo tên đơn vị...",
+app/views/units/index.html.erb	{ label: "Khu vực:", param: :zone_id,
+app/views/units/new.html.erb	<% page_title "Thêm đơn vị" %>
+app/views/units/show.html.erb	<% page_title "Đơn vị: #{@unit.name}" %>
+app/views/units/show.html.erb	<%= link_to "Quay lại", units_path, class: "text-gray-600 hover:text-gray-800" %>
+app/views/units/show.html.erb	<%= link_to "Sửa", edit_unit_path(@unit), class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700" %>
+app/views/units/show.html.erb	<div><strong>Khu vực:</strong> <%= @unit.zone.name %></div>
+app/views/units/show.html.erb	<div><strong>Là đơn vị quản lý khu vực:</strong>
+app/views/units/show.html.erb	<div><strong>Tên:</strong> <%= @unit.name %></div>
+app/views/users/_form.html.erb	<%= f.label :display_name, "Tên hiển thị", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/users/_form.html.erb	<%= f.label :password, "Mật khẩu", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/users/_form.html.erb	<%= f.label :password_confirmation, "Xác nhận", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/users/_form.html.erb	<%= f.label :role, "Vai trò", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/users/_form.html.erb	<%= f.label :unit_id, "Đơn vị (bắt buộc cho quản trị viên đơn vị / chỉ huy)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/users/_form.html.erb	<%= f.label :username, "Tên đăng nhập", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/users/_form.html.erb	<%= f.submit "Lưu", data: { password_validator_target: "submit" },
+app/views/users/_form.html.erb	<%= link_to "Hủy", users_path, class: "text-gray-600 px-4 py-2 hover:text-gray-800" %>
+app/views/users/_form.html.erb	<%= user.new_record? ? "Mật khẩu" : "Đổi mật khẩu (để trống nếu không đổi)" %>
+app/views/users/_form.html.erb	<label class="block text-sm font-medium text-gray-700 mb-1">Tên đăng nhập</label>
+app/views/users/_form.html.erb	{ include_blank: "— Chọn vai trò —" },
+app/views/users/_form.html.erb	{ include_blank: "— Không thuộc đơn vị nào —" },
+app/views/users/edit.html.erb	<% page_title "Sửa tài khoản: #{@user.username}" %>
+app/views/users/index.html.erb	<%= sortable_header :zone, "Khu vực",
+app/views/users/index.html.erb	search_placeholder: "Tìm theo tên đăng nhập hoặc tên hiển thị...",
+app/views/users/index.html.erb	{ label: "Khu vực:", param: :zone_id,
+app/views/users/index.html.erb	{ label: "Vai trò:", param: :role,
+app/views/users/index.html.erb	{ label: "Đơn vị:", param: :unit_id,
+app/views/users/new.html.erb	<% page_title "Thêm tài khoản" %>
+app/views/users/show.html.erb	<% page_title "Tài khoản: #{@user.username}" %>
+app/views/users/show.html.erb	<%= link_to "Quay lại", users_path, class: "text-gray-600 hover:text-gray-800" %>
+app/views/users/show.html.erb	<%= link_to "Sửa", edit_user_path(@user), class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700" %>
+app/views/users/show.html.erb	<div class="text-xs text-yellow-700 bg-yellow-50 p-2 rounded">Đây là tài khoản mặc định, không thể xóa.</div>
+app/views/users/show.html.erb	<div><strong>Tên hiển thị:</strong> <%= @user.display_name %></div>
+app/views/users/show.html.erb	<div><strong>Tên đăng nhập:</strong> <%= @user.username %></div>
+app/views/users/show.html.erb	<div><strong>Vai trò:</strong>
+app/views/users/show.html.erb	<div><strong>Đơn vị:</strong> <%= @user.unit&.name || "—" %></div>
+app/views/zones/_form.html.erb	<%= f.label :name, "Tên khu vực", class: "block text-sm font-medium text-gray-700 mb-1" %>
+app/views/zones/_form.html.erb	<%= f.submit "Lưu", class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 cursor-pointer" %>
+app/views/zones/_form.html.erb	<%= link_to "Hủy", zones_path, class: "text-gray-600 px-4 py-2 hover:text-gray-800" %>
+app/views/zones/_form.html.erb	<%= mf.text_field :name, placeholder: "Tên công tơ tổng (VD: CT-Tổng-KV1)",
+app/views/zones/_form.html.erb	<h3 class="text-sm font-semibold text-gray-700 mb-2">Công tơ tổng</h3>
+app/views/zones/_form.html.erb	<p class="text-xs text-gray-500 mb-2">Khu vực phải có ít nhất một công tơ tổng để theo dõi tổng điện cấp.</p>
+app/views/zones/edit.html.erb	<% page_title "Sửa khu vực: #{@zone.name}" %>
+app/views/zones/edit.html.erb	<%= submit_tag "Cập nhật", class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 cursor-pointer" %>
+app/views/zones/edit.html.erb	<h3 class="text-base font-semibold text-gray-900 mb-3">Đơn vị quản lý khu vực</h3>
+app/views/zones/edit.html.erb	<p class="text-xs text-gray-500 mt-1">Đơn vị quản lý có quyền khai báo và nhập liệu phần khu vực (đầu mối, công tơ, quân số, phân bổ bơm nước, chỉ số công tơ tổng).</p>
+app/views/zones/edit.html.erb	include_blank: "— Không có đơn vị quản lý —",
+app/views/zones/index.html.erb	<%= sortable_header :name, "Khu vực",
+app/views/zones/index.html.erb	<%= sortable_header :units_count, "Số đơn vị",
+app/views/zones/index.html.erb	search_placeholder: "Tìm theo tên khu vực...",
+app/views/zones/new.html.erb	<% page_title "Thêm khu vực" %>
+app/views/zones/show.html.erb	<% page_title "Khu vực: #{@zone.name}" %>
+app/views/zones/show.html.erb	<%= link_to "Quay lại", zones_path, class: "text-gray-600 hover:text-gray-800" %>
+app/views/zones/show.html.erb	<%= link_to "Sửa", edit_zone_path(@zone), class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700" %>
+app/views/zones/show.html.erb	<div><strong>Công tơ tổng:</strong> <%= @zone.main_meters.kept.pluck(:name).join(", ") %></div>
+app/views/zones/show.html.erb	<div><strong>Số đơn vị:</strong> <%= @zone.units.kept.count %></div>
+app/views/zones/show.html.erb	<div><strong>Tên:</strong> <%= @zone.name %></div>
+app/views/zones/show.html.erb	<div><strong>Đơn vị quản lý:</strong> <%= @zone.manager_unit&.name || "—" %></div>

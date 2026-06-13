@@ -109,6 +109,16 @@ jobs:
           bash .github/scripts/check-test-dimensions.sh || rc=1
           exit $rc
 
+  i18n-view-guardrail:
+    name: i18n view guardrail (no new hard-coded Vietnamese)
+    runs-on: ubuntu-latest
+    # Chạy LUÔN trên mọi pull request (KHÔNG gate qua `changes`): guardrail grep
+    # rẻ, cần bắt đúng lúc pull request đụng .erb (ADR-032, triết lý ADR-024).
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check views for new hard-coded Vietnamese literals (ADR-032)
+        run: bash .github/scripts/check-view-i18n.sh
+
   tests:
     name: Tests (rspec incl. system specs, zeitwerk, schema drift)
     runs-on: ubuntu-latest
