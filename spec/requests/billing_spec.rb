@@ -80,6 +80,7 @@ RSpec.describe "Billing", type: :request do
         expect(body).to include("38,24")
         expect(body).to include("12,44")
         expect(body).to include("9,33")
+        expect(body).to include("60,00") # Tổng tổn hao C ở dòng "Cộng"/"Tổng cộng"
         expect(body).to include("2.100,00")
       end
 
@@ -430,8 +431,14 @@ RSpec.describe "Billing", type: :request do
       expect(response.body).to include(breakdown_title)
     end
 
-    it "CHIEU-breakdown-vai-tro: commander thấy breakdown (read-only)" do
+    it "CHIEU-breakdown-vai-tro: commander đơn vị quản lý khu vực (CMD-ZM) thấy breakdown" do
       sign_in create(:user, :commander, unit: sample.unit_a)
+      get billing_path
+      expect(response.body).to include(breakdown_title)
+    end
+
+    it "CHIEU-breakdown-vai-tro: commander đơn vị thường (CMD) thấy breakdown" do
+      sign_in create(:user, :commander, unit: sample.unit_b)
       get billing_path
       expect(response.body).to include(breakdown_title)
     end

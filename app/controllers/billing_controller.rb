@@ -31,7 +31,7 @@ class BillingController < ApplicationController
                                  .includes(:zone).to_a.sort_by { |s| s.zone&.name.to_s }
     @loss_breakdowns = @loss_summaries.each_with_object({}) do |summary, hash|
       next unless summary.zone
-      hash[summary.zone_id] = LossBreakdown.new(zone: summary.zone, period: @period).call
+      hash[summary.zone_id] = LossBreakdown.new(zone: summary.zone, period: @period, summary: summary).call
     end
 
     respond_to do |format|

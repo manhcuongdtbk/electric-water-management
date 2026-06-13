@@ -12,19 +12,26 @@ class LossBreakdown
   Result = Struct.new(:rows, :loss_bearing_total, :no_loss_total, :grand_total, :no_loss_by_type,
                       keyword_init: true)
 
-  def initialize(zone:, period:)
+  # summary: pass the already-loaded LossSummary (the billing controller has it in
+  # hand) to avoid a redundant lookup; falls back to a query when not provided.
+  def initialize(zone:, period:, summary: nil)
     @zone = zone
     @period = period
+    @summary = summary
     @query = ZoneQuery.new(zone: zone, period: period)
   end
 
   def call
-    summary = LossSummary.find_by(zone_id: @zone.id, period_id: @period.id)
+    summary = @summary || LossSummary.find_by(zone_id: @zone.id, period_id: @period.id)
     return nil unless summary
 
     meters = @query.meters.includes(:contact_point).to_a
-    usages = @query.meter_usages
+    # Load readings once and derive usages from them (matches LossCalculator) so
+    # the page does not query meter_readings twice per zone.
     readings = @query.meter_readings.index_by(&:meter_id)
+    usages = readings.transform_values do |reading|
+      reading.usage.nil? ? BigDecimal("0") : BigDecimal(reading.usage.to_s)
+    end
 
     no_loss, loss_bearing = meters.partition do |meter|
       reading = readings[meter.id]
