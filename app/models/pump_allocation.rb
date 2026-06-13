@@ -1,5 +1,6 @@
 class PumpAllocation < ApplicationRecord
   include Auditable
+  include TouchesCalculationState
 
   belongs_to :zone
   belongs_to :period
@@ -21,6 +22,10 @@ class PumpAllocation < ApplicationRecord
   validate :validate_fixed_percentage_sum_within_limit
 
   private
+
+  def calculation_state_targets
+    [[zone_id, period_id]]
+  end
 
   # Nghiệp vụ 9.2: đầu mối nhận trực tiếp phải "thuộc khu vực" (zone-level, unit_id nil).
   # Đầu mối thuộc đơn vị nhận gián tiếp qua đơn vị (mục 9.4).

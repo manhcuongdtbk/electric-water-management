@@ -1,5 +1,6 @@
 class MeterReading < ApplicationRecord
   include Auditable
+  include TouchesCalculationState
 
   belongs_to :meter
   belongs_to :period
@@ -23,5 +24,11 @@ class MeterReading < ApplicationRecord
     usage_value = usage
     return nil if usage_value.nil?
     usage_value + loss
+  end
+
+  private
+
+  def calculation_state_targets
+    [[meter&.contact_point&.effective_zone&.id, period_id]]
   end
 end

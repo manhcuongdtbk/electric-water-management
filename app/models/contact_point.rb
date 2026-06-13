@@ -171,5 +171,7 @@ class ContactPoint < ApplicationRecord
     return unless period
     non_establishment_snapshots.find_by(period: period)
       &.update_column(:personnel_count, personnel_count)
+    zone_id = effective_zone&.id
+    CalculationState.touch_inputs!(zone_id: zone_id, period_id: period.id) if zone_id
   end
 end

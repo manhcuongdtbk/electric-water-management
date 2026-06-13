@@ -28,6 +28,8 @@ class Meter < ApplicationRecord
     period = Period.current
     return unless period
     meter_readings.find_by(period: period)&.update_column(:no_loss, no_loss)
+    zone_id = contact_point&.effective_zone&.id
+    CalculationState.touch_inputs!(zone_id: zone_id, period_id: period.id) if zone_id
   end
 
   def ensure_not_last_meter

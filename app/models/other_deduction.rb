@@ -1,5 +1,6 @@
 class OtherDeduction < ApplicationRecord
   include Auditable
+  include TouchesCalculationState
 
   enum :other_type, { fixed: "fixed", coefficient: "coefficient", unit_coefficient: "unit_coefficient" },
     prefix: :other
@@ -13,6 +14,10 @@ class OtherDeduction < ApplicationRecord
   validate :validate_unit_coefficient_requires_unit
 
   private
+
+  def calculation_state_targets
+    [[contact_point&.effective_zone&.id, period_id]]
+  end
 
   def validate_unit_coefficient_requires_unit
     return unless other_unit_coefficient?
