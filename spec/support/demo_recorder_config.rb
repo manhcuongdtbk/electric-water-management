@@ -41,9 +41,23 @@ RSpec.configure do |config|
     # Capybara.reset_sessions! (fired in Capybara's own after hook, after user
     # after hooks) calls driver.reset! which invokes this callback with the path.
     page.driver.on_save_screenrecord do |video_path|
-      safe = RSpec.current_example.full_description.parameterize(separator: "_")
+      example = RSpec.current_example
+      safe = example.full_description.parameterize(separator: "_")
       dest = DEMO_VIDEO_DIR.join("#{safe}.webm")
       FileUtils.mv(video_path, dest)
+
+      # Append an authoritative clip→spec→NV mapping line for the release
+      # bundler (rake demo:bundle, ADR-048). The transcode step turns the .webm
+      # into "<safe>.mp4", so record the .mp4 name here. The demo job's artifact
+      # upload globs *.mp4, so this sidecar file is harmless to it.
+      File.open(DEMO_VIDEO_DIR.join("manifest.jsonl"), "a") do |io|
+        io.puts(JSON.generate(
+          video: "#{safe}.mp4",
+          description: example.full_description,
+          file: example.metadata[:file_path],
+          nv: example.metadata[:nv]
+        ))
+      end
     end
   end
 
