@@ -478,6 +478,31 @@ RSpec.describe "UnitConfig", type: :request do
       expect(response).to have_http_status(:redirect)
     end
 
+    it "PATCH không kèm unit_id lẫn zone_id (cả hai nil) → redirect an toàn, không 500" do
+      expect {
+        patch unit_config_path, params: {}
+      }.not_to raise_error
+      expect(response).to have_http_status(:redirect)
+    end
+
+    it "CHIEU-khac-zone-direct-orphan: khu vực từng có đơn vị quản lý, đơn vị bị xóa → vẫn sửa được 'Khác' zone-direct" do
+      # Tạo đơn vị quản lý cho orphan_zone rồi xóa nó → clear_zone_manager_if_self set manager_unit_id nil.
+      manager = create(:unit, zone: orphan_zone, name: "Đơn vị quản lý tạm")
+      expect(orphan_zone.reload.manager_unit_id).to eq(manager.id)
+      manager.discard
+      expect(orphan_zone.reload.manager_unit_id).to be_nil
+
+      od = OtherDeduction.find_by!(contact_point: orphan_zone_cp, period: period)
+      patch unit_config_path, params: {
+        zone_id: orphan_zone.id,
+        other_deductions: {
+          od.id.to_s => { other_type: "fixed", other_value: "7.50", lock_version: od.lock_version }
+        }
+      }
+      expect(response).to redirect_to(unit_config_path(zone_id: orphan_zone.id))
+      expect(od.reload.other_value).to eq(BigDecimal("7.50"))
+    end
+
     it "CHIEU-khac-zone-direct-sua-duoc: PATCH zone-context lỗi validation → 422 re-render an toàn (không raise), giá trị giữ nguyên" do
       od = OtherDeduction.find_by!(contact_point: orphan_zone_cp, period: period)
       original_value = od.other_value

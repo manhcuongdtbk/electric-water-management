@@ -68,7 +68,7 @@ class UnitConfigController < ApplicationController
       set_sa_filter_dropdowns
       render :show, status: :unprocessable_content
     else
-      redirect_to unit_config_path(@unit ? { unit_id: @unit.id } : { zone_id: @zone.id }),
+      redirect_to unit_config_path(@unit ? { unit_id: @unit.id } : { zone_id: @zone&.id }),
                   notice: t("unit_config.flash.saved")
     end
   end
