@@ -1,7 +1,6 @@
 ---
 title: Hiển thị chi tiết tổn hao (cột Tổn hao / Sử dụng thực tế + tóm tắt A/B/C)
-version: 0.3.0
-status: approved (triển khai 1.2.0)
+version: 0.3.1
 date: 2026-06-11
 governed_by: 2026-06-07-sdlc-overview-design.md
 ---
@@ -28,7 +27,7 @@ Mã nguồn liên quan hiện tại:
 
 ## ADR-027: Lưu snapshot tổn hao per-công-tơ + A/B/C per zone-kỳ
 
-- **Trạng thái:** Proposed · 2026-06-11
+- **Trạng thái:** Accepted · 2026-06-11
 - **Bối cảnh:** Cần hiển thị tổn hao per công tơ và "sử dụng thực tế" (sử dụng + tổn hao) trên hai trang nhập chỉ số, và tóm tắt A/B/C trên bảng tính tiền. Yêu cầu nghiệp vụ: hai cột "hiển thị kết quả từ lần tính toán gần nhất" và **để trống nếu chưa tính**. Hiện loss per-công-tơ chỉ tồn tại trong bộ nhớ khi chạy `LossCalculator`.
 - **Quyết định:** **Lưu snapshot** kết quả tổn hao tại thời điểm tính:
   - Thêm cột `meter_readings.loss` (decimal, nullable) — tổn hao của công tơ đó ở kỳ đó, ghi bởi `CalculationOrchestrator` trong transaction tính toán. "Sử dụng thực tế" = `sử dụng + loss`, tính khi hiển thị (không lưu thêm cột).
@@ -99,7 +98,11 @@ Mã `CHIEU-<slug>` khai chiều test; test mang mã ở mô tả `it` (CI đối
 - Issue: [`#319`](https://github.com/manhcuongdtbk/electric-water-management/issues/319).
 - Spec anh em milestone 1.2.0: [cột Khác hệ số đơn vị](2026-06-11-cot-khac-he-so-don-vi-design.md), [phân bổ bơm theo trạm](2026-06-11-phan-bo-bom-theo-tram-design.md).
 
-## Changelog
+## Lịch sử thay đổi
+
+### 0.3.1 (2026-06-13)
+
+- Theo ADR-033 (#339): bỏ field frontmatter `status:` (nguồn duy nhất = inline `**Trạng thái:**`); lật trạng thái các ADR đã merge sang `Accepted`.
 
 ### 0.3.0 (2026-06-13)
 

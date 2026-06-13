@@ -1,7 +1,6 @@
 ---
 title: Guardrail i18n cho view (baseline grandfather — chặn hard-code tiếng Việt mới ngoài t())
-version: 0.1.0
-status: draft (chờ duyệt)
+version: 0.1.1
 date: 2026-06-13
 governed_by: 2026-06-07-sdlc-overview-design.md
 ---
@@ -62,7 +61,7 @@ Hai lý do gốc khiến không gì khớp đồng thời **làm cách của ta 
 
 ## ADR-032: Guardrail i18n cho view — baseline grandfather bằng script CI bash native (mở rộng ADR-002/024/030)
 
-- **Trạng thái:** Proposed · 2026-06-13 · mở rộng [ADR-002](2026-06-07-sdlc-overview-design.md) (máy ép luật kiểm được), [ADR-024](2026-06-11-guardrail-quan-tri-tai-lieu-design.md) (pattern guardrail CI bash fail-loud), [ADR-030](2026-06-13-truy-vet-chieu-test-design.md) (guardrail bash chạy cả cây + companion `.test.sh`).
+- **Trạng thái:** Accepted · 2026-06-13 · mở rộng [ADR-002](2026-06-07-sdlc-overview-design.md) (máy ép luật kiểm được), [ADR-024](2026-06-11-guardrail-quan-tri-tai-lieu-design.md) (pattern guardrail CI bash fail-loud), [ADR-030](2026-06-13-truy-vet-chieu-test-design.md) (guardrail bash chạy cả cây + companion `.test.sh`).
 - **Bối cảnh:** xem trên.
 - **Quyết định:**
 
@@ -162,4 +161,5 @@ Mạnh nhất là phần lưới chống regression: pattern hard-code tiếng V
 
 ## Lịch sử thay đổi
 
+- **0.1.1 (2026-06-13):** Theo ADR-033 (#339): bỏ field frontmatter `status:` (nguồn duy nhất = inline `**Trạng thái:**`); lật trạng thái các ADR đã merge sang `Accepted`.
 - **0.1.0 (2026-06-13):** Bản thảo đầu — ADR-032 (guardrail i18n cho view, hướng M baseline grandfather). Script bash native `check-view-i18n.sh` + companion `.test.sh` + baseline content-based `.github/i18n-view-baseline.txt` + job CI `i18n-view-guardrail` always-on. Phát hiện: diacritic tiếng Việt ngoài comment span = literal người-dùng-thấy (false-positive thấp, khảo sát 1/476 trùng `t()`). Loại: XL full migration (YAGNI single-locale), rubocop-i18n/erb_lint (heuristic câu-tiếng-Anh + mù text node ERB), i18n-tasks (giải bài key, không bắt literal chưa-bọc), baseline số-dòng/file-level, soi-diff-git, nhồi job doc-governance. Chờ duyệt.

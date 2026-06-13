@@ -1,7 +1,6 @@
 ---
 title: CI gate truy vết chiều test ↔ test (anchor CHIEU-<slug>, đối chiếu bảng spec với test)
-version: 0.1.1
-status: draft (chờ duyệt)
+version: 0.1.2
 date: 2026-06-13
 governed_by: 2026-06-07-sdlc-overview-design.md
 ---
@@ -27,7 +26,7 @@ ADR-014 cố ý **không** nhúng mã `NV-...` vào test ("0 churn test") khi ch
 
 ## ADR-030: CI gate truy vết chiều test ↔ test bằng anchor `CHIEU-<slug>` (mở rộng ADR-002/015/024)
 
-- **Trạng thái:** Proposed · 2026-06-13 · mở rộng [ADR-002](2026-06-07-sdlc-overview-design.md), [ADR-015](2026-06-08-truy-vet-quan-ly-thay-doi-design.md), [ADR-024](2026-06-11-guardrail-quan-tri-tai-lieu-design.md).
+- **Trạng thái:** Accepted · 2026-06-13 · mở rộng [ADR-002](2026-06-07-sdlc-overview-design.md), [ADR-015](2026-06-08-truy-vet-quan-ly-thay-doi-design.md), [ADR-024](2026-06-11-guardrail-quan-tri-tai-lieu-design.md).
 - **Bối cảnh:** xem trên.
 - **Quyết định:**
 
@@ -114,7 +113,8 @@ Mạnh nhất vẫn là construct **tự-không-lỗi-thời**: trạng thái đ
 - **Lên:** [ADR-002](2026-06-07-sdlc-overview-design.md) (máy ép luật kiểm được), [ADR-015](2026-06-08-truy-vet-quan-ly-thay-doi-design.md) (đường nâng cấp "CI chặn thiếu test + gắn mã vào test" mà ADR này kích hoạt), [ADR-024](2026-06-11-guardrail-quan-tri-tai-lieu-design.md) (pattern job `doc-governance` bash native fail-loud).
 - **Test:** `check-test-dimensions.sh` tự-kiểm trên chính pull request giới thiệu nó (đụng `.github/**` → CI full) trên các bảng `CHIEU-` retrofit milestone 1.2.0; kèm fixture vi phạm cố ý trong plan.
 
-## Changelog
+## Lịch sử thay đổi
 
+- **0.1.2 (2026-06-13):** Theo ADR-033 (#339): bỏ field frontmatter `status:` (nguồn duy nhất = inline `**Trạng thái:**`); lật trạng thái các ADR đã merge sang `Accepted`.
 - **0.1.1 (2026-06-13):** Đổi tiền tố anchor `CT-` → `CHIEU-` (viết đủ chữ "chiều") sau khi triển khai phát hiện `CT-` đã được dùng làm **tên công tơ** trong fixture test (`CT` = công tơ) → tránh trùng nghĩa. Guardrail nhận anchor theo dạng `CHIEU-<slug>:` (có dấu hai chấm) ở mô tả test. Glossary: thêm gloss "Anchor chiều test" trong `THUAT_NGU.md` thay vì đăng ký term `CT` vào `glossary-terms.txt` (song song cách xử lý `NV-`).
 - **0.1.0 (2026-06-13):** Bản thảo đầu — ADR-030 (CI gate truy vết chiều test ↔ test): anchor `CHIEU-<slug>` song song `NV-<slug>`; bảng `## Truy vết chiều test` trong spec (opt-in); test mang anchor ở mô tả `it`; script thứ tư `check-test-dimensions.sh` của job `doc-governance` (hard-fail, fail-loud) đối chiếu bảng ↔ `grep spec/` với 4 luật (thiếu-test / hoãn-không-Issue / orphan / đụng-tên). Retrofit milestone 1.2.0 (TN1+TN3 có test thật, TN2 toàn DEFERRED #319). Loại tự-sinh-bảng, RSpec-tag (v1), chỉ-cảnh-báo, mã-số-ngắn. Kích hoạt ADR-015; mở rộng ADR-002/024. Lớp phụ #329 (i18n guardrail; dimension review) ngoài phạm vi. Chờ duyệt.

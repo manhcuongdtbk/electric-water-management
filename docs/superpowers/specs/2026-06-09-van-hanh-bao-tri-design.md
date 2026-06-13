@@ -1,7 +1,6 @@
 ---
 title: Vận hành & bảo trì (giám sát production offline, sao lưu, tiếp nhận lỗi khách) — Mảnh 3 của SDLC
-version: 0.2.0
-status: draft (chờ duyệt)
+version: 0.2.1
 date: 2026-06-09
 governed_by: 2026-06-07-sdlc-overview-design.md
 ---
@@ -77,7 +76,7 @@ flowchart LR
 
 ### ADR-016: Giám sát production offline — review khi giao bản, không nhịp định kỳ
 
-- **Trạng thái:** Proposed · 2026-06-09
+- **Trạng thái:** Accepted · 2026-06-09
 - **Bối cảnh:** Production = Mini PC mạng LAN **offline**, không Internet (bối cảnh an ninh). Đội phát triển **không có quyền truy cập từ xa** vào hộp; **điểm chạm production duy nhất của đội là lúc giao phiên bản**. Đã có sẵn: `/up`, `/version`, nhật ký §20 (quản trị viên hệ thống + kỹ thuật viên xem), cron auto-backup Lớp 3 chạy nền bất kể có ai giám sát. Hộp ít người đụng tới; tải nội bộ thấp.
 - **Quyết định:** Giám sát gồm đúng ba thành phần:
   1. **Review khi giao phiên bản** — checklist nhẹ tại hộp: 3 container `Up` (`docker compose ps`); `/up` xanh + `/version` đúng bản vừa giao; dung lượng đĩa còn chỗ (`df -h`, `docker system df`); cron auto-backup Lớp 3 có chạy (log + file mới ở ổ phụ).
@@ -96,7 +95,7 @@ flowchart LR
 
 ### ADR-017: Chính sách sao lưu & khôi phục (đặt trên tính năng 3 lớp đã có)
 
-- **Trạng thái:** Proposed · 2026-06-09
+- **Trạng thái:** Accepted · 2026-06-09
 - **Bối cảnh:** §21 yêu cầu: kỹ thuật viên tạo backup toàn bộ data; restore qua dòng lệnh (không UI vì ghi đè toàn bộ DB quá rủi ro); tối đa 3 bản. Tính năng đã build đủ (3 lớp, xem Hiện trạng) và how-to đã có trong deploy guide + docker guide §10. **Thiếu là *chính sách***: lớp nào là nguồn cậy chính, off-box có bắt buộc không, và backup có được *kiểm chứng restore được* không.
 - **Quyết định:**
   1. **Phân vai 3 lớp tường minh.** Lớp 3 (auto, ổ phụ, 7 bản) = **bản sao lưu nguồn cậy chính, BẮT BUỘC** (sống sót khi ổ chính hỏng). Lớp 1 (UI, 3 bản, trong container) = **snapshot trước thao tác nguy hiểm** (cập nhật phiên bản, trước khi restore). Giữ nguyên hai con số **3** và **7** — **không đụng code**: 3 là yêu cầu §21 cho backup UI; 7 là vòng xoay off-box độc lập.
@@ -112,7 +111,7 @@ flowchart LR
 
 ### ADR-018: Tiếp nhận lỗi/sự cố khách — mở rộng luồng Hybrid #2
 
-- **Trạng thái:** Proposed · 2026-06-09
+- **Trạng thái:** Accepted · 2026-06-09
 - **Bối cảnh:** Mảnh #2 (ADR-013..015) đã dựng luồng thay đổi Hybrid + truy vết, nhưng **cố ý hoãn** template báo lỗi/sự cố production cho mảnh này (ADR-015, mục Phương án đã loại + Điều kiện xem lại). Lỗi production do khách báo cần intake chuẩn để không rơi và cần phân luồng vá (có cái gồn bản sau, có cái vá gấp). Khách **không có GitHub access**. Đã có sẵn `hotfix/*` ← `main` (ADR-003) + rollback "deploy lại tag trước" (release spec).
 - **Quyết định:**
   1. **Lỗi/sự cố là một "thay đổi" trong mô hình #2** — cùng `#N` (mã định danh), `Refs #N`/`Closes #N`, anchor `NV-...` nếu đụng nghiệp vụ, milestone = version đích, trạng thái suy ra từ artifact. **Tái dùng nguyên**, không dựng luồng sự cố riêng song song.
@@ -183,7 +182,8 @@ flowchart LR
 - **Tính năng + how-to liên quan (đã có, chỉ trỏ — không lặp lại):** sao lưu `app/models/backup.rb`, `app/services/backup_service.rb`, `lib/backup_restore_runner.rb`, `script/setup-auto-backup`; nhật ký `app/controllers/audit_logs_controller.rb`; version reporting spec `2026-06-07-app-version-reporting-design.md`; deploy guide `docs/HUONG_DAN_DEPLOY.md` (§Vận hành hàng ngày, §Sao lưu dữ liệu, §Xử lý sự cố); docker guide `docs/KIEN_THUC_DOCKER.md` §10.
 - **Đã hiện thực** (plan [`2026-06-09-van-hanh-bao-tri.md`](../plans/2026-06-09-van-hanh-bao-tri.md)): `.github/ISSUE_TEMPLATE/bug-report.md` + nhãn `severity-critical`; anchor `NV-nhat-ky-he-thong`/`NV-sao-luu-phuc-hoi` trong `docs/V2_XAC_NHAN_NGHIEP_VU.md`; mục 10 "Vận hành & xử lý sự cố" trong `CONTRIBUTING.md`; pointer trong `AGENTS.md`; Backlog #3 trong release spec → ✅.
 
-## Changelog
+## Lịch sử thay đổi
 
+- **0.2.1 (2026-06-13):** Theo ADR-033 (#339): bỏ field frontmatter `status:` (nguồn duy nhất = inline `**Trạng thái:**`); lật trạng thái các ADR đã merge sang `Accepted`.
 - **0.2.0 (2026-06-09):** Hiện thực xong (xem plan `2026-06-09-van-hanh-bao-tri.md`): template `bug-report` + nhãn `severity-critical`; anchor `NV-nhat-ky-he-thong`/`NV-sao-luu-phuc-hoi`; mục 10 `CONTRIBUTING.md`; pointer `AGENTS.md`; Backlog #3 → ✅. Cập nhật mục "Truy vết" sang trạng thái đã hiện thực.
 - **0.1.0 (2026-06-09):** Bản thảo đầu — ADR-016 (giám sát production offline = review khi giao bản + lưới auto-backup nền + nhật ký §20 tra theo yêu cầu; không nhịp định kỳ), ADR-017 (chính sách sao lưu/khôi phục trên tính năng 3 lớp đã có: Lớp 3 off-box bắt buộc là nguồn cậy chính, Lớp 1 là snapshot trước thao tác; diễn tập khôi phục mỗi bản giao phía dev; backup Lớp 1 trước restore thật trên prod), ADR-018 (tiếp nhận lỗi/sự cố = mở rộng luồng Hybrid #2; một template bug-report + mức độ 2 bậc → đường vá hotfix/thường; nhãn `severity-critical`; đội mở Issue thay khách). Backlog #3. Chờ duyệt.
