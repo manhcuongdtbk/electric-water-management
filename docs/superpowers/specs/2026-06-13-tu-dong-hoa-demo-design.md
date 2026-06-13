@@ -1,6 +1,6 @@
 ---
 title: Tự động hoá demo (walkthrough cho chủ dự án trước merge + khách trước release)
-version: 0.1.4
+version: 0.1.5
 date: 2026-06-13
 ---
 
@@ -43,7 +43,7 @@ Liên quan: tương tác khách mức release & nghiệm thu hands-on trên Acce
 | **Seed demo** | Bộ dữ liệu mẫu có chủ đích (tách `db/seeds.rb`), version trong repo; mọi clip sống trong cùng một "thế giới" nhất quán. |
 | **PR hướng-khách** | PR mang một nhãn (ví dụ `customer-facing`) do người gắn ở triage, báo rằng thay đổi này khách sẽ thấy → bắt buộc có demo spec. |
 | **Chặng owner** | Sản xuất + xem demo trên PR trước merge (chủ dự án/đội). |
-| **Chặng khách** | Lọc bộ clip hướng-khách ở release, chủ dự án duyệt rồi forward cho khách trước khi deploy Production. |
+| **Chặng khách** | Ở cửa sổ `release/*` (trước merge `main`): lọc bộ clip hướng-khách, chủ dự án duyệt rồi forward cho khách để phản hồi sớm — đứng *trước* nghiệm thu hands-on (vòng ②). |
 | **Capability levels** | Các cấp độ hoàn thiện demo: MVP = screencast + caption; nâng = + TTS. Cấp cao chưa xong thì cấp dưới vẫn giao được. |
 
 ## Sơ đồ luồng
@@ -197,3 +197,4 @@ Cả ① và ② nếu phát hiện vấn đề đều **lặp lại từ đầu
 | 0.1.2 | 2026-06-13 | Vòng phản hồi ①/② quay về đầu pipeline (nhánh fix → PR → demo lại → owner duyệt → release), không vá tắt trên release; làm rõ bản vá vẫn qua đúng các cổng. |
 | 0.1.3 | 2026-06-13 | Sửa sơ đồ/prose cho khớp SDLC canonical: bỏ "release candidate" (ADR-008 không dùng rc), Acceptance = `main` sau tag (ADR-005), vòng ① đặt ở cửa sổ `release/*` trước merge `main`; dẫn đúng ADR (ADR-013 nghiệm thu hands-on, ADR-029 gate người) và phân biệt với ADR-028 (xác nhận yêu cầu trước build). |
 | 0.1.4 | 2026-06-13 | Sửa lỗi cú pháp mermaid: nhãn cạnh nét đứt chuyển sang dạng `-.->\|"..."\|` (bọc nháy kép) để nuốt được ký tự đặc biệt (dấu chấm trong 1.1.1, ngoặc, dấu hai chấm). |
+| 0.1.5 | 2026-06-13 | Tinh chỉnh Glossary "Chặng khách" cho khớp vị trí đã sửa (cửa sổ `release/*` trước merge `main`, đứng trước nghiệm thu hands-on ②). |
