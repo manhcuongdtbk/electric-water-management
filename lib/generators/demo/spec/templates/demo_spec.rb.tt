@@ -1,0 +1,38 @@
+require "rails_helper"
+
+# Demo spec for <%= file_name.humanize %> — a narrated, recorded walkthrough for the
+# owner (pre-merge) and the customer (pre-release). Runs in CI like any spec
+# (green-to-merge → anti-drift). See ADR-036..041 (#343) + ADR-050/051 (#352).
+#
+# TODO(demo-author): replace the placeholder journey below with the real
+# customer-facing flow. Write each caption in Vietnamese from the acceptance
+# criteria (NV-...) and the real UI. A human reviews the produced video before
+# it reaches the customer — do NOT auto-fill captions blindly (ADR-037/050).
+RSpec.describe "Demo: <%= file_name.humanize %>", type: :demo do
+  include_context "demo seeded world"
+
+  # TODO(demo-author): replace NV-TODO with the business requirement anchor(s)
+  # this demo covers. Anchors are defined in docs/V2_XAC_NHAN_NGHIEP_VU.md
+  # (e.g. NV-phan-bo-bom-nuoc). Lets the demo trace forward to its requirement.
+  it "walks through <%= file_name.humanize.downcase %>", demo_nv: %w[NV-TODO] do
+    demo = DemoRecorder.new(self)
+
+    # Sign in as the seeded demo admin (db/seeds/demo.rb). Adjust the role if
+    # this feature is shown to a different one; delete these steps if the journey
+    # continues from an already-authenticated state.
+    demo.visit("/users/sign_in", caption: "Mở trang đăng nhập")
+    demo.fill("Tên đăng nhập", with: "demo_admin", caption: "Nhập tên đăng nhập")
+    demo.fill("Mật khẩu", with: "Demo@1234", caption: "Nhập mật khẩu")
+    demo.click("Đăng nhập", caption: "Nhấn Đăng nhập")
+    expect(page).to have_current_path("/", wait: 10)
+
+    # TODO(demo-author): drive the real journey for this feature. Each step needs
+    # a Vietnamese caption derived from NV-... and the real UI. Examples:
+    #   demo.visit("/...", caption: "TODO: caption tiếng Việt")
+    #   demo.fill("Nhãn trường", with: "...", caption: "TODO: caption")
+    #   demo.click("Nút", caption: "TODO: caption")
+    #
+    # End on a real assertion against seeded data so the spec is green-to-merge:
+    #   expect(page).to have_content("TODO: dữ liệu seed thật")
+  end
+end

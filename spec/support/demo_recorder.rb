@@ -34,6 +34,21 @@ class DemoRecorder
     page.execute_script("window.__demo.unpoint();")
   end
 
+  # Select an option (by visible text) from a <select> located by `from` (id,
+  # name, or label — anything Capybara find_field accepts).
+  def select(option, from:, caption:)
+    show_caption(caption)
+    el = page.find_field(from)
+    point_and_pause(el)
+    el.find(:option, text: option).select_option
+    page.execute_script("window.__demo.unpoint();")
+  end
+
+  # Show a caption with no action — for narrating context between steps.
+  def narrate(caption)
+    show_caption(caption)
+  end
+
   private
 
   def page
