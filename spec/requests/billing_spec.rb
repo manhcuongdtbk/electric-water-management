@@ -268,7 +268,7 @@ RSpec.describe "Billing", type: :request do
           expect(all_text).to include("v#{SystemInfo.version}")
         end
 
-        it "D15: A/B/C xuất ra Excel ở cuối sheet sau khi tính" do
+        it "CHIEU-ton-hao-sau-tinh: A/B/C xuất ra Excel ở cuối sheet sau khi tính" do
           CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
           get billing_path(format: :xlsx)
           xlsx = parse_xlsx(response.body)
@@ -277,7 +277,7 @@ RSpec.describe "Billing", type: :request do
           expect(all_text).to include("Tổng tổn hao (C = A − B)")
         end
 
-        it "D2(Excel): chưa tính → không có khối A/B/C trong Excel" do
+        it "CHIEU-ton-hao-chua-tinh: chưa tính → không có khối A/B/C trong Excel" do
           # describe-level before đã chạy CalculationOrchestrator; xóa snapshot để
           # tái lập trạng thái "chưa tính" (@loss_summaries rỗng).
           LossSummary.where(period: sample.period).delete_all
@@ -491,14 +491,14 @@ RSpec.describe "Billing", type: :request do
     end
     let(:sa) { create(:user, :system_admin) }
 
-    it "D2: chưa tính → không có khối A/B/C" do
+    it "CHIEU-ton-hao-chua-tinh: chưa tính → không có khối A/B/C" do
       sample
       sign_in sa
       get billing_path
       expect(response.body).not_to include("Công tơ tổng (A)")
     end
 
-    it "D4: sau tính → A/B/C khớp LossCalculator (HTML)" do
+    it "CHIEU-ton-hao-sau-tinh: sau tính → A/B/C khớp LossCalculator (HTML)" do
       sample
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
       sign_in sa
@@ -519,7 +519,7 @@ RSpec.describe "Billing", type: :request do
       expect(response.body).to include("đã trừ điện công tơ không tổn hao")
     end
 
-    it "D9: SA chọn zone → chỉ A/B/C của zone đó" do
+    it "CHIEU-ton-hao-theo-zone: SA chọn zone → chỉ A/B/C của zone đó" do
       sample
       other = create(:zone, name: "Khu vực Hai TN3")
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
@@ -531,7 +531,7 @@ RSpec.describe "Billing", type: :request do
       expect(response.body).not_to include("Khu vực Hai TN3")
     end
 
-    it "D10: SA không chọn zone → mỗi zone một dòng A/B/C" do
+    it "CHIEU-ton-hao-theo-zone: SA không chọn zone → mỗi zone một dòng A/B/C" do
       sample
       other = create(:zone, name: "Khu vực Hai TN3")
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
@@ -542,7 +542,7 @@ RSpec.describe "Billing", type: :request do
       expect(response.body).to include(sample.zone.name).and include("Khu vực Hai TN3")
     end
 
-    it "D13: cả 5 vai trò nghiệp vụ thấy A/B/C; TECH bị chặn" do
+    it "CHIEU-ton-hao-vai-tro: cả 5 vai trò nghiệp vụ thấy A/B/C; TECH bị chặn" do
       sample
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
       [
@@ -562,7 +562,7 @@ RSpec.describe "Billing", type: :request do
       expect(response).not_to have_http_status(:ok)
     end
 
-    it "B = 0 (mọi công tơ không tổn hao) → A/B/C hiển thị (B=C=0) + cảnh báo" do
+    it "CHIEU-ton-hao-bien: B = 0 (mọi công tơ không tổn hao) → A/B/C hiển thị (B=C=0) + cảnh báo" do
       sample
       MeterReading.where(period: sample.period).update_all(no_loss: true)
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
@@ -575,7 +575,7 @@ RSpec.describe "Billing", type: :request do
       expect(response.body).to include("Khu vực không có công tơ có tổn hao")
     end
 
-    it "khu vực trống (có số điện lực, không đầu mối) → A/B/C (B=C=0) + cảnh báo trên billing" do
+    it "CHIEU-ton-hao-bien: khu vực trống (có số điện lực, không đầu mối) → A/B/C (B=C=0) + cảnh báo trên billing" do
       sample
       empty_zone = create(:zone, name: "Khu vực Trống TN3")
       main_meter = create(:main_meter, name: "CT-Tổng-Trống", zone: empty_zone)
@@ -592,7 +592,7 @@ RSpec.describe "Billing", type: :request do
       expect(response.body).to include("Khu vực chưa có đầu mối")  # cảnh báo zone_empty hiện trên billing
     end
 
-    it "D6: C < 0 → C hiển thị 0,00 + cảnh báo" do
+    it "CHIEU-ton-hao-bien: C < 0 → C hiển thị 0,00 + cảnh báo" do
       sample
       # Đặt sử dụng công tơ tổng rất thấp để tổng công tơ con > công tơ tổng (C<0, kẹp 0)
       sample.main_meter_reading.update!(usage: BigDecimal("1"))

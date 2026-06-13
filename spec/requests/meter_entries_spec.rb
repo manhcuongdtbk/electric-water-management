@@ -283,7 +283,7 @@ RSpec.describe "MeterEntries", type: :request do
       expect(response.body).to include("Tính toán lại")
     end
 
-    it "D1: chưa tính → loss nil → ô để trống (không có giá trị tổn hao)" do
+    it "CHIEU-ton-hao-chua-tinh: chưa tính → loss nil → ô để trống (không có giá trị tổn hao)" do
       sample
       get meter_entries_path
       reading = MeterReading.find_by(meter: sample.meters[:ct_a1], period: sample.period)
@@ -293,7 +293,7 @@ RSpec.describe "MeterEntries", type: :request do
       expect(response.body).to include("Tổn hao").and include("Sử dụng thực tế")
     end
 
-    it "D3: sau tính → hiển thị loss và sử dụng thực tế đúng" do
+    it "CHIEU-ton-hao-sau-tinh: sau tính → hiển thị loss và sử dụng thực tế đúng" do
       sample
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
       get meter_entries_path
@@ -303,7 +303,7 @@ RSpec.describe "MeterEntries", type: :request do
       expect(response.body).to include(vi.number_to_vi(reading.usage + reading.loss))
     end
 
-    it "D11: công tơ no_loss → loss hiển thị 0,00 (không trống)" do
+    it "CHIEU-ton-hao-khong-ton-hao: công tơ no_loss → loss hiển thị 0,00 (không trống)" do
       sample
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
       get meter_entries_path
@@ -312,7 +312,7 @@ RSpec.describe "MeterEntries", type: :request do
       expect(response.body).to include("0,00")
     end
 
-    it "D5: sửa chỉ số sau tính (chưa tính lại) → giữ loss cũ; thực tế = usage mới + loss cũ" do
+    it "CHIEU-ton-hao-sua-giu-cu: sửa chỉ số sau tính (chưa tính lại) → giữ loss cũ; thực tế = usage mới + loss cũ" do
       sample
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
       reading = MeterReading.find_by(meter: sample.meters[:ct_a1], period: sample.period).reload
@@ -326,7 +326,7 @@ RSpec.describe "MeterEntries", type: :request do
       expect(response.body).to include(vi.number_to_vi(reading.usage + old_loss))
     end
 
-    it "D14: 2 cột read-only — không thêm input vào bảng" do
+    it "CHIEU-ton-hao-vai-tro: 2 cột read-only — không thêm input vào bảng" do
       sample
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
       get meter_entries_path
@@ -337,7 +337,7 @@ RSpec.describe "MeterEntries", type: :request do
     end
   end
 
-  describe "D12: 6 vai trò thấy 2 cột read-only (meter_entries)" do
+  describe "CHIEU-ton-hao-vai-tro: 6 vai trò thấy 2 cột read-only (meter_entries)" do
     before { sample; CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call }
 
     it "SA, UA-ZM, UA, CMD-ZM, CMD đều thấy 2 cột" do

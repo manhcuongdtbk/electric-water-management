@@ -85,7 +85,7 @@ RSpec.describe "PumpEntries", type: :request do
       expect(response.body).to include("Tổn hao").and include("Sử dụng thực tế")
     end
 
-    it "D1: chưa tính → loss nil (ô tổn hao để trống)" do
+    it "CHIEU-ton-hao-chua-tinh: chưa tính → loss nil (ô tổn hao để trống)" do
       sample
       get pump_entries_path
       reading = MeterReading.find_by(meter: sample.meters[:ct_bn1], period: sample.period)
@@ -99,7 +99,7 @@ RSpec.describe "PumpEntries", type: :request do
       expect(response.body).to include("Tính toán lại")
     end
 
-    it "D3: sau tính → hiển thị loss và sử dụng thực tế đúng (công tơ bơm nước)" do
+    it "CHIEU-ton-hao-sau-tinh: sau tính → hiển thị loss và sử dụng thực tế đúng (công tơ bơm nước)" do
       sample
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
       get pump_entries_path
@@ -109,7 +109,7 @@ RSpec.describe "PumpEntries", type: :request do
       expect(response.body).to include(vi.number_to_vi(reading.usage + reading.loss))
     end
 
-    it "D14: 2 cột read-only — không thêm input vào bảng" do
+    it "CHIEU-ton-hao-vai-tro: 2 cột read-only — không thêm input vào bảng" do
       sample
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
       get pump_entries_path
@@ -119,7 +119,7 @@ RSpec.describe "PumpEntries", type: :request do
     end
   end
 
-  describe "D12: 6 vai trò thấy 2 cột read-only (pump_entries)" do
+  describe "CHIEU-ton-hao-vai-tro: 6 vai trò thấy 2 cột read-only (pump_entries)" do
     before { sample; CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call }
 
     it "SA, UA-ZM, CMD-ZM, CMD thấy 2 cột (có/không data tùy phạm vi)" do
