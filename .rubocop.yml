@@ -3,8 +3,21 @@ inherit_from: .rubocop_todo.yml
 # Omakase Ruby styling for Rails
 inherit_gem: { rubocop-rails-omakase: rubocop.yml }
 
-# Overwrite or add rules to create your own house style
-#
-# # Use `[a, [b, c]]` not `[ a, [ b, c ] ]`
-# Layout/SpaceInsideArrayLiteralBrackets:
-#   Enabled: false
+# Custom cops enforcing the AGENTS BigDecimal/rounding conventions in the
+# calculation layer (ADR-031). RuboCop loads these files itself (Rails autoload
+# ignores lib/rubocop — see config/application.rb).
+require:
+  - ./lib/rubocop/cop/decimal/no_float_in_calculation.rb
+  - ./lib/rubocop/cop/decimal/explicit_rounding_mode.rb
+
+Decimal/NoFloatInCalculation:
+  Enabled: true
+  Include:
+    - 'app/models/**/*.rb'
+    - 'app/services/**/*.rb'
+
+Decimal/ExplicitRoundingMode:
+  Enabled: true
+  Include:
+    - 'app/models/**/*.rb'
+    - 'app/services/**/*.rb'
