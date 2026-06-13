@@ -35,7 +35,7 @@ RUN apt-get update -qq && \
       chromium chromium-driver fonts-liberation && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
-# Node.js LTS (v22) + npm-managed Playwright for demo recording (spec/demo, ADR-036).
+# Node.js LTS (v22) + npm-managed Playwright for demo recording (spec/demo, ADR-038).
 # Use NodeSource repo so we get a current LTS instead of the outdated Debian package.
 # package.json is copied here so npm install runs at build time (good layer caching);
 # at runtime the bind-mount overlays /rails but node_modules is already present.

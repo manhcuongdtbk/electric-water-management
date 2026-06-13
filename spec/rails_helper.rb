@@ -75,7 +75,7 @@ RSpec.configure do |config|
 
   # spec/demo/** are demo recordings, not part of the normal suite. Auto-tag them
   # type: :demo and exclude them from `bundle exec rspec` unless DEMO=1 (the CI
-  # `demo` job sets DEMO=1 and targets spec/demo explicitly). See ADR-035/036.
+  # `demo` job sets DEMO=1 and targets spec/demo explicitly). See ADR-037/038.
   config.define_derived_metadata(file_path: %r{/spec/demo/}) do |metadata|
     metadata[:type] = :demo
   end

@@ -8,7 +8,7 @@
 
 **Tech Stack:** Rails 8, RSpec, Capybara, `capybara-playwright-driver` + Playwright (Node), Selenium (existing, untouched), `ffmpeg` (single WebM→MP4 transcode), GitHub Actions, bash guardrail (`.github/scripts/`).
 
-**Phasing & de-risk:** Task 1 is a **walking skeleton** that proves the core unverified assumption (Playwright records a demo spec to video inside this project's Docker/CI). **Do not proceed past Task 1 until a `.webm` is produced.** If it cannot, stop and revisit ADR-036 (fallback: Cuprite+ffmpeg or Selenium+Xvfb) before building further.
+**Phasing & de-risk:** Task 1 is a **walking skeleton** that proves the core unverified assumption (Playwright records a demo spec to video inside this project's Docker/CI). **Do not proceed past Task 1 until a `.webm` is produced.** If it cannot, stop and revisit ADR-038 (fallback: Cuprite+ffmpeg or Selenium+Xvfb) before building further.
 
 **Conventions to follow (from AGENTS.md / existing code):**
 - Code/identifiers/log English; UI/caption text Vietnamese; commits Conventional Commits, English, subject not starting with an uppercase token.
@@ -40,7 +40,7 @@
 
 ## Task 1: Walking skeleton — prove Playwright records a demo spec to video
 
-**Goal:** One trivial demo spec, driven by Playwright, produces a `.webm` locally in Docker. This de-risks ADR-036 before any further work.
+**Goal:** One trivial demo spec, driven by Playwright, produces a `.webm` locally in Docker. This de-risks ADR-038 before any further work.
 
 **Files:**
 - Modify: `Gemfile`
@@ -55,7 +55,7 @@ In `Gemfile`, inside the existing `group :test do` block (where `capybara` and `
 
 ```ruby
   # Playwright-backed Capybara driver — used ONLY by spec/demo (type: :demo) to
-  # record native WebM video. The main suite stays on Selenium. See ADR-036.
+  # record native WebM video. The main suite stays on Selenium. See ADR-038.
   gem "capybara-playwright-driver"
 ```
 
@@ -84,7 +84,7 @@ Create `spec/support/demo_recorder_config.rb`:
 ```ruby
 # Capybara driver for demo specs (spec/demo, type: :demo) ONLY. Uses Playwright
 # to record a native WebM per example. The main suite keeps :headless_chromium
-# (Selenium) — see spec/support/system_test_config.rb and ADR-036.
+# (Selenium) — see spec/support/system_test_config.rb and ADR-038.
 require "capybara-playwright-driver"
 
 # Directory where recorded videos are collected (gitignored; CI uploads them).
@@ -123,7 +123,7 @@ In `spec/rails_helper.rb`, inside the `RSpec.configure do |config|` block, add:
 ```ruby
   # spec/demo/** are demo recordings, not part of the normal suite. Auto-tag them
   # type: :demo and exclude them from `bundle exec rspec` unless DEMO=1 (the CI
-  # `demo` job sets DEMO=1 and targets spec/demo explicitly). See ADR-035/036.
+  # `demo` job sets DEMO=1 and targets spec/demo explicitly). See ADR-037/038.
   config.define_derived_metadata(file_path: %r{/spec/demo/}) do |metadata|
     metadata[:type] = :demo
   end
@@ -153,7 +153,7 @@ Run:
 bin/docker bash -c "DEMO=1 bundle exec rspec spec/demo/smoke_demo_spec.rb"
 ls -la tmp/demo_videos/
 ```
-Expected: spec passes AND `tmp/demo_videos/` contains a `*.webm` file. **This is the de-risk gate — if no video is produced, stop and revisit ADR-036.**
+Expected: spec passes AND `tmp/demo_videos/` contains a `*.webm` file. **This is the de-risk gate — if no video is produced, stop and revisit ADR-038.**
 
 - [ ] **Step 7: Gitignore the video dir + commit**
 
@@ -716,7 +716,7 @@ git commit -m "ci(demo): record/transcode/upload demo videos and comment on PR"
 
 ## Task 8: Guardrail — customer-facing PRs must include a demo spec
 
-**Goal:** A PR labelled customer-facing that does not add/modify `spec/demo/**` fails CI (ADR-038).
+**Goal:** A PR labelled customer-facing that does not add/modify `spec/demo/**` fails CI (ADR-040).
 
 **Files:**
 - Create: `.github/scripts/check-demo-spec.sh`
@@ -727,7 +727,7 @@ git commit -m "ci(demo): record/transcode/upload demo videos and comment on PR"
 Create `.github/scripts/check-demo-spec.sh` (matches the existing bash guardrail style — fail-loud, English output):
 ```bash
 #!/usr/bin/env bash
-# Guardrail (ADR-038): a pull request labelled customer-facing MUST add or modify
+# Guardrail (ADR-040): a pull request labelled customer-facing MUST add or modify
 # a demo spec (spec/demo/**). Internal PRs (no label) are exempt. FAIL-LOUD.
 # Inputs via env: LABELS_JSON (pull_request.labels as JSON), BASE_SHA, HEAD_SHA.
 set -uo pipefail
@@ -747,7 +747,7 @@ if [[ -n "$changed" ]]; then
 fi
 
 echo "✗ check-demo-spec: pull request is labelled '$LABEL' but does not add/modify any spec/demo/** file."
-echo "  Customer-facing changes must ship a demo spec (ADR-038). Add one under spec/demo/."
+echo "  Customer-facing changes must ship a demo spec (ADR-040). Add one under spec/demo/."
 exit 1
 ```
 
@@ -762,7 +762,7 @@ Add to `.github/workflows/ci.yml`:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - name: Require a demo spec for customer-facing pull requests (ADR-038)
+      - name: Require a demo spec for customer-facing pull requests (ADR-040)
         env:
           LABELS_JSON: ${{ toJSON(github.event.pull_request.labels) }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -788,7 +788,7 @@ Expected: `✗ ...` and `exit=1`.
 
 Run:
 ```bash
-gh label create customer-facing --description "Khách sẽ thấy thay đổi này → bắt buộc có demo spec (ADR-038)" --color 0e8a16
+gh label create customer-facing --description "Khách sẽ thấy thay đổi này → bắt buộc có demo spec (ADR-040)" --color 0e8a16
 ```
 Expected: label created (or "already exists").
 
@@ -856,15 +856,15 @@ Watch the run; confirm `demo` job records + uploads, `demo-guardrail` passes, an
 ## Self-Review
 
 **Spec coverage (each spec section → task):**
-- ADR-034 (one artifact, two stages): Tasks 3–4 (artifact), 7 (owner PR comment), 7+release (customer) — release-bundling is manual at MVP (owner downloads artifact + forwards per ADR-039); no automation task needed.
-- ADR-035 (demo = green-to-merge spec + NV anchor): Tasks 1–5 (specs run in CI); NV anchors are per-feature spec metadata, added when real feature demos are written (template shown in spec §1).
-- ADR-036 (Playwright scoped to spec/demo, Selenium kept, highlight via DOM): Tasks 1, 3, 4; Task 2 proves isolation.
-- ADR-037 (MVP screencast + caption, TTS later): Tasks 3–4 (caption + screencast); TTS is Non-Goal.
-- ADR-038 (guardrail): Task 8.
-- ADR-039 (per-feature clips, render in CI from seed, owner gate + forward): Tasks 5 (seed), 7 (render in CI, artifacts), delivery is manual (no task).
+- ADR-036 (one artifact, two stages): Tasks 3–4 (artifact), 7 (owner PR comment), 7+release (customer) — release-bundling is manual at MVP (owner downloads artifact + forwards per ADR-041); no automation task needed.
+- ADR-037 (demo = green-to-merge spec + NV anchor): Tasks 1–5 (specs run in CI); NV anchors are per-feature spec metadata, added when real feature demos are written (template shown in spec §1).
+- ADR-038 (Playwright scoped to spec/demo, Selenium kept, highlight via DOM): Tasks 1, 3, 4; Task 2 proves isolation.
+- ADR-039 (MVP screencast + caption, TTS later): Tasks 3–4 (caption + screencast); TTS is Non-Goal.
+- ADR-040 (guardrail): Task 8.
+- ADR-041 (per-feature clips, render in CI from seed, owner gate + forward): Tasks 5 (seed), 7 (render in CI, artifacts), delivery is manual (no task).
 - Recorder/seed/CI/surfacing components: Tasks 3/4, 5, 7, 7.
 
-**Known gaps / deferred (intentional):** inline PR thumbnails (Task 7 note); release-bundle automation (manual at MVP per ADR-039); NV anchors materialise with the first real feature demo, not the smoke spec.
+**Known gaps / deferred (intentional):** inline PR thumbnails (Task 7 note); release-bundle automation (manual at MVP per ADR-041); NV anchors materialise with the first real feature demo, not the smoke spec.
 
 **Placeholder scan:** Task 5 seed body and Task 4 locator depend on reading the project's real models/views — flagged inline with the exact files to read, not left as blind "TODO". No fabricated assertions for visual fidelity (verify-by-artifact steps are explicit).
 

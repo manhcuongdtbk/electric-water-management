@@ -1,6 +1,6 @@
 # Capybara driver for demo specs (spec/demo, type: :demo) ONLY. Uses Playwright
 # to record a native WebM per example. The main suite keeps :headless_chromium
-# (Selenium) — see spec/support/system_test_config.rb and ADR-036.
+# (Selenium) — see spec/support/system_test_config.rb and ADR-038.
 #
 # Node.js + Playwright are provisioned in the dev Docker image (Dockerfile.dev)
 # via NodeSource + npm install + npx playwright install. The driver auto-detects
