@@ -19,6 +19,20 @@ RSpec.describe RuboCop::Cop::Decimal::ExplicitRoundingMode, :config do
     RUBY
   end
 
+  it "registers an offense for the ROUND_HALF_EVEN constant" do
+    expect_offense(<<~RUBY)
+      amount.round(2, BigDecimal::ROUND_HALF_EVEN)
+             ^^^^^ Round money/electricity with an explicit half-up mode (AGENTS): value.round(n, :half_up).
+    RUBY
+  end
+
+  it "registers an offense for round with no arguments" do
+    expect_offense(<<~RUBY)
+      amount.round
+             ^^^^^ Round money/electricity with an explicit half-up mode (AGENTS): value.round(n, :half_up).
+    RUBY
+  end
+
   it "accepts an explicit :half_up symbol" do
     expect_no_offenses(<<~RUBY)
       amount.round(2, :half_up)
