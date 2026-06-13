@@ -17,9 +17,12 @@ BASELINE="${2:-.github/i18n-view-baseline.txt}"
 command -v perl >/dev/null 2>&1 || { echo "✗ check-view-i18n: perl not found (required for the Unicode line scan)"; exit 1; }
 
 # extract_violations: in mỗi dòng vi phạm dạng "relpath<TAB>normalized-text".
-# Bỏ comment span ERB (<%# … %>) và HTML (<!-- … -->) theo greedy: sai sót duy
-# nhất là FALSE NEGATIVE hiếm (comment đứng trước code trên cùng dòng), KHÔNG bao
-# giờ false positive (đỏ oan). Lớp ký tự: Latin Extended (U+00C0–U+024F) + Latin
+# Bỏ comment span ERB (<%# … %>) và HTML (<!-- … -->) theo greedy, trên TỪNG dòng
+# (perl đọc từng dòng). Với comment MỘT-dòng: sai sót duy nhất là false negative
+# hiếm (comment cùng-dòng đứng trước code), không đỏ oan. Lưu ý: comment NHIỀU-dòng
+# có chữ Việt ở dòng giữa (mở <!-- và đóng --> khác dòng) CÓ THỂ bị bắt — codebase
+# hiện không dùng kiểu đó; nếu cần, thêm dòng đó vào baseline. Lớp ký tự: Latin
+# Extended (U+00C0–U+024F) + Latin
 # Extended Additional (U+1E00–U+1EFF) = các chữ tiếng Việt precomposed; ASCII Anh
 # thuần không khớp. Key chuẩn-hoá từ phần ĐÃ bỏ comment (sửa comment không churn).
 extract_violations() {
