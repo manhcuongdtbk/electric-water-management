@@ -8,7 +8,7 @@
 
 **Tech Stack:** Bash, Perl (Unicode line scan — present on `ubuntu-latest` CI runner and macOS), GitHub Actions.
 
-**Spec:** [`docs/superpowers/specs/2026-06-13-guardrail-i18n-view-design.md`](2026-06-13-guardrail-i18n-view-design.md) (ADR-032).
+**Spec:** [`docs/superpowers/specs/2026-06-13-guardrail-i18n-view-design.md`](../specs/2026-06-13-guardrail-i18n-view-design.md) (ADR-032).
 
 **Branch:** `feature/i18n-view-guardrail` ← `develop` (already created). PR base `develop`, squash.
 

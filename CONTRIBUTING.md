@@ -138,12 +138,14 @@ release-please đã được cấu hình (P3): khi `release/*`/`hotfix/*` vào `
 
 | Chiều | Kiểm gì | Cơ chế phủ |
 |---|---|---|
-| **i18n** | Chữ người dùng qua `t(...)` + `config/locales/vi.yml`; không hard-code tiếng Việt | Tạm bằng mắt người (mục A của #329 sẽ máy-ép sau) |
+| **i18n** | Chữ người dùng qua `t(...)` + `config/locales/vi.yml`; không hard-code tiếng Việt | Máy-ép: guardrail i18n cho view (ADR-032) bắt literal tiếng Việt **mới** ngoài `t(...)` trong `app/views/**/*.erb`; phần cũ grandfather qua baseline. Chữ không-dấu/ngoài view còn người/AI |
 | **Không viết tắt** | Mọi viết tắt mới (code/i18n/giao diện/commit) có trong `docs/THUAT_NGU.md` | Người/AI — ngữ nghĩa, máy không grep được |
 | **BigDecimal tiền/điện** | Tiền/điện giữ BigDecimal xuyên suốt; `.to_f`/`Float()` chỉ ở ranh giới hiển thị/Excel; làm tròn `ROUND_HALF_UP` chỉ khi hiển thị | Custom RuboCop cop `Decimal/*` (job `ruby-checks`) bắt ca rõ ràng ở `app/models`,`app/services`; người/AI soi ca lẩn đường vòng |
 | **Phủ đủ 6 vai trò** | Test phủ SA, UA-ZM, UA, CMD-ZM, CMD, TECH hoặc hoãn tường minh | ADR-030 ép liên kết chiều test ↔ test; người/AI soi đủ-6-vai |
 
 Bề mặt ép: (1) cop `Decimal/*` máy-ép phần BigDecimal; (2) hook `UserPromptSubmit` (`.claude/settings.json`) bơm chiều này vào Claude khi gõ `/code-review`; (3) checkbox trong `.github/pull_request_template.md`. Không sửa prompt `/code-review`/review subagent vì chúng là plugin toàn cục, không version-controlled trong repo. Chi tiết + lý do: ADR-031 (`docs/superpowers/specs/2026-06-13-dimension-review-tuan-agents-design.md`).
+
+**CI guardrail i18n cho view (ADR-032):** một job `i18n-view-guardrail` chạy trên **mọi** pull request (`.github/scripts/check-view-i18n.sh`, native bash fail-loud) quét `app/views/**/*.erb` và **đỏ** khi có literal tiếng Việt **mới** — ký tự có dấu, ngoài comment, ngoài `t(...)` — **không** có trong baseline `.github/i18n-view-baseline.txt`. Phần hard-code **đã có** được grandfather qua baseline (không ép migration vì app single-locale). Ngoại lệ hợp lệ / ghi nhận một đợt migrate: regenerate baseline bằng `UPDATE_BASELINE=1 bash .github/scripts/check-view-i18n.sh` (diff baseline hiện trong pull request, người gác merge duyệt). Không bắt chữ người-dùng **không dấu** hoặc **ngoài view** — phần đó còn người/AI (chiều i18n ở bảng trên). Chi tiết + lý do: ADR-032 trong `docs/superpowers/specs/2026-06-13-guardrail-i18n-view-design.md`.
 
 ## 9. Quản lý thay đổi & truy vết
 
