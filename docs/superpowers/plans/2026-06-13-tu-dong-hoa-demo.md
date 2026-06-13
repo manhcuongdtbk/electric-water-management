@@ -199,6 +199,52 @@ git commit -am "test(demo): verify demo specs excluded from the default suite" -
 
 ---
 
+## Task 2b: Provision Playwright permanently in `Dockerfile.dev` (Node + npm playwright)
+
+**Goal:** The dev image currently has **no Node.js**. Task 1 proved Playwright video works but installed Playwright into the *running* container (impermanent — lost on rebuild; the committed smoke spec depends on a path that won't exist on a fresh image). Decision (owner): add Node.js + npm-managed Playwright to `Dockerfile.dev` so demo recording survives rebuilds and any dev can record locally.
+
+**Files:**
+- Modify: `Dockerfile.dev`
+- Modify: `spec/support/demo_recorder_config.rb`
+- (uses) `package.json`
+
+- [ ] **Step 1: Add Node + Playwright to `Dockerfile.dev`**
+
+Read `Dockerfile.dev` first (match its base distro/user). Add: install Node.js LTS; copy `package.json` (+ lockfile if present); run `npm install`; run `npx playwright install --with-deps chromium`. Place it so layer caching is sensible (copy package.json before bulk app copy). Keep the existing Chromium/chromedriver (Selenium suite still needs them).
+
+- [ ] **Step 2: Drop the impermanent CLI-path default in the driver config**
+
+In `spec/support/demo_recorder_config.rb`, remove the hard-coded `/usr/local/bin/playwright-driver` default. `capybara-playwright-driver` auto-detects `node_modules/.bin/playwright`. Keep an *optional* override:
+```ruby
+  driver_args = { browser_type: :chromium, headless: true, record_video_dir: DEMO_VIDEO_DIR.to_s }
+  cli = ENV["PLAYWRIGHT_CLI_EXECUTABLE_PATH"]
+  driver_args[:playwright_cli_executable_path] = cli if cli.present?
+  Capybara::Playwright::Driver.new(app, **driver_args)
+```
+Also keep the `Capybara.current_driver = :playwright_demo` + `config.include Capybara::DSL/RSpecMatchers, type: :demo` approach the implementer adopted (driven_by isn't available for `:demo`).
+
+- [ ] **Step 3: Rebuild the image and re-verify permanence (the new gate)**
+
+Run (rebuild, then record from the CLEAN image — no in-container hacks):
+```bash
+bin/docker build   # or the project's rebuild path; read bin/docker
+bin/docker bash -c "DEMO=1 bundle exec rspec spec/demo/smoke_demo_spec.rb"
+ls tmp/demo_videos/*.webm
+```
+Expected: a `.webm` is produced from the freshly built image. This is the permanence gate — if it only works with the running-container hack, it isn't done.
+> Rebuild may be long-running; that's expected for this one task.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add Dockerfile.dev spec/support/demo_recorder_config.rb
+git commit -m "build(demo): provision Node + Playwright in the dev image"
+```
+
+> **CI reconciliation (applied in Task 7):** with `package.json` present, the CI `demo` job uses `npm ci` (or `npm install`) + `npx playwright install --with-deps chromium` instead of an ad-hoc install — same mechanism as the image.
+
+---
+
 ## Task 3: Caption banner + the `DemoRecorder` DSL
 
 **Goal:** A `demo.*` DSL where each step shows a Vietnamese caption banner (a DOM element, so it is captured in the video) and paces the action. Banner presence IS assertable via Capybara.
