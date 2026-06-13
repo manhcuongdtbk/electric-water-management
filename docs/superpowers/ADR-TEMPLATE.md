@@ -1,7 +1,7 @@
 # Mẫu ADR (Architecture Decision Record)
 
 > Dán khối dưới vào mục `## Quyết định (ADR)` của một spec trong `docs/superpowers/specs/`.
-> ADR đánh **số toàn cục, tăng dần** (số mới nhất: xem spec gần nhất). Giữ đúng **7 mục, đúng thứ tự**.
+> ADR đánh **số toàn cục, tăng dần** (số mới nhất: xem spec gần nhất). **Trùng số bị CI bắt** (`check-adr-numbering`, ADR-046) — nhưng vẫn kiểm **nhánh/PR đang mở** (không chỉ `develop`) trước khi đặt số, vì số của nhánh chưa merge là vô hình với `develop`. Giữ đúng **7 mục, đúng thứ tự**.
 > ADR mới có thể **thay** (supersede) ADR cũ — ghi rõ ở Trạng thái, giữ lịch sử.
 
 ### ADR-NNN: <Tiêu đề quyết định, ngắn gọn>
