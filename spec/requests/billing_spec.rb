@@ -346,7 +346,7 @@ RSpec.describe "Billing", type: :request do
           CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
         end
 
-        it "cell U7 (Khác của Văn thư) = -16" do
+        it "CHIEU-khac-don-vi-vi-du: cell U7 (Khác của Văn thư) = -16" do
           get billing_path(format: :xlsx)
           xlsx = parse_xlsx(response.body)
 

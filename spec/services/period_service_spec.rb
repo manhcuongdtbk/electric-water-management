@@ -140,7 +140,7 @@ RSpec.describe PeriodService do
       expect(Calculation.where(period: result.period)).to be_empty
     end
 
-    it "unit_coefficient kế thừa sang kỳ mới và tính lại đúng khoản trừ" do
+    it "CHIEU-khac-don-vi-ke-thua: unit_coefficient kế thừa sang kỳ mới và tính lại đúng khoản trừ" do
       # Gán unit_coefficient -2 cho Văn thư ở kỳ 5 (Đơn vị A tổng 10, Văn thư 2)
       van_thu = sample.contact_points[:van_thu]
       van_thu.other_deductions.find_by!(period: sample.period)
