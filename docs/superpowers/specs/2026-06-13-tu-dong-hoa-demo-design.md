@@ -1,6 +1,6 @@
 ---
 title: Tự động hoá demo (walkthrough cho chủ dự án trước merge + khách trước release)
-version: 0.1.1
+version: 0.1.2
 date: 2026-06-13
 ---
 
@@ -65,8 +65,8 @@ flowchart TD
   FWD --> L1["Chặng KHÁCH ① — xem demo:<br/>phản hồi sớm + duyệt sơ bộ<br/>(async, trước khi tự chạm Acceptance)"]
   ACCDEP --> L2
   L1 --> L2["Chặng KHÁCH ② — nghiệm thu hands-on<br/>trên Acceptance: phản hồi + duyệt"]
-  L1 -. có vấn đề .-> ITER["Sửa → develop → release (lặp)"]
-  L2 -. có vấn đề .-> ITER
+  L1 -. có vấn đề: sửa & lặp lại từ đầu .-> SPEC
+  L2 -. có vấn đề: sửa & lặp lại từ đầu .-> SPEC
   L2 -->|đạt nghiệm thu| PROD["Deploy Production<br/>(Mini PC offline)"]
 ```
 
@@ -78,7 +78,7 @@ Demo **không thay** nghiệm thu hands-on trên Acceptance — nó là **vòng 
 2. **Vòng ② — nghiệm thu hands-on trên Acceptance.** Release candidate deploy lên Acceptance; khách (đã được demo định hướng) tự thao tác, nghiệm thu thật → phản hồi/duyệt.
 3. **Chỉ khi đạt nghiệm thu ②** → deploy **Production (Mini PC)**.
 
-Cả ① và ② đều **lặp ngược** về `develop`→`release` nếu phát hiện vấn đề. Giá trị của demo là **rút ngắn vòng lặp**: bắt lỗi/định hướng *trước* khâu hands-on tốn công, đúng tinh thần cổng xác nhận khách (ADR-028).
+Cả ① và ② nếu phát hiện vấn đề đều **lặp lại từ đầu pipeline**, *không* vá tắt trên `release`: nhánh fix từ `develop` → PR (demo **tự chạy lại** + owner duyệt) → `develop` → `release` → deploy Acceptance lại → gửi demo lại. Tức bản vá cũng đi qua đúng các cổng (ADR-038 guardrail vẫn áp). Giá trị của demo là **rút ngắn vòng lặp**: bắt lỗi/định hướng *trước* khâu hands-on tốn công, đúng tinh thần cổng xác nhận khách (ADR-028).
 
 ## Bối cảnh & hiện trạng
 
@@ -196,3 +196,4 @@ Cả ① và ② đều **lặp ngược** về `develop`→`release` nếu phá
 |---|---|---|
 | 0.1.0 | 2026-06-13 | Bản đầu: thiết kế tự động hoá demo (#343). Thêm ADR-034..039. |
 | 0.1.1 | 2026-06-13 | Sửa sơ đồ luồng: tách rõ hai vòng phản hồi khách (① xem demo sớm → ② nghiệm thu hands-on Acceptance → Production); thêm mục "Hai vòng phản hồi" + Non-Goal "không thay nghiệm thu Acceptance". |
+| 0.1.2 | 2026-06-13 | Vòng phản hồi ①/② quay về đầu pipeline (nhánh fix → PR → demo lại → owner duyệt → release), không vá tắt trên release; làm rõ bản vá vẫn qua đúng các cổng. |
