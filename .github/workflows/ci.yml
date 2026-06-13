@@ -168,6 +168,7 @@ jobs:
       # version-matched chromedriver. No app/test code change needed.
       CHROMIUM_BINARY: /nonexistent/chromium
       CHROMEDRIVER_BINARY: /nonexistent/chromedriver
+      COVERAGE: "1" # SimpleCov line+branch report (Issue #360); no hard minimum yet
     steps:
       - uses: actions/checkout@v6
       - uses: ruby/setup-ruby@v1

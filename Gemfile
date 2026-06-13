@@ -84,6 +84,9 @@ group :test do
   gem "capybara"
   gem "selenium-webdriver"
   gem "ostruct"
+  # Code coverage (line + branch), opt-in via COVERAGE=1 — see spec/spec_helper.rb
+  # and Issue #360. CI's `tests` job sets COVERAGE=1.
+  gem "simplecov", require: false
   # Playwright-backed Capybara driver — used ONLY by spec/demo (type: :demo) to
   # record native WebM video. The main suite stays on Selenium. See ADR-036.
   gem "capybara-playwright-driver"
