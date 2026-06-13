@@ -47,6 +47,8 @@
 
   <%= render "warnings" %>
 
+  <%= render "shared/freshness_indicator", states: @freshness_states %>
+
   <p class="text-sm text-gray-700 mb-2">
     Đơn giá điện: <strong><%= unit_price_to_vi(@period.unit_price) %> đ/kW</strong>
     <% unless @period.open? %>
