@@ -56,4 +56,25 @@ RSpec.describe LossBreakdown do
     LossSummary.where(period: sample.period).delete_all
     expect(described_class.new(zone: sample.zone, period: sample.period).call).to be_nil
   end
+
+  describe "CHIEU-breakdown-doi-chieu-sinh-hoat: khớp tổng cột bảng tính tiền" do
+    let(:billing_summary) do
+      ability = Ability.new(create(:user, :system_admin))
+      scope = Billing::Query.apply_zone_unit_filter(
+        Billing::Query.base_scope(sample.period, ability), zone: sample.zone, unit: nil
+      )
+      Billing::Query.summary(scope, period: sample.period)
+    end
+
+    it "Sinh hoạt/Tổn hao = TỔNG cột Tổn hao (loss_deduction)" do
+      residential = row_for("residential")
+      expect(residential.loss).to eq(BigDecimal(billing_summary[:loss_deduction].to_s))
+    end
+
+    it "(Sinh hoạt có-tổn-hao + Sinh hoạt không-tổn-hao) = TỔNG Sử dụng sinh hoạt (residential_usage)" do
+      residential = row_for("residential")
+      total = residential.usage + result.no_loss_by_type["residential"]
+      expect(total).to eq(BigDecimal(billing_summary[:residential_usage].to_s))
+    end
+  end
 end
