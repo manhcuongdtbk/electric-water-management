@@ -475,6 +475,18 @@ vi:
       search: "Tìm kiếm"
     confirm:
       recalculate: "Xác nhận tính toán lại bảng tính tiền?"
+    loss_breakdown:
+      title: "Đối chiếu tổn hao/sử dụng theo loại đầu mối"
+      columns:
+        type: "Loại"
+        usage: "Sử dụng"
+        loss: "Tổn hao"
+        actual: "Sử dụng thực tế"
+      rows:
+        loss_bearing_total: "Cộng (công tơ có tổn hao)"
+        no_loss: "Không tổn hao"
+        grand_total: "Tổng cộng"
+      rounding_note: "Số làm tròn 2 chữ số; tổng các dòng có thể lệch ±0,01 do làm tròn. Số chuẩn để đối chiếu là A/B/C và số công tơ tổng."
   dashboard:
     sections:
       public_total: "Sử dụng điện công cộng toàn khu vực"
