@@ -134,6 +134,17 @@ release-please đã được cấu hình (P3): khi `release/*`/`hotfix/*` vào `
 
 **CI guardrail truy vết chiều test (ADR-030):** script thứ tư của job `doc-governance` (`check-test-dimensions.sh`) đối chiếu bảng `## Truy vết chiều test` của mỗi spec với anchor `CHIEU-<slug>` nhúng trong mô tả `it` của test (`spec/`). Đỏ nếu: một chiều **required** thiếu test; một chiều **DEFERRED** không kèm `#<số>`; anchor `CHIEU-` dùng trong test mà không có trong bảng nào (orphan); hoặc một anchor khai trùng ở hai spec. Biến luật AGENTS "test mọi output + cả 6 vai trò" thành máy-ép cho phần khai-tường-minh. Việc "spec có đủ chiều chưa" vẫn là review người (checklist plan/PR). Chi tiết: ADR-030 trong `docs/superpowers/specs/2026-06-13-truy-vet-chieu-test-design.md`.
 
+**Chiều review "tuân AGENTS" (ADR-031):** review code — người và Claude khi chạy `/code-review` — không chỉ soi đúng/sai chức năng của diff mà còn kiểm tuân thủ quy ước AGENTS. Bốn chiều và cách phủ:
+
+| Chiều | Kiểm gì | Cơ chế phủ |
+|---|---|---|
+| **i18n** | Chữ người dùng qua `t(...)` + `config/locales/vi.yml`; không hard-code tiếng Việt | Tạm bằng mắt người (mục A của #329 sẽ máy-ép sau) |
+| **Không viết tắt** | Mọi viết tắt mới (code/i18n/giao diện/commit) có trong `docs/THUAT_NGU.md` | Người/AI — ngữ nghĩa, máy không grep được |
+| **BigDecimal tiền/điện** | Tiền/điện giữ BigDecimal xuyên suốt; `.to_f`/`Float()` chỉ ở ranh giới hiển thị/Excel; làm tròn `ROUND_HALF_UP` chỉ khi hiển thị | Custom RuboCop cop `Decimal/*` (job `ruby-checks`) bắt ca rõ ràng ở `app/models`,`app/services`; người/AI soi ca lẩn đường vòng |
+| **Phủ đủ 6 vai trò** | Test phủ SA, UA-ZM, UA, CMD-ZM, CMD, TECH hoặc hoãn tường minh | ADR-030 ép liên kết chiều test ↔ test; người/AI soi đủ-6-vai |
+
+Bề mặt ép: (1) cop `Decimal/*` máy-ép phần BigDecimal; (2) hook `UserPromptSubmit` (`.claude/settings.json`) bơm chiều này vào Claude khi gõ `/code-review`; (3) checkbox trong `.github/pull_request_template.md`. Không sửa prompt `/code-review`/review subagent vì chúng là plugin toàn cục, không version-controlled trong repo. Chi tiết + lý do: ADR-031 (`docs/superpowers/specs/2026-06-13-dimension-review-tuan-agents-design.md`).
+
 ## 9. Quản lý thay đổi & truy vết
 
 Theo ADR-013..015 (chi tiết + lý do: `docs/superpowers/specs/2026-06-08-truy-vet-quan-ly-thay-doi-design.md`). Mục tiêu: yêu cầu khách **không rơi** và truy được **yêu cầu → thiết kế → test → release**.
