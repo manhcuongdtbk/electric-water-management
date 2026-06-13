@@ -22,12 +22,16 @@ class UnitConfigController < ApplicationController
 
   def update
     @unit = resolve_unit_for_update
+    @zone = resolve_zone_for_update
     @period = current_period
     @unit_config = find_or_create_unit_config
     if @unit_config
       authorize!(:update, @unit_config)
-    else
+    elsif @unit
       authorize!(:update, UnitConfig.new(unit: @unit, period: @period))
+    else
+      # Ngữ cảnh khu vực (SA, không có @unit): chỉ sửa OtherDeduction zone-direct.
+      authorize!(:update, OtherDeduction)
     end
 
     errors_collected = []
@@ -39,7 +43,7 @@ class UnitConfigController < ApplicationController
         end
       end
 
-      all_editable_ods = scope_other_deductions.or(scope_zone_other_deductions)
+      all_editable_ods = @unit ? scope_other_deductions.or(scope_zone_other_deductions) : scope_zone_other_deductions
       (params[:other_deductions] || {}).each do |id, attrs|
         od = all_editable_ods.find_by(id: id)
         next unless od
@@ -59,11 +63,13 @@ class UnitConfigController < ApplicationController
       @other_deductions = scope_other_deductions
       @zone_other_deductions = scope_zone_other_deductions
       # View show.html.erb đọc @available_zones/@available_units vô điều kiện cho SA → phải set lại khi re-render.
-      @zone = @unit&.zone if current_user.system_admin?
+      # Giữ @zone đã resolve cho nhánh zone-context (||= để không clobber khi @unit nil).
+      @zone ||= @unit&.zone if current_user.system_admin?
       set_sa_filter_dropdowns
       render :show, status: :unprocessable_content
     else
-      redirect_to unit_config_path(unit_id: @unit&.id), notice: t("unit_config.flash.saved")
+      redirect_to unit_config_path(@unit ? { unit_id: @unit.id } : { zone_id: @zone&.id }),
+                  notice: t("unit_config.flash.saved")
     end
   end
 
@@ -99,6 +105,14 @@ class UnitConfigController < ApplicationController
     end
   end
 
+  # Ngữ cảnh khu vực cho #update: chỉ SA, khi không chọn đơn vị mà có zone_id.
+  # Tôn trọng reopened_old_period? như đường unit (with_discarded khi xem kỳ cũ mở lại).
+  def resolve_zone_for_update
+    return nil unless current_user.system_admin? && @unit.nil? && params[:zone_id].present?
+    zone_scope = reopened_old_period? ? Zone.with_discarded : Zone.kept
+    zone_scope.find(params[:zone_id])
+  end
+
   def scope_other_deductions
     return OtherDeduction.none unless @period && @unit
     OtherDeduction.joins(:contact_point).includes(:contact_point)
@@ -110,15 +124,28 @@ class UnitConfigController < ApplicationController
   end
 
   def scope_zone_other_deductions
-    return OtherDeduction.none unless @period && @unit
-    managed_zone_ids = Zone.kept.where(manager_unit_id: @unit.id).pluck(:id)
-    return OtherDeduction.none if managed_zone_ids.empty?
+    return OtherDeduction.none unless @period
+    zone_ids = zone_other_deduction_zone_ids
+    return OtherDeduction.none if zone_ids.empty?
     OtherDeduction.joins(:contact_point).includes(:contact_point)
                   .where(period: @period,
-                         contact_points: { zone_id: managed_zone_ids,
+                         contact_points: { zone_id: zone_ids,
                                            unit_id: nil,
                                            contact_point_type: "residential" })
                   .accessible_by(current_ability)
                   .order("contact_points.name")
+  end
+
+  # Nguồn zone_ids cho khoản trừ "Khác" của đầu mối zone-direct:
+  # - @unit có → các khu vực do đơn vị này quản lý (đường manager-unit, gồm non-SA).
+  # - @unit nil & @zone có & SA → đúng khu vực đang chọn (ngữ cảnh khu vực, ADR-034).
+  def zone_other_deduction_zone_ids
+    if @unit
+      Zone.kept.where(manager_unit_id: @unit.id).pluck(:id)
+    elsif @zone && current_user.system_admin?
+      [@zone.id]
+    else
+      []
+    end
   end
 end

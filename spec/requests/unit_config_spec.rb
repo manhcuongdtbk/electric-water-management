@@ -406,6 +406,123 @@ RSpec.describe "UnitConfig", type: :request do
     end
   end
 
+  describe "system_admin sửa 'Khác' đầu mối zone-direct theo ngữ cảnh khu vực (#328)" do
+    let(:system_admin) { create(:user, :system_admin) }
+    # orphan_zone không có đơn vị nào → manager_unit_id nil (không auto-assign).
+    let!(:orphan_zone) { create(:zone, name: "Khu vực mồ côi") }
+    let!(:orphan_zone_cp) {
+      create(:contact_point, :zone_residential, zone: orphan_zone, name: "Zone-CP-Orphan",
+             initial_personnel_counts: { rank.id => 1 })
+    }
+
+    before { sign_in system_admin }
+
+    it "CHIEU-khac-zone-direct-orphan: GET zone-context surface đầu mối zone-direct dù khu vực không có manager" do
+      expect(orphan_zone.reload.manager_unit_id).to be_nil
+      get unit_config_path(zone_id: orphan_zone.id)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Zone-CP-Orphan")
+      expect(response.body).to include("thuộc khu vực")
+      # Không có @unit → section "thuộc đơn vị" bị ẩn.
+      expect(response.body).not_to include("thuộc đơn vị")
+    end
+
+    it "CHIEU-khac-zone-direct-sua-duoc: PATCH zone-context cập nhật 'Khác' của đầu mối zone-direct (BigDecimal)" do
+      od = OtherDeduction.find_by!(contact_point: orphan_zone_cp, period: period)
+
+      patch unit_config_path, params: {
+        zone_id: orphan_zone.id,
+        other_deductions: {
+          od.id.to_s => { other_type: "fixed", other_value: "12.34", lock_version: od.lock_version }
+        }
+      }
+
+      expect(response).to redirect_to(unit_config_path(zone_id: orphan_zone.id))
+      od.reload
+      expect(od.other_value).to eq(BigDecimal("12.34"))
+      expect(od.other_type).to eq("fixed")
+    end
+
+    it "CHIEU-khac-zone-direct-trang-trong: chọn khu vực không có đầu mối zone-direct → hiện gợi ý" do
+      empty_zone = create(:zone, name: "Khu vực rỗng")
+      get unit_config_path(zone_id: empty_zone.id)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(I18n.t("unit_config.zone_context.empty"))
+    end
+
+    it "CHIEU-khac-zone-direct-vai-tro: chỉ system_admin vào được ngữ cảnh khu vực orphan; non-SA không thấy" do
+      parse = ->(body) { Nokogiri::HTML(body) }
+
+      # system_admin: thấy đầu mối + input không disabled (sửa được).
+      get unit_config_path(zone_id: orphan_zone.id)
+      expect(response.body).to include("Zone-CP-Orphan")
+      parse.call(response.body).css("input[type='number'], select").each do |input|
+        next if input["type"] == "hidden" || input["id"]&.match?(/zone_id|unit_id/)
+        expect(input["disabled"]).to be_nil,
+          "SA: input '#{input['name']}' không được disabled"
+      end
+
+      # unit_admin (đơn vị 'unit', không quản lý orphan_zone): zone_id bị bỏ qua → không thấy.
+      sign_in admin
+      get unit_config_path(zone_id: orphan_zone.id)
+      expect(response.body).not_to include("Zone-CP-Orphan")
+
+      # commander: cũng không thấy đầu mối zone orphan.
+      sign_in create(:user, :commander, unit: unit)
+      get unit_config_path(zone_id: orphan_zone.id)
+      expect(response.body).not_to include("Zone-CP-Orphan")
+
+      # technician: không phải vai trò nghiệp vụ → BusinessRoleRequired chặn (redirect).
+      sign_in create(:user)
+      get unit_config_path(zone_id: orphan_zone.id)
+      expect(response).to have_http_status(:redirect)
+    end
+
+    it "PATCH không kèm unit_id lẫn zone_id (cả hai nil) → redirect an toàn, không 500" do
+      expect {
+        patch unit_config_path, params: {}
+      }.not_to raise_error
+      expect(response).to have_http_status(:redirect)
+    end
+
+    it "CHIEU-khac-zone-direct-orphan: khu vực từng có đơn vị quản lý, đơn vị bị xóa → vẫn sửa được 'Khác' zone-direct" do
+      # Tạo đơn vị quản lý cho orphan_zone rồi xóa nó → clear_zone_manager_if_self set manager_unit_id nil.
+      manager = create(:unit, zone: orphan_zone, name: "Đơn vị quản lý tạm")
+      expect(orphan_zone.reload.manager_unit_id).to eq(manager.id)
+      manager.discard
+      expect(orphan_zone.reload.manager_unit_id).to be_nil
+
+      od = OtherDeduction.find_by!(contact_point: orphan_zone_cp, period: period)
+      patch unit_config_path, params: {
+        zone_id: orphan_zone.id,
+        other_deductions: {
+          od.id.to_s => { other_type: "fixed", other_value: "7.50", lock_version: od.lock_version }
+        }
+      }
+      expect(response).to redirect_to(unit_config_path(zone_id: orphan_zone.id))
+      expect(od.reload.other_value).to eq(BigDecimal("7.50"))
+    end
+
+    it "CHIEU-khac-zone-direct-sua-duoc: PATCH zone-context lỗi validation → 422 re-render an toàn (không raise), giá trị giữ nguyên" do
+      od = OtherDeduction.find_by!(contact_point: orphan_zone_cp, period: period)
+      original_value = od.other_value
+
+      expect {
+        patch unit_config_path, params: {
+          zone_id: orphan_zone.id,
+          other_deductions: {
+            od.id.to_s => { other_type: "fixed", other_value: "", lock_version: od.lock_version }
+          }
+        }
+      }.not_to raise_error
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(od.reload.other_value).to eq(original_value)
+      # Dropdown khu vực vẫn render (chứng tỏ @zone + set_sa_filter_dropdowns sống sót re-render).
+      expect(response.body).to include("Khu vực mồ côi")
+    end
+  end
+
   describe "unit_coefficient — chỉ huy đơn vị xem trang cấu hình" do
     # Test 4: commander viewing unit config cannot edit — select is disabled, no submit button.
     # Mirrors pattern from "view permission guards" context but scoped to unit_coefficient feature.
