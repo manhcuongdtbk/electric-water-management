@@ -1,6 +1,6 @@
 ---
 title: Chiều review "tuân AGENTS" (custom RuboCop cop cho BigDecimal + hook/checklist cho phần phán đoán)
-version: 0.1.0
+version: 0.1.1
 status: draft (chờ duyệt)
 date: 2026-06-13
 governed_by: 2026-06-07-sdlc-overview-design.md
@@ -49,9 +49,11 @@ Triage (chủ dự án) đã chốt: thứ tự **B → A**; B **không** `prior
 
   **(2) Lớp 1 — custom RuboCop cop cho BigDecimal/làm tròn.** Chạy trong job `ruby-checks` sẵn có (RuboCop đã ở CI). Cop đặt ở `lib/rubocop/cop/decimal/`, nạp qua `require:` trong `.rubocop.yml`, scope theo thư mục qua `Include`/`Exclude`:
   - **`Decimal/NoFloatInCalculation`** — chặn `.to_f` và `Float(...)` ở **tầng tính toán** (`Include: app/models/**, app/services/**`). Tầng xuất/hiển thị (`*.axlsx`, `app/helpers/number_helper_vi.rb`) **không** bị bắt (qua `Exclude` hoặc giới hạn `Include`). Escape hợp lệ: `# rubocop:disable Decimal/NoFloatInCalculation` kèm lý do.
-  - **`Decimal/ExplicitRoundingMode`** — chặn hằng `ROUND_HALF_EVEN` (mọi nơi `app/`,`lib/`) và `.round(<precision>)` **thiếu** đối số mode `:half_up`/`ROUND_HALF_UP` ở tầng tính toán (gợi ý dùng `ROUND_HALF_UP` tường minh). Cùng escape `# rubocop:disable`.
+  - **`Decimal/ExplicitRoundingMode`** — scope cùng tầng tính toán (`Include: app/models/**, app/services/**`); chặn **mọi** `.round` **không** kèm đối số mode half-up tường minh (`:half_up` hoặc hằng kết thúc `ROUND_HALF_UP`). Như vậy bắt cả `.round(2)` thiếu mode, lẫn `.round(2, :half_even)`/`ROUND_HALF_EVEN`/banker's (mode bị AGENTS cấm) — chỉ `.round(2, :half_up)`/`.round(2, BigDecimal::ROUND_HALF_UP)` qua. Cùng escape `# rubocop:disable`.
 
-  Hiện code đã sạch → cop chạy **xanh ngay** trên cây repo; vai trò là **lưới chống regression** về sau (bắt float/làm-tròn-sai *mới thêm*). Test cop bằng RSpec (`spec/rubocop/cop/decimal/`) — case vi phạm bị bắt, case hợp lệ qua, case escape-comment qua, case file ngoài scope không bị bắt.
+  **Vì sao scope tầng tính toán cho cả hai (không "mọi nơi"):** khảo sát cho thấy tầng tính toán hiện có **0** `.round` và **0** `.to_f` (mọi làm tròn nằm ở helper hiển thị `number_helper_vi.rb`, đã dùng `ROUND_HALF_UP` tường minh, thuộc tầng hiển thị nên **Exclude**). Quy ước BigDecimal của AGENTS là về **tính toán** tiền/điện → ép đúng tầng đó cho false-positive thấp và scope mỗi cop đồng nhất (dễ hiểu/bảo trì). Banker's-rounding lọt ở tầng hiển thị là khe hở nhỏ, đã được review người + checklist §8 phủ; chấp nhận đánh đổi này thay vì cop xét đường-dẫn phức tạp.
+
+  Hiện code đã sạch → cop chạy **xanh ngay** trên cây repo; vai trò là **lưới chống regression** về sau (bắt float/làm-tròn-sai *mới thêm*). Test cop bằng RSpec (`spec/rubocop/cop/decimal/`, dùng `RuboCop::RSpec::ExpectOffense`) — case vi phạm bị bắt đúng message, case hợp lệ (BigDecimal + `:half_up`) qua. "File ngoài scope không bị bắt" được chứng minh bằng lần chạy `rubocop` xanh trên cả repo (15 `.to_f` ở axlsx không bị bắt); inline-disable là tính năng sẵn của RuboCop, không cần unit-test riêng.
 
   **(3) Lớp 2 — hook `UserPromptSubmit` + checklist.**
   - **Hook** trong `.claude/settings.json`: `UserPromptSubmit` khớp prompt chứa `/code-review` → bơm `additionalContext` gồm 3 câu hỏi phán đoán (không-viết-tắt ngữ nghĩa; BigDecimal đặt-đúng-chỗ ngoài tầm cop; lập-luận phủ đủ 6 vai) + trỏ `CONTRIBUTING.md` §8. Bash thuần (`jq`, grep), **fail-open** nếu thiếu `jq` (im lặng, không lỗi) — khớp các hook hiện có. Chỉ kích hoạt khi gõ `/code-review` (không bơm ở chỗ khác → ít nhiễu); gate PR-time cho người đã có checkbox PR template riêng.
@@ -103,7 +105,7 @@ Một pull request, nhánh `feature/agents-compliance-review-dimension` ← `dev
 - `docs/THUAT_NGU.md` — **kiểm**: nếu introduce term/abbrev mới cần đăng ký (dự kiến không — "RuboCop cop", "BigDecimal" là tên công cụ/chuẩn). Nếu có → bump version + changelog.
 
 ### Kiểm thử
-- **Cop (máy chạy được):** `bin/docker rspec spec/rubocop/cop/decimal/` — mỗi cop có case: (a) vi phạm bị bắt đúng message; (b) code hợp lệ (BigDecimal + `ROUND_HALF_UP`) không bị bắt; (c) inline-disable-kèm-lý-do qua; (d) file ngoài scope (axlsx/helper) không bị bắt. Chạy `bin/docker bundle exec rubocop` trên cây repo → **xanh** (code đã sạch), chứng minh không false-positive trên data thật.
+- **Cop (máy chạy được):** `bin/docker rspec spec/rubocop/cop/decimal/` — mỗi cop có case: (a) vi phạm bị bắt đúng message; (b) code hợp lệ (BigDecimal + `:half_up`) không bị bắt. Scope theo thư mục và inline-disable do RuboCop framework lo (không unit-test riêng). Chạy `bin/docker bundle exec rubocop` trên cây repo → **xanh** (code đã sạch; 15 `.to_f` ở axlsx ngoài scope không bị bắt), chứng minh không false-positive trên data thật + scope đúng.
 - **Hook (kiểm tay):** gõ `/code-review` trong Claude Code → xác nhận `additionalContext` được bơm (3 câu hỏi + trỏ §8). Không có framework test hook trong repo (như mọi hook hiện có); plan ghi bước verify.
 
 ## Giới hạn (không phóng đại "đảm bảo")
@@ -125,4 +127,5 @@ Mạnh nhất là phần Lớp 1: anti-pattern float/làm-tròn **mới thêm** 
 
 ## Lịch sử thay đổi
 
+- **0.1.1 (2026-06-13):** Tinh chỉnh hành vi `Decimal/ExplicitRoundingMode` (phát hiện lúc viết plan, khảo sát code): scope **cùng tầng tính toán** (`app/models`, `app/services`) như cop float — bỏ "ROUND_HALF_EVEN mọi nơi"; cop bắt **mọi** `.round` thiếu mode half-up tường minh (subsume cả missing-mode lẫn banker's-mode trong tầng đó). Lý do: tầng tính toán hiện 0 `.round`/0 `.to_f` (mọi làm tròn ở helper hiển thị, đã `ROUND_HALF_UP` — Exclude); scope đồng nhất mỗi cop, false-positive thấp; khe hở banker's ở tầng hiển thị do review người + §8 phủ. Bỏ unit-test "escape-comment"/"ngoài-scope" (do RuboCop framework lo; scope chứng minh qua lần chạy `rubocop` xanh toàn repo).
 - **0.1.0 (2026-06-13):** Bản thảo đầu — ADR-031 (chiều review "tuân AGENTS" hai lớp). Lớp 1: custom RuboCop cop `Decimal/NoFloatInCalculation` + `Decimal/ExplicitRoundingMode` (job `ruby-checks`, scope theo thư mục, inline-disable làm escape). Lớp 2: hook `UserPromptSubmit` bơm `additionalContext` khi gõ `/code-review` + checklist canonical `CONTRIBUTING.md` §8 + checkbox PR template. Khảo sát code: `.to_f` chỉ ở tầng xuất Excel/helper (hợp lệ), tầng tính toán sạch → cop là lưới chống regression. Loại: sửa-prompt-plugin-toàn-cục, bash-grep, project-subagent, checklist-thuần, ép-i18n-trong-B, hook-bơm-PR-create/simplify. Giới hạn: i18n thuộc mục A; không-viết-tắt bất-khả-thi-máy (ADR-024); phủ-6-vai phần lớn ADR-030; Lớp 2 không chặn. Chờ duyệt.
