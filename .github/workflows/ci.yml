@@ -121,6 +121,22 @@ jobs:
       - name: Check views for new hard-coded Vietnamese literals (ADR-032)
         run: bash .github/scripts/check-view-i18n.sh
 
+  demo-guardrail:
+    name: Demo guardrail (customer-facing PR needs a demo spec)
+    runs-on: ubuntu-latest
+    # Chạy LUÔN trên mọi pull request (KHÔNG gate qua `changes`): guardrail nhẹ,
+    # cần bắt đúng lúc pull request được gán nhãn customer-facing (ADR-040).
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Require a demo spec for customer-facing pull requests (ADR-040)
+        env:
+          LABELS_JSON: ${{ toJSON(github.event.pull_request.labels) }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bash .github/scripts/check-demo-spec.sh
+
   tests:
     name: Tests (rspec incl. system specs, zeitwerk, schema drift)
     runs-on: ubuntu-latest
