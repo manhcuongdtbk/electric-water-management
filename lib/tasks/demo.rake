@@ -32,7 +32,7 @@ namespace :demo do
        "tag .. HEAD). Sends nothing — the owner reviews and forwards."
   task :bundle, %i[since head] => :environment do |_task, args|
     video_dir = Rails.root.join("tmp", "demo_videos")
-    git = ->(*cmd) { `git #{cmd.join(' ')}`.strip }
+    git = ->(*cmd) { `git #{cmd.join(" ")}`.strip }
 
     since = args[:since].presence || git.call("describe", "--tags", "--abbrev=0", "--match", "'v*'")
     abort("demo:bundle: no <since> ref and no v* tag found — pass one explicitly.") if since.blank?
