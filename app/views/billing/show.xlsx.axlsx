@@ -56,6 +56,14 @@ wb = xlsx_package.workbook
     # An toàn vì mọi dữ liệu trong sheet đều từ server, không có input user.
     sheet.escape_formulas = false
 
+    # Layer 3 stamp: when the file is generated from stale derived data (acknowledged
+    # via the server guard), stamp a Vietnamese warning at the very top so the reader
+    # cannot miss that the numbers may be out of date.
+    if @export_stale
+      sheet.add_row [t("billing.export.stale_stamp")], types: [:string]
+      sheet.add_row []
+    end
+
     sheet.add_row ["Đơn giá:", @period.unit_price.to_f] + Array.new(total_columns - 2),
                   style: [text_style, money_style]
     sheet.add_row []

@@ -1,6 +1,8 @@
 require "rails_helper"
 
 RSpec.describe "Billing Excel export guard", type: :request do
+  include XlsxHelpers
+
   let(:period) { Period.current || create(:period, closed: false) }
   let(:zone) { create(:zone) }
   let(:unit) { create(:unit, zone: zone) }
@@ -43,12 +45,7 @@ RSpec.describe "Billing Excel export guard", type: :request do
     make_stale!
     get billing_path(period_id: period.id, format: :xlsx, acknowledged_stale: "1")
     expect(response).to have_http_status(:ok)
-    require "zip"
-    shared = ""
-    Zip::File.open_buffer(StringIO.new(response.body)) do |zip|
-      entry = zip.find_entry("xl/sharedStrings.xml")
-      shared = entry.get_input_stream.read if entry
-    end
-    expect(shared).to include("CẢNH BÁO")
+    xlsx = parse_xlsx(response.body)
+    expect(xlsx.rows.first.first).to include("CẢNH BÁO")
   end
 end
