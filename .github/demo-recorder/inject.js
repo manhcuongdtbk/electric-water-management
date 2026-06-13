@@ -11,7 +11,11 @@ window.__demo.ensureCaption = function () {
     el.style.cssText = [
       "position:fixed", "left:0", "right:0", "bottom:0", "z-index:2147483647",
       "padding:16px 24px", "font:600 20px/1.4 system-ui,sans-serif",
-      "color:#fff", "background:rgba(17,24,39,.92)", "text-align:center"
+      "color:#fff", "background:rgba(17,24,39,.92)", "text-align:center",
+      // Display-only overlay: never intercept clicks on the page beneath it
+      // (the banner sits at the bottom, over submit buttons). The cursor and
+      // ripple are already pointer-events:none for the same reason.
+      "pointer-events:none"
     ].join(";");
     document.body.appendChild(el);
   }

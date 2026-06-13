@@ -50,12 +50,14 @@ RSpec.configure do |config|
       # bundler (rake demo:bundle, ADR-048). The transcode step turns the .webm
       # into "<safe>.mp4", so record the .mp4 name here. The demo job's artifact
       # upload globs *.mp4, so this sidecar file is harmless to it.
+      # The NV anchor(s) come from the `demo_nv:` example metadata — the array
+      # convention the `rails g demo:spec` scaffold writes (ADR-051, #352).
       File.open(DEMO_VIDEO_DIR.join("manifest.jsonl"), "a") do |io|
         io.puts(JSON.generate(
           video: "#{safe}.mp4",
           description: example.full_description,
           file: example.metadata[:file_path],
-          nv: example.metadata[:nv]
+          nv: example.metadata[:demo_nv]
         ))
       end
     end
