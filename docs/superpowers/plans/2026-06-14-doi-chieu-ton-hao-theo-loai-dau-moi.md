@@ -330,21 +330,21 @@ Trong `app/views/billing/_loss_summary.html.erb`, bên trong vòng `@loss_summar
                 <% end %>
                 <tr class="font-semibold border-t border-gray-300">
                   <td class="px-2 py-1"><%= t("billing.loss_breakdown.rows.loss_bearing_total") %></td>
-                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.cong.usage) %></td>
-                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.cong.loss) %></td>
-                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.cong.actual) %></td>
+                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.loss_bearing_total.usage) %></td>
+                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.loss_bearing_total.loss) %></td>
+                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.loss_bearing_total.actual) %></td>
                 </tr>
                 <tr>
                   <td class="px-2 py-1"><%= t("billing.loss_breakdown.rows.no_loss") %></td>
-                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.khong_ton_hao.usage) %></td>
-                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.khong_ton_hao.loss) %></td>
-                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.khong_ton_hao.actual) %></td>
+                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.no_loss_total.usage) %></td>
+                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.no_loss_total.loss) %></td>
+                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.no_loss_total.actual) %></td>
                 </tr>
                 <tr class="font-semibold border-t border-gray-300">
                   <td class="px-2 py-1"><%= t("billing.loss_breakdown.rows.grand_total") %></td>
-                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.tong_cong.usage) %></td>
-                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.tong_cong.loss) %></td>
-                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.tong_cong.actual) %></td>
+                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.grand_total.usage) %></td>
+                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.grand_total.loss) %></td>
+                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.grand_total.actual) %></td>
                 </tr>
               </tbody>
             </table>
@@ -458,9 +458,9 @@ Trong `app/views/billing/show.xlsx.axlsx`, trong khối `@loss_summaries.each do
               row.usage.to_f, row.loss.to_f, row.actual.to_f
             ], style: [text_style, num_style, num_style, num_style]
           end
-          [[I18n.t("billing.loss_breakdown.rows.loss_bearing_total"), breakdown.cong],
-           [I18n.t("billing.loss_breakdown.rows.no_loss"), breakdown.khong_ton_hao],
-           [I18n.t("billing.loss_breakdown.rows.grand_total"), breakdown.tong_cong]].each do |label, r|
+          [[I18n.t("billing.loss_breakdown.rows.loss_bearing_total"), breakdown.loss_bearing_total],
+           [I18n.t("billing.loss_breakdown.rows.no_loss"), breakdown.no_loss_total],
+           [I18n.t("billing.loss_breakdown.rows.grand_total"), breakdown.grand_total]].each do |label, r|
             sheet.add_row [label, r.usage.to_f, r.loss.to_f, r.actual.to_f],
                           style: [text_style, num_style, num_style, num_style]
           end
@@ -687,4 +687,4 @@ gh pr create --base develop --label customer-facing \
 
 - **Spec coverage:** 10 CHIEU-breakdown → Task 1 (tong-theo-loai, khong-ton-hao, doi-chieu-cong-to-tong, chua-tinh), Task 4 (lam-tron, HTML hiện), Task 5 (doi-chieu-sinh-hoat), Task 6 (excel), Task 7 (vai-tro, theo-zone), i18n (Task 2+4). Demo (Task 8). Doc §8.5 (Task 9). ✓ đủ.
 - **Placeholder scan:** không có TBD/TODO trong bước code (chỉ "TODO(demo-author)" là của skeleton generator, thay ở Task 8 Step 4). ✓
-- **Type consistency:** `LossBreakdown::Result` fields (`rows`/`cong`/`khong_ton_hao`/`tong_cong`/`no_loss_by_type`) + `Row` (`type`/`usage`/`loss`/`actual`) dùng nhất quán ở service, controller, view, Excel, test. ✓
+- **Type consistency:** `LossBreakdown::Result` fields (`rows`/`loss_bearing_total`/`no_loss_total`/`grand_total`/`no_loss_by_type`) + `Row` (`type`/`usage`/`loss`/`actual`) — tên tiếng Anh (AGENTS) — dùng nhất quán ở service, controller, view, Excel, test. ✓
