@@ -312,6 +312,16 @@ RSpec.describe "Billing", type: :request do
           expect(all_text).to include("Tổng tổn hao (C = A − B)")
         end
 
+        it "CHIEU-breakdown-excel: các dòng breakdown theo loại ở cuối sheet" do
+          CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
+          get billing_path(format: :xlsx)
+          xlsx = parse_xlsx(response.body)
+          all_text = xlsx.rows.compact.flatten.compact.map(&:to_s).join(" | ")
+          expect(all_text).to include("Đối chiếu tổn hao/sử dụng theo loại đầu mối")
+          expect(all_text).to include("Cộng (công tơ có tổn hao)")
+          expect(all_text).to include("Tổng cộng")
+        end
+
         it "CHIEU-ton-hao-chua-tinh: chưa tính → không có khối A/B/C trong Excel" do
           # describe-level before đã chạy CalculationOrchestrator; xóa snapshot để
           # tái lập trạng thái "chưa tính" (@loss_summaries rỗng).
