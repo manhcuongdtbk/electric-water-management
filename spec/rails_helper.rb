@@ -79,7 +79,7 @@ RSpec.configure do |config|
   config.define_derived_metadata(file_path: %r{/spec/demo/}) do |metadata|
     metadata[:type] = :demo
   end
-  config.filter_run_excluding(:type => :demo) unless ENV["DEMO"] == "1"
+  config.filter_run_excluding(type: :demo) unless ENV["DEMO"] == "1"
 end
 
 Shoulda::Matchers.configure do |config|

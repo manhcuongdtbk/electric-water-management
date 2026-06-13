@@ -127,7 +127,7 @@ In `spec/rails_helper.rb`, inside the `RSpec.configure do |config|` block, add:
   config.define_derived_metadata(file_path: %r{/spec/demo/}) do |metadata|
     metadata[:type] = :demo
   end
-  config.filter_run_excluding(:type => :demo) unless ENV["DEMO"] == "1"
+  config.filter_run_excluding(type: :demo) unless ENV["DEMO"] == "1"
 ```
 
 - [ ] **Step 5: Write the smoke demo spec**
