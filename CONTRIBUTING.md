@@ -165,7 +165,7 @@ Theo ADR-013..015 (chi tiết + lý do: `docs/superpowers/specs/2026-06-08-truy-
 2. **Phân loại** — gắn 1 nhãn loại (`change-request` / `enhancement` / `bug`); chốt mức SemVer (`feat`/`fix`/breaking); xác định có đụng nghiệp vụ không. Cần thiết kế → gắn `needs-design`. Gán **milestone = version đích** khi đã biết.
 3. **Thiết kế** (nếu cần) — brainstorm → spec trong `docs/superpowers/specs/`; nếu đụng nghiệp vụ, cập nhật `docs/V2_XAC_NHAN_NGHIEP_VU.md` + gắn anchor (xem dưới). Cần khách xác nhận trước khi build → xem **Cổng xác nhận khách trước build** dưới. Gỡ `needs-design`.
 4. **Hiện thực + test** — `feature/*`, pull request `Refs #N`, test cover yêu cầu (mục 4).
-5. **Release** — gom vào `release/*` → bản ứng viên (release candidate) → khách nghiệm thu → release-please tag `X.Y.Z` (mục 6).
+5. **Release** — gom vào `release/*` → merge `main` → release-please tag `X.Y.Z`; khách nghiệm thu trên môi trường **Acceptance** (chạy `main`, không dùng `-rc.N` — ADR-005/008) (mục 6).
 6. **Đóng** — `Closes #N` khi merge; CHANGELOG tự liệt kê `(#N)`.
 
 **Trạng thái không gắn nhãn tay** — suy ra từ artifact: Issue mở = đang mở; có pull request liên kết = đang làm; merged = xong; có trong CHANGELOG/tag = đã release.

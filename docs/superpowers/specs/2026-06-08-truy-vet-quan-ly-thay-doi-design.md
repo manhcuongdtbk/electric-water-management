@@ -1,6 +1,6 @@
 ---
 title: Truy vết & quản lý thay đổi (yêu cầu → thiết kế → test → release) — Mảnh 2 của SDLC
-version: 0.3.1
+version: 0.3.2
 date: 2026-06-08
 governed_by: 2026-06-07-sdlc-overview-design.md
 ---
@@ -49,8 +49,8 @@ flowchart LR
   TRIAGE -->|đủ rõ| FEAT
   DESIGN --> FEAT["feature/*<br/>pull request 'Refs #N' + test"]
   FEAT -->|squash| D["develop"]
-  D --> REL["release/*<br/>release candidate → Nghiệm thu"]
-  REL -->|release-please tag X.Y.Z| M["main<br/>CHANGELOG + tag"]
+  D --> REL["release/*<br/>ổn định nội dung (không deploy)"]
+  REL -->|release-please tag X.Y.Z| M["main<br/>CHANGELOG + tag<br/>(Acceptance chạy main → khách nghiệm thu)"]
   M -->|Closes #N| DONE["Issue đóng<br/>dấu vết bền trong repo"]
   M --> DELIVER["Giao production Mini PC<br/>+ release notes tiếng Việt cho khách"]
 ```
@@ -79,9 +79,9 @@ flowchart LR
 - **Bối cảnh:** Đội 2–3 người, chủ dự án duyệt & phát hành; Kanban "ít nghi thức" (ADR-001); nguồn sự thật trong repo (ADR-002). Khách chạy Mini PC offline, bối cảnh an ninh → **không có quyền truy cập repo private trên GitHub**. Đã dùng nặng GitHub pull request + release-please.
 - **Quyết định:**
   1. **Hybrid.** *Luồng sống* của một thay đổi (tiếp nhận, phân loại, thảo luận) sống ở **GitHub Issue**; số `#N` là mã định danh thay đổi, tự liên kết pull request/commit. *Dấu vết bền* **không giữ tay** mà tự rơi vào repo: Conventional Commit body ghi `Refs #N`/`Closes #N` → `CHANGELOG.md` (release-please) → mục "Truy vết" của spec. **Không có bảng ma trận giữ tay.**
-  2. **Vòng đời 6 bước**, ánh xạ thẳng Git Flow: (1) Tiếp nhận = mở Issue; (2) Phân loại = loại + mức SemVer + có đụng nghiệp vụ; (3) Thiết kế (nếu cần) = spec + fold yêu cầu vào tài liệu nghiệp vụ; (4) Hiện thực + test = `feature/*`, pull request `Refs #N`; (5) Release = `release/*` → release candidate → tag (release-please); (6) Đóng = `Closes #N`.
+  2. **Vòng đời 6 bước**, ánh xạ thẳng Git Flow: (1) Tiếp nhận = mở Issue; (2) Phân loại = loại + mức SemVer + có đụng nghiệp vụ; (3) Thiết kế (nếu cần) = spec + fold yêu cầu vào tài liệu nghiệp vụ; (4) Hiện thực + test = `feature/*`, pull request `Refs #N`; (5) Release = `release/*` → `main` → tag (release-please); (6) Đóng = `Closes #N`.
   3. **P1 — nhãn tối thiểu + artifact tự mang trạng thái.** Issue gắn **1 nhãn loại** (`change-request` / `enhancement` / `bug`) + nhãn `needs-design` khi cần spec. Trạng thái còn lại **đọc từ artifact** (có pull request liên kết = đang làm; merged = xong; có trong CHANGELOG/tag = đã release) — **không kéo thẻ, không đổi nhãn trạng thái tay**. Thêm **milestone = version đích** (gán một lần, không phải mỗi bước) để cả đội biết "việc gì nằm trong bản nào."
-  4. **Lớp khách = mức release.** Khách thấy trạng thái qua **môi trường Nghiệm thu** (thử bản release candidate) + **release notes tiếng Việt** (đã có ở quy trình phát hành). Câu hỏi "đã nhận / đang làm chưa" trước release → **đội trả lời từ Issue/milestone list** rồi chuyển tiếp cho khách. Không mở board/issue cho khách (khách không có GitHub access).
+  4. **Lớp khách = mức release.** Khách thấy trạng thái qua **môi trường Acceptance** (chạy `main` — bản release mới nhất; ADR-005/008) + **release notes tiếng Việt** (đã có ở quy trình phát hành). Câu hỏi "đã nhận / đang làm chưa" trước release → **đội trả lời từ Issue/milestone list** rồi chuyển tiếp cho khách. Không mở board/issue cho khách (khách không có GitHub access).
 - **Lý do:** Tránh được "sổ đăng ký giữ tay" — thứ chắc chắn rữa khi quên (đúng nguyên tắc ADR-002 "để máy/automation nhắc, đừng mong người nhớ"). Dấu vết bền vẫn nằm trong repo, **tự động** từ commit/CHANGELOG/spec. Tận dụng đúng công cụ đội đã dùng nặng — không thêm phụ thuộc, đúng ethos "miễn phí trước" của ADR-007. `#N` là mã định danh thay đổi rẻ nhất có thể và nuôi luôn truy vết.
 - **Tradeoff:** (+) ít thao tác tay nhất (mở Issue + 1–2 nhãn), trạng thái luôn khớp thực tế vì suy ra từ artifact, dấu vết bền trong repo. (−) phần *thảo luận/triage* sống trên GitHub chứ không trong repo — chấp nhận được, đúng bằng tradeoff đã chấp nhận cho pull request. (−) không có một bảng tổng quan trực quan khi nhiều việc song song — để dành Projects làm đường nâng cấp.
 - **Phương án đã loại:**
@@ -155,7 +155,7 @@ flowchart LR
 | 2. Phân loại | Đọc, xác nhận `feat` (MINOR), có đụng nghiệp vụ (thêm mô tả cột). | nhãn | `needs-design` đang treo |
 | 3. Thiết kế | Brainstorm → spec; fold mô tả cột vào `V2_XAC_NHAN_NGHIEP_VU.md` §6, thêm `<a id="NV-cot-thang-truoc"></a>`. Spec kết bằng `## Truy vết` (yêu cầu `NV-cot-thang-truoc`, Issue `#42`, test dự kiến). **Gỡ** `needs-design`. | spec "Truy vết" ⇄ `#42`; anchor `NV-cot-thang-truoc` | Đang thiết kế = Issue mở, `needs-design`, chưa có pull request |
 | 4. Hiện thực + test | `feature/cot-thang-truoc` từ `develop`; code + system spec cover cột. pull request vào `develop`, mô tả có `Refs #42`. | commit body, pull request | Đang làm = GitHub tự hiện "linked pull request" trên `#42` |
-| 5. Release | Squash merge → `feat(billing): add previous-period column (#42)`. Gom vào `release/1.2` → release candidate → khách thử ở Nghiệm thu → release-please tag `1.2.0`. | `CHANGELOG.md` có dòng `(#42)`, tag | Đã release = thấy `#42` trong CHANGELOG 1.2.0 + tag |
+| 5. Release | Squash merge → `feat(billing): add previous-period column (#42)`. Gom vào `release/1.2` → merge `main` → release-please tag `1.2.0`; khách nghiệm thu trên **Acceptance** (chạy `main`). | `CHANGELOG.md` có dòng `(#42)`, tag | Đã release = thấy `#42` trong CHANGELOG 1.2.0 + tag |
 | 6. Đóng | pull request release/merge-back; Issue đóng (`Closes #42`). Release notes tiếng Việt cho khách. | Issue đóng, link tự nối | Đóng = Issue closed |
 
 **Truy vết về sau:**
@@ -181,7 +181,7 @@ Tổng thao tác *quản lý trạng thái bằng tay*: mở Issue + gắn/gỡ 
 | Yêu cầu khách đến qua kênh ngoài (lời nói, chat) bị rơi | Quy ước: mọi thay đổi phải có Issue trước khi vào `feature/*`; đội mở Issue thay khách nếu cần. |
 | Anchor `NV-...` đặt không nhất quán | Slug không dấu, theo chủ đề; quy tắc ghi rõ trong spec + `CONTRIBUTING.md`. |
 | Sửa tài liệu nghiệp vụ để thêm anchor mà quên bump version/changelog | pull request template có mục kiểm; ADR-002 đã yêu cầu. |
-| Khách muốn biết trạng thái nhưng không vào được GitHub | Lớp khách ở mức release (Nghiệm thu + release notes); đội chủ động chuyển tiếp từ Issue/milestone list. |
+| Khách muốn biết trạng thái nhưng không vào được GitHub | Lớp khách ở mức release (Acceptance chạy `main` + release notes); đội chủ động chuyển tiếp từ Issue/milestone list. |
 | Trạng thái trên milestone lệch | Milestone gán một lần theo version đích; reslot hiếm; không dùng làm trạng thái bước. |
 
 ## Truy vết
@@ -194,6 +194,7 @@ Tổng thao tác *quản lý trạng thái bằng tay*: mở Issue + gắn/gỡ 
 
 ## Lịch sử thay đổi
 
+- **0.3.2 (2026-06-14):** Đồng bộ mô tả luồng release cho khớp ADR-005/008/028 (Issue #345) — **không đổi quyết định**: sơ đồ Git Flow (`release/*` ổn định nội dung, không deploy; Acceptance chạy `main`), bước (5) lifecycle ADR-013 (`release/*` → `main` → tag), lớp khách (môi trường **Acceptance** chạy `main` thay cho "Nghiệm thu thử release candidate"), ví dụ end-to-end + bảng rủi ro. Bỏ "release candidate"/tên môi trường cũ "Nghiệm thu" trong mô tả luồng hiện hành.
 - **0.3.1 (2026-06-13):** Theo ADR-033 (#339): bỏ field frontmatter `status:` (nguồn duy nhất = inline `**Trạng thái:**`); lật trạng thái các ADR đã merge sang `Accepted`.
 - **0.3.0 (2026-06-11):** Thêm **ADR-028** (cổng xác nhận khách trước build — tài liệu xác nhận versioned trong `docs/xac-nhan-khach/`, Issue-anchored, current-state→lịch sử, fold-mới-ràng-buộc, vận hành AI-assisted). Issue #320; bối cảnh #264/#319.
 - **0.2.0 (2026-06-08):** Hiện thực xong (xem plan `2026-06-08-truy-vet-quan-ly-thay-doi.md`): thêm 3 template (Issue change-request, pull request, ADR), mục 9 `CONTRIBUTING.md`, pointer `AGENTS.md`; cập nhật mục "Truy vết" sang trạng thái đã hiện thực.
