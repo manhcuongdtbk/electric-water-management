@@ -60,6 +60,8 @@ bin/docker up                                # tự in cổng đã gán cho work
 ```bash
 bin/docker rspec              # Chạy test
 bin/docker rspec spec/models  # Chạy test 1 thư mục
+bin/docker demo               # Chạy demo specs (tự set DEMO=1)
+bin/docker demo spec/demo/x   # Chạy 1 demo spec
 bin/docker console            # Rails console
 bin/docker bash               # Shell trong container app
 bin/docker bash postgres      # Shell trong container postgres

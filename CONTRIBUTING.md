@@ -191,6 +191,8 @@ Cách soạn (vận hành AI-assisted, ADR-029 — viết trung lập công cụ
 3. **Người giữ gate:** demo là spec **xanh-mới-merge** (máy bắt selector/bước sai → anti-drift); **người duyệt video** (chất lượng caption/nghiệp vụ) trước khi tới khách. **Không** có đường CI tự-soạn-rồi-gửi (ADR-050).
 4. **Guardrail (ADR-040):** PR `customer-facing` mà thiếu file `spec/demo/**` → CI đỏ. Guardrail ép *sự tồn tại*; các bước trên lo *nội dung*.
 
+> Chạy/xem demo cục bộ: `bin/docker demo spec/demo/<x>_demo_spec.rb` (bỏ tham số để chạy cả `spec/demo`). Lệnh tự set `DEMO=1` — demo spec bị loại khỏi `bin/docker rspec` thường, và `bin/docker bash -c "..."` KHÔNG nhận command nên đừng dùng để chạy demo.
+
 > Hạ tầng + lý do đầy đủ: ADR-036..041 (`docs/superpowers/specs/2026-06-13-tu-dong-hoa-demo-design.md`); thói quen soạn + scaffold: ADR-050/051 (`docs/superpowers/specs/2026-06-14-ai-soan-demo-scaffold-design.md`).
 
 ### Chuẩn "demo tốt" — chất lượng, không chỉ tồn tại (ADR-059)
