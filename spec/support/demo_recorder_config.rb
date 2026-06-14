@@ -14,6 +14,11 @@ Capybara.register_driver :playwright_demo do |app|
   driver_args = {
     browser_type: :chromium,
     headless: true,
+    # Record at a fixed 720p so clips are crisp and consistent rather than the
+    # small/letterboxed Playwright default. viewport sets the rendered page size;
+    # record_video_size matches it (equal sizes avoid scaling blur).
+    viewport: { width: 1280, height: 720 },
+    record_video_size: { width: 1280, height: 720 },
     # Passing record_video_dir here ensures the Playwright browser context is
     # created with video recording enabled regardless of when on_save_screenrecord
     # is registered. The callback renames the raw temp file to a descriptive name.

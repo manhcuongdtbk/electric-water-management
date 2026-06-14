@@ -219,7 +219,12 @@ ActiveRecord::Base.transaction do
   ct_kv = Meter.find_or_create_by!(name: "CT-KV", contact_point: cp_chi_huy_kv) do |m|
     m.no_loss = false
   end
-  puts "  Meters: #{[ct_a1, ct_a2, ct_b1, ct_cc, ct_bom, ct_kv].map(&:name).join(', ')}"
+  # no_loss meter on cp_ban_chi_huy — makes "Không tổn hao" row non-zero in the
+  # per-type breakdown table (#332 demo requirement).
+  ct_kth = Meter.find_or_create_by!(name: "CT-KTH", contact_point: cp_ban_chi_huy) do |m|
+    m.no_loss = true
+  end
+  puts "  Meters: #{[ct_a1, ct_a2, ct_b1, ct_cc, ct_bom, ct_kv, ct_kth].map(&:name).join(', ')}"
 
   # ---------------------------------------------------------------------------
   # Meter readings for the open period — update reading_start and reading_end
@@ -231,14 +236,15 @@ ActiveRecord::Base.transaction do
     ct_b1  => { start: 5_500, finish: 5_980 },
     ct_cc  => { start: 800,   finish: 950  },
     ct_bom => { start: 200,   finish: 350  },
-    ct_kv  => { start: 400,   finish: 520  }
+    ct_kv  => { start: 400,   finish: 520  },
+    ct_kth => { start: 0,     finish: 90   }
   }
   readings.each do |meter, attrs|
-    reading = meter.meter_readings.find_by(period: period)
-    next unless reading
+    reading = meter.meter_readings.find_or_initialize_by(period: period)
     reading.update!(
       reading_start: BigDecimal(attrs[:start].to_s),
-      reading_end:   BigDecimal(attrs[:finish].to_s)
+      reading_end:   BigDecimal(attrs[:finish].to_s),
+      no_loss:       meter.no_loss
     )
   end
   puts "  MeterReadings updated for #{readings.size} meters"
@@ -246,8 +252,11 @@ ActiveRecord::Base.transaction do
   # ---------------------------------------------------------------------------
   # Main meter reading for the zone
   # ---------------------------------------------------------------------------
+  # Realistic supply: a little above the measured sub-meters so loss is a few %
+  # (measured = loss-bearing 1.470 + no-loss 90 = 1.560 → ~5% loss), not an
+  # alarming figure that makes the demo look broken.
   main_reading = MainMeterReading.find_or_initialize_by(main_meter: main_meter, period: period)
-  main_reading.usage = BigDecimal("2800")
+  main_reading.usage = BigDecimal("1640")
   main_reading.save!
   puts "  MainMeterReading: #{main_reading.usage} kWh"
 

@@ -1,6 +1,6 @@
 ---
 title: Hiển thị chi tiết tổn hao (cột Tổn hao / Sử dụng thực tế + tóm tắt A/B/C)
-version: 0.3.1
+version: 0.3.2
 date: 2026-06-11
 governed_by: 2026-06-07-sdlc-overview-design.md
 ---
@@ -61,7 +61,7 @@ Mã nguồn liên quan hiện tại:
   - "Tổn hao" = `meter_readings.loss` (trống nếu null).
   - "Sử dụng thực tế" = `sử dụng + loss` (trống nếu loss null). Tính khi render, không lưu.
   - Áp dụng cho tất cả công tơ trên trang (sinh hoạt, công cộng, bơm nước).
-- Trang **Bảng tính tiền** (`billing`): thêm tóm tắt A/B/C ở header (cạnh đơn giá + cảnh báo), đọc từ `loss_summaries` theo zone đang chọn. Nhãn: Công tơ tổng (A), Tổng sử dụng (B), Tổng tổn hao (C = A − B).
+- Trang **Bảng tính tiền** (`billing`): thêm tóm tắt A/B/C ở header (cạnh đơn giá + cảnh báo), đọc từ `loss_summaries` theo zone đang chọn. Nhãn: Công tơ tổng (A), Tổng sử dụng (B), Tổng tổn hao (C = A − B). **Cập nhật (ADR-054, #332):** ở **HTML**, chip A/B/C riêng này đã được **gộp vào bảng đối chiếu theo loại** — A/B/C chính là dòng "Cộng (công tơ có tổn hao)" (nhãn (B)/(C)/(A)); chip header riêng đã bỏ để khỏi lặp. **Excel** giữ nguyên khối A/B/C ở cuối sheet.
 - Làm tròn chỉ khi hiển thị (2 chữ số thập phân kW), phân cách số tiếng Việt (mục 26 nghiệp vụ).
 - SA xem nhiều khu vực (chưa lọc zone): tóm tắt hiển thị một dòng A/B/C cho mỗi khu vực trong phạm vi (mỗi dòng đọc từ `loss_summaries` của zone đó). Non-SA / SA đã chọn zone = một zone = một dòng.
 - Excel: A/B/C có trong file xuất, đặt ở cuối sheet (dưới hàng TỔNG) để không dịch lưới công thức (`$B$1` đơn giá, dòng dữ liệu bắt đầu ở 6). HTML đặt ở đầu bảng; Excel ở cuối là khác biệt cố ý, an toàn công thức.
@@ -99,6 +99,10 @@ Mã `CHIEU-<slug>` khai chiều test; test mang mã ở mô tả `it` (CI đối
 - Spec anh em milestone 1.2.0: [cột Khác hệ số đơn vị](2026-06-11-cot-khac-he-so-don-vi-design.md), [phân bổ bơm theo trạm](2026-06-11-phan-bo-bom-theo-tram-design.md).
 
 ## Lịch sử thay đổi
+
+### 0.3.2 (2026-06-14)
+
+- Ghi chú theo ADR-054 (#332): ở HTML, chip A/B/C riêng đã được gộp vào bảng đối chiếu theo loại (dòng "Cộng" = A/B/C); chip header riêng bỏ. Excel giữ nguyên khối A/B/C. Không đổi ngữ nghĩa ADR-027.
 
 ### 0.3.1 (2026-06-13)
 

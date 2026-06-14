@@ -475,6 +475,22 @@ vi:
       search: "Tìm kiếm"
     confirm:
       recalculate: "Xác nhận tính toán lại bảng tính tiền?"
+    loss_breakdown:
+      title: "Đối chiếu tổn hao/sử dụng theo loại đầu mối"
+      columns:
+        type: "Loại"
+        usage: "Sử dụng"
+        loss: "Tổn hao"
+        actual: "Sử dụng thực tế"
+      rows:
+        loss_bearing_total: "Cộng (công tơ có tổn hao)"
+        no_loss: "Không tổn hao"
+        grand_total: "Tổng cộng (= số công tơ tổng)"
+      note_items:
+        - "Dòng \"Cộng (công tơ có tổn hao)\" chính là A/B/C: Sử dụng = B, Tổn hao = C, Sử dụng thực tế = A."
+        - "A/B/C tính trên toàn khu vực (gồm công cộng + bơm nước), nên có thể khác tổng các cột trên bảng tính tiền — vốn chỉ tính đầu mối sinh hoạt."
+        - "A (Sử dụng thực tế của dòng \"Cộng\") đã trừ điện công tơ không tổn hao nên nhỏ hơn số công tơ tổng; dòng \"Tổng cộng\" mới bằng số công tơ tổng."
+        - "Làm tròn 2 chữ số nên tổng các dòng có thể lệch ±0,01 — số chuẩn để đối chiếu là A/B/C và số công tơ tổng."
   dashboard:
     sections:
       public_total: "Sử dụng điện công cộng toàn khu vực"
