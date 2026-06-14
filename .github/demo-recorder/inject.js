@@ -47,7 +47,10 @@ window.__demo.ensureCursor = function () {
 window.__demo.point = function (selector) {
   const el = document.querySelector(selector);
   if (!el) return false;
-  el.scrollIntoView({ block: "center", behavior: "instant" });
+  // inline:center also scrolls horizontally — needed so a highlighted cell deep
+  // in a wide, horizontally-scrollable table (e.g. the billing "Khác" column)
+  // is actually brought into view, not just centered vertically. See #363.
+  el.scrollIntoView({ block: "center", inline: "center", behavior: "instant" });
   const r = el.getBoundingClientRect();
   const c = window.__demo.ensureCursor();
   c.style.left = (r.left + r.width / 2) + "px";
