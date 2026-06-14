@@ -407,5 +407,4 @@ module RoleBehaviorScenarios
     proxy.extend(SampleData)
     proxy.setup_zone_two_full_sample(period: period)
   end
-
 end
