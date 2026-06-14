@@ -1,0 +1,11 @@
+# Equivalent mutants (ADR-056): mutations that do NOT change observable behaviour
+# (e.g. `x * 1` -> `x / 1`) and therefore always survive without being a test gap.
+# Each entry is excluded from the run and counted as "ignored". Always give a reason.
+#
+# ignores:
+#   - path: app/services/loss_calculator.rb
+#     line: 53
+#     from: "*"
+#     to: "/"
+#     reason: "multiplying by 1; equivalent"
+ignores: []
