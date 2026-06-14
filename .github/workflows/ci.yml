@@ -187,17 +187,25 @@ jobs:
       CHROMIUM_BINARY: /nonexistent/chromium
       CHROMEDRIVER_BINARY: /nonexistent/chromedriver
       COVERAGE: "1" # SimpleCov line+branch report (Issue #360); no hard minimum yet
-      # TEMPORARY (with self-hosted runner): run the suite in parallel across
-      # cores to cut wall-clock. The parallel_tests gem and per-process test
-      # databases (config/database.yml uses TEST_ENV_NUMBER) are already wired.
-      # Conservative process count to fit the runner's RAM; bump if more is free.
-      PARALLEL_TEST_PROCESSORS: "4"
+      # TEMPORARY (with self-hosted runner): run the suite in parallel. The process
+      # count is deliberately NOT hardcoded — the "Pick parallel process count" step
+      # below derives it from THIS machine's CPU + free RAM (bin/test-processes), so
+      # any runner or laptop fits with no manual tuning. The parallel_tests gem and
+      # per-process test databases (config/database.yml TEST_ENV_NUMBER) are wired.
     steps:
       - uses: actions/checkout@v6
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: .ruby-version
           bundler-cache: true
+      - name: Pick a parallel process count that fits this runner
+        if: ${{ !cancelled() }}
+        # Derived from CPU + free RAM so nobody hand-tunes per machine. Exposed to
+        # the later steps (parallel DB setup + the run) via the job environment.
+        run: |
+          n="$(bin/test-processes)"
+          echo "Using $n parallel test processes on this runner"
+          echo "PARALLEL_TEST_PROCESSORS=$n" >> "$GITHUB_ENV"
       - name: Set up test database and check for schema drift
         if: ${{ !cancelled() }}
         # Fresh DB + migrate must reproduce the committed db/schema.rb byte-for-byte.
@@ -213,7 +221,16 @@ jobs:
         run: bin/rails zeitwerk:check
       - name: rspec — parallel (model, request, and system specs with headless Chrome)
         if: ${{ !cancelled() }}
-        run: bundle exec parallel_test --type rspec
+        # parallel_tests' default grouping already balances by recorded runtime
+        # when the log is filled, and falls back to filesize otherwise — so we just
+        # point --runtime-log at a path outside the checkout ($HOME) that survives
+        # across runs on the self-hosted runner (actions/checkout wipes the workdir).
+        # Run 1 splits by filesize and records timings; later runs self-balance so
+        # one worker doesn't hog all the slow system specs. Ephemeral GitHub-hosted
+        # runners simply never accumulate the log and stay on filesize — harmless.
+        run: |
+          bundle exec parallel_test --type rspec \
+            --runtime-log "$HOME/parallel_runtime_rspec.log"
 
   demo:
     name: Demo recordings (Playwright)

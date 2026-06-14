@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Print a parallel_tests process count that fits THIS machine, so nobody has to
+# hand-tune PARALLEL_TEST_PROCESSORS per runner or laptop.
+#
+# Bounded by BOTH CPU cores and currently-available RAM. System specs each launch
+# a headless Chrome (~1 GB), so parallel_tests' built-in default (just `nproc`)
+# over-subscribes RAM on a memory-constrained runner and thrashes. Reading the
+# *available* RAM also means a busy machine automatically gets fewer processes.
+#
+# Override the per-process RAM budget with TEST_PER_PROCESS_MB if your specs are
+# lighter/heavier than the default assumption.
+set -euo pipefail
+
+cpus=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
+
+if [ -r /proc/meminfo ]; then
+  avail_mb=$(awk '/MemAvailable/{print int($2/1024)}' /proc/meminfo)
+else
+  # macOS (local runs): no MemAvailable; approximate with total physical RAM.
+  avail_mb=$(( $(sysctl -n hw.memsize) / 1024 / 1024 ))
+fi
+
+per_proc_mb=${TEST_PER_PROCESS_MB:-1100} # Rails + headless Chrome budget per process
+by_mem=$(( avail_mb / per_proc_mb ))
+
+n=$cpus
+[ "$by_mem" -lt "$n" ] && n=$by_mem
+[ "$n" -lt 1 ] && n=1
+
+echo "$n"
