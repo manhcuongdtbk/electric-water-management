@@ -1,65 +1,52 @@
 <% if @loss_summaries.any? %>
   <% @loss_summaries.each do |s| %>
-    <div class="mb-3">
-      <div class="inline-block rounded border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
-        <span class="font-semibold"><%= s.zone&.name %></span> —
-        Công tơ tổng (A): <strong><%= number_to_vi(s.a) %></strong> kW;
-        Tổng sử dụng (B): <strong><%= number_to_vi(s.b) %></strong> kW;
-        Tổng tổn hao (C = A − B): <strong><%= number_to_vi(s.c) %></strong> kW
+    <% breakdown = @loss_breakdowns[s.zone_id] %>
+    <% next unless breakdown %>
+    <div class="mb-4">
+      <div class="overflow-x-auto">
+        <table class="text-sm border border-gray-200">
+          <caption class="text-left font-semibold text-gray-700 px-2 py-1">
+            <%= t("billing.loss_breakdown.title") %> — <%= s.zone&.name %>
+          </caption>
+          <thead class="bg-gray-100 text-gray-700">
+            <tr>
+              <th class="px-2 py-1 text-left"><%= t("billing.loss_breakdown.columns.type") %></th>
+              <th class="px-2 py-1 text-right"><%= t("billing.loss_breakdown.columns.usage") %></th>
+              <th class="px-2 py-1 text-right"><%= t("billing.loss_breakdown.columns.loss") %></th>
+              <th class="px-2 py-1 text-right"><%= t("billing.loss_breakdown.columns.actual") %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% breakdown.rows.each do |row| %>
+              <tr>
+                <td class="px-2 py-1"><%= t("activerecord.attributes.contact_point.types.#{row.type}", default: row.type) %></td>
+                <td class="px-2 py-1 text-right"><%= number_to_vi(row.usage) %></td>
+                <td class="px-2 py-1 text-right"><%= number_to_vi(row.loss) %></td>
+                <td class="px-2 py-1 text-right"><%= number_to_vi(row.actual) %></td>
+              </tr>
+            <% end %>
+            <tr class="font-semibold border-t border-gray-300">
+              <td class="px-2 py-1"><%= t("billing.loss_breakdown.rows.loss_bearing_total") %></td>
+              <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.loss_bearing_total.usage) %> <span class="font-normal text-gray-400">(B)</span></td>
+              <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.loss_bearing_total.loss) %> <span class="font-normal text-gray-400">(C)</span></td>
+              <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.loss_bearing_total.actual) %> <span class="font-normal text-gray-400">(A)</span></td>
+            </tr>
+            <tr>
+              <td class="px-2 py-1"><%= t("billing.loss_breakdown.rows.no_loss") %></td>
+              <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.no_loss_total.usage) %></td>
+              <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.no_loss_total.loss) %></td>
+              <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.no_loss_total.actual) %></td>
+            </tr>
+            <tr class="font-semibold border-t border-gray-300">
+              <td class="px-2 py-1"><%= t("billing.loss_breakdown.rows.grand_total") %></td>
+              <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.grand_total.usage) %></td>
+              <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.grand_total.loss) %></td>
+              <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.grand_total.actual) %></td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="mt-1 text-xs text-gray-500 max-w-3xl"><%= t("billing.loss_breakdown.note") %></p>
       </div>
-        <% breakdown = @loss_breakdowns[s.zone_id] %>
-        <% if breakdown %>
-          <div class="mt-2 overflow-x-auto">
-            <table class="text-sm border border-gray-200">
-              <caption class="text-left font-semibold text-gray-700 px-2 py-1">
-                <%= t("billing.loss_breakdown.title") %>
-              </caption>
-              <thead class="bg-gray-100 text-gray-700">
-                <tr>
-                  <th class="px-2 py-1 text-left"><%= t("billing.loss_breakdown.columns.type") %></th>
-                  <th class="px-2 py-1 text-right"><%= t("billing.loss_breakdown.columns.usage") %></th>
-                  <th class="px-2 py-1 text-right"><%= t("billing.loss_breakdown.columns.loss") %></th>
-                  <th class="px-2 py-1 text-right"><%= t("billing.loss_breakdown.columns.actual") %></th>
-                </tr>
-              </thead>
-              <tbody>
-                <% breakdown.rows.each do |row| %>
-                  <tr>
-                    <td class="px-2 py-1"><%= t("activerecord.attributes.contact_point.types.#{row.type}", default: row.type) %></td>
-                    <td class="px-2 py-1 text-right"><%= number_to_vi(row.usage) %></td>
-                    <td class="px-2 py-1 text-right"><%= number_to_vi(row.loss) %></td>
-                    <td class="px-2 py-1 text-right"><%= number_to_vi(row.actual) %></td>
-                  </tr>
-                <% end %>
-                <tr class="font-semibold border-t border-gray-300">
-                  <td class="px-2 py-1"><%= t("billing.loss_breakdown.rows.loss_bearing_total") %></td>
-                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.loss_bearing_total.usage) %></td>
-                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.loss_bearing_total.loss) %></td>
-                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.loss_bearing_total.actual) %></td>
-                </tr>
-                <tr>
-                  <td class="px-2 py-1"><%= t("billing.loss_breakdown.rows.no_loss") %></td>
-                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.no_loss_total.usage) %></td>
-                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.no_loss_total.loss) %></td>
-                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.no_loss_total.actual) %></td>
-                </tr>
-                <tr class="font-semibold border-t border-gray-300">
-                  <td class="px-2 py-1"><%= t("billing.loss_breakdown.rows.grand_total") %></td>
-                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.grand_total.usage) %></td>
-                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.grand_total.loss) %></td>
-                  <td class="px-2 py-1 text-right"><%= number_to_vi(breakdown.grand_total.actual) %></td>
-                </tr>
-              </tbody>
-            </table>
-            <p class="mt-1 text-xs text-gray-500"><%= t("billing.loss_breakdown.rounding_note") %></p>
-          </div>
-        <% end %>
     </div>
   <% end %>
-  <p class="mb-3 text-xs text-gray-500">
-    A/B/C tính trên toàn khu vực theo sử dụng thô của mọi công tơ có tổn hao
-    (gồm cả công tơ công cộng và bơm nước), nên có thể khác tổng các cột trên bảng —
-    vốn chỉ tính đầu mối sinh hoạt. Riêng A (Công tơ tổng) đã trừ điện công tơ không tổn hao
-    nên có thể nhỏ hơn số điện lực.
-  </p>
 <% end %>

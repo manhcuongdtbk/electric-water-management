@@ -515,7 +515,7 @@ RSpec.describe "Billing", type: :request do
       expect(reading.reload.loss).to be_present
 
       get billing_path
-      expect(response.body).to include("Công tơ tổng (A)")
+      expect(response.body).to include("Cộng (công tơ có tổn hao)")
     end
   end
 
@@ -586,7 +586,7 @@ RSpec.describe "Billing", type: :request do
       sample
       sign_in sa
       get billing_path
-      expect(response.body).not_to include("Công tơ tổng (A)")
+      expect(response.body).not_to include("Cộng (công tơ có tổn hao)")
     end
 
     it "CHIEU-ton-hao-sau-tinh: sau tính → A/B/C khớp LossCalculator (HTML)" do
@@ -595,7 +595,7 @@ RSpec.describe "Billing", type: :request do
       sign_in sa
       get billing_path
       ls = LossSummary.find_by(zone: sample.zone, period: sample.period)
-      expect(response.body).to include("Công tơ tổng (A)")
+      expect(response.body).to include("Cộng (công tơ có tổn hao)")
       expect(response.body).to include(vi.number_to_vi(ls.a))
       expect(response.body).to include(vi.number_to_vi(ls.b))
       expect(response.body).to include(vi.number_to_vi(ls.c))
@@ -606,7 +606,7 @@ RSpec.describe "Billing", type: :request do
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
       sign_in sa
       get billing_path
-      expect(response.body).to include("gồm cả công tơ công cộng và bơm nước")
+      expect(response.body).to include("tính trên toàn khu vực")
       expect(response.body).to include("đã trừ điện công tơ không tổn hao")
     end
 
@@ -645,7 +645,7 @@ RSpec.describe "Billing", type: :request do
       ].each do |u|
         sign_in u
         get billing_path
-        expect(response.body).to include("Công tơ tổng (A)")
+        expect(response.body).to include("Cộng (công tơ có tổn hao)")
       end
 
       sign_in create(:user, :technician)
@@ -662,7 +662,7 @@ RSpec.describe "Billing", type: :request do
       ls = LossSummary.find_by(zone: sample.zone, period: sample.period)
       expect(ls.b).to eq(BigDecimal("0"))
       expect(ls.c).to eq(BigDecimal("0"))
-      expect(response.body).to include("Công tơ tổng (A)")
+      expect(response.body).to include("Cộng (công tơ có tổn hao)")
       expect(response.body).to include("Khu vực không có công tơ có tổn hao")
     end
 
@@ -692,7 +692,7 @@ RSpec.describe "Billing", type: :request do
       get billing_path
       ls = LossSummary.find_by(zone: sample.zone, period: sample.period)
       expect(ls.c).to eq(BigDecimal("0"))
-      expect(response.body).to include("Công tơ tổng (A)")
+      expect(response.body).to include("Cộng (công tơ có tổn hao)")
       expect(response.body).to include("Tổng sử dụng các công tơ con lớn hơn công tơ tổng")
     end
   end
