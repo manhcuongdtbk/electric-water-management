@@ -28,6 +28,8 @@ class Meter < ApplicationRecord
     period = Period.current
     return unless period
     meter_readings.find_by(period: period)&.update_column(:no_loss, no_loss)
+    zone_id = contact_point&.effective_zone&.id
+    CalculationState.touch_inputs!(zone_id: zone_id, period_id: period.id) if zone_id
   end
 
   def ensure_not_last_meter
@@ -41,6 +43,7 @@ class Meter < ApplicationRecord
   # Khi discard công tơ đơn lẻ lúc đang mở kỳ: hard delete meter_readings kỳ đang mở.
   # Bỏ qua khi discard cascade từ contact_point (ContactPoint#delete_current_period_records
   # đã xóa hết) — lúc đó contact_point đã discarded.
+  # Uses destroy_all (not delete_all) so TouchesCalculationState fires and marks the zone stale on discard (#334).
   def delete_current_period_meter_readings
     return if contact_point.discarded?
     period = Period.current

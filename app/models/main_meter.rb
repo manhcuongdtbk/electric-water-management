@@ -14,6 +14,7 @@ class MainMeter < ApplicationRecord
   # Khi discard công tơ tổng lúc đang mở kỳ: hard delete main_meter_readings kỳ đang mở.
   # Khác Meter: không cần guard bỏ qua cascade — Zone đã xóa readings trước khi cascade
   # discard (Zone#delete_current_period_main_meter_readings), callback này khi đó là no-op.
+  # Uses destroy_all (not delete_all) so TouchesCalculationState fires and marks the zone stale on discard (#334).
   def delete_current_period_main_meter_readings
     period = Period.current
     return unless period

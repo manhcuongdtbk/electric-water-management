@@ -43,6 +43,7 @@ class Zone < ApplicationRecord
 
   # Khi discard khu vực lúc đang mở kỳ: hard delete main_meter_readings kỳ đang mở của
   # mọi công tơ tổng thuộc khu vực. Dữ liệu kỳ cũ (đã đóng) giữ nguyên.
+  # Uses destroy_all (not delete_all) so TouchesCalculationState fires and marks the zone stale on discard (#334).
   def delete_current_period_main_meter_readings
     period = Period.current
     return unless period

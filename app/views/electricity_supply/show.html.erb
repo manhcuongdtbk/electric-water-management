@@ -2,6 +2,7 @@
 
 <% can_edit = @period.present? && can?(:update, MainMeterReading) %>
 
+<%= render "shared/freshness_indicator", states: @freshness_states %>
 
 <%= form_with url: electricity_supply_path, method: :patch, local: true do %>
   <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden mb-4">

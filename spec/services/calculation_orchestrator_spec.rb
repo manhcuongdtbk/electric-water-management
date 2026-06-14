@@ -113,6 +113,15 @@ RSpec.describe CalculationOrchestrator do
     end
   end
 
+  describe "calculation state — ghi last_calculated_at" do
+    it "records last_calculated_at for the zone-period after running" do
+      described_class.new(zone: sample.zone, period: sample.period).call
+      state = CalculationState.find_by(zone_id: sample.zone.id, period_id: sample.period.id)
+      expect(state.last_calculated_at).to be_present
+      expect(state.never_calculated?).to be(false)
+    end
+  end
+
   describe "loss snapshot persistence" do
     let(:sample) { setup_zone_one_full_sample }
 

@@ -1,0 +1,11 @@
+<% stale = Array(states).select { |e| e.status == :stale } %>
+<% if stale.any? %>
+  <div class="bg-yellow-50 border border-yellow-300 text-yellow-900 rounded p-3 mb-3 text-sm" data-testid="freshness-stale">
+    <ul class="list-disc list-inside space-y-1">
+      <% stale.each do |entry| %>
+        <li><%= t("calculation_states.stale_zone", zone: entry.zone.name) %></li>
+      <% end %>
+    </ul>
+    <p class="mt-1"><%= t("calculation_states.recalculate_hint") %></p>
+  </div>
+<% end %>
