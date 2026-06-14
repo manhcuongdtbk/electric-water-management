@@ -58,6 +58,20 @@ module RoleBehaviorScenarios
                  column_users: accessible_non_sa_roles("blocks").map { |r| make_user(r, w) })
   end
 
+  # --- contact_points (new-form zone-manager variant) -----------------------
+  def contact_points
+    w = base_world
+    Scenario.new(
+      path: Rails.application.routes.url_helpers.contact_points_path,
+      sa_user: FactoryBot.create(:user, :system_admin),
+      all_texts: [], checks: [], columns: [], column_users: [],
+      zm: { zm_user: FactoryBot.create(:user, :unit_admin, unit: w[:unit_manager]),
+            non_zm_user: FactoryBot.create(:user, :unit_admin, unit: w[:unit_other]),
+            marker_css: "select#type option",
+            marker_values: %w[water_pump non_establishment] }
+    )
+  end
+
   # --- meter_entries --------------------------------------------------------
   def meter_entries
     # SampleData is included into RSpec example groups (config.include SampleData),
