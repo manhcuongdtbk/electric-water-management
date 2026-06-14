@@ -219,18 +219,28 @@ jobs:
       - name: Zeitwerk check (autoloading)
         if: ${{ !cancelled() }}
         run: bin/rails zeitwerk:check
-      - name: rspec — parallel (model, request, and system specs with headless Chrome)
+      # Two phases on purpose. Non-system specs are CPU-bound and safe at the full
+      # auto-detected parallelism. System specs each launch a headless Chrome, and
+      # on the nested Docker-on-Mac runner more than ~2 concurrent Chrome exhausts
+      # CPU/shm/PIDs — chromedriver then crashes (Errno::ECONNREFUSED on its port).
+      # So system specs run at a low, fixed concurrency while the lighter specs keep
+      # the full count. Each phase tags its SimpleCov result (COVERAGE_PHASE) so the
+      # per-process coverage still merges into one report.
+      - name: rspec — non-system specs (full parallelism)
         if: ${{ !cancelled() }}
-        # parallel_tests' default grouping already balances by recorded runtime
-        # when the log is filled, and falls back to filesize otherwise — so we just
-        # point --runtime-log at a path outside the checkout ($HOME) that survives
-        # across runs on the self-hosted runner (actions/checkout wipes the workdir).
-        # Run 1 splits by filesize and records timings; later runs self-balance so
-        # one worker doesn't hog all the slow system specs. Ephemeral GitHub-hosted
-        # runners simply never accumulate the log and stay on filesize — harmless.
+        env:
+          COVERAGE_PHASE: nonsystem
+        # Default grouping self-balances by the runtime log (persisted in $HOME so it
+        # survives actions/checkout across runs); falls back to filesize when absent.
         run: |
           bundle exec parallel_test --type rspec \
-            --runtime-log "$HOME/parallel_runtime_rspec.log"
+            --runtime-log "$HOME/parallel_runtime_rspec.log" \
+            -- --tag ~type:system
+      - name: rspec — system specs (headless Chrome, low concurrency)
+        if: ${{ !cancelled() }}
+        env:
+          COVERAGE_PHASE: system
+        run: bundle exec parallel_test spec/system --type rspec -n 2
 
   demo:
     name: Demo recordings (Playwright)

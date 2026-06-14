@@ -8,11 +8,12 @@ if ENV["COVERAGE"]
     enable_coverage :branch
     add_filter %r{^/spec/}
     # Under parallel_tests each process reports coverage separately. Give each a
-    # distinct command name (TEST_ENV_NUMBER is "" / "2" / "3" / …) so they don't
-    # clobber one another, and widen the merge window so SimpleCov unions all
-    # processes into one report even on a slow run instead of showing just one
-    # process's partial numbers.
-    command_name "RSpec_#{ENV['TEST_ENV_NUMBER']}"
+    # distinct command name so they don't clobber one another — keyed by both the
+    # process (TEST_ENV_NUMBER is "" / "2" / "3" / …) and the run phase
+    # (COVERAGE_PHASE: nonsystem / system; see ci.yml). Widen the merge window so
+    # SimpleCov unions every process across both phases into one report instead of
+    # showing just one process's partial numbers.
+    command_name "RSpec_#{ENV['TEST_ENV_NUMBER']}_#{ENV['COVERAGE_PHASE']}"
     merge_timeout 3600
   end
 end
