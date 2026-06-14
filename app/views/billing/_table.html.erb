@@ -36,7 +36,7 @@
           <% @ranks.each do |rank| %>
             <td class="<%= num_cell %>"><%= (@personnel_by_cp_id[cp.id] || {})[rank.id] || 0 %></td>
           <% end %>
-          <td class="<%= num_cell %>"><%= calc.total_personnel %></td>
+          <td class="<%= num_cell %>" data-total-personnel-cp-id="<%= cp.id %>"><%= calc.total_personnel %></td>
           <td class="<%= num_cell %>"><%= number_to_vi(calc.residential_standard) %></td>
           <td class="<%= num_cell %>"><%= number_to_vi(calc.water_pump_standard) %></td>
           <td class="<%= num_cell %>"><%= number_to_vi(calc.total_standard) %></td>

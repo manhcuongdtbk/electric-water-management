@@ -36,6 +36,7 @@ RSpec.describe "Demo: cột Khác hệ số đơn vị", type: :demo do
     value_field = "other_deductions[#{other_deduction.id}][other_value]"
     name_cell = "[data-contact-point-name-id='#{kitchen.id}']"
     other_cell = "[data-other-deduction-cp-id='#{kitchen.id}']"
+    dai_doi_1_personnel = "[data-total-personnel-cp-id='#{dai_doi_1.id}']"
 
     # Sign in as the seeded admin (db/seeds/demo.rb).
     demo.visit("/users/sign_in", caption: "Mở trang đăng nhập")
@@ -51,8 +52,7 @@ RSpec.describe "Demo: cột Khác hệ số đơn vị", type: :demo do
       caption: "Mở Cấu hình đơn vị — Tiểu đoàn Alpha, kỳ tháng 6/2026"
     )
     demo.narrate("Bếp ăn phục vụ cả tiểu đoàn — mỗi người góp một phần tiêu chuẩn, bếp nhận lại tổng")
-    demo.narrate("Trước đây phải tính tay khoản trừ này và sửa lại mỗi kỳ quân số đổi")
-    demo.narrate(%(Cách nhập thứ ba — "Theo hệ số (đơn vị)" — làm thay: nhập hệ số một lần, hệ thống tự tính))
+    demo.narrate(%(Trước phải tính tay mỗi kỳ; cách "Theo hệ số (đơn vị)" nhập một lần, hệ thống tự tính))
 
     # Pick the unit-coefficient type and a negative coefficient (bếp được cộng ngược).
     demo.select(
@@ -79,7 +79,7 @@ RSpec.describe "Demo: cột Khác hệ số đơn vị", type: :demo do
     demo.highlight(name_cell, caption: "Đầu mối Bếp ăn Tiểu đoàn Alpha — bếp ăn chung của tiểu đoàn")
     demo.highlight(
       other_cell,
-      caption: "Cột Khác của Bếp ăn = −44 kW — bếp nhận lại 2 kW × 22 người còn lại của tiểu đoàn"
+      caption: "Cột Khác của Bếp ăn = −44 kW — bếp được cộng ngược theo quân số phần còn lại của tiểu đoàn"
     )
 
     calc = Calculation.find_by!(contact_point_id: kitchen.id, period_id: period.id)
@@ -116,9 +116,15 @@ RSpec.describe "Demo: cột Khác hệ số đơn vị", type: :demo do
     expect(page).to have_content("Đã tính toán lại bảng tính tiền.", wait: 15)
     demo.visit("/billing?zone_id=#{zone.id}", caption: "Xem lại kết quả kỳ mới")
     expect(page).to have_content("Bếp ăn Tiểu đoàn Alpha", wait: 15)
+    # Show cause then effect, both on screen: Đại đội 1's headcount grew (16 → 20)…
+    demo.highlight(
+      dai_doi_1_personnel,
+      caption: "Đại đội 1 giờ 20 người — vừa thêm 4 ở bước trước, quân số đơn vị tăng"
+    )
+    # …so the kitchen's credit auto-grows, with the coefficient never re-entered.
     demo.highlight(
       other_cell,
-      caption: "Không nhập lại hệ số — chỉ thêm 4 người vào Đại đội 1, Khác của bếp tự −44 → −52 kW"
+      caption: "Khác của Bếp ăn tự −44 → −52 kW theo quân số mới — không ai mở lại, không nhập lại hệ số"
     )
 
     # The coefficient carried over untouched; only the result moved with headcount.
@@ -142,7 +148,7 @@ RSpec.describe "Demo: cột Khác hệ số đơn vị", type: :demo do
     commander_type_select = "select[name=\"other_deductions[#{other_deduction_next.id}][other_type]\"]"
     demo.highlight(
       commander_type_select,
-      caption: "Chỉ huy chỉ xem: ô chọn cách nhập bị khóa, không có nút Lưu — đúng phân quyền"
+      caption: "Chỉ huy mở đúng cấu hình bếp — nhưng ô hệ số Khác bị khóa, không có nút Lưu: chỉ xem"
     )
     expect(page).to have_css("#{commander_type_select}[disabled]", wait: 10)
     expect(page).to have_no_button("Lưu cấu hình")
