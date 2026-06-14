@@ -187,6 +187,11 @@ jobs:
       CHROMIUM_BINARY: /nonexistent/chromium
       CHROMEDRIVER_BINARY: /nonexistent/chromedriver
       COVERAGE: "1" # SimpleCov line+branch report (Issue #360); no hard minimum yet
+      # TEMPORARY (with self-hosted runner): run the suite in parallel across
+      # cores to cut wall-clock. The parallel_tests gem and per-process test
+      # databases (config/database.yml uses TEST_ENV_NUMBER) are already wired.
+      # Conservative process count to fit the runner's RAM; bump if more is free.
+      PARALLEL_TEST_PROCESSORS: "4"
     steps:
       - uses: actions/checkout@v6
       - uses: ruby/setup-ruby@v1
@@ -199,12 +204,16 @@ jobs:
         run: |
           bin/rails db:create db:migrate
           git diff --exit-code db/schema.rb
+      - name: Set up parallel test databases
+        if: ${{ !cancelled() }}
+        # Create + schema-load the per-process databases (test, test2, … testN).
+        run: bin/rails parallel:create parallel:prepare
       - name: Zeitwerk check (autoloading)
         if: ${{ !cancelled() }}
         run: bin/rails zeitwerk:check
-      - name: rspec (model, request, and system specs with headless Chrome)
+      - name: rspec — parallel (model, request, and system specs with headless Chrome)
         if: ${{ !cancelled() }}
-        run: bundle exec rspec
+        run: bundle exec parallel_test --type rspec
 
   demo:
     name: Demo recordings (Playwright)
