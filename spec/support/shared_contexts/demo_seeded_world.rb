@@ -14,17 +14,18 @@ RSpec.shared_context "demo seeded world" do
   self.use_transactional_tests = false
 
   before(:each) do
+    # Start from a clean slate even if a previous demo example crashed before its
+    # teardown — otherwise its committed open Period would linger.
+    DatabaseCleanup.purge!
     # Load the curated demo dataset — commits data so Puma can read it.
     load Rails.root.join("db", "seeds", "demo.rb")
   end
 
   after(:each) do
-    # Minimal teardown so the test DB stays predictable across re-runs within the
-    # same rspec invocation.
-    [MeterReading, MainMeterReading, PersonnelEntry, OtherDeduction,
-     UnitConfig, NonEstablishmentSnapshot, Calculation, PumpAllocation,
-     Meter, ContactPoint, Block, Group, Rank, Period, Unit, MainMeter,
-     Zone].each { |model| model.unscoped.delete_all rescue nil }
-    User.where(username: "demo_admin").delete_all
+    # Remove the committed demo data so it can't leak into later examples (these
+    # specs are non-transactional). TRUNCATE ... CASCADE is FK-safe and, unlike
+    # the previous hand-ordered `delete_all rescue nil`, never silently leaves a
+    # committed open Period behind to trip idx_periods_only_one_open. See #362.
+    DatabaseCleanup.purge!
   end
 end
