@@ -53,11 +53,20 @@ module Mutation
     private
 
     def normalize(hash)
-      { "path" => hash["path"], "line" => hash["line"], "from" => hash["from"], "to" => hash["to"] }
+      { "path" => hash["path"], "line" => hash["line"], "from" => hash["from"],
+        "to" => hash["to"], "column" => hash["column"] }
     end
 
+    # An ignore matches a change on path/line/from/to. `column` is optional: when
+    # the ignore entry omits it, every mutant on that line+from->to is ignored;
+    # when present, only the mutant at that exact column (0-based) is ignored.
     def ignored?(change)
-      @ignores.include?(normalize(change.ignore_key))
+      key = change.ignore_key
+      @ignores.any? do |ignore|
+        ignore["path"] == key["path"] && ignore["line"] == key["line"] &&
+          ignore["from"] == key["from"] && ignore["to"] == key["to"] &&
+          (ignore["column"].nil? || ignore["column"] == key["column"])
+      end
     end
 
     # Replace `from` with `to` at the change's 1-based line / 0-based column.
