@@ -17,13 +17,21 @@ class DemoRecorder
     show_caption(caption)
   end
 
-  def click(locator, caption:)
+  # `confirm: true` accepts the Turbo confirmation dialog (data-turbo-confirm)
+  # that the clicked control triggers. The Playwright driver's DEFAULT dialog
+  # handler DISMISSES confirm dialogs, so without this the form is cancelled and
+  # never submits (e.g. the billing "Tính toán lại" button). See #363.
+  def click(locator, caption:, confirm: false)
     show_caption(caption)
     el = page.find(:link_or_button, locator)
     point_and_pause(el)
     page.execute_script("window.__demo.ripple();")
-    el.click
-    page.execute_script("window.__demo.unpoint();")
+    if confirm
+      page.accept_confirm { el.click }
+    else
+      el.click
+    end
+    unpoint
   end
 
   def fill(field, with:, caption:)
@@ -31,7 +39,7 @@ class DemoRecorder
     el = page.find_field(field)
     point_and_pause(el)
     el.set(with)
-    page.execute_script("window.__demo.unpoint();")
+    unpoint
   end
 
   # Select an option (by visible text) from a <select> located by `from` (id,
@@ -41,7 +49,17 @@ class DemoRecorder
     el = page.find_field(from)
     point_and_pause(el)
     el.find(:option, text: option).select_option
-    page.execute_script("window.__demo.unpoint();")
+    unpoint
+  end
+
+  # Scroll an element (by CSS selector) into view and outline it, so a specific
+  # result is visibly surfaced in the recording — e.g. one cell deep in the wide
+  # billing table. No click; just draws attention. See #363.
+  def highlight(selector, caption:)
+    show_caption(caption)
+    page.execute_script("window.__demo.point(arguments[0]);", selector)
+    sleep STEP_PAUSE
+    unpoint
   end
 
   # Show a caption with no action — for narrating context between steps.
@@ -65,5 +83,14 @@ class DemoRecorder
     page.execute_script(INJECT_JS)
     page.execute_script("window.__demo.caption(arguments[0]);", text)
     sleep STEP_PAUSE
+  end
+
+  # Clear the highlight outline — best-effort. A click/fill may have navigated the
+  # page, so the script can race the new (un-injected) document; the highlight is
+  # gone with the old page either way, so a failure here must never fail the demo.
+  def unpoint
+    page.execute_script("window.__demo.unpoint();")
+  rescue StandardError
+    nil
   end
 end
