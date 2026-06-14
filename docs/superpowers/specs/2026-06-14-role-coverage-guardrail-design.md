@@ -1,6 +1,6 @@
 ---
 title: Guardrail role-coverage — ép mọi trang test đủ 6 vai trò (meta-spec data-driven)
-version: 0.1.0
+version: 0.1.1
 date: 2026-06-14
 governed_by: 2026-06-07-sdlc-overview-design.md
 ---
@@ -114,7 +114,7 @@ Guardrail **chỉ** đảm bảo: mọi controller kế thừa `ApplicationContr
 
 ## Truy vết
 
-- **Issue:** [`#359`](https://github.com/manhcuongdtbk/electric-water-management/issues/359) (`change-request`, milestone `1.3.0`, không `priority-high`) → PR mang **`Refs #359`**; phạm vi access-only của #359 hoàn tất ở PR này, chủ dự án đóng #359 khi xác nhận (gate đóng issue thuộc người). Phần hành vi tách sang [`#373`](https://github.com/manhcuongdtbk/electric-water-management/issues/373).
+- **Issue:** [`#359`](https://github.com/manhcuongdtbk/electric-water-management/issues/359) (`change-request`, milestone `1.2.0`, không `priority-high`) → PR mang **`Refs #359`**; phạm vi access-only của #359 hoàn tất ở PR này, chủ dự án đóng #359 khi xác nhận (gate đóng issue thuộc người). Phần hành vi tách sang [`#373`](https://github.com/manhcuongdtbk/electric-water-management/issues/373).
 - **Lên:** [ADR-002](2026-06-07-sdlc-overview-design.md) (luật nào máy ép được thì để máy ép), [ADR-030](2026-06-13-truy-vet-chieu-test-design.md) (họ guardrail truy vết chiều test — mẫu fail-loud/test-kèm), [ADR-029](2026-06-07-sdlc-overview-design.md) (máy lo cơ học, người giữ phán đoán).
 - **Nghiệp vụ/hành vi:** [`V2_HANH_VI_HE_THONG.md` mục 1](../../V2_HANH_VI_HE_THONG.md) (6 vai trò), [`V2_CHIEU_TEST.md`](../../V2_CHIEU_TEST.md) (chiều 2/3 ma trận truy cập).
 - **Xuống (follow-up):** [`#373`](https://github.com/manhcuongdtbk/electric-water-management/issues/373) — độ phủ **hành vi chi tiết** per-role (ngoài phạm vi guardrail access này).
@@ -122,4 +122,5 @@ Guardrail **chỉ** đảm bảo: mọi controller kế thừa `ApplicationContr
 
 ## Lịch sử thay đổi
 
-- **0.1.0 (2026-06-14):** Bản thảo đầu — ADR-056 (guardrail role-coverage bằng meta-spec data-driven). Nguồn-trang = `ApplicationController.descendants` (fail-safe, không registry tay) lọc cây Devise theo cấu trúc (`<= DeviseController`); module `RoleAccessMatrix` (`spec/support/`) giữ `ROLES`/`ROLE_LABELS`/`EXCLUDED_CONTROLLERS`/`PAGES` + hàm thuần `coverage_gaps`/`role_gaps`; `role_access_matrix_spec.rb` sinh 108 test access + block completeness (eager-load, đối xứng missing/stale, đủ-6-vai-trò); unit-test `spec/lib/role_access_matrix_spec.rb` chứng minh guardrail cắn. Không thêm script bash/`.test.sh`, không sửa `ci.yml`. Phạm vi cố ý **chỉ access** — hành vi chi tiết per-role (coverage hiện lệch SA-nặng) tách sang follow-up [`#373`](https://github.com/manhcuongdtbk/electric-water-management/issues/373). Loại: script bash parse Ruby, registry tay, suy từ `rails routes`, job CI riêng. Triage: milestone 1.3.0, không priority-high.
+- **0.1.0 (2026-06-14):** Bản thảo đầu — ADR-056 (guardrail role-coverage bằng meta-spec data-driven). Nguồn-trang = `ApplicationController.descendants` (fail-safe, không registry tay) lọc cây Devise theo cấu trúc (`<= DeviseController`); module `RoleAccessMatrix` (`spec/support/`) giữ `ROLES`/`ROLE_LABELS`/`EXCLUDED_CONTROLLERS`/`PAGES` + hàm thuần `coverage_gaps`/`role_gaps`; `role_access_matrix_spec.rb` sinh 108 test access + block completeness (eager-load, đối xứng missing/stale, đủ-6-vai-trò); unit-test `spec/lib/role_access_matrix_spec.rb` chứng minh guardrail cắn. Không thêm script bash/`.test.sh`, không sửa `ci.yml`. Phạm vi cố ý **chỉ access** — hành vi chi tiết per-role (coverage hiện lệch SA-nặng) tách sang follow-up [`#373`](https://github.com/manhcuongdtbk/electric-water-management/issues/373). Loại: script bash parse Ruby, registry tay, suy từ `rails routes`, job CI riêng. Triage: milestone 1.2.0, không priority-high.
+- **0.1.1 (2026-06-14):** Sửa milestone tham chiếu 1.3.0 → 1.2.0 (khớp milestone thực tế của [`#359`](https://github.com/manhcuongdtbk/electric-water-management/issues/359), đã đóng ở 1.2.0) tại mục Truy vết + entry changelog 0.1.0. Không đổi nội dung thiết kế/ADR.
