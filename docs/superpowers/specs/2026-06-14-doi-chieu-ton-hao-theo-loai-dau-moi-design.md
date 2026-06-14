@@ -1,6 +1,6 @@
 ---
 title: Đối chiếu tổn hao/sử dụng theo loại đầu mối trên bảng tính tiền (mở rộng TN3 / ADR-027)
-version: 0.1.0
+version: 0.2.0
 date: 2026-06-14
 governed_by: 2026-06-07-sdlc-overview-design.md
 ---
@@ -77,7 +77,9 @@ PORO read-only, `initialize(zone:, period:)` — trả giá trị **thô** (BigD
 
 ### Hiển thị
 
-Mở rộng `_loss_summary.html.erb`: dưới chip A/B/C **của mỗi zone**, render bảng 4 cột (Loại · Sử dụng · Tổn hao · Sử dụng thực tế). Dòng theo thứ tự: các loại **có công tơ có-tổn-hao** (bỏ loại rỗng để tránh nhiễu) → **"Cộng (công tơ có tổn hao)"** → **"Không tổn hao"** → **"Tổng cộng"**. Làm tròn 2 chữ số **từng ô** + định dạng số tiếng Việt (`number_to_vi`). Thêm **chú thích** (i18n): tổng các dòng có thể lệch ±0,01 do làm tròn; số chuẩn là A/B/C và số công tơ tổng.
+`_loss_summary.html.erb`: mỗi zone một bảng 4 cột (Loại · Sử dụng · Tổn hao · Sử dụng thực tế), tiêu đề kèm tên khu vực. Dòng theo thứ tự: các loại **có công tơ có-tổn-hao** (bỏ loại rỗng để tránh nhiễu) → **"Cộng (công tơ có tổn hao)"** → **"Không tổn hao"** → **"Tổng cộng (= số công tơ tổng)"**. Làm tròn 2 chữ số **từng ô** + định dạng số tiếng Việt (`number_to_vi`). Một **chú thích gộp** (i18n): dòng "Cộng" chính là A/B/C, tính trên toàn khu vực; A đã trừ công tơ không tổn hao nên nhỏ hơn số công tơ tổng; tổng các dòng có thể lệch ±0,01 do làm tròn.
+
+> **Consolidation (UX review, 0.2.0):** khối **chip A/B/C riêng của TN3 (HTML) được GỘP vào bảng này** — dòng "Cộng (công tơ có tổn hao)" mang nhãn (B)/(C)/(A) chính là A/B/C, nên bỏ chip để khỏi lặp số + khử đụng tên ("Công tơ tổng (A)" vs "Tổng cộng = số công tơ tổng"). Excel **giữ nguyên** khối A/B/C ở cuối sheet (định dạng phẳng, không gây rối). Đây là thay đổi trình bày HTML, **không đổi ngữ nghĩa** ADR-027.
 
 ### Excel parity
 
@@ -129,6 +131,11 @@ Mã `CHIEU-<slug>` khai chiều test; test mang mã ở mô tả `it` (CI đối
 - Issue: [`#332`](https://github.com/manhcuongdtbk/electric-water-management/issues/332); umbrella [`#319`](https://github.com/manhcuongdtbk/electric-water-management/issues/319).
 
 ## Lịch sử thay đổi
+
+### 0.2.0 (2026-06-14)
+
+- **Consolidation (UX review):** gộp chip A/B/C của TN3 (HTML) vào bảng đối chiếu — dòng "Cộng" mang nhãn (B)/(C)/(A); đổi dòng cuối thành "Tổng cộng (= số công tơ tổng)"; gộp 2 chú thích thành 1; khử lặp số + đụng tên. Excel giữ nguyên khối A/B/C. Không đổi ngữ nghĩa ADR-027/054.
+- Demo: bỏ re-visit (dùng `DemoRecorder#narrate`, một lần mở Bảng tính tiền); demo ghi hình 720p (`record_video_size`/viewport trong `demo_recorder_config`); seed `db/seeds/demo.rb` hạ công tơ tổng 2.800 → 1.640 cho tổn hao ~5% thực tế (tránh demo trông như lỗi).
 
 ### 0.1.0 (2026-06-14)
 
