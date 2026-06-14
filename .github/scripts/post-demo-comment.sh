@@ -12,10 +12,11 @@ MARKER="<!-- demo-recordings -->"
 # Prefer the direct artifact URL (upload-artifact output); fall back to the run page.
 artifact_link="${ARTIFACT_URL:-${RUN_URL}}"
 body="${MARKER}
-🎬 **Bản demo tự động** cho pull request này đã được ghi hình.
+🎬 **Demo quay lại để kiểm tra** — CI vừa ghi hình lại **toàn bộ** demo walkthrough cho lần chạy này.
+ℹ️ Job chạy trên **mọi** pull request đụng code (anti-drift, ADR-036), nên **không** chắc có demo mới: nội dung chỉ đổi nếu pull request sửa \`spec/demo/\`.
 👉 **Tải video (mp4):** [demo-videos](${artifact_link})
 (hoặc mở [lần chạy CI](${RUN_URL}) → cuối trang, mục **Artifacts**)
-> Chặng owner: xem để xác nhận tính năng ổn trước khi merge (ADR-036)."
+> Chặng owner: xem để xác nhận demo vẫn chạy ổn trước khi merge (ADR-036)."
 
 # Delete the previous marker comment (best-effort) so the PR keeps one fresh link.
 prev="$(gh api "repos/{owner}/{repo}/issues/${PR_NUMBER}/comments" \
