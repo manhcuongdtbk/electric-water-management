@@ -1,7 +1,14 @@
 # Code coverage (SimpleCov) — opt-in via COVERAGE=1 (CI's `tests` job sets it).
 # MUST start before any application code is required so every file is tracked;
 # .rspec loads spec_helper first, so the very top of this file is the right spot.
-# Reports line + branch coverage; no hard minimum yet — observe first (Issue #360).
+# Reports line + branch coverage and enforces an anti-regression RATCHET floor
+# (Issue #381, ADR-060): minimum_coverage sits just below current levels purely to
+# block silent regressions — it is NOT an aspirational target (a high bar would
+# reward vacuous tests; test quality is owned by the structural guardrails in
+# #359/#373/#358 and ADR-030, not by this %). Bump these manually when coverage
+# rises on purpose. NOTE: minimum_coverage only holds for the FULL CI suite;
+# running a subset locally with COVERAGE=1 under-reports and fails falsely, so do
+# not gate coverage locally (CI covers it).
 if ENV["COVERAGE"]
   require "simplecov"
   SimpleCov.start "rails" do
@@ -15,6 +22,12 @@ if ENV["COVERAGE"]
     # showing just one process's partial numbers.
     command_name "RSpec_#{ENV['TEST_ENV_NUMBER']}_#{ENV['COVERAGE_PHASE']}"
     merge_timeout 3600
+    # Anti-regression ratchet (Issue #381, ADR-060). Only enforce when the WHOLE
+    # suite runs in one process (TEST_ENV_NUMBER unset). Under parallel_tests each
+    # process checks at its own at_exit before the others' results have merged, so a
+    # per-process gate would fail falsely on its partial coverage — exactly the
+    # "subset under-reports" caveat above. The single-process CI still gates it.
+    minimum_coverage line: 96, branch: 80 unless ENV["TEST_ENV_NUMBER"]
   end
 end
 

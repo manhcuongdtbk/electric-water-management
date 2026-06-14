@@ -186,7 +186,7 @@ jobs:
       # version-matched chromedriver. No app/test code change needed.
       CHROMIUM_BINARY: /nonexistent/chromium
       CHROMEDRIVER_BINARY: /nonexistent/chromedriver
-      COVERAGE: "1" # SimpleCov line+branch report (Issue #360); no hard minimum yet
+      COVERAGE: "1" # SimpleCov line+branch report + ratchet floor (Issue #381, ADR-060)
       # TEMPORARY (with self-hosted runner): run the suite in parallel. The process
       # count is deliberately NOT hardcoded — the "Pick parallel process count" step
       # below derives it from THIS machine's CPU + free RAM (bin/test-processes), so
