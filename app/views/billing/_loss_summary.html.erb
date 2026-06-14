@@ -45,7 +45,11 @@
             </tr>
           </tbody>
         </table>
-        <p class="mt-1 text-xs text-gray-500 max-w-3xl"><%= t("billing.loss_breakdown.note") %></p>
+        <ul class="mt-1 text-xs text-gray-500 max-w-3xl list-disc pl-5 space-y-0.5">
+          <% t("billing.loss_breakdown.note_items").each do |item| %>
+            <li><%= item %></li>
+          <% end %>
+        </ul>
       </div>
     </div>
   <% end %>
