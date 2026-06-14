@@ -25,4 +25,27 @@ RSpec.describe "Role behavior matrix (#373)", type: :request do
       end
     end
   end
+
+  describe "completeness (guardrail #373)" do
+    it "mọi trang access-matrix đều khai hành vi (không thiếu, không stale)" do
+      gaps = RoleBehaviorMatrix.coverage_gaps
+      expect(gaps[:missing]).to be_empty,
+        "Trang access-matrix chưa khai hành vi: #{gaps[:missing].join(', ')}. " \
+        "Thêm vào RoleBehaviorMatrix::BEHAVIORS (mỗi dimension applies hoặc na kèm lý do)."
+      expect(gaps[:stale]).to be_empty,
+        "Entry BEHAVIORS không có trang access tương ứng: #{gaps[:stale].join(', ')}."
+    end
+
+    it "mỗi trang khai đủ 4 dimension hành vi" do
+      gaps = RoleBehaviorMatrix.dimension_gaps
+      expect(gaps).to be_empty,
+        "Trang thiếu dimension: #{gaps.map { |s, d| "#{s} (#{d.join(', ')})" }.join('; ')}."
+    end
+
+    it "mọi entry đúng hình thức (na có lý do, applies có scenario)" do
+      bad = RoleBehaviorMatrix.invalid_entries
+      expect(bad).to be_empty,
+        "Entry sai hình thức: #{bad.map { |s, d| "#{s} (#{d.join(', ')})" }.join('; ')}."
+    end
+  end
 end

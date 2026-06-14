@@ -405,21 +405,4 @@ module RoleBehaviorScenarios
     proxy.setup_zone_two_full_sample(period: period)
   end
 
-  # --- history --------------------------------------------------------------
-  # Range mode renders period-level aggregate rows (no CP names); compare mode
-  # requires ≥2 periods and the view blocks with a "need at least 2" notice when
-  # only one period exists. Neither mode renders distinguishable per-unit strings
-  # suitable for the data_scoping shared example. Declared na in the matrix.
-  # (Zone/unit columns: history ALWAYS shows both columns for every role — na too.)
-  def history
-    sample = sample_world
-    users  = sample_role_users(sample)
-    path   = Rails.application.routes.url_helpers.history_path(
-               mode: "range",
-               from_period_id: sample.period.id,
-               to_period_id:   sample.period.id)
-    Scenario.new(path: path, sa_user: FactoryBot.create(:user, :system_admin),
-                 all_texts: [], checks: [],
-                 columns: [], column_users: [])
-  end
 end
