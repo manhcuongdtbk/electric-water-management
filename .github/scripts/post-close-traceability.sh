@@ -49,6 +49,28 @@ EOF
 # Trả 0 nếu OK/skip; 1 nếu có thao tác gh lỗi (để main gộp thành đỏ cuối).
 process_issue() {
   local issue="$1"
+
+  # GitHub closing-keywords only ever act on issues, never on pull requests, so
+  # a number that resolves to a PR is not a close target — skip it (not an
+  # error). This mirrors GitHub's own behavior and avoids commenting on a PR,
+  # which the workflow lacks `pull-requests: write` for (would 403 → false red).
+  # Reachable in practice: a PR body documenting a closing-keyword example (e.g.
+  # "this closes #9" where #9 is a PR) matches legitimately yet must be ignored.
+  # The REST /issues/N endpoint carries a `pull_request` object only for PRs;
+  # this is the reliable discriminator (`gh pr view N` also resolves issue
+  # numbers, so it cannot tell the two apart). (#389)
+  local issue_kind
+  issue_kind="$(gh api "repos/{owner}/{repo}/issues/${issue}" \
+    --jq 'if .pull_request then "pr" else "issue" end' 2>/dev/null || echo "")"
+  if [[ "$issue_kind" == "pr" ]]; then
+    echo "#${issue} is a pull request, not an issue; skipping (closing keywords act on issues only)."
+    return 0
+  fi
+  if [[ "$issue_kind" != "issue" ]]; then
+    echo "::warning::Cannot resolve #${issue} (missing or no access); skipping."
+    return 1
+  fi
+
   local issue_ms
   if ! issue_ms="$(gh issue view "$issue" --json milestone --jq '.milestone.title // ""' 2>/dev/null)"; then
     echo "::warning::Cannot read issue #${issue} (missing or no access); skipping."
