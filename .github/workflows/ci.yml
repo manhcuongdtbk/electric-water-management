@@ -30,6 +30,10 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       code_touched: ${{ steps.detect.outputs.code_touched }}
+      # Whether the changed paths can alter the recorded demo output (#367,
+      # Option C): the demo job still records to verify anti-drift on every code
+      # PR, but only uploads the artifact + posts the comment when this is true.
+      demo_relevant: ${{ steps.detect-demo.outputs.demo_relevant }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -39,6 +43,11 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: bash .github/scripts/detect-code-changes.sh
+      - id: detect-demo
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bash .github/scripts/detect-demo-relevant.sh
 
   ruby-checks:
     name: Ruby static checks (rubocop, brakeman, bundler-audit)
@@ -192,6 +201,11 @@ jobs:
     name: Demo recordings (Playwright)
     runs-on: ubuntu-latest
     needs: changes
+    # Record on EVERY code PR to verify the demo still runs green (anti-drift,
+    # ADR-021/ADR-036). The Upload + Comment steps below are additionally gated
+    # on `demo_relevant` so we only surface an artifact/comment when the changed
+    # paths can actually alter the demo output — no more "looks like a new demo"
+    # noise on infra-only PRs (#367, Option C).
     if: ${{ needs.changes.outputs.code_touched == 'true' }} # ADR-021: skip on docs-only
     # The final step posts the demo-artifact link as a PR comment, which needs
     # write access to the pull request (default GITHUB_TOKEN is read-only here).
@@ -247,14 +261,17 @@ jobs:
         run: bin/rails demo:transcode
       - name: Upload demo videos
         id: upload
-        if: ${{ !cancelled() }}
+        # Only when the changed paths can alter the demo output (#367, Option C).
+        if: ${{ !cancelled() && needs.changes.outputs.demo_relevant == 'true' }}
         uses: actions/upload-artifact@v7
         with:
           name: demo-videos
           path: tmp/demo_videos/*.mp4
           if-no-files-found: warn
       - name: Comment on the PR with the demo artifact link
-        if: ${{ !cancelled() }}
+        # Pair with the upload above: skip the comment on infra-only PRs so we
+        # don't imply a fresh demo where the output cannot have changed (#367).
+        if: ${{ !cancelled() && needs.changes.outputs.demo_relevant == 'true' }}
         continue-on-error: true # auxiliary: a comment hiccup must not fail the recording job
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
