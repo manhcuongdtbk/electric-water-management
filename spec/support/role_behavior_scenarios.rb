@@ -223,6 +223,57 @@ module RoleBehaviorScenarios
                  column_users: users.values_at(:ua_zm, :ua, :cmd_zm, :cmd))
   end
 
+  # --- unit_config (commander readonly) ------------------------------------
+  # sample_world builds unit_a (zone-manager) with residential CPs (Ban Tác huấn,
+  # Văn thư, Kho vật tư) and unit_b with Đại đội 1. Both units have OtherDeduction
+  # rows so unit_config renders number/select inputs for them.
+  # Control user = unit_admin of unit_b (plain UA, not ZM); commanders from both
+  # units are tested. Submit button (input[name='commit']) is ABSENT for commanders
+  # (view hides it entirely), so submit_optional: true.
+  def unit_config_commander
+    sample = sample_world
+    commander_users = [
+      FactoryBot.create(:user, :commander, unit: sample.unit_a),
+      FactoryBot.create(:user, :commander, unit: sample.unit_b)
+    ]
+    control_user = FactoryBot.create(:user, :unit_admin, unit: sample.unit_b)
+    Scenario.new(
+      path: Rails.application.routes.url_helpers.unit_config_path,
+      sa_user: FactoryBot.create(:user, :system_admin),
+      all_texts: [], checks: [], columns: [], column_users: [],
+      commander: {
+        commander_users: commander_users,
+        control_user:    control_user,
+        input_css:       "form input[type='number'], form select",
+        submit_css:      "input[name='commit']",
+        submit_optional: true
+      }
+    )
+  end
+
+  # --- unit_config (zone-manager variant) -----------------------------------
+  # UA-ZM (unit manages a zone) sees "thuộc khu vực" section when there is at
+  # least one zone_residential contact_point in the managed zone — mirrors the
+  # setup in unit_config_spec.rb lines 127-143. Plain UA (unit_other, no zone)
+  # does NOT see that section.
+  def unit_config_zm
+    w = base_world
+    rank = open_period_rank
+    # Create a zone_residential CP in the zone managed by unit_manager so the
+    # "thuộc khu vực" section renders for that unit's admin.
+    FactoryBot.create(:contact_point, :zone_residential, zone: w[:zone],
+                      name: "ZCP-ZM-#{SecureRandom.hex(3)}",
+                      initial_personnel_counts: { rank.id => 1 })
+    zm_user     = FactoryBot.create(:user, :unit_admin, unit: w[:unit_manager])
+    non_zm_user = FactoryBot.create(:user, :unit_admin, unit: w[:unit_other])
+    Scenario.new(
+      path: Rails.application.routes.url_helpers.unit_config_path,
+      sa_user: FactoryBot.create(:user, :system_admin),
+      all_texts: [], checks: [], columns: [], column_users: [],
+      zm: { zm_user: zm_user, non_zm_user: non_zm_user, marker_text: "thuộc khu vực" }
+    )
+  end
+
   # --- history --------------------------------------------------------------
   # Range mode renders period-level aggregate rows (no CP names); compare mode
   # requires ≥2 periods and the view blocks with a "need at least 2" notice when

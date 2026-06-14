@@ -56,6 +56,12 @@ module RoleBehaviorMatrix
       zone_unit_columns:    { na: "History LUÔN hiện cả cột Khu vực + Đơn vị mọi vai trò (so sánh kỳ cần context đầy đủ) — không ẩn theo vai trò." },
       commander_readonly:   { na: "Trang chỉ xem — không có input nghiệp vụ để disable." },
       zone_manager_variant: { na: "UA-ZM xem lịch sử như UA — không có biến thể riêng." }
+    },
+    "unit_config" => {
+      data_scoping:         { na: "SA unit_config shows one unit at a time (dropdown pick); no single request renders all units' CP names simultaneously, so the SA-sees-all precondition in the shared example cannot be satisfied. Per-unit scoping is already covered in unit_config_spec.rb." },
+      zone_unit_columns:    { na: "Trang cấu hình một đơn vị, không có bảng cross-zone/unit để ẩn cột." },
+      commander_readonly:   { applies: { scenario: :unit_config_commander } },
+      zone_manager_variant: { applies: { scenario: :unit_config_zm } }
     }
   }.freeze
 
