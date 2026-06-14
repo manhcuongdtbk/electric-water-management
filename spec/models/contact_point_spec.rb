@@ -84,6 +84,18 @@ RSpec.describe ContactPoint do
         cp = build(:contact_point, :public_type, unit: nil, zone: nil)
         expect(cp).not_to be_valid
       end
+
+      it "không hợp lệ khi có nhóm (group_id phải để trống)" do
+        cp = build(:contact_point, :public_type, group: create(:group))
+        cp.valid?
+        expect(cp.errors).to be_added(:group_id, :must_be_blank)
+      end
+
+      it "không hợp lệ khi có quân số (personnel_count phải để trống)" do
+        cp = build(:contact_point, :public_type, personnel_count: 5)
+        cp.valid?
+        expect(cp.errors).to be_added(:personnel_count, :must_be_blank)
+      end
     end
 
     describe "water_pump" do
@@ -105,6 +117,18 @@ RSpec.describe ContactPoint do
         cp = build(:contact_point, :water_pump, zone: nil)
         expect(cp).not_to be_valid
       end
+
+      it "không hợp lệ khi có khối (block_id phải để trống)" do
+        cp = build(:contact_point, :water_pump, block: create(:block))
+        cp.valid?
+        expect(cp.errors).to be_added(:block_id, :must_be_blank)
+      end
+
+      it "không hợp lệ khi có nhóm (group_id phải để trống)" do
+        cp = build(:contact_point, :water_pump, group: create(:group))
+        cp.valid?
+        expect(cp.errors).to be_added(:group_id, :must_be_blank)
+      end
     end
 
     describe "non_establishment" do
@@ -125,6 +149,24 @@ RSpec.describe ContactPoint do
       it "không hợp lệ khi có unit" do
         cp = build(:contact_point, :non_establishment, unit: create(:unit))
         expect(cp).not_to be_valid
+      end
+
+      it "không hợp lệ khi zone null" do
+        cp = build(:contact_point, :non_establishment, zone: nil)
+        cp.valid?
+        expect(cp.errors).to be_added(:zone_id, :blank)
+      end
+
+      it "không hợp lệ khi có khối (block_id phải để trống)" do
+        cp = build(:contact_point, :non_establishment, block: create(:block))
+        cp.valid?
+        expect(cp.errors).to be_added(:block_id, :must_be_blank)
+      end
+
+      it "không hợp lệ khi có nhóm (group_id phải để trống)" do
+        cp = build(:contact_point, :non_establishment, group: create(:group))
+        cp.valid?
+        expect(cp.errors).to be_added(:group_id, :must_be_blank)
       end
     end
   end
