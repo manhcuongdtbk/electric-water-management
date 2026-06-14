@@ -1,12 +1,20 @@
 # Code coverage (SimpleCov) — opt-in via COVERAGE=1 (CI's `tests` job sets it).
 # MUST start before any application code is required so every file is tracked;
 # .rspec loads spec_helper first, so the very top of this file is the right spot.
-# Reports line + branch coverage; no hard minimum yet — observe first (Issue #360).
+# Reports line + branch coverage and enforces an anti-regression RATCHET floor
+# (Issue #381, ADR-060): minimum_coverage sits just below current levels purely to
+# block silent regressions — it is NOT an aspirational target (a high bar would
+# reward vacuous tests; test quality is owned by the structural guardrails in
+# #359/#373/#358 and ADR-030, not by this %). Bump these manually when coverage
+# rises on purpose. NOTE: minimum_coverage only holds for the FULL CI suite;
+# running a subset locally with COVERAGE=1 under-reports and fails falsely, so do
+# not gate coverage locally (CI covers it).
 if ENV["COVERAGE"]
   require "simplecov"
   SimpleCov.start "rails" do
     enable_coverage :branch
     add_filter %r{^/spec/}
+    minimum_coverage line: 96, branch: 80
   end
 end
 
