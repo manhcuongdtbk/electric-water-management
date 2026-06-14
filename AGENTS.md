@@ -43,6 +43,7 @@ Mỗi git worktree dùng bộ cổng host riêng do `bin/docker` tự gán (post
 `bin/docker` là shortcut cho các lệnh Docker development:
 
 - Chạy test: `bin/docker rspec` (hoặc `bin/docker rspec spec/models`)
+- Chạy demo specs: `bin/docker demo` (hoặc `bin/docker demo spec/demo/<file>`) — tự set `DEMO=1` (demo spec bị loại khỏi `bin/docker rspec` thường)
 - Rails console: `bin/docker console`
 - Xem logs: `bin/docker logs`
 - Mở shell: `bin/docker bash` (hoặc `bin/docker bash postgres`)
