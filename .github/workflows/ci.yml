@@ -102,7 +102,7 @@ jobs:
         run: bash .github/scripts/check-branch-source.sh
 
   doc-governance:
-    name: Doc governance (links, map, glossary, test dimensions, ADR status, changelog header, ADR numbering)
+    name: Doc governance (links, map, glossary, test dimensions, ADR status, changelog header, ADR numbering, demo deliverable)
     runs-on: ubuntu-latest
     # Chạy LUÔN trên mọi pull request (KHÔNG gate qua `changes`): guardrail tài
     # liệu cần nhất đúng lúc pull request chỉ sửa tài liệu (ADR-024).
@@ -119,6 +119,7 @@ jobs:
           bash .github/scripts/check-adr-status.sh || rc=1
           bash .github/scripts/check-changelog-header.sh || rc=1
           bash .github/scripts/check-adr-numbering.sh || rc=1
+          bash .github/scripts/check-demo-deliverable.sh || rc=1
           exit $rc
 
   i18n-view-guardrail:

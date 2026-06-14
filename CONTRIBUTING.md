@@ -163,7 +163,7 @@ Theo ADR-013..015 (chi tiết + lý do: `docs/superpowers/specs/2026-06-08-truy-
 ### Luồng một thay đổi (6 bước)
 
 1. **Tiếp nhận** — mở **GitHub Issue** bằng template *Yêu cầu thay đổi* (`.github/ISSUE_TEMPLATE/change-request.md`). Yêu cầu đến từ kênh ngoài (lời nói, chat) cũng phải có Issue trước khi vào `feature/*` — đội mở thay khách nếu cần. Số `#N` là mã định danh thay đổi.
-2. **Phân loại** — gắn 1 nhãn loại (`change-request` / `enhancement` / `bug`); chốt mức SemVer (`feat`/`fix`/breaking); xác định có đụng nghiệp vụ không. Cần thiết kế → gắn `needs-design`. Gán **milestone = version đích** khi đã biết.
+2. **Phân loại** — gắn 1 nhãn loại (`change-request` / `enhancement` / `bug`); chốt mức SemVer (`feat`/`fix`/breaking); xác định có đụng nghiệp vụ không. Cần thiết kế → gắn `needs-design`. **Khách có thấy thay đổi này không?** Nếu có → gắn `customer-facing` **ngay tại đây** (đừng đợi PR): nhãn này kéo theo demo spec là **Definition of Done** của cả thiết kế lẫn hiện thực (ADR-052). Gán **milestone = version đích** khi đã biết.
 3. **Thiết kế** (nếu cần) — brainstorm → spec trong `docs/superpowers/specs/`; nếu đụng nghiệp vụ, cập nhật `docs/V2_XAC_NHAN_NGHIEP_VU.md` + gắn anchor (xem dưới). Cần khách xác nhận trước khi build → xem **Cổng xác nhận khách trước build** dưới. Gỡ `needs-design`.
 4. **Hiện thực + test** — `feature/*`, pull request `Refs #N`, test cover yêu cầu (mục 4). Tính năng **hướng-khách** soạn thêm **demo spec** cùng nhịp (xem *Demo spec cho tính năng hướng-khách* dưới).
 5. **Release** — gom vào `release/*` → merge `main` → release-please tag `X.Y.Z`; khách nghiệm thu trên môi trường **Acceptance** (chạy `main`, không dùng `-rc.N` — ADR-005/008) (mục 6).
@@ -175,7 +175,16 @@ Theo ADR-013..015 (chi tiết + lý do: `docs/superpowers/specs/2026-06-08-truy-
 
 ### Demo spec cho tính năng hướng-khách (ADR-050/051)
 
-Khi làm một tính năng **hướng-khách** (PR gắn nhãn `customer-facing`), soạn **demo spec** trong `spec/demo/` **cùng nhịp với code/test** — coi như một phần của việc làm feature, giống viết test. Cách làm (vận hành AI-assisted, ADR-029 — viết trung lập công cụ; ánh xạ Claude Code ở mục 8):
+Khi làm một tính năng **hướng-khách** (PR gắn nhãn `customer-facing`), soạn **demo spec** trong `spec/demo/` **cùng nhịp với code/test** — coi như một phần của việc làm feature, giống viết test.
+
+**Chốt từ khâu thiết kế (Definition of Done — ADR-052).** Demo spec là **deliverable của thiết kế**, không phải việc-làm-sau. Spec thiết kế của tính năng hướng-khách:
+
+- đặt frontmatter `customer_facing: true`, và
+- kết bằng mục **`## Truy vết demo`** trỏ tới một `spec/demo/<x>_demo_spec.rb` (hoặc `DEFERRED #<issue>` nếu hoãn có gate).
+
+Guardrail `check-demo-deliverable.sh` (job `doc-governance`) ép luật này ở **mức spec** — sớm hơn guardrail bắt-buộc-tồn-tại ở PR-time (ADR-040). Ngoài ra, PR đụng path khách-thấy-được (`app/views/**`, `app/javascript/controllers/**`) mà quên nhãn + thiếu demo sẽ nhận **cảnh báo advisory** (không chặn) từ `check-demo-spec.sh` (ADR-052 Lớp C). Ba lớp này cùng khép đường "tính năng khách-thấy-được tới PR mà thiếu demo".
+
+Cách soạn (vận hành AI-assisted, ADR-029 — viết trung lập công cụ; ánh xạ Claude Code ở mục 8):
 
 1. **Lấy khung:** chạy `rails g demo:spec <feature>` → đẻ `spec/demo/<feature>_demo_spec.rb` rỗng nhưng chạy được (boilerplate DSL `DemoRecorder`, `include_context "demo seeded world"`, caption TODO, placeholder `demo_nv: %w[NV-TODO]`). Generator **không** đọc acceptance criteria — không sinh mù (ADR-051).
 2. **Soạn nháp:** trợ lý AI điền hành trình + **caption tiếng Việt** suy từ acceptance criteria (`NV-...` trong `docs/V2_XAC_NHAN_NGHIEP_VU.md`) + UI thật; thay `NV-TODO` bằng anchor thật để giữ truy vết xuôi.
