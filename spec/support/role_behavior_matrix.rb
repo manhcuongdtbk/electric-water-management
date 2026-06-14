@@ -57,6 +57,24 @@ module RoleBehaviorMatrix
       commander_readonly:   { na: "Trang chỉ xem — không có input nghiệp vụ để disable." },
       zone_manager_variant: { na: "UA-ZM xem lịch sử như UA — không có biến thể riêng." }
     },
+    "electricity_supply" => {
+      data_scoping:         { applies: { scenario: :electricity_supply_data } },
+      zone_unit_columns:    { na: "Cột Khu vực hiện cho mọi vai trò có quyền (UA-ZM/CMD-ZM), không gated theo SA." },
+      commander_readonly:   { applies: { scenario: :electricity_supply } },
+      zone_manager_variant: { na: "Khác biệt UA-ZM vs UA là thuần access (UA bị redirect) — đã ép ở #359." }
+    },
+    "pump_entries" => {
+      data_scoping:         { applies: { scenario: :pump_entries_data } },
+      zone_unit_columns:    { applies: { scenario: :pump_entries_data } },
+      commander_readonly:   { applies: { scenario: :pump_entries_commander } },
+      zone_manager_variant: { na: "UA-ZM nhập liệu như UA — không có biến thể riêng." }
+    },
+    "pump_allocations" => {
+      data_scoping:         { applies: { scenario: :pump_allocations_data } },
+      zone_unit_columns:    { na: "Cột Khu vực hiện cho mọi vai trò có quyền (UA-ZM/CMD-ZM), không gated theo SA." },
+      commander_readonly:   { na: "CMD-ZM xem danh sách read-only (nút Sửa/Xóa ẩn), không có input nội dòng; form không truy cập được." },
+      zone_manager_variant: { na: "Khác biệt UA-ZM vs UA là thuần access (UA bị redirect) — đã ép ở #359." }
+    },
     "unit_config" => {
       data_scoping:         { na: "SA unit_config shows one unit at a time (dropdown pick); no single request renders all units' CP names simultaneously, so the SA-sees-all precondition in the shared example cannot be satisfied. Per-unit scoping is already covered in unit_config_spec.rb." },
       zone_unit_columns:    { na: "Trang cấu hình một đơn vị, không có bảng cross-zone/unit để ẩn cột." },

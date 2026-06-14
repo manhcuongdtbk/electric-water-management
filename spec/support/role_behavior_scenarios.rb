@@ -274,6 +274,137 @@ module RoleBehaviorScenarios
     )
   end
 
+  # --- electricity_supply (commander readonly) ------------------------------
+  # Accessible roles: sa/ua_zm/cmd_zm (ua/cmd redirected).
+  # Commander (CMD-ZM) sees all number inputs disabled; submit present but disabled.
+  # control_user = unit_admin of the zone-manager unit (UA-ZM).
+  def electricity_supply
+    sample = sample_world
+    commander_users = [FactoryBot.create(:user, :commander, unit: sample.unit_a)]
+    control_user    = FactoryBot.create(:user, :unit_admin,  unit: sample.unit_a)
+    Scenario.new(
+      path: Rails.application.routes.url_helpers.electricity_supply_path,
+      sa_user: FactoryBot.create(:user, :system_admin),
+      all_texts: [], checks: [], columns: [], column_users: [],
+      commander: {
+        commander_users: commander_users,
+        control_user:    control_user,
+        input_css:       "input[type='number']",
+        submit_css:      "form[method='post'] input[name='commit']",
+        submit_optional: false
+      }
+    )
+  end
+
+  # --- electricity_supply_data (data scoping) --------------------------------
+  # SA sees main meters from both zones; UA-ZM/CMD-ZM (zone-manager of zone one)
+  # see only zone one's main meter. plain UA/CMD are redirected — not included.
+  def electricity_supply_data
+    sample1 = sample_world
+    setup_zone_two_full_sample_proxy(period: sample1.period)
+    sa_user  = FactoryBot.create(:user, :system_admin)
+    ua_zm    = FactoryBot.create(:user, :unit_admin, unit: sample1.unit_a)
+    cmd_zm   = FactoryBot.create(:user, :commander,  unit: sample1.unit_a)
+    text_a = sample1.main_meter.name   # "CT-Tổng-KV1"
+    text_b = "CT-Tổng-KV2"             # zone two's main meter from setup
+    Scenario.new(
+      path: Rails.application.routes.url_helpers.electricity_supply_path,
+      sa_user: sa_user,
+      all_texts: [text_a, text_b],
+      checks: [
+        { user: ua_zm,  sees: text_a, hides: [text_b] },
+        { user: cmd_zm, sees: text_a, hides: [text_b] }
+      ],
+      columns: [], column_users: []
+    )
+  end
+
+  # --- pump_entries_data (data scoping) -------------------------------------
+  # Water-pump CPs are zone-level. Zone one has "Trạm bơm 1" (sample_world);
+  # zone two has "Trạm bơm 2" (setup_zone_two_full_sample).
+  # SA sees both; UA-ZM/CMD-ZM (zone-manager of zone one) see only zone one's.
+  # Plain UA/CMD have no water_pump CPs (no managed zone) → empty table → excluded.
+  def pump_entries_data
+    sample1 = sample_world
+    setup_zone_two_full_sample_proxy(period: sample1.period)
+    sa_user  = FactoryBot.create(:user, :system_admin)
+    ua_zm    = FactoryBot.create(:user, :unit_admin, unit: sample1.unit_a)
+    cmd_zm   = FactoryBot.create(:user, :commander,  unit: sample1.unit_a)
+    text_a = "Trạm bơm 1"
+    text_b = "Trạm bơm 2"
+    Scenario.new(
+      path: Rails.application.routes.url_helpers.pump_entries_path,
+      sa_user: sa_user,
+      all_texts: [text_a, text_b],
+      checks: [
+        { user: ua_zm,  sees: text_a, hides: [text_b] },
+        { user: cmd_zm, sees: text_a, hides: [text_b] }
+      ],
+      columns: ["Khu vực"],
+      column_users: [ua_zm, cmd_zm]
+    )
+  end
+
+  # --- pump_entries (commander readonly) ------------------------------------
+  # Mirrors meter_entries: data-entry page with number+text inputs in a table.
+  # control_user = UA-ZM (zone manager's unit_admin).
+  # commander_users = [CMD-ZM, CMD] — both accessible, both should have inputs
+  # disabled (CMD-ZM sees zone-one pumps; CMD sees zone-two pumps if built,
+  # but we only need one commander to prove the pattern). Use CMD-ZM only since
+  # CMD would see an empty table (no pumps) → would fail the "inputs not empty" check.
+  def pump_entries_commander
+    sample = sample_world
+    commander_users = [FactoryBot.create(:user, :commander, unit: sample.unit_a)]
+    control_user    = FactoryBot.create(:user, :unit_admin,  unit: sample.unit_a)
+    Scenario.new(
+      path: Rails.application.routes.url_helpers.pump_entries_path,
+      sa_user: FactoryBot.create(:user, :system_admin),
+      all_texts: [], checks: [], columns: [], column_users: [],
+      commander: {
+        commander_users: commander_users,
+        control_user:    control_user,
+        input_css:       "table input[type='number'], table input[type='text']",
+        submit_css:      "form[method='post'] input[name='commit']",
+        submit_optional: false
+      }
+    )
+  end
+
+  # --- pump_allocations_data (data scoping) ---------------------------------
+  # Zone-based scoping. Zone one's allocations have unit_a/unit_b/chi_huy_khu_vuc
+  # as targets; zone two has unit_c/unit_d/chi_huy_khu_vuc_2.
+  # The view renders `alloc.unit&.name || alloc.contact_point&.name`.
+  # We pick unit_a.name ("Đơn vị A") as zone-one identifier and
+  # unit_c.name ("Đơn vị C") as zone-two identifier.
+  # SA sees both; UA-ZM/CMD-ZM of zone-one see only zone-one allocations.
+  def pump_allocations_data
+    sample1 = sample_world
+    setup_zone_two_full_sample_proxy(period: sample1.period)
+    sa_user  = FactoryBot.create(:user, :system_admin)
+    ua_zm    = FactoryBot.create(:user, :unit_admin, unit: sample1.unit_a)
+    cmd_zm   = FactoryBot.create(:user, :commander,  unit: sample1.unit_a)
+    text_a = sample1.unit_a.name   # "Đơn vị A"
+    text_b = "Đơn vị C"            # zone two's manager unit
+    Scenario.new(
+      path: Rails.application.routes.url_helpers.pump_allocations_path,
+      sa_user: sa_user,
+      all_texts: [text_a, text_b],
+      checks: [
+        { user: ua_zm,  sees: text_a, hides: [text_b] },
+        { user: cmd_zm, sees: text_a, hides: [text_b] }
+      ],
+      columns: [], column_users: []
+    )
+  end
+
+  # Helper: call setup_zone_two_full_sample via the same proxy mechanism as sample_world.
+  def setup_zone_two_full_sample_proxy(period:)
+    proxy = Object.new
+    proxy.extend(FactoryBot::Syntax::Methods)
+    proxy.extend(SampleData)
+    proxy.setup_zone_two_full_sample(period: period)
+  end
+
   # --- history --------------------------------------------------------------
   # Range mode renders period-level aggregate rows (no CP names); compare mode
   # requires ≥2 periods and the view blocks with a "need at least 2" notice when
