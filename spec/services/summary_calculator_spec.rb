@@ -110,6 +110,11 @@ RSpec.describe SummaryCalculator do
         expect(calc.surplus).to eq_display("5.72")
         expect(calc.deficit).to eq(0)
       end
+
+      it "thành tiền thừa = thừa × đơn giá (nhân, không phải chia)" do
+        unit_price = BigDecimal(sample.period.unit_price.to_s)
+        expect(calc.surplus_amount).to eq(calc.surplus * unit_price)
+      end
     end
 
     describe "Kho vật tư (Đơn vị A) — không tổn hao" do
