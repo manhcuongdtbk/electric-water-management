@@ -85,3 +85,23 @@ của headless Chrome trên Docker-lồng-trên-Mac**, không phải bug logic.
 - Shell trong CI là **zsh**: `for x in $VAR` KHÔNG tự tách từ — dùng `${=VAR}`.
 - `parallel_test` parse args dễ bẫy (file vs test-options): ưu tiên **đường dẫn
   file tường minh** thay vì `--tag`/`--`/`-o`.
+
+## 8. Bắt đầu tiếp #383 từ đâu (runbook)
+
+1. `git checkout claude/dazzling-rubin-334f1e` — nhánh #383 (KHÔNG merge vào
+   develop, chỉ research).
+2. Bật runner: `tools/self-hosted-runner/start.sh` (cần Docker Desktop chạy +
+   `gh` đã đăng nhập bằng tài khoản **có quyền admin repo** để lấy token đăng ký).
+   Đợi log `Listening for Jobs` (`docker logs -f ewm-gh-runner`).
+3. Chọn một hướng ở mục 6, sửa code tương ứng (`spec/support/system_test_config.rb`,
+   `.github/workflows/ci.yml`, `spec/spec_helper.rb`).
+4. Commit + push lên nhánh #383 → runner tự nhận job → CI chạy. (Đang behind
+   develop thì merge develop trước khi push; **chạy `commit` và `push` ở 2 lệnh
+   riêng** vì hook chặn-nhánh-cũ chặn cả lệnh nếu gộp.)
+5. Theo dõi: `gh pr checks 383 --watch` (nên chạy nền). Lưu ý: log job
+   **in-progress KHÔNG tải được** (`gh api …/jobs/<id>/logs` → 404) — đợi job xong
+   mới đọc full; giữa chừng soi `docker exec ewm-gh-runner ps`/`log/test.log`.
+6. Lặp tới khi system specs xanh ổn định, hoặc chốt hướng 3 (system specs để
+   GitHub-hosted, self-hosted chỉ chạy non-system).
+
+Xong thì tắt runner: `tools/self-hosted-runner/stop.sh`.

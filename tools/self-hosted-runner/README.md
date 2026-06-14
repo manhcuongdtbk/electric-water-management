@@ -1,8 +1,10 @@
 # Self-hosted GitHub Actions runner cho `electric-water-management`
 
-> Tài liệu vận hành + giải thích cơ chế. Đây là một **giải pháp tạm thời** để CI
-> không tiêu phút GitHub Actions trả phí (quota tài khoản cá nhân reset đầu mỗi
-> tháng). File này nằm **ngoài repo** nên không thuộc doc-governance của dự án.
+> Tài liệu vận hành + giải thích cơ chế cho self-hosted CI runner. **Giải pháp
+> tạm thời** để CI không tiêu phút GitHub-hosted khi quota đã hết (quota reset
+> đầu mỗi tháng). Bản ghi *vì sao / quyết định / ngõ cụt* xem `DECISIONS.md` cùng
+> thư mục. (Thư mục `tools/` nằm ngoài `docs/` nên không bị doc-governance ép
+> version/changelog — nhưng vẫn là một phần của repo, ai cũng dùng được.)
 
 ---
 
@@ -206,8 +208,8 @@ mà repo vẫn private. Đánh đổi: chậm hơn GitHub-hosted (xem mục 4).
 1. `tools/self-hosted-runner/stop.sh`
 2. Trong repo, đổi lại `.github/workflows/ci.yml`: mọi `runs-on: self-hosted`
    → `runs-on: ubuntu-latest` (header của file đã ghi chú điều này).
-3. (Tuỳ chọn) dọn volume Docker:
-   `docker volume rm gh-runner-ewm_runner-docker gh-runner-ewm_runner-work`
+3. (Tuỳ chọn) dọn cả volume Docker: chạy `docker compose down -v` trong
+   `tools/self-hosted-runner/` (tự xoá đúng volume của project, khỏi đoán tên).
 
 Hoặc cứ giữ runner và dùng tiếp vĩnh viễn — nó vẫn free.
 
