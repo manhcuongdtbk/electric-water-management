@@ -33,6 +33,15 @@ check "bare reference no keyword"  ""      "$(extract_issue_numbers 'see #7 for 
 check "closed (past tense)"        "10"    "$(extract_issue_numbers 'closed #10')"
 check "fixed (past tense)"         "11"    "$(extract_issue_numbers 'fixed #11')"
 check "resolves (present plural)"  "12"    "$(extract_issue_numbers 'resolves #12')"
+# Word-boundary: a keyword glued to a longer word must NOT match (#389).
+# "auto-closed #386" (hyphen-prefixed) was the real-world false-match that turned
+# the post-merge job red; disclosed/preclosed/unfixed are the alpha-prefixed kin.
+check "auto-closed (hyphen prefix)" ""     "$(extract_issue_numbers 'auto-closed #386')"
+check "disclosed (alpha prefix)"    ""     "$(extract_issue_numbers 'disclosed #5')"
+check "preclosed (alpha prefix)"    ""     "$(extract_issue_numbers 'preclosed #6')"
+check "unfixed (alpha prefix)"      ""     "$(extract_issue_numbers 'unfixed #7')"
+# But a real keyword mid-line (whitespace-prefixed) still matches.
+check "keyword mid-line w/ space"   "9"    "$(extract_issue_numbers 'this closes #9')"
 
 # --- comment_marker ---
 check "marker format" "<!-- auto-close-traceability:pr-123 -->" "$(comment_marker 123)"

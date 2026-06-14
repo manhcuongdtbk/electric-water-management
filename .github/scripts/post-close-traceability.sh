@@ -13,9 +13,13 @@ comment_marker() { printf '<!-- auto-close-traceability:pr-%s -->' "$1"; }
 
 # Body PR → số issue có closing-keyword GitHub, một dòng/số, theo thứ tự xuất
 # hiện, đã khử trùng. Chỉ khớp keyword + #<số> (Refs/#trần không tính).
+# Word-boundary trái = start-of-line HOẶC whitespace: keyword phải đứng riêng,
+# nên "auto-closed"/"disclosed"/"unfixed" KHÔNG khớp (#389). Dùng whitespace
+# (không phải [^[:alpha:]]) vì gạch nối trong "auto-closed" cũng là non-alpha →
+# vẫn dính; và whitespace không phải chữ số nên không bị grep [0-9]+ bắt nhầm.
 extract_issue_numbers() {
   printf '%s\n' "$1" \
-    | grep -ioE '(close[sd]?|fix(es|ed)?|resolve[sd]?)[[:space:]]+#[0-9]+' \
+    | grep -ioE '(^|[[:space:]])(close[sd]?|fix(es|ed)?|resolve[sd]?)[[:space:]]+#[0-9]+' \
     | grep -oE '[0-9]+' \
     | awk '!seen[$0]++' || true
 }
