@@ -1,6 +1,6 @@
 ---
 title: Chốt demo spec ở Definition-of-Done cho tính năng hướng-khách
-version: 0.2.0
+version: 0.2.1
 date: 2026-06-14
 ---
 
@@ -149,7 +149,7 @@ Không đụng code ứng dụng end-user → không có chiều test (`CHIEU-..
 
 ## Truy vết
 
-- Issue: [#357](https://github.com/manhcuongdtbk/electric-water-management/issues/357) (intake change-request, milestone 1.3.0, không `priority-high`). Phát sinh từ [#355](https://github.com/manhcuongdtbk/electric-water-management/issues/355). Trục chất lượng (ADR-059): [#379](https://github.com/manhcuongdtbk/electric-water-management/issues/379) (change-request, milestone 1.2.0, không `priority-high`), phát sinh từ retro [#363](https://github.com/manhcuongdtbk/electric-water-management/issues/363).
+- Issue: [#357](https://github.com/manhcuongdtbk/electric-water-management/issues/357) (intake change-request, milestone 1.2.0, không `priority-high`). Phát sinh từ [#355](https://github.com/manhcuongdtbk/electric-water-management/issues/355). Trục chất lượng (ADR-059): [#379](https://github.com/manhcuongdtbk/electric-water-management/issues/379) (change-request, milestone 1.2.0, không `priority-high`), phát sinh từ retro [#363](https://github.com/manhcuongdtbk/electric-water-management/issues/363).
 - Liên quan: [#343](https://github.com/manhcuongdtbk/electric-water-management/issues/343) (engine), [#351](https://github.com/manhcuongdtbk/electric-water-management/issues/351) (bundle), [#352](https://github.com/manhcuongdtbk/electric-water-management/issues/352) (scaffold); demo TN1 refine [#375](https://github.com/manhcuongdtbk/electric-water-management/pull/375)/[#382](https://github.com/manhcuongdtbk/electric-water-management/pull/382) (recorder primitives + golden example); mở rộng ADR-040.
 - Không đụng nghiệp vụ end-user (không anchor `NV-...` mới): đây là tooling/quy trình dev.
 - Không có chiều test (`CHIEU-...`): spec quy trình, không phải tính năng nghiệp vụ có ma trận chiều. Test guardrail: `.github/scripts/check-demo-deliverable.test.sh` (đối chiếu pass/fail script). Trục chất lượng (ADR-059) chủ ý không có guardrail bash (không lint được); anti-drift khung demo ở `spec/generators/demo/spec_generator_spec.rb`.
@@ -160,3 +160,4 @@ Không đụng code ứng dụng end-user → không có chiều test (`CHIEU-..
 |---|---|---|
 | 0.1.0 | 2026-06-14 | Bản đầu (#357): chốt demo spec ở DoD bằng ba lớp (DoD template/quy trình, guardrail mức spec, suy luận path advisory). Thêm ADR-052. |
 | 0.2.0 | 2026-06-14 | Thêm trục chất lượng (#379): mục "Chuẩn demo tốt" ba tầng (toolkit `DemoRecorder` + quy ước neo, TN1 golden example + scaffold sinh đúng-hình, checklist 6 tiêu chí + tự-soi-như-khách + gate người). Thêm ADR-059; chủ ý không thêm guardrail bash (chất lượng không lint được). |
+| 0.2.1 | 2026-06-14 | Sửa truy vết: milestone của #357 là 1.2.0 (không phải 1.3.0) — khớp milestone thực tế của issue. |
