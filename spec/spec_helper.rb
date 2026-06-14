@@ -27,7 +27,7 @@ if ENV["COVERAGE"]
     # process checks at its own at_exit before the others' results have merged, so a
     # per-process gate would fail falsely on its partial coverage — exactly the
     # "subset under-reports" caveat above. The single-process CI still gates it.
-    minimum_coverage line: 96, branch: 80 unless ENV["TEST_ENV_NUMBER"]
+    minimum_coverage line: 96, branch: 81 unless ENV["TEST_ENV_NUMBER"]
   end
 end
 
