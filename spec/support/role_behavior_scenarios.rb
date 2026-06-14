@@ -155,7 +155,10 @@ module RoleBehaviorScenarios
                  column_users: accessible_non_sa_roles("contact_points").map { |r| make_user(r, w) })
   end
 
-  # --- contact_points (new-form zone-manager variant) -----------------------
+  # --- contact_points (index "Loại" filter zone-manager variant) ------------
+  # On the index, the type filter (`select#type`) only offers the zone-level
+  # types (water_pump / non_establishment) to zone managers — see @visible_types
+  # in ContactPointsController. That is the ZM behavior marker tested here.
   def contact_points
     w = base_world
     Scenario.new(

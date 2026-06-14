@@ -2,7 +2,8 @@
 # Sibling to role_access_matrix_spec.rb (#359, access). For every page in
 # RoleBehaviorMatrix::BEHAVIORS and every dimension that `applies`, build the
 # page's scenario and run the matching shared example (real assertions live
-# there). The completeness block is added in a later task.
+# there). The completeness block below forces every access-matrix page to
+# declare all 4 dimensions (applies + scenario, or na + reason).
 require "rails_helper"
 
 RSpec.describe "Role behavior matrix (#373)", type: :request do
