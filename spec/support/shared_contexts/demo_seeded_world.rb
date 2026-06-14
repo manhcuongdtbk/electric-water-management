@@ -7,9 +7,9 @@
 # re-runs within the same rspec invocation stay predictable. The canonical setup
 # for a recording session is still a full `db:reset && demo:seed`.
 #
-# Used by spec/demo/smoke_demo_spec.rb and by every spec produced by the
-# `rails g demo:spec` scaffold (lib/generators/demo/spec). See ADR-050/051 in
-# docs/superpowers/specs/2026-06-14-ai-soan-demo-scaffold-design.md.
+# Used by every demo spec under spec/demo (the customer-facing feature demos and
+# anything produced by the `rails g demo:spec` scaffold, lib/generators/demo/spec).
+# See ADR-050/051 in docs/superpowers/specs/2026-06-14-ai-soan-demo-scaffold-design.md.
 RSpec.shared_context "demo seeded world" do
   self.use_transactional_tests = false
 
