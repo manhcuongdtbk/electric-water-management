@@ -230,12 +230,16 @@ jobs:
         if: ${{ !cancelled() }}
         env:
           COVERAGE_PHASE: nonsystem
-        # Default grouping self-balances by the runtime log (persisted in $HOME so it
-        # survives actions/checkout across runs); falls back to filesize when absent.
+        # Pass the explicit non-system spec files (everything except spec/system and
+        # the demo specs) rather than an rspec --tag: parallel_test treats anything
+        # after `--` as file paths and an `-o` value starting with `--` slips past
+        # OptionParser, both of which made it File.stat('--tag'). An explicit file
+        # list is unambiguous. Default grouping still self-balances via the runtime
+        # log (persisted in $HOME so it survives actions/checkout across runs).
         run: |
           bundle exec parallel_test --type rspec \
             --runtime-log "$HOME/parallel_runtime_rspec.log" \
-            -- --tag ~type:system
+            $(find spec -name '*_spec.rb' -not -path 'spec/system/*' -not -path 'spec/demo/*')
       - name: rspec — system specs (headless Chrome, low concurrency)
         if: ${{ !cancelled() }}
         env:
