@@ -57,4 +57,27 @@ module RoleBehaviorScenarios
                  columns: ["Khu vực", "Đơn vị"],
                  column_users: accessible_non_sa_roles("blocks").map { |r| make_user(r, w) })
   end
+
+  # --- meter_entries --------------------------------------------------------
+  def meter_entries
+    # SampleData is included into RSpec example groups (config.include SampleData),
+    # not available at plain module-function level. Bind it via a lightweight helper
+    # object that has both FactoryBot::Syntax::Methods and SampleData.
+    helper = Object.new
+    helper.extend(FactoryBot::Syntax::Methods)
+    helper.extend(SampleData)
+    sample = helper.setup_zone_one_full_sample
+    path = Rails.application.routes.url_helpers.meter_entries_path
+    commander_users = [FactoryBot.create(:user, :commander, unit: sample.unit_a),
+                       FactoryBot.create(:user, :commander, unit: sample.unit_b)]
+    control_user = FactoryBot.create(:user, :unit_admin, unit: sample.unit_a)
+    Scenario.new(
+      path: path, sa_user: FactoryBot.create(:user, :system_admin),
+      all_texts: [], checks: [], columns: [], column_users: [],
+      commander: { commander_users: commander_users, control_user: control_user,
+                   input_css: "table input[type='number'], table input[type='text']",
+                   submit_css: "form[method='post'] input[name='commit'][value='Lưu toàn bộ']",
+                   submit_optional: false }
+    )
+  end
 end

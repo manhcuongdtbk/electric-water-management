@@ -26,6 +26,12 @@ module RoleBehaviorMatrix
       zone_unit_columns:    { applies: { scenario: :blocks } },
       commander_readonly:   { na: "Commander chỉ :read — không vào được form new/edit; index không có input nội dòng; nút Sửa/Thêm bị ẩn." },
       zone_manager_variant: { na: "blocks không có hành vi riêng cho zone-manager — UA-ZM hành xử như UA." }
+    },
+    "meter_entries" => {
+      data_scoping:         { na: "pending — bù ở task backfill." },
+      zone_unit_columns:    { na: "pending — bù ở task backfill." },
+      commander_readonly:   { applies: { scenario: :meter_entries } },
+      zone_manager_variant: { na: "UA-ZM nhập liệu như UA — không có biến thể riêng." }
     }
   }.freeze
 
