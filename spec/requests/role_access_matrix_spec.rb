@@ -1,226 +1,91 @@
-# Chiều 2 — kiểm thử vai trò: mọi trang × 6 role.
-# File này cover "ai vào được trang nào" theo ma trận trong V2_CHIEU_TEST.md chiều 3.
-# Behavior cụ thể per role (data scoping, disabled inputs) test ở spec riêng per page.
+# Chiều 2-3 — ma trận truy cập: mọi trang × 6 vai trò (200 hay redirect).
+# "Ai vào được trang nào". Hành vi chi tiết per vai trò (data scoping, disabled
+# input, ẩn/hiện cột) test ở spec riêng per trang — và độ phủ hành vi đó theo dõi
+# ở #373; KHÔNG thuộc file này.
+#
+# Cả test access lẫn guardrail đủ-phủ (#359, ADR-056) sinh từ MỘT nguồn:
+# RoleAccessMatrix::PAGES (spec/support/role_access_matrix.rb). Thêm một trang mà
+# quên khai → block "completeness" đỏ; trang khai thiếu vai trò → cũng đỏ.
 require "rails_helper"
 
-RSpec.describe "Role access matrix (chiều 2)", type: :request do
+RSpec.describe "Role access matrix (chiều 2-3)", type: :request do
   let!(:zone) { create(:zone, name: "Khu vực test") }
   let!(:unit_manager) { create(:unit, zone: zone, name: "Đơn vị quản lý") }
   let!(:unit_other) { create(:unit, zone: zone, name: "Đơn vị khác") }
   let!(:period) { create(:period, closed: false) }
 
-  let(:sa) { create(:user, :system_admin) }
-  let(:ua_zm) { create(:user, :unit_admin, unit: unit_manager) }
-  let(:ua) { create(:user, :unit_admin, unit: unit_other) }
-  let(:cmd_zm) { create(:user, :commander, unit: unit_manager) }
-  let(:cmd) { create(:user, :commander, unit: unit_other) }
-  let(:tech) { create(:user, :technician) }
+  # unit_manager là đơn vị quản lý khu vực (UA-ZM/CMD-ZM); unit_other thì không.
+  # Set tường minh thay vì dựa vào thứ tự auto-assign (AGENTS — quy ước test).
+  before { zone.update!(manager_unit_id: unit_manager.id) }
 
-  # zone auto-assigns manager to unit_manager (first unit in zone).
-  # unit_other is NOT zone-manager.
+  def build_user(role)
+    case role
+    when :sa     then create(:user, :system_admin)
+    when :ua_zm  then create(:user, :unit_admin, unit: unit_manager)
+    when :ua     then create(:user, :unit_admin, unit: unit_other)
+    when :cmd_zm then create(:user, :commander, unit: unit_manager)
+    when :cmd    then create(:user, :commander, unit: unit_other)
+    when :tech   then create(:user, :technician)
+    else raise ArgumentError, "Unknown role #{role.inspect}"
+    end
+  end
 
-  # Helper: test rằng role truy cập trang trả về 200 (hoặc redirect nếu expected)
-  def expect_access(user, path, expected_status)
-    sign_in user
-    get path
-    case expected_status
+  def assert_access(role, path_helper, expected)
+    label = RoleAccessMatrix::ROLE_LABELS[role]
+    sign_in build_user(role)
+    get public_send(path_helper)
+    case expected
     when :ok
       expect(response).to have_http_status(:ok),
-        "Expected 200 for #{user.role}#{' (zone-manager)' if Zone.kept.exists?(manager_unit_id: user.unit_id)} on #{path}, got #{response.status}"
+        "Expected 200 for #{label} on #{path_helper}, got #{response.status}"
     when :redirect
       expect(response).to have_http_status(:redirect),
-        "Expected redirect for #{user.role} on #{path}, got #{response.status}"
-    end
-    reset!  # clear session between roles
-  end
-
-  describe "Xem kết quả" do
-    describe "dashboard" do
-      let(:path) { dashboard_path }
-      it("SA → 200")      { expect_access(sa, path, :ok) }
-      it("UA-ZM → 200")   { expect_access(ua_zm, path, :ok) }
-      it("UA → 200")      { expect_access(ua, path, :ok) }
-      it("CMD-ZM → 200")  { expect_access(cmd_zm, path, :ok) }
-      it("CMD → 200")     { expect_access(cmd, path, :ok) }
-      it("TECH → redirect") { expect_access(tech, path, :redirect) }
-    end
-
-    describe "billing" do
-      let(:path) { billing_path }
-      it("SA → 200")      { expect_access(sa, path, :ok) }
-      it("UA-ZM → 200")   { expect_access(ua_zm, path, :ok) }
-      it("UA → 200")      { expect_access(ua, path, :ok) }
-      it("CMD-ZM → 200")  { expect_access(cmd_zm, path, :ok) }
-      it("CMD → 200")     { expect_access(cmd, path, :ok) }
-      it("TECH → redirect") { expect_access(tech, path, :redirect) }
-    end
-
-    describe "history" do
-      let(:path) { history_path }
-      it("SA → 200")      { expect_access(sa, path, :ok) }
-      it("UA-ZM → 200")   { expect_access(ua_zm, path, :ok) }
-      it("UA → 200")      { expect_access(ua, path, :ok) }
-      it("CMD-ZM → 200")  { expect_access(cmd_zm, path, :ok) }
-      it("CMD → 200")     { expect_access(cmd, path, :ok) }
-      it("TECH → redirect") { expect_access(tech, path, :redirect) }
+        "Expected redirect for #{label} on #{path_helper}, got #{response.status}"
     end
   end
 
-  describe "Nhập liệu" do
-    describe "electricity_supply" do
-      let(:path) { electricity_supply_path }
-      it("SA → 200")      { expect_access(sa, path, :ok) }
-      it("UA-ZM → 200")   { expect_access(ua_zm, path, :ok) }
-      it("UA → redirect")  { expect_access(ua, path, :redirect) }
-      it("CMD-ZM → 200")  { expect_access(cmd_zm, path, :ok) }
-      it("CMD → redirect") { expect_access(cmd, path, :redirect) }
-      it("TECH → redirect") { expect_access(tech, path, :redirect) }
-    end
-
-    describe "meter_entries" do
-      let(:path) { meter_entries_path }
-      it("SA → 200")      { expect_access(sa, path, :ok) }
-      it("UA-ZM → 200")   { expect_access(ua_zm, path, :ok) }
-      it("UA → 200")      { expect_access(ua, path, :ok) }
-      it("CMD-ZM → 200")  { expect_access(cmd_zm, path, :ok) }
-      it("CMD → 200")     { expect_access(cmd, path, :ok) }
-      it("TECH → redirect") { expect_access(tech, path, :redirect) }
-    end
-
-    describe "pump_entries" do
-      let(:path) { pump_entries_path }
-      it("SA → 200")      { expect_access(sa, path, :ok) }
-      it("UA-ZM → 200")   { expect_access(ua_zm, path, :ok) }
-      it("UA → 200")      { expect_access(ua, path, :ok) }
-      it("CMD-ZM → 200")  { expect_access(cmd_zm, path, :ok) }
-      it("CMD → 200")     { expect_access(cmd, path, :ok) }
-      it("TECH → redirect") { expect_access(tech, path, :redirect) }
+  # Sinh test: gom theo category cho dễ đọc output, mỗi trang 6 vai trò.
+  RoleAccessMatrix::PAGES.group_by { |_slug, config| config[:category] }.each do |category, pages|
+    describe category do
+      pages.each do |slug, config|
+        describe slug do
+          RoleAccessMatrix::ROLES.each do |role|
+            expected = config[:expect].fetch(role)
+            it "#{RoleAccessMatrix::ROLE_LABELS[role]} → #{expected}" do
+              assert_access(role, config[:path], expected)
+            end
+          end
+        end
+      end
     end
   end
 
-  describe "Khai báo" do
-    describe "contact_points" do
-      let(:path) { contact_points_path }
-      it("SA → 200")      { expect_access(sa, path, :ok) }
-      it("UA-ZM → 200")   { expect_access(ua_zm, path, :ok) }
-      it("UA → 200")      { expect_access(ua, path, :ok) }
-      it("CMD-ZM → 200")  { expect_access(cmd_zm, path, :ok) }
-      it("CMD → 200")     { expect_access(cmd, path, :ok) }
-      it("TECH → redirect") { expect_access(tech, path, :redirect) }
+  # --- Guardrail #359: ép đủ TRANG và đủ 6 VAI TRÒ -------------------------
+  describe "completeness (guardrail #359)" do
+    it "ma trận phủ mọi controller-trang (không thiếu, không stale)" do
+      Rails.application.eager_load!
+      # App page controllers = ApplicationController descendants, minus the Devise
+      # auth infrastructure (Devise.parent_controller makes the whole Devise tree —
+      # incl. Users::SessionsController — descend from ApplicationController). Those
+      # are framework/auth controllers, not role-differentiated pages, so filter
+      # them structurally rather than listing each Devise subclass.
+      actual = ApplicationController.descendants
+                                    .reject { |klass| klass <= DeviseController }
+                                    .map(&:name)
+      gaps = RoleAccessMatrix.coverage_gaps(actual)
+
+      expect(gaps[:missing]).to be_empty,
+        "Controller-trang chưa có trong ma trận: #{gaps[:missing].join(', ')}. " \
+        "Thêm vào RoleAccessMatrix::PAGES (test đủ 6 vai trò) — hoặc nếu không phân vai trò, " \
+        "thêm vào RoleAccessMatrix::EXCLUDED_CONTROLLERS kèm lý do."
+      expect(gaps[:stale]).to be_empty,
+        "Entry ma trận không còn controller tương ứng (đổi tên/xóa?): #{gaps[:stale].join(', ')}."
     end
 
-    describe "blocks" do
-      let(:path) { blocks_path }
-      it("SA → 200")      { expect_access(sa, path, :ok) }
-      it("UA-ZM → 200")   { expect_access(ua_zm, path, :ok) }
-      it("UA → 200")      { expect_access(ua, path, :ok) }
-      it("CMD-ZM → 200")  { expect_access(cmd_zm, path, :ok) }
-      it("CMD → 200")     { expect_access(cmd, path, :ok) }
-      it("TECH → redirect") { expect_access(tech, path, :redirect) }
-    end
-
-    describe "groups" do
-      let(:path) { groups_path }
-      it("SA → 200")      { expect_access(sa, path, :ok) }
-      it("UA-ZM → 200")   { expect_access(ua_zm, path, :ok) }
-      it("UA → 200")      { expect_access(ua, path, :ok) }
-      it("CMD-ZM → 200")  { expect_access(cmd_zm, path, :ok) }
-      it("CMD → 200")     { expect_access(cmd, path, :ok) }
-      it("TECH → redirect") { expect_access(tech, path, :redirect) }
-    end
-
-    describe "unit_config" do
-      let(:path) { unit_config_path }
-      it("SA → 200")      { expect_access(sa, path, :ok) }
-      it("UA-ZM → 200")   { expect_access(ua_zm, path, :ok) }
-      it("UA → 200")      { expect_access(ua, path, :ok) }
-      it("CMD-ZM → 200")  { expect_access(cmd_zm, path, :ok) }
-      it("CMD → 200")     { expect_access(cmd, path, :ok) }
-      it("TECH → redirect") { expect_access(tech, path, :redirect) }
-    end
-  end
-
-  describe "Thiết lập" do
-    describe "zones" do
-      let(:path) { zones_path }
-      it("SA → 200")      { expect_access(sa, path, :ok) }
-      it("UA-ZM → redirect (chỉ system_admin)") { expect_access(ua_zm, path, :redirect) }
-      it("UA → redirect (chỉ system_admin)") { expect_access(ua, path, :redirect) }
-      it("CMD-ZM → redirect (chỉ system_admin)") { expect_access(cmd_zm, path, :redirect) }
-      it("CMD → redirect (chỉ system_admin)") { expect_access(cmd, path, :redirect) }
-      it("TECH → redirect") { expect_access(tech, path, :redirect) }
-    end
-
-    describe "units" do
-      let(:path) { units_path }
-      it("SA → 200")      { expect_access(sa, path, :ok) }
-      it("UA-ZM → redirect") { expect_access(ua_zm, path, :redirect) }
-      it("UA → redirect")     { expect_access(ua, path, :redirect) }
-      it("CMD-ZM → redirect") { expect_access(cmd_zm, path, :redirect) }
-      it("CMD → redirect")     { expect_access(cmd, path, :redirect) }
-      it("TECH → redirect") { expect_access(tech, path, :redirect) }
-    end
-
-    describe "pump_allocations" do
-      let(:path) { pump_allocations_path }
-      it("SA → 200")      { expect_access(sa, path, :ok) }
-      it("UA-ZM → 200")   { expect_access(ua_zm, path, :ok) }
-      it("UA → redirect (không quản lý khu vực)") { expect_access(ua, path, :redirect) }
-      it("CMD-ZM → 200")  { expect_access(cmd_zm, path, :ok) }
-      it("CMD → redirect (không quản lý khu vực)") { expect_access(cmd, path, :redirect) }
-      it("TECH → redirect") { expect_access(tech, path, :redirect) }
-    end
-
-    describe "pricing" do
-      let(:path) { pricing_path }
-      it("SA → 200")      { expect_access(sa, path, :ok) }
-      it("UA-ZM → redirect") { expect_access(ua_zm, path, :redirect) }
-      it("UA → redirect")     { expect_access(ua, path, :redirect) }
-      it("CMD-ZM → redirect") { expect_access(cmd_zm, path, :redirect) }
-      it("CMD → redirect")     { expect_access(cmd, path, :redirect) }
-      it("TECH → redirect") { expect_access(tech, path, :redirect) }
-    end
-
-    describe "ranks" do
-      let(:path) { ranks_path }
-      it("SA → 200")      { expect_access(sa, path, :ok) }
-      it("UA-ZM → redirect") { expect_access(ua_zm, path, :redirect) }
-      it("UA → redirect")      { expect_access(ua, path, :redirect) }
-      it("CMD-ZM → redirect")  { expect_access(cmd_zm, path, :redirect) }
-      it("CMD → redirect")     { expect_access(cmd, path, :redirect) }
-      it("TECH → redirect") { expect_access(tech, path, :redirect) }
-    end
-  end
-
-  describe "Hệ thống" do
-    describe "users" do
-      let(:path) { users_path }
-      it("SA → 200")      { expect_access(sa, path, :ok) }
-      it("UA-ZM → redirect") { expect_access(ua_zm, path, :redirect) }
-      it("UA → redirect")  { expect_access(ua, path, :redirect) }
-      it("CMD-ZM → redirect") { expect_access(cmd_zm, path, :redirect) }
-      it("CMD → redirect") { expect_access(cmd, path, :redirect) }
-      it("TECH → 200")    { expect_access(tech, path, :ok) }
-    end
-
-    describe "audit_logs" do
-      let(:path) { audit_logs_path }
-      it("SA → 200")      { expect_access(sa, path, :ok) }
-      it("UA-ZM → redirect") { expect_access(ua_zm, path, :redirect) }
-      it("UA → redirect")  { expect_access(ua, path, :redirect) }
-      it("CMD-ZM → redirect") { expect_access(cmd_zm, path, :redirect) }
-      it("CMD → redirect") { expect_access(cmd, path, :redirect) }
-      it("TECH → 200")    { expect_access(tech, path, :ok) }
-    end
-
-    describe "backups" do
-      let(:path) { backups_path }
-      it("SA → redirect")  { expect_access(sa, path, :redirect) }
-      it("UA-ZM → redirect") { expect_access(ua_zm, path, :redirect) }
-      it("UA → redirect")  { expect_access(ua, path, :redirect) }
-      it("CMD-ZM → redirect") { expect_access(cmd_zm, path, :redirect) }
-      it("CMD → redirect") { expect_access(cmd, path, :redirect) }
-      it("TECH → 200")    { expect_access(tech, path, :ok) }
+    it "mỗi trang nêu kỳ vọng cho đủ 6 vai trò" do
+      gaps = RoleAccessMatrix.role_gaps
+      expect(gaps).to be_empty,
+        "Trang thiếu vai trò: #{gaps.map { |slug, roles| "#{slug} (#{roles.join(', ')})" }.join('; ')}."
     end
   end
 end
