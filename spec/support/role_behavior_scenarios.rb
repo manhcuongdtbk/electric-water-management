@@ -40,6 +40,60 @@ module RoleBehaviorScenarios
     end
   end
 
+  # SampleData lives in a module included into example groups; this module uses
+  # module_function, so build a tiny proxy that can call it (+ FactoryBot create).
+  def sample_world
+    proxy = Object.new
+    proxy.extend(FactoryBot::Syntax::Methods)
+    proxy.extend(SampleData)
+    proxy.setup_zone_one_full_sample
+  end
+
+  # Users for the 4 accessible non-SA roles mapped onto the sample's units.
+  def sample_role_users(sample)
+    { ua_zm:  FactoryBot.create(:user, :unit_admin, unit: sample.unit_a),
+      ua:     FactoryBot.create(:user, :unit_admin, unit: sample.unit_b),
+      cmd_zm: FactoryBot.create(:user, :commander,  unit: sample.unit_a),
+      cmd:    FactoryBot.create(:user, :commander,  unit: sample.unit_b) }
+  end
+
+  # Build data_scoping checks: unit_a-roles see own_a not own_b; unit_b-roles vice-versa.
+  def unit_scoped_checks(users, text_a, text_b)
+    [{ user: users[:ua_zm],  sees: text_a, hides: [text_b] },
+     { user: users[:ua],     sees: text_b, hides: [text_a] },
+     { user: users[:cmd_zm], sees: text_a, hides: [text_b] },
+     { user: users[:cmd],    sees: text_b, hides: [text_a] }]
+  end
+
+  # Contact-point names that render on the target page, for unit_a and unit_b.
+  # Picks the first kept CP (by id) that appears in the given scope for each unit.
+  def sample_cp_names_for_meter_entries(sample)
+    types = %w[residential public]
+    a = ContactPoint.kept
+                    .joins(:meters)
+                    .where(unit: sample.unit_a, contact_point_type: types)
+                    .order(:id).first&.name
+    b = ContactPoint.kept
+                    .joins(:meters)
+                    .where(unit: sample.unit_b, contact_point_type: types)
+                    .order(:id).first&.name
+    [a, b]
+  end
+
+  def sample_cp_names_for_billing(sample)
+    a = Calculation.where(period: sample.period)
+                   .joins(:contact_point)
+                   .where(contact_points: { unit: sample.unit_a,
+                                            contact_point_type: "residential" })
+                   .order("contact_points.id").first&.contact_point&.name
+    b = Calculation.where(period: sample.period)
+                   .joins(:contact_point)
+                   .where(contact_points: { unit: sample.unit_b,
+                                            contact_point_type: "residential" })
+                   .order("contact_points.id").first&.contact_point&.name
+    [a, b]
+  end
+
   # --- blocks (pilot) -------------------------------------------------------
   def blocks
     w = base_world
@@ -120,10 +174,7 @@ module RoleBehaviorScenarios
     # SampleData is included into RSpec example groups (config.include SampleData),
     # not available at plain module-function level. Bind it via a lightweight helper
     # object that has both FactoryBot::Syntax::Methods and SampleData.
-    helper = Object.new
-    helper.extend(FactoryBot::Syntax::Methods)
-    helper.extend(SampleData)
-    sample = helper.setup_zone_one_full_sample
+    sample = sample_world
     path = Rails.application.routes.url_helpers.meter_entries_path
     commander_users = [FactoryBot.create(:user, :commander, unit: sample.unit_a),
                        FactoryBot.create(:user, :commander, unit: sample.unit_b)]
@@ -136,5 +187,57 @@ module RoleBehaviorScenarios
                    submit_css: "form[method='post'] input[name='commit'][value='Lưu toàn bộ']",
                    submit_optional: false }
     )
+  end
+
+  # --- meter_entries_data (data scoping + zone/unit columns) ----------------
+  # Separate scenario from `meter_entries` (commander_readonly) because these
+  # dimensions need different Scenario fields (all_texts / checks / columns).
+  def meter_entries_data
+    sample = sample_world
+    users  = sample_role_users(sample)
+    text_a, text_b = sample_cp_names_for_meter_entries(sample)
+    Scenario.new(path: Rails.application.routes.url_helpers.meter_entries_path,
+                 sa_user: FactoryBot.create(:user, :system_admin),
+                 all_texts: [text_a, text_b],
+                 checks: unit_scoped_checks(users, text_a, text_b),
+                 columns: ["Khu vực", "Đơn vị"],
+                 column_users: users.values_at(:ua_zm, :ua, :cmd_zm, :cmd))
+  end
+
+  # --- billing --------------------------------------------------------------
+  def billing
+    sample = sample_world
+    CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
+    users = sample_role_users(sample)
+    text_a, text_b = sample_cp_names_for_billing(sample)
+    # zone_unit_columns: "Khu vực" is hidden for ALL non-SA (SA-only).
+    # "Đơn vị" IS shown to UA-ZM/CMD-ZM (zone-managers see the unit column because
+    # @unit is nil for them — resolve_current_user_zone_unit returns [zone, nil]).
+    # So column_users covers all 4 non-SA roles for "Khu vực" only; "Đơn vị"
+    # visibility for zone-managers is tracked under zone_manager_variant (na here).
+    Scenario.new(path: Rails.application.routes.url_helpers.billing_path,
+                 sa_user: FactoryBot.create(:user, :system_admin),
+                 all_texts: [text_a, text_b],
+                 checks: unit_scoped_checks(users, text_a, text_b),
+                 columns: ["Khu vực"],
+                 column_users: users.values_at(:ua_zm, :ua, :cmd_zm, :cmd))
+  end
+
+  # --- history --------------------------------------------------------------
+  # Range mode renders period-level aggregate rows (no CP names); compare mode
+  # requires ≥2 periods and the view blocks with a "need at least 2" notice when
+  # only one period exists. Neither mode renders distinguishable per-unit strings
+  # suitable for the data_scoping shared example. Declared na in the matrix.
+  # (Zone/unit columns: history ALWAYS shows both columns for every role — na too.)
+  def history
+    sample = sample_world
+    users  = sample_role_users(sample)
+    path   = Rails.application.routes.url_helpers.history_path(
+               mode: "range",
+               from_period_id: sample.period.id,
+               to_period_id:   sample.period.id)
+    Scenario.new(path: path, sa_user: FactoryBot.create(:user, :system_admin),
+                 all_texts: [], checks: [],
+                 columns: [], column_users: [])
   end
 end

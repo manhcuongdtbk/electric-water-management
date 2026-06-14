@@ -40,10 +40,22 @@ module RoleBehaviorMatrix
       zone_manager_variant: { applies: { scenario: :contact_points } }
     },
     "meter_entries" => {
-      data_scoping:         { na: "pending — bù ở task backfill." },
-      zone_unit_columns:    { na: "pending — bù ở task backfill." },
+      data_scoping:         { applies: { scenario: :meter_entries_data } },
+      zone_unit_columns:    { applies: { scenario: :meter_entries_data } },
       commander_readonly:   { applies: { scenario: :meter_entries } },
       zone_manager_variant: { na: "UA-ZM nhập liệu như UA — không có biến thể riêng." }
+    },
+    "billing" => {
+      data_scoping:         { applies: { scenario: :billing } },
+      zone_unit_columns:    { applies: { scenario: :billing } },
+      commander_readonly:   { na: "Trang chỉ xem kết quả — không có input nghiệp vụ để disable." },
+      zone_manager_variant: { na: "UA-ZM xem bảng tính như UA — không có biến thể riêng." }
+    },
+    "history" => {
+      data_scoping:         { na: "Range mode renders period-level aggregate rows, not per-CP names; compare mode requires ≥2 periods and the view blocks on @available_periods.size < 2. No distinguishable per-unit string renders on either history mode with a single-period sample." },
+      zone_unit_columns:    { na: "History LUÔN hiện cả cột Khu vực + Đơn vị mọi vai trò (so sánh kỳ cần context đầy đủ) — không ẩn theo vai trò." },
+      commander_readonly:   { na: "Trang chỉ xem — không có input nghiệp vụ để disable." },
+      zone_manager_variant: { na: "UA-ZM xem lịch sử như UA — không có biến thể riêng." }
     }
   }.freeze
 
