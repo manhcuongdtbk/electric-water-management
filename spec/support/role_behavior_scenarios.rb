@@ -58,6 +58,49 @@ module RoleBehaviorScenarios
                  column_users: accessible_non_sa_roles("blocks").map { |r| make_user(r, w) })
   end
 
+  # --- groups (unit-scoped index, clone of blocks) --------------------------
+  def groups
+    w = base_world
+    mgr = FactoryBot.create(:group, unit: w[:unit_manager], name: "Nhom-QL-#{SecureRandom.hex(3)}")
+    oth = FactoryBot.create(:group, unit: w[:unit_other],   name: "Nhom-Khac-#{SecureRandom.hex(3)}")
+    checks = accessible_non_sa_roles("groups").map do |role|
+      user = make_user(role, w)
+      owned = unit_for(role, w) == w[:unit_manager] ? mgr.name : oth.name
+      { user: user, sees: owned, hides: [owned == mgr.name ? oth.name : mgr.name] }
+    end
+    Scenario.new(path: Rails.application.routes.url_helpers.groups_path,
+                 sa_user: FactoryBot.create(:user, :system_admin),
+                 all_texts: [mgr.name, oth.name], checks: checks,
+                 columns: ["Khu vực", "Đơn vị"],
+                 column_users: accessible_non_sa_roles("groups").map { |r| make_user(r, w) })
+  end
+
+  # The open period's rank for personnel counts (residential CP needs it).
+  def open_period_rank
+    period = Period.order(:year, :month).last
+    period.ranks.first || period.ranks.create!(name: "Hạ sĩ", quota: 1, position: 1)
+  end
+
+  # --- contact_points_index (unit-scoped index) -----------------------------
+  def contact_points_index
+    w = base_world
+    rank = open_period_rank
+    mgr = FactoryBot.create(:contact_point, :residential, unit: w[:unit_manager],
+            name: "DM-QL-#{SecureRandom.hex(3)}", initial_personnel_counts: { rank.id => 1 })
+    oth = FactoryBot.create(:contact_point, :residential, unit: w[:unit_other],
+            name: "DM-Khac-#{SecureRandom.hex(3)}", initial_personnel_counts: { rank.id => 1 })
+    path = Rails.application.routes.url_helpers.contact_points_path(type: "residential")
+    checks = accessible_non_sa_roles("contact_points").map do |role|
+      user = make_user(role, w)
+      owned = unit_for(role, w) == w[:unit_manager] ? mgr.name : oth.name
+      { user: user, sees: owned, hides: [owned == mgr.name ? oth.name : mgr.name] }
+    end
+    Scenario.new(path: path, sa_user: FactoryBot.create(:user, :system_admin),
+                 all_texts: [mgr.name, oth.name], checks: checks,
+                 columns: ["Khu vực", "Đơn vị"],
+                 column_users: accessible_non_sa_roles("contact_points").map { |r| make_user(r, w) })
+  end
+
   # --- contact_points (new-form zone-manager variant) -----------------------
   def contact_points
     w = base_world

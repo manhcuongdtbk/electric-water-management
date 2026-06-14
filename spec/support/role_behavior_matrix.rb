@@ -27,9 +27,15 @@ module RoleBehaviorMatrix
       commander_readonly:   { na: "Commander chỉ :read — không vào được form new/edit; index không có input nội dòng; nút Sửa/Thêm bị ẩn." },
       zone_manager_variant: { na: "blocks không có hành vi riêng cho zone-manager — UA-ZM hành xử như UA." }
     },
+    "groups" => {
+      data_scoping:         { applies: { scenario: :groups } },
+      zone_unit_columns:    { applies: { scenario: :groups } },
+      commander_readonly:   { na: "Commander chỉ :read — không vào được form; index không có input nội dòng; nút Sửa/Thêm bị ẩn." },
+      zone_manager_variant: { na: "groups không có biến thể zone-manager — UA-ZM như UA." }
+    },
     "contact_points" => {
-      data_scoping:         { na: "pending — bù ở task backfill." },
-      zone_unit_columns:    { na: "pending — bù ở task backfill." },
+      data_scoping:         { applies: { scenario: :contact_points_index } },
+      zone_unit_columns:    { applies: { scenario: :contact_points_index } },
       commander_readonly:   { na: "Commander chỉ :read — không vào được form; index không có input nội dòng; nút Sửa/Thêm ẩn." },
       zone_manager_variant: { applies: { scenario: :contact_points } }
     },
