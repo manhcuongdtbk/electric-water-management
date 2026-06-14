@@ -30,23 +30,18 @@ RSpec.describe "Demo: Loss breakdown", type: :demo do
     demo.click("Đăng nhập", caption: "Nhấn Đăng nhập")
     expect(page).to have_current_path("/", wait: 10)
 
-    # Bước 2 — mở Bảng tính tiền (đã có kết quả tính toán từ before hook)
+    # Bước 2 — mở Bảng tính tiền MỘT lần (đã có kết quả tính toán từ before hook),
+    # rồi narrate các caption tại chỗ (không tải lại trang) để video gọn, không lặp.
     demo.visit("/billing", caption: "Mở Bảng tính tiền tháng 6/2026")
+    expect(page).to have_content("Đối chiếu tổn hao/sử dụng theo loại đầu mối", wait: 10)
 
-    # Bước 3 — xác nhận khối A/B/C (TN3) hiện ra
-    expect(page).to have_content("Tổng tổn hao", wait: 10)
-    demo.visit("/billing", caption: "Xem chỉ số A/B/C — tổng tổn hao toàn khu vực (TN3)")
+    demo.narrate("Bảng đối chiếu tổn hao/sử dụng theo từng loại đầu mối (Sinh hoạt / Công cộng / Bơm nước)")
+    demo.narrate("Dòng \"Cộng\" chính là A/B/C; \"Tổng cộng\" bằng số công tơ tổng")
 
-    # Bước 4 — xem bảng đối chiếu theo loại đầu mối (#332)
-    expect(page).to have_content("Đối chiếu tổn hao/sử dụng theo loại đầu mối")
-    demo.visit("/billing", caption: "Bảng đối chiếu tổn hao/sử dụng theo loại đầu mối (#332)")
-
-    # Assert nội dung bảng breakdown: hàng tổng và hàng không tổn hao
+    # Assert nội dung bảng breakdown: các dòng tổng + cột Tổn hao
     expect(page).to have_content("Cộng (công tơ có tổn hao)")
     expect(page).to have_content("Không tổn hao")
     expect(page).to have_content("Tổng cộng")
-
-    # Cột Tổn hao trong bảng tính tiền (TN3)
     expect(page).to have_content("Tổn hao")
   end
 end

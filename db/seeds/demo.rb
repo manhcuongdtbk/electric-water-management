@@ -252,8 +252,11 @@ ActiveRecord::Base.transaction do
   # ---------------------------------------------------------------------------
   # Main meter reading for the zone
   # ---------------------------------------------------------------------------
+  # Realistic supply: a little above the measured sub-meters so loss is a few %
+  # (measured = loss-bearing 1.470 + no-loss 90 = 1.560 → ~5% loss), not an
+  # alarming figure that makes the demo look broken.
   main_reading = MainMeterReading.find_or_initialize_by(main_meter: main_meter, period: period)
-  main_reading.usage = BigDecimal("2800")
+  main_reading.usage = BigDecimal("1640")
   main_reading.save!
   puts "  MainMeterReading: #{main_reading.usage} kWh"
 
