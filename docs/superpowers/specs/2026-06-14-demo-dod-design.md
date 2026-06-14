@@ -1,12 +1,14 @@
 ---
 title: Chốt demo spec ở Definition-of-Done cho tính năng hướng-khách
-version: 0.1.0
+version: 0.2.0
 date: 2026-06-14
 ---
 
 # Chốt demo spec ở Definition-of-Done cho tính năng hướng-khách
 
 Thiết kế cho [#357](https://github.com/manhcuongdtbk/electric-water-management/issues/357) — siết quy trình để **không tính năng hướng-khách nào tới PR mà thiếu demo spec**. Phát sinh từ [#355](https://github.com/manhcuongdtbk/electric-water-management/issues/355) (TN1 ship trước engine demo → phải backfill).
+
+> **Mở rộng cho [#379](https://github.com/manhcuongdtbk/electric-water-management/issues/379) (ADR-059):** ba lớp ADR-052 chỉ ép demo **TỒN TẠI**, không ép demo **TỐT**. Mục [Chuẩn "demo tốt" (chất lượng)](#chuẩn-demo-tốt-chất-lượng--adr-059) thêm trục chất lượng — không thay, không trùng ba lớp tồn tại ở trên.
 
 Hạ tầng demo đã có: DSL `DemoRecorder`, `spec/demo/`, seed demo, CI ghi hình ([#343](https://github.com/manhcuongdtbk/electric-water-management/issues/343), ADR-036..041); scaffold `rails g demo:spec` ([#352](https://github.com/manhcuongdtbk/electric-water-management/issues/352), ADR-050/051); gom bộ demo theo delta release ([#351](https://github.com/manhcuongdtbk/electric-water-management/issues/351), ADR-047/048). Spec này KHÔNG thêm năng lực demo mới — chỉ **dịch điểm ép sớm hơn** trong vòng đời.
 
@@ -66,6 +68,45 @@ Mở rộng `check-demo-spec.sh` (job `demo-guardrail`): khi PR **không** gắn
 
 > "Điều kiện xem lại" của ADR-040 chính là gợi ý này; ADR-052 hiện thực nó ở mức advisory và để ngỏ nâng lên chặn nếu dữ liệu cho thấy nhãn hay bị quên.
 
+## Chuẩn "demo tốt" (chất lượng) — ADR-059
+
+Ba lớp trên đóng đường "demo **thiếu**". Chúng **không** chạm tới việc demo **dở**: #363 cho thấy một demo qua hết guardrail + CI mà vẫn lười — nói-trong-caption-mà-không-chỉ-trên-màn-hình, kể sai chuyện khách, diễn nửa-vời thứ medium không kham (trỏ nút "Xuất Excel" — video không dựng được `.xlsx`), và **xanh nhờ may** (recorder flake).
+
+**Sự thật cốt lõi (giữ nguyên, không giấu):** CI bảo đảm demo **chạy**, không bảo đảm demo **hay**. "Hay" là phán đoán con người — **không lint được**. Nên giải pháp KHÔNG phải một check thần kỳ, mà là **đưa chuẩn ra ngoài đầu người + một bước review người thật**, kèm hai lưới đỡ để "tốt" thành đường-dễ-đi-nhất. Ba tầng, chắc dần code → mẫu → quy trình:
+
+### Tầng 1 — Bộ công cụ (code), neo kỹ thuật vào `DemoRecorder` (chắc nhất, tự tái dùng)
+
+Các kỹ thuật làm demo TN1 hay đã thành **primitive tái dùng** của `DemoRecorder` (`spec/support/demo_recorder.rb`) + một quy ước **DOM hook** trên view. Demo sau thừa kế miễn phí — không phải phát minh lại:
+
+- `visit(path, caption:)` — mở thẳng một path (kèm query) để vào đúng màn cần, không phải lái qua filter.
+- `click(locator, caption:, confirm:)` — `confirm: true` chấp nhận hộp xác nhận Turbo (`data-turbo-confirm`); driver Playwright mặc định **dismiss** dialog nên thiếu cờ này form không submit (vd "Tính toán lại"). Bài học #363.
+- `fill(field, with:, caption:)`, `select(option, from:, caption:)` — nhập/chọn có trỏ + nhịp đọc được.
+- `highlight(selector, caption:)` — cuộn một ô/kết quả vào khung + vẽ viền, để thứ caption khẳng định **thấy được trên màn hình** (vd ô −44 sâu trong bảng tính tiền rộng).
+- `narrate(caption)` — caption không thao tác, để kể bối cảnh/nhân-quả giữa các bước.
+- `unpoint` (riêng tư) — gỡ viền best-effort, `rescue` nuốt lỗi vì click/fill có thể đã điều hướng (chống flake "xanh nhờ may").
+- **Quy ước DOM hook `data-*-cp-id`** trên view (vd `data-other-deduction-cp-id`, `data-contact-point-name-id`, `data-total-personnel-cp-id`) — để `highlight` nhắm **đúng ô của đúng đầu mối** thay vì dò text mong manh.
+
+> **Quy ước neo:** cần một kỹ thuật demo mới → **thêm vào `DemoRecorder`/hook DOM**, đừng tự chế tại chỗ trong một spec. Demo sau thừa kế; sửa một chỗ là cả họ được. Danh sách primitive này cũng nằm ở `CONTRIBUTING.md` §9 để tra nhanh.
+
+### Tầng 2 — Demo mẫu (golden example) + scaffold sinh đúng-hình (cụ thể thắng trừu tượng)
+
+`spec/demo/cot_khac_he_so_don_vi_demo_spec.rb` (TN1, đã refine ở #363 qua PR #375/#382) là **DEMO MẪU** của dự án. Checklist Tầng 3 trỏ tới nó cho từng tiêu chí (nhân-quả cùng khung, two-beat reveal cause→effect, narration bám-chuyện-khách, trung thực về medium với ghi chú "Excel để test lo").
+
+Scaffold `rails g demo:spec` (ADR-051, #352) sinh khung **kèm sẵn pattern tốt + pointer TN1**: chỗ trống `highlight` để cho-thấy-kết-quả, narration bám-chuyện, và ghi chú "đừng diễn thứ browser không dựng được (vd Excel)". Demo mới ra đời đã đúng hình. Anti-drift của khung sống ở `spec/generators/demo/spec_generator_spec.rb` (đối chiếu nội dung sinh ra), không phải một bash guardrail riêng.
+
+### Tầng 3 — Checklist 6 tiêu chí + tự-soi-như-khách + gate người (bắt phần phán đoán)
+
+Checklist "demo tốt" (ở `CONTRIBUTING.md` §9 + mục demo của PR template + header `rails g demo:spec` sinh ra — để chuẩn ở repo, không ở đầu người):
+
+1. **Cho thấy, đừng nói** — mọi điều caption khẳng định phải *thấy được* trên màn hình (dùng `highlight`).
+2. **Kể đúng chuyện khách** — khớp ví dụ/thế giới thật của khách, không chỉ số đúng.
+3. **Diễn kết quả + cái đau được xoá**, không diễn thao tác.
+4. **Trung thực với medium** — không diễn thứ browser không dựng (vd `.xlsx`); cái đó để test/file thật lo.
+5. **Đủ cung đường khách quan tâm**, không nhồi mọi ngóc ngách/chiều test.
+6. **Ổn định** — không "xanh nhờ may" (dùng primitive `confirm:`/`unpoint`-rescue; không đua điều hướng).
+
+**Bước bắt buộc trước gate:** người làm **xem lại bản quay như một khách chưa biết gì**, đối chiếu 6 tiêu chí + so với TN1, và **báo đã soi gì** ở PR. Mắt xích cuối "mãi về sau" là **gate người** soi theo chuẩn — anti-drift CI (ADR-036) chỉ giữ demo *chạy*, không giữ nó *hay*.
+
 ## Hiện thực
 
 - `docs/superpowers/specs/2026-06-14-demo-dod-design.md` — spec này (ADR-052).
@@ -78,6 +119,14 @@ Mở rộng `check-demo-spec.sh` (job `demo-guardrail`): khi PR **không** gắn
 
 Không đụng code ứng dụng end-user → không có chiều test (`CHIEU-...`) mới, không anchor `NV-...` mới. Test của thay đổi này là `check-demo-deliverable.test.sh` (đối chiếu ca pass/fail của script) — chạy ở job `tests`/cục bộ như các `*.test.sh` guardrail khác.
 
+**Chuẩn "demo tốt" (#379, ADR-059) — chủ ý KHÔNG thêm bash guardrail** (chất lượng không lint được):
+
+- `docs/superpowers/specs/2026-06-14-demo-dod-design.md` — mục [Chuẩn "demo tốt"](#chuẩn-demo-tốt-chất-lượng--adr-059) + ADR-059 (spec này).
+- `CONTRIBUTING.md` §9 — mục "Chuẩn demo tốt": danh sách primitive `DemoRecorder` + quy ước neo (Tầng 1), pointer TN1 golden example (Tầng 2), checklist 6 tiêu chí + bước tự-soi-như-khách bắt buộc (Tầng 3).
+- `.github/pull_request_template.md` — thêm dòng demo: tự-soi-như-khách theo 6 tiêu chí + đối chiếu TN1, báo đã soi gì (Tầng 3).
+- `lib/generators/demo/spec/templates/demo_spec.rb.tt` — khung sinh kèm pattern tốt: chỗ trống `highlight`, narration bám-chuyện, ghi chú "đừng diễn thứ browser không dựng (vd Excel)", pointer TN1 + checklist (Tầng 2).
+- `spec/generators/demo/spec_generator_spec.rb` — anti-drift: đối chiếu khung sinh ra mang đủ pattern + pointer (thay cho một guardrail bash riêng).
+
 ## Quyết định (ADR)
 
 ### ADR-052: Chốt demo spec ở Definition-of-Done bằng ba lớp phòng-thủ
@@ -89,15 +138,25 @@ Không đụng code ứng dụng end-user → không có chiều test (`CHIEU-..
 - **Phương án đã loại:** *Chỉ Lớp A (docs)* — không có ép máy, rơi như hiện tại. *Lớp C chặn cứng* — false-positive trên view nội bộ/trang admin, đẻ nhãn-rác dập CI. *Suy luận hướng-khách hoàn toàn tự động bỏ nhãn người* — mất gate quyết định ở triage (ADR-040 cố ý để người quyết); path là tín hiệu, không phải sự thật. *Gộp ràng buộc demo vào check-test-dimensions* — trộn hai trục (chiều test vs deliverable demo), khó đọc lỗi.
 - **Điều kiện xem lại:** Nếu dữ liệu cho thấy `customer-facing`/`customer_facing` vẫn hay bị quên dù đã có ba lớp → cân nhắc nâng Lớp C từ advisory lên **chặn** (có cơ chế opt-out tường minh cho PR nội bộ đụng view), hoặc suy luận flag spec từ path khi tạo spec.
 
+### ADR-059: Chuẩn "demo tốt" — chất lượng demo bằng toolkit + golden example + gate người, không bằng lint
+- **Trạng thái:** Accepted · 2026-06-14
+- **Bối cảnh:** Ba lớp ADR-052 ép demo **tồn tại** (spec khai, demo trỏ tới, video quay). Chúng không ép demo **tốt**: #363 cho thấy một demo qua hết guardrail + CI mà vẫn lười — nói-trong-caption-không-chỉ-trên-màn, kể sai chuyện khách, diễn thứ medium không kham (trỏ "Xuất Excel" — video không dựng `.xlsx`), xanh-nhờ-may do recorder flake. "Hay" là phán đoán con người, không lint được.
+- **Quyết định:** Thêm trục **chất lượng** bằng **ba tầng**, chắc dần code → mẫu → quy trình: **(1) Toolkit** — neo kỹ thuật demo vào primitive `DemoRecorder` + quy ước DOM hook `data-*-cp-id`, ghi danh sách + quy ước "kỹ thuật mới → thêm vào recorder, đừng tự chế" vào `CONTRIBUTING.md` §9; **(2) Golden example** — `spec/demo/cot_khac_he_so_don_vi_demo_spec.rb` (TN1) là demo mẫu, checklist trỏ tới nó, scaffold `rails g demo:spec` sinh khung kèm pattern tốt + pointer TN1 + ghi chú "đừng diễn thứ browser không dựng (vd Excel)"; **(3) Checklist 6 tiêu chí + tự-soi-như-khách + gate người** ở `CONTRIBUTING.md` §9 + PR template + header generator. **Chủ ý KHÔNG thêm bash guardrail cho chất lượng** — quality không lint được; anti-drift duy nhất là generator rspec (khung sinh ra mang đủ pattern).
+- **Lý do:** Một demo tốt chỉ "mãi về sau" nếu "tốt" thành đường-dễ-đi-nhất. Code (Tầng 1) làm pattern tốt thành mặc-định tái dùng; mẫu (Tầng 2) làm chuẩn cụ thể-thắng-trừu-tượng; quy trình (Tầng 3) bắt phần phán đoán mà máy không bắt được. Khớp "AI lo cơ học — người giữ gate" (ADR-029) và phân-lớp-theo-mức-chặn-được của ADR-052: tồn tại (máy) · ổn định (cơ giới-một-phần qua primitive) · chất lượng (người).
+- **Tradeoff:** (+) Nâng chất demo mà không dựng một check giả-định-lint-được-cái-không-lint-được; tái dùng hạ tầng sẵn (recorder, generator, golden example). (−) Mắt xích cuối vẫn là gate người — kỷ luật, không cưỡng chế được bằng CI; chấp nhận vì đó là **bản chất** của "hay" (nói dối nếu giả vờ lint được).
+- **Phương án đã loại:** *Một guardrail chấm điểm "demo tốt"* — không lint được phán đoán; chấm giả tạo cảm giác an toàn sai. *Spec mới riêng* — tách khỏi ADR-052 cùng chủ đề DoD demo, đọc rời rạc; gộp cùng spec, ADR riêng là đủ. *Bỏ Tầng 1/2, chỉ checklist* — checklist suông không tự-thực-thi; thiếu code/mẫu thì "tốt" vẫn là đường-khó-đi (đúng ca #363).
+- **Điều kiện xem lại:** Nếu phần *ổn định* (flake "xanh nhờ may") tái diễn dù đã có primitive → cân nhắc lưới cơ giới riêng cho **độ ổn định** (vd chạy lặp demo N lần, hoặc lint recorder) — phần này *cơ giới hoá được*, tách khỏi phần "hay" không lint được.
+
 ## Truy vết
 
-- Issue: [#357](https://github.com/manhcuongdtbk/electric-water-management/issues/357) (intake change-request, milestone 1.3.0, không `priority-high`). Phát sinh từ [#355](https://github.com/manhcuongdtbk/electric-water-management/issues/355).
-- Liên quan: [#343](https://github.com/manhcuongdtbk/electric-water-management/issues/343) (engine), [#351](https://github.com/manhcuongdtbk/electric-water-management/issues/351) (bundle), [#352](https://github.com/manhcuongdtbk/electric-water-management/issues/352) (scaffold); mở rộng ADR-040.
+- Issue: [#357](https://github.com/manhcuongdtbk/electric-water-management/issues/357) (intake change-request, milestone 1.3.0, không `priority-high`). Phát sinh từ [#355](https://github.com/manhcuongdtbk/electric-water-management/issues/355). Trục chất lượng (ADR-059): [#379](https://github.com/manhcuongdtbk/electric-water-management/issues/379) (change-request, milestone 1.2.0, không `priority-high`), phát sinh từ retro [#363](https://github.com/manhcuongdtbk/electric-water-management/issues/363).
+- Liên quan: [#343](https://github.com/manhcuongdtbk/electric-water-management/issues/343) (engine), [#351](https://github.com/manhcuongdtbk/electric-water-management/issues/351) (bundle), [#352](https://github.com/manhcuongdtbk/electric-water-management/issues/352) (scaffold); demo TN1 refine [#375](https://github.com/manhcuongdtbk/electric-water-management/pull/375)/[#382](https://github.com/manhcuongdtbk/electric-water-management/pull/382) (recorder primitives + golden example); mở rộng ADR-040.
 - Không đụng nghiệp vụ end-user (không anchor `NV-...` mới): đây là tooling/quy trình dev.
-- Không có chiều test (`CHIEU-...`): spec quy trình, không phải tính năng nghiệp vụ có ma trận chiều. Test guardrail: `.github/scripts/check-demo-deliverable.test.sh` (đối chiếu pass/fail script).
+- Không có chiều test (`CHIEU-...`): spec quy trình, không phải tính năng nghiệp vụ có ma trận chiều. Test guardrail: `.github/scripts/check-demo-deliverable.test.sh` (đối chiếu pass/fail script). Trục chất lượng (ADR-059) chủ ý không có guardrail bash (không lint được); anti-drift khung demo ở `spec/generators/demo/spec_generator_spec.rb`.
 
 ## Lịch sử thay đổi
 
 | Phiên bản | Ngày | Thay đổi |
 |---|---|---|
 | 0.1.0 | 2026-06-14 | Bản đầu (#357): chốt demo spec ở DoD bằng ba lớp (DoD template/quy trình, guardrail mức spec, suy luận path advisory). Thêm ADR-052. |
+| 0.2.0 | 2026-06-14 | Thêm trục chất lượng (#379): mục "Chuẩn demo tốt" ba tầng (toolkit `DemoRecorder` + quy ước neo, TN1 golden example + scaffold sinh đúng-hình, checklist 6 tiêu chí + tự-soi-như-khách + gate người). Thêm ADR-059; chủ ý không thêm guardrail bash (chất lượng không lint được). |
