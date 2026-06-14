@@ -53,6 +53,19 @@ ActiveRecord::Base.transaction do
   end
   puts "  Unit: #{unit_beta.name}"
 
+  # Demo commander of Tiểu đoàn Alpha — read-only role, so the demo can show that
+  # a commander views the billing config but cannot change it (#363, CHIEU-vai-tro).
+  demo_commander = User.find_or_create_by!(username: "demo_commander") do |u|
+    u.display_name          = "Chỉ huy Demo"
+    u.role                  = :commander
+    u.unit                  = unit_alpha
+    u.password              = "Demo@1234"
+    u.password_confirmation = "Demo@1234"
+    u.force_password_change = false
+    u.default_account       = false
+  end
+  puts "  User: #{demo_commander.username} (#{demo_commander.role})"
+
   # Ensure unit_alpha is the zone manager (auto-assigned if it was the first,
   # but we set it explicitly so idempotent re-runs are consistent).
   zone.reload
@@ -145,6 +158,28 @@ ActiveRecord::Base.transaction do
   end
   puts "  ContactPoint (residential): #{cp_dai_doi_1.name}"
 
+  # Residential: Bếp ăn (unit_alpha) — the battalion's shared kitchen. Demonstrates
+  # the unit-coefficient "Khác" (nghiệp vụ 10.2.1, ADR-025): each soldier in the
+  # battalion contributes a share and the kitchen receives the total back, so its
+  # deduction = hệ số × (Σ residential headcount of the unit − the kitchen's own).
+  # Kept meter-less on purpose: the demo highlights its "Khác" credit, not usage,
+  # and that keeps the zone loss numbers (and the loss-breakdown demo) untouched.
+  cp_bep = ContactPoint.find_by(
+    name: "Bếp ăn Tiểu đoàn Alpha",
+    contact_point_type: "residential",
+    unit_id: unit_alpha.id
+  )
+  unless cp_bep
+    cp_bep = ContactPoint.new(
+      name: "Bếp ăn Tiểu đoàn Alpha",
+      contact_point_type: "residential",
+      unit: unit_alpha,
+      initial_personnel_counts: personnel_counts(rank_by_pos, 7 => 8)
+    )
+    cp_bep.save!
+  end
+  puts "  ContactPoint (residential): #{cp_bep.name}"
+
   # Residential: Đại đội 1 (unit_beta)
   cp_dai_doi_b1 = ContactPoint.find_by(
     name: "Đại đội 1",
@@ -207,6 +242,11 @@ ActiveRecord::Base.transaction do
   ct_a2 = Meter.find_or_create_by!(name: "CT-A2", contact_point: cp_dai_doi_1) do |m|
     m.no_loss = false
   end
+  # The kitchen draws real power — so it shows up in billing (the engine skips
+  # residential contact points with no metered reading for the period). See #363.
+  ct_bep = Meter.find_or_create_by!(name: "CT-BEP", contact_point: cp_bep) do |m|
+    m.no_loss = false
+  end
   ct_b1 = Meter.find_or_create_by!(name: "CT-B1", contact_point: cp_dai_doi_b1) do |m|
     m.no_loss = false
   end
@@ -219,7 +259,12 @@ ActiveRecord::Base.transaction do
   ct_kv = Meter.find_or_create_by!(name: "CT-KV", contact_point: cp_chi_huy_kv) do |m|
     m.no_loss = false
   end
-  puts "  Meters: #{[ct_a1, ct_a2, ct_b1, ct_cc, ct_bom, ct_kv].map(&:name).join(', ')}"
+  # no_loss meter on cp_ban_chi_huy — makes "Không tổn hao" row non-zero in the
+  # per-type breakdown table (#332 demo requirement).
+  ct_kth = Meter.find_or_create_by!(name: "CT-KTH", contact_point: cp_ban_chi_huy) do |m|
+    m.no_loss = true
+  end
+  puts "  Meters: #{[ct_a1, ct_a2, ct_bep, ct_b1, ct_cc, ct_bom, ct_kv, ct_kth].map(&:name).join(', ')}"
 
   # ---------------------------------------------------------------------------
   # Meter readings for the open period — update reading_start and reading_end
@@ -228,17 +273,19 @@ ActiveRecord::Base.transaction do
   readings = {
     ct_a1  => { start: 1_200, finish: 1_450 },
     ct_a2  => { start: 3_000, finish: 3_320 },
+    ct_bep => { start: 600,   finish: 720  },
     ct_b1  => { start: 5_500, finish: 5_980 },
     ct_cc  => { start: 800,   finish: 950  },
     ct_bom => { start: 200,   finish: 350  },
-    ct_kv  => { start: 400,   finish: 520  }
+    ct_kv  => { start: 400,   finish: 520  },
+    ct_kth => { start: 0,     finish: 90   }
   }
   readings.each do |meter, attrs|
-    reading = meter.meter_readings.find_by(period: period)
-    next unless reading
+    reading = meter.meter_readings.find_or_initialize_by(period: period)
     reading.update!(
       reading_start: BigDecimal(attrs[:start].to_s),
-      reading_end:   BigDecimal(attrs[:finish].to_s)
+      reading_end:   BigDecimal(attrs[:finish].to_s),
+      no_loss:       meter.no_loss
     )
   end
   puts "  MeterReadings updated for #{readings.size} meters"
@@ -246,8 +293,11 @@ ActiveRecord::Base.transaction do
   # ---------------------------------------------------------------------------
   # Main meter reading for the zone
   # ---------------------------------------------------------------------------
+  # Realistic supply: a little above the measured sub-meters so loss is a few %
+  # (measured = loss-bearing 1.590 [incl. kitchen 120] + no-loss 90 = 1.680 →
+  # ~5% loss), not an alarming figure that makes the demo look broken.
   main_reading = MainMeterReading.find_or_initialize_by(main_meter: main_meter, period: period)
-  main_reading.usage = BigDecimal("2800")
+  main_reading.usage = BigDecimal("1760")
   main_reading.save!
   puts "  MainMeterReading: #{main_reading.usage} kWh"
 

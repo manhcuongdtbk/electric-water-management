@@ -110,6 +110,11 @@ RSpec.describe SummaryCalculator do
         expect(calc.surplus).to eq_display("5.72")
         expect(calc.deficit).to eq(0)
       end
+
+      it "thành tiền thừa = thừa × đơn giá (nhân, không phải chia)" do
+        unit_price = BigDecimal(sample.period.unit_price.to_s)
+        expect(calc.surplus_amount).to eq(calc.surplus * unit_price)
+      end
     end
 
     describe "Kho vật tư (Đơn vị A) — không tổn hao" do
@@ -367,6 +372,53 @@ RSpec.describe SummaryCalculator do
         # with_discarded → Kho vật tư vẫn đóng góp 3 người vào tổng kỳ N
         expect(calc.other_deduction).to eq_display("-16.00")
       end
+    end
+  end
+
+  # Khoá biên `if delta > 0` (mutation #376). delta = tổng sử dụng − tiêu chuẩn còn
+  # lại. Dựng một đầu mối thuộc khu vực (unit_id nil → bỏ công cộng đơn vị), tắt mọi
+  # tỷ lệ trừ để tiêu chuẩn còn lại = tổng tiêu chuẩn, rồi đặt sử dụng để delta = 0,5
+  # (∈ (0,1]). Mutant `delta > 1` sẽ lật thành "thừa" → assert thiếu/thừa bắt được.
+  describe "#call — biên thiếu/thừa delta ∈ (0,1]" do
+    def empty_loss_results
+      LossCalculator::Result.new(meter_losses: {}, contact_point_losses: {},
+                                 total_loss: BigDecimal("0"), total_a: BigDecimal("0"),
+                                 total_b: BigDecimal("0"), warnings: [])
+    end
+
+    def empty_pump_results
+      PumpAllocationCalculator::Result.new(contact_point_allocations: {},
+                                           total_d: BigDecimal("0"), warnings: [])
+    end
+
+    it "delta = 0,5 → thiếu = 0,5, thừa = 0 (không bị lật sang thừa)" do
+      zone = create(:zone, name: "Khu vực biên delta")
+      create(:unit, name: "Đơn vị biên delta", zone: zone) # tự thành đơn vị quản lý
+      period = PeriodService.new.open_new_period(
+        year: 2026, month: 1, unit_price: BigDecimal("2000")
+      ).period
+      period.update!(savings_rate: BigDecimal("0"), division_public_rate: BigDecimal("0"))
+      rank = period.ranks.find_by!(position: 7) # Hạ sĩ quan, binh sĩ — định mức 24
+
+      contact_point = create(:contact_point, :zone_residential, name: "Đầu mối biên delta",
+                             zone: zone, initial_personnel_counts: { rank.id => 1 })
+      apply_other_deduction(contact_point, period, type: "fixed", value: BigDecimal("0"))
+      meter = create(:meter, name: "CT-biên-delta", contact_point: contact_point, no_loss: true)
+
+      # tiêu chuẩn còn lại = 1×24 (sinh hoạt) + 1×9,45 (bơm nước) = 33,45 (tỷ lệ trừ = 0).
+      # Đặt sử dụng = 33,95 → delta = 0,5.
+      remaining_standard = BigDecimal("24") + BigDecimal(period.water_pump_standard.to_s)
+      meter.meter_readings.find_by!(period: period)
+           .update!(reading_start: BigDecimal("0"), reading_end: remaining_standard + BigDecimal("0.5"))
+
+      described_class.new(zone: zone, period: period,
+                          loss_results: empty_loss_results, pump_results: empty_pump_results).call
+
+      calc = Calculation.find_by!(contact_point_id: contact_point.id, period_id: period.id)
+      expect(calc.remaining_standard).to eq(BigDecimal("33.45"))
+      expect(calc.total_usage).to eq(BigDecimal("33.95"))
+      expect(calc.deficit).to eq(BigDecimal("0.5"))
+      expect(calc.surplus).to eq(BigDecimal("0"))
     end
   end
 end

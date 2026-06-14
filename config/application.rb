@@ -29,7 +29,10 @@ module ElectricWaterManagement
     # `generators` holds Rails generators (lib/generators/**) loaded by the
     # generators lookup, not zeitwerk — ignore so `rails zeitwerk:check` stays
     # green (their constants do not match the lib autoload root). See ADR-051.
-    config.autoload_lib(ignore: %w[assets tasks rubocop generators])
+    # `mutation` holds the mutation-testing harness (lib/mutation/**), required
+    # explicitly by lib/tasks/mutation.rake — keep it off the autoload/eager-load
+    # path (test tooling, not app code). See ADR-056, Issue #358.
+    config.autoload_lib(ignore: %w[assets tasks rubocop generators mutation])
 
     # Configuration for the application, engines, and railties goes here.
     #

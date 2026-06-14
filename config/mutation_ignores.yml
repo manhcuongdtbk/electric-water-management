@@ -1,0 +1,76 @@
+# Equivalent mutants (ADR-057): mutations that do NOT change observable behaviour
+# and therefore always survive without being a test gap. Each entry is excluded
+# from the run and counted as "ignored". Always give a reason.
+#
+# Matching is on path/line/from/to. `column` (0-based, from the report's token
+# position) is OPTIONAL — add it only to single out one mutant when a line carries
+# several with the same from->to (e.g. two `+` on one line).
+#
+# ignores:
+#   - path: app/services/loss_calculator.rb
+#     line: 53
+#     from: "*"
+#     to: "/"
+#     reason: "multiplying by 1; equivalent"
+ignores:
+  # `loss.warnings + pump.warnings + summary.warnings`: the FIRST `+` (loss+pump)
+  # is killed by the warnings-collection spec; the SECOND `+` (pump+summary) is
+  # equivalent because SummaryCalculator hard-codes `warnings: []`, so
+  # `pump.warnings + [] == pump.warnings - []`. `column` singles out the 2nd `+`.
+  - path: app/services/calculation_orchestrator.rb
+    line: 22
+    from: "+"
+    to: "-"
+    column: 48
+    reason: "second `+` adds summary.warnings, which is always []; `x + [] == x - []`. Equivalent until SummaryCalculator emits warnings."
+
+  # `if delta > 0` -> `if delta >= 0`: differs only at delta == 0, where both
+  # branches yield deficit=0 and surplus=-0=0 (identical money). Equivalent.
+  # (The sibling `0 -> 1` mutation on this line IS a real gap and is killed by a
+  # delta-in-(0,1] spec.)
+  - path: app/services/summary_calculator.rb
+    line: 78
+    from: ">"
+    to: ">="
+    reason: "delta>0 vs delta>=0 differ only at delta==0, where deficit=0 and surplus=-0=0 are identical. Equivalent."
+
+  # `@unit_total_personnel_by_unit_id` is a `Hash.new(0)`, so the left operand is
+  # always an Integer (0 is truthy in Ruby) -> `int || 0 == int || 1`. Equivalent.
+  - path: app/services/summary_calculator.rb
+    line: 134
+    from: "0"
+    to: "1"
+    reason: "left operand reads from Hash.new(0), always a truthy Integer, so `|| 0` never fires. `|| 1` is equivalent."
+
+  # personnel_count_for: cache[:unit][unit_id] is always set (unit_id is in
+  # unit_ids) to an Integer -> truthy -> `|| 0` never fires. `|| 1` equivalent.
+  - path: app/services/pump_allocation_calculator.rb
+    line: 117
+    from: "0"
+    to: "1"
+    reason: "cache[:unit][unit_id] is always a present Integer (truthy), so `|| 0` never fires. `|| 1` is equivalent."
+
+  # personnel_count_for: cache[:contact_point][cp_id] is always set for a
+  # contact_point allocation -> truthy Integer -> `|| 0` never fires. Equivalent.
+  - path: app/services/pump_allocation_calculator.rb
+    line: 119
+    from: "0"
+    to: "1"
+    reason: "cache[:contact_point][cp_id] is always a present Integer (truthy), so `|| 0` never fires. `|| 1` is equivalent."
+
+  # personnel_count_for final `else 0`: unreachable. PumpAllocation's XOR
+  # validation guarantees every allocation has unit_id OR contact_point_id, so
+  # control never reaches this branch. Dead-branch equivalent.
+  - path: app/services/pump_allocation_calculator.rb
+    line: 121
+    from: "0"
+    to: "1"
+    reason: "dead branch: PumpAllocation validates unit XOR contact_point, so an allocation with neither cannot exist. Equivalent."
+
+  # distribute_to_residential_contact_points: cache[:unit][alloc.unit_id] is
+  # always a present Integer (truthy), so `|| 0` never fires. `|| 1` equivalent.
+  - path: app/services/pump_allocation_calculator.rb
+    line: 133
+    from: "0"
+    to: "1"
+    reason: "cache[:unit][alloc.unit_id] is always a present Integer (truthy), so `|| 0` never fires. `|| 1` is equivalent."

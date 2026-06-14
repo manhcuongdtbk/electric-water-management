@@ -269,6 +269,28 @@ wb = xlsx_package.workbook
                        "Tổng sử dụng (B):", summary.b.to_f,
                        "Tổng tổn hao (C = A − B):", summary.c.to_f],
                       style: [text_style, num_style, text_style, num_style, text_style, num_style]
+        breakdown = @loss_breakdowns[summary.zone_id]
+        if breakdown
+          sheet.add_row [I18n.t("billing.loss_breakdown.title")], style: [text_style]
+          sheet.add_row [
+            I18n.t("billing.loss_breakdown.columns.type"),
+            I18n.t("billing.loss_breakdown.columns.usage"),
+            I18n.t("billing.loss_breakdown.columns.loss"),
+            I18n.t("billing.loss_breakdown.columns.actual")
+          ], style: [text_style, text_style, text_style, text_style]
+          breakdown.rows.each do |row|
+            sheet.add_row [
+              I18n.t("activerecord.attributes.contact_point.types.#{row.type}", default: row.type),
+              row.usage.to_f, row.loss.to_f, row.actual.to_f
+            ], style: [text_style, num_style, num_style, num_style]
+          end
+          [[I18n.t("billing.loss_breakdown.rows.loss_bearing_total"), breakdown.loss_bearing_total],
+           [I18n.t("billing.loss_breakdown.rows.no_loss"), breakdown.no_loss_total],
+           [I18n.t("billing.loss_breakdown.rows.grand_total"), breakdown.grand_total]].each do |label, r|
+            sheet.add_row [label, r.usage.to_f, r.loss.to_f, r.actual.to_f],
+                          style: [text_style, num_style, num_style, num_style]
+          end
+        end
       end
     end
 

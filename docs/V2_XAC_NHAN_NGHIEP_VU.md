@@ -1,6 +1,6 @@
 # Xác nhận nghiệp vụ — Hệ thống quản lý điện nội bộ Sư đoàn (Hệ thống v2)
 
-> **Phiên bản:** 2.15.0
+> **Phiên bản:** 2.16.0
 > **Ngày:** 11/06/2026
 > **Tính chất:** Tài liệu nội bộ giữa chủ dự án và đội phát triển. Là nguồn sự thật duy nhất cho thiết kế và triển khai.
 > **Ngôn ngữ hệ thống:** Toàn bộ hệ thống phải được Việt hóa 100% (giao diện, thông báo, cảnh báo, xuất file) vì hệ thống dùng trong Sư đoàn Quân đội nhân dân Việt Nam.
@@ -296,12 +296,16 @@ Tổn hao được hệ thống tự tính, là 1 trong các giá trị phải t
   - **Tổn hao** = phần tổn hao phân bổ cho công tơ đó.
   - **Sử dụng thực tế** = Sử dụng + Tổn hao.
   - Áp dụng cho tất cả công tơ trên trang. Nếu chưa bấm "Tính toán lại" (chưa có kết quả) → hai cột để trống. Nếu đã tính rồi sửa chỉ số (chưa tính lại) → giữ giá trị lần tính gần nhất.
-- **Trang Bảng tính tiền:** thêm tóm tắt tổn hao ở đầu bảng (cạnh đơn giá và cảnh báo), theo khu vực đang chọn:
+- **Trang Bảng tính tiền:** thêm **bảng đối chiếu tổn hao/sử dụng theo loại đầu mối** theo khu vực đang chọn. Khái niệm A/B/C (hiển thị ở dòng "Cộng (công tơ có tổn hao)" của bảng — không còn khối riêng):
   - **Công tơ tổng (A)** = số sử dụng công tơ tổng − tổng công tơ không tổn hao.
   - **Tổng sử dụng (B)** = tổng sử dụng tất cả công tơ có tổn hao.
   - **Tổng tổn hao (C = A − B)** = phần điện "mất" trên đường truyền toàn khu vực.
+- **Bảng đối chiếu theo loại đầu mối:** tách tổn hao/sử dụng theo loại đầu mối để đối chiếu được từng phần. Ba cột **Sử dụng · Tổn hao · Sử dụng thực tế** (= Sử dụng + Tổn hao); các dòng theo loại (Sinh hoạt / Công cộng / Bơm nước), một dòng **"Không tổn hao"** riêng, và hai dòng tổng:
+  - **Cộng (công tơ có tổn hao)** chính là A/B/C: Sử dụng = B, Tổn hao = C, Sử dụng thực tế = A.
+  - **Tổng cộng** = Cộng + Không tổn hao; Sử dụng thực tế của dòng này = số trên công tơ tổng (toàn bộ điện cấp = đo được + hao).
+  - Số làm tròn 2 chữ số khi hiển thị nên tổng các dòng có thể lệch ±0,01 — số chuẩn để đối chiếu là A/B/C và số công tơ tổng. Bảng chỉ hiện sau khi đã tính. Bảng này đối chiếu trục tổn hao/sử dụng thô, **không** đối chiếu điện bơm nước đã phân bổ (mục 9).
 
-> Thiết kế hệ thống & quyết định: [`docs/superpowers/specs/2026-06-11-hien-thi-chi-tiet-ton-hao-design.md`](superpowers/specs/2026-06-11-hien-thi-chi-tiet-ton-hao-design.md) (ADR-027).
+> Thiết kế hệ thống & quyết định: [`docs/superpowers/specs/2026-06-11-hien-thi-chi-tiet-ton-hao-design.md`](superpowers/specs/2026-06-11-hien-thi-chi-tiet-ton-hao-design.md) (ADR-027); bảng đối chiếu theo loại: [`docs/superpowers/specs/2026-06-14-doi-chieu-ton-hao-theo-loai-dau-moi-design.md`](superpowers/specs/2026-06-14-doi-chieu-ton-hao-theo-loai-dau-moi-design.md) (ADR-054).
 
 ---
 
@@ -884,6 +888,10 @@ Người dùng chỉ cần sửa chỗ có thay đổi. Mọi thao tác ở kỳ
 ---
 
 ## 29. Lịch sử thay đổi
+
+### v2.16.0 (14/06/2026)
+
+- Mở rộng mục 8.5 (anchor `NV-hien-thi-chi-tiet-ton-hao`): mô tả **bảng đối chiếu tổn hao/sử dụng theo loại đầu mối** trên Bảng tính tiền (Sinh hoạt / Công cộng / Bơm nước; cột Sử dụng/Tổn hao/Sử dụng thực tế; dòng "Không tổn hao" + 2 dòng tổng; làm tròn ±0,01; không bắc cầu điện bơm nước đã phân bổ). A/B/C hiển thị ở dòng "Cộng" của bảng (ADR-054 gộp, bỏ chip riêng ở HTML; Excel giữ khối A/B/C). Issue #332, spec ADR-054.
 
 ### v2.15.0 (11/06/2026)
 

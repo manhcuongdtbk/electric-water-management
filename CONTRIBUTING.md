@@ -163,7 +163,7 @@ Theo ADR-013..015 (chi tiết + lý do: `docs/superpowers/specs/2026-06-08-truy-
 ### Luồng một thay đổi (6 bước)
 
 1. **Tiếp nhận** — mở **GitHub Issue** bằng template *Yêu cầu thay đổi* (`.github/ISSUE_TEMPLATE/change-request.md`). Yêu cầu đến từ kênh ngoài (lời nói, chat) cũng phải có Issue trước khi vào `feature/*` — đội mở thay khách nếu cần. Số `#N` là mã định danh thay đổi.
-2. **Phân loại** — gắn 1 nhãn loại (`change-request` / `enhancement` / `bug`); chốt mức SemVer (`feat`/`fix`/breaking); xác định có đụng nghiệp vụ không. Cần thiết kế → gắn `needs-design`. Gán **milestone = version đích** khi đã biết.
+2. **Phân loại** — gắn 1 nhãn loại (`change-request` / `enhancement` / `bug`); chốt mức SemVer (`feat`/`fix`/breaking); xác định có đụng nghiệp vụ không. Cần thiết kế → gắn `needs-design`. **Khách có thấy thay đổi này không?** Nếu có → gắn `customer-facing` **ngay tại đây** (đừng đợi PR): nhãn này kéo theo demo spec là **Definition of Done** của cả thiết kế lẫn hiện thực (ADR-052). Gán **milestone = version đích** khi đã biết.
 3. **Thiết kế** (nếu cần) — brainstorm → spec trong `docs/superpowers/specs/`; nếu đụng nghiệp vụ, cập nhật `docs/V2_XAC_NHAN_NGHIEP_VU.md` + gắn anchor (xem dưới). Cần khách xác nhận trước khi build → xem **Cổng xác nhận khách trước build** dưới. Gỡ `needs-design`.
 4. **Hiện thực + test** — `feature/*`, pull request `Refs #N`, test cover yêu cầu (mục 4). Tính năng **hướng-khách** soạn thêm **demo spec** cùng nhịp (xem *Demo spec cho tính năng hướng-khách* dưới).
 5. **Release** — gom vào `release/*` → merge `main` → release-please tag `X.Y.Z`; khách nghiệm thu trên môi trường **Acceptance** (chạy `main`, không dùng `-rc.N` — ADR-005/008) (mục 6).
@@ -175,7 +175,16 @@ Theo ADR-013..015 (chi tiết + lý do: `docs/superpowers/specs/2026-06-08-truy-
 
 ### Demo spec cho tính năng hướng-khách (ADR-050/051)
 
-Khi làm một tính năng **hướng-khách** (PR gắn nhãn `customer-facing`), soạn **demo spec** trong `spec/demo/` **cùng nhịp với code/test** — coi như một phần của việc làm feature, giống viết test. Cách làm (vận hành AI-assisted, ADR-029 — viết trung lập công cụ; ánh xạ Claude Code ở mục 8):
+Khi làm một tính năng **hướng-khách** (PR gắn nhãn `customer-facing`), soạn **demo spec** trong `spec/demo/` **cùng nhịp với code/test** — coi như một phần của việc làm feature, giống viết test.
+
+**Chốt từ khâu thiết kế (Definition of Done — ADR-052).** Demo spec là **deliverable của thiết kế**, không phải việc-làm-sau. Spec thiết kế của tính năng hướng-khách:
+
+- đặt frontmatter `customer_facing: true`, và
+- kết bằng mục **`## Truy vết demo`** trỏ tới một `spec/demo/<x>_demo_spec.rb` (hoặc `DEFERRED #<issue>` nếu hoãn có gate).
+
+Guardrail `check-demo-deliverable.sh` (job `doc-governance`) ép luật này ở **mức spec** — sớm hơn guardrail bắt-buộc-tồn-tại ở PR-time (ADR-040). Ngoài ra, PR đụng path khách-thấy-được (`app/views/**`, `app/javascript/controllers/**`) mà quên nhãn + thiếu demo sẽ nhận **cảnh báo advisory** (không chặn) từ `check-demo-spec.sh` (ADR-052 Lớp C). Ba lớp này cùng khép đường "tính năng khách-thấy-được tới PR mà thiếu demo".
+
+Cách soạn (vận hành AI-assisted, ADR-029 — viết trung lập công cụ; ánh xạ Claude Code ở mục 8):
 
 1. **Lấy khung:** chạy `rails g demo:spec <feature>` → đẻ `spec/demo/<feature>_demo_spec.rb` rỗng nhưng chạy được (boilerplate DSL `DemoRecorder`, `include_context "demo seeded world"`, caption TODO, placeholder `demo_nv: %w[NV-TODO]`). Generator **không** đọc acceptance criteria — không sinh mù (ADR-051).
 2. **Soạn nháp:** trợ lý AI điền hành trình + **caption tiếng Việt** suy từ acceptance criteria (`NV-...` trong `docs/V2_XAC_NHAN_NGHIEP_VU.md`) + UI thật; thay `NV-TODO` bằng anchor thật để giữ truy vết xuôi.
@@ -183,6 +192,34 @@ Khi làm một tính năng **hướng-khách** (PR gắn nhãn `customer-facing`
 4. **Guardrail (ADR-040):** PR `customer-facing` mà thiếu file `spec/demo/**` → CI đỏ. Guardrail ép *sự tồn tại*; các bước trên lo *nội dung*.
 
 > Hạ tầng + lý do đầy đủ: ADR-036..041 (`docs/superpowers/specs/2026-06-13-tu-dong-hoa-demo-design.md`); thói quen soạn + scaffold: ADR-050/051 (`docs/superpowers/specs/2026-06-14-ai-soan-demo-scaffold-design.md`).
+
+### Chuẩn "demo tốt" — chất lượng, không chỉ tồn tại (ADR-059)
+
+Guardrail + CI ép demo **tồn tại** và **chạy**; chúng **không** ép demo **hay** — "hay" là phán đoán con người, không lint được. Demo mẫu của dự án: **`spec/demo/cot_khac_he_so_don_vi_demo_spec.rb`** (TN1). Soi nó khi viết demo mới. Chuẩn ở repo (không ở đầu người), ba tầng chắc dần:
+
+**Tầng 1 — Bộ công cụ (neo kỹ thuật vào `DemoRecorder`, đừng tự chế tại chỗ).** Primitive tái dùng (`spec/support/demo_recorder.rb`):
+
+- `visit(path, caption:)` — mở thẳng path (kèm query) vào đúng màn, không lái qua filter.
+- `click(locator, caption:, confirm:)` — `confirm: true` chấp nhận hộp xác nhận Turbo (`data-turbo-confirm`); thiếu cờ này form không submit (driver Playwright mặc định dismiss dialog — bài học #363).
+- `fill(field, with:, caption:)` · `select(option, from:, caption:)` — nhập/chọn có trỏ + nhịp đọc được.
+- `highlight(selector, caption:)` — cuộn một ô/kết quả vào khung + vẽ viền, để thứ caption khẳng định **thấy được trên màn**.
+- `narrate(caption)` — caption không thao tác, kể bối cảnh/nhân-quả.
+- **Quy ước DOM hook `data-*-cp-id`** trên view (vd `data-other-deduction-cp-id`, `data-total-personnel-cp-id`) — để `highlight` nhắm đúng ô của đúng đầu mối thay vì dò text mong manh.
+
+> Cần kỹ thuật demo mới → **thêm vào `DemoRecorder`/hook DOM**, đừng tự chế trong một spec. Demo sau thừa kế miễn phí.
+
+**Tầng 2 — Khởi đầu đúng-hình.** `rails g demo:spec` sinh khung kèm sẵn pattern tốt (chỗ trống `highlight` để cho-thấy-kết-quả, narration bám-chuyện, ghi chú "đừng diễn thứ browser không dựng — vd Excel") + pointer TN1. Đừng xoá các nhắc đó; thay bằng hành trình thật.
+
+**Tầng 3 — Checklist 6 tiêu chí + tự-soi-như-khách (gate người).** Trước khi xin merge, **xem lại bản quay như một khách chưa biết gì**, đối chiếu 6 tiêu chí, và **báo đã soi gì** ở PR:
+
+1. **Cho thấy, đừng nói** — mọi điều caption khẳng định phải *thấy được* trên màn (dùng `highlight`).
+2. **Kể đúng chuyện khách** — khớp ví dụ/thế giới thật của khách, không chỉ số đúng.
+3. **Diễn kết quả + cái đau được xoá**, không diễn thao tác.
+4. **Trung thực với medium** — không diễn thứ browser không dựng (vd `.xlsx`); cái đó để test/file thật lo.
+5. **Đủ cung đường khách quan tâm**, không nhồi mọi ngóc ngách/chiều test.
+6. **Ổn định** — không "xanh nhờ may" (dùng `confirm:`/`unpoint`-rescue; không đua điều hướng).
+
+> Chuẩn + lý do đầy đủ: ADR-059 (`docs/superpowers/specs/2026-06-14-demo-dod-design.md`, mục "Chuẩn demo tốt").
 
 ### Cổng xác nhận khách trước build (ADR-028)
 

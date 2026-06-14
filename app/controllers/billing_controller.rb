@@ -32,6 +32,10 @@ class BillingController < ApplicationController
     @warnings = collect_warnings_for_zones(zones_in_scope(@period))
     @loss_summaries = LossSummary.where(period_id: @period.id, zone_id: zones_in_scope(@period).select(:id))
                                  .includes(:zone).to_a.sort_by { |s| s.zone&.name.to_s }
+    @loss_breakdowns = @loss_summaries.each_with_object({}) do |summary, hash|
+      next unless summary.zone
+      hash[summary.zone_id] = LossBreakdown.new(zone: summary.zone, period: @period, summary: summary).call
+    end
 
     respond_to do |format|
       format.html do

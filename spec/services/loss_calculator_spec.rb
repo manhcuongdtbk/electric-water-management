@@ -145,5 +145,35 @@ RSpec.describe LossCalculator do
           .to include(I18n.t("services.loss_calculator.warnings.subtotal_exceeds_main"))
       end
     end
+
+    # Khoá biên `if c_raw < 0` (mutation #376): với dữ liệu mẫu A = công tơ tổng −
+    # tổng no_loss(110), B (chịu tổn hao) = 1930. Đẩy công tơ tổng để C = A − B
+    # rơi đúng vào 0 và (0,1) — chứng minh điều kiện kẹp là `< 0` chứ không phải
+    # `<= 0` hay `< 1`.
+    context "C = 0 đúng (A = B): KHÔNG kẹp, KHÔNG cảnh báo vượt tổng" do
+      let(:sample) { setup_zone_one_full_sample }
+
+      before { sample.main_meter_reading.update!(usage: BigDecimal("2040")) } # A = 1930 = B
+
+      it "total_a = total_b = 1930, total_loss = 0, không có cảnh báo" do
+        result = described_class.new(zone: sample.zone, period: sample.period).call
+        expect(result.total_a).to eq(BigDecimal("1930"))
+        expect(result.total_b).to eq(BigDecimal("1930"))
+        expect(result.total_loss).to eq(BigDecimal("0"))
+        expect(result.warnings).to be_empty
+      end
+    end
+
+    context "C ∈ (0,1): tổn hao dương nhỏ hơn 1 KHÔNG bị kẹp về 0" do
+      let(:sample) { setup_zone_one_full_sample }
+
+      before { sample.main_meter_reading.update!(usage: BigDecimal("2040.5")) } # A = 1930,5; C = 0,5
+
+      it "total_loss = 0,5 (giữ nguyên), không có cảnh báo" do
+        result = described_class.new(zone: sample.zone, period: sample.period).call
+        expect(result.total_loss).to eq(BigDecimal("0.5"))
+        expect(result.warnings).to be_empty
+      end
+    end
   end
 end

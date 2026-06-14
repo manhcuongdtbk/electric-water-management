@@ -49,6 +49,23 @@ RSpec.describe Demo::SpecGenerator do
     expect(content).to include('RSpec.describe "Demo: Meter entries"')
   end
 
+  it "seeds the good-demo patterns: golden example pointer, highlight, narrate, the honesty note and the quality checklist (ADR-059)" do
+    generate("meter_entries")
+    content = read("spec/demo/meter_entries_demo_spec.rb")
+
+    # Tier 2: every new demo starts pointed at the golden example (TN1)…
+    expect(content).to include("cot_khac_he_so_don_vi_demo_spec.rb")
+    # …with the six-point "demo tốt" checklist inline (ADR-059)…
+    expect(content).to include("ADR-059")
+    expect(content).to include("Show, don't tell")
+    # …a highlight placeholder so the result is shown, not just told…
+    expect(content).to include("demo.highlight(")
+    # …a narrate placeholder to tell the customer's story…
+    expect(content).to include("demo.narrate(")
+    # …and the honesty-about-the-medium note (do not act out Excel).
+    expect(content).to include(".xlsx")
+  end
+
   it "produces parseable Ruby" do
     generate("meter_entries")
     content = read("spec/demo/meter_entries_demo_spec.rb")

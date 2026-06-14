@@ -14,6 +14,9 @@ labels: change-request
 ## Có đụng nghiệp vụ không?
 <!-- Có / Không. Nếu có: mục nào trong docs/V2_XAC_NHAN_NGHIEP_VU.md (sẽ gắn anchor NV-... khi thiết kế). -->
 
+## Khách có thấy thay đổi này không?
+<!-- Có / Không. Nếu CÓ → gắn nhãn `customer-facing` ngay khi triage: kéo theo demo spec là Definition of Done (ADR-052), khai trong spec thiết kế (`## Truy vết demo`). -->
+
 ## Mức thay đổi (SemVer dự kiến)
 <!-- feat (thêm tính năng → MINOR) / fix (sửa lỗi → PATCH) / breaking (→ MAJOR). Chốt khi phân loại. -->
 
