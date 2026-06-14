@@ -1,9 +1,15 @@
 # This file is copied to spec/ when you run 'rails generate rspec:install'
 require 'spec_helper'
-ENV['RAILS_ENV'] ||= 'test'
+# Force the test environment. The app container defaults to RAILS_ENV=development
+# (compose.dev.yml), and the generated `||=` would NOT override it — so running
+# `bundle exec rspec` via `bin/docker exec app` / `bin/docker bash` (instead of
+# `bin/docker rspec`, which sets RAILS_ENV=test) would silently run against the
+# DEVELOPMENT database. That masks failures and pollutes results, and was what
+# made #362 look like seed-dependent flakiness. RSpec must always run in test.
+ENV['RAILS_ENV'] = 'test'
 require_relative '../config/environment'
-# Prevent database truncation if the environment is production
-abort("The Rails environment is running in production mode!") if Rails.env.production?
+# Safety net: never let a non-test environment (and its database) be used.
+abort("RSpec must run with RAILS_ENV=test (got #{Rails.env})") unless Rails.env.test?
 # Uncomment the line below in case you have `--require rails_helper` in the `.rspec` file
 # that will avoid rails generators crashing because migrations haven't been run yet
 # return unless Rails.env.test?
