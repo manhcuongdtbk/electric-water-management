@@ -13,6 +13,14 @@ name: CI
 # body does not re-run CI.
 # Per ADR-007 this CI only SHOWS status (a private repo has no free branch
 # protection) — single-merger discipline enforces the rules.
+#
+# TEMPORARY (revert after the Actions quota resets): every job runs on a
+# self-hosted runner (`runs-on: self-hosted`) instead of `ubuntu-latest` to stop
+# consuming the account's paid GitHub-hosted minutes. The runner is an Ubuntu
+# 24.04 container with its own Docker daemon (so `services:` still work); see
+# ~/gh-runner-ewm on the maintainer's machine. It must be ONLINE for checks to
+# run — if it is offline, jobs queue and wait. To restore GitHub-hosted CI,
+# change every `runs-on: self-hosted` back to `runs-on: ubuntu-latest`.
 on:
   pull_request:
     types: [opened, synchronize, reopened]
@@ -27,7 +35,7 @@ jobs:
   # Skips them only when EVERY changed file is docs/meta; any uncertainty → run.
   changes:
     name: Detect code changes
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     outputs:
       code_touched: ${{ steps.detect.outputs.code_touched }}
       # Whether the changed paths can alter the recorded demo output (#367,
@@ -51,7 +59,7 @@ jobs:
 
   ruby-checks:
     name: Ruby static checks (rubocop, brakeman, bundler-audit)
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: changes
     if: ${{ needs.changes.outputs.code_touched == 'true' }} # ADR-021: skip on docs-only
     steps:
@@ -73,7 +81,7 @@ jobs:
 
   commitlint:
     name: Conventional Commits (commitlint)
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v6
         with:
@@ -92,7 +100,7 @@ jobs:
 
   branch-source-guard:
     name: Branch-source guard (Git Flow)
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v6
       - name: Check the pull request source for a main target
@@ -103,7 +111,7 @@ jobs:
 
   doc-governance:
     name: Doc governance (links, map, glossary, test dimensions, ADR status, changelog header, ADR numbering, demo deliverable)
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     # Chạy LUÔN trên mọi pull request (KHÔNG gate qua `changes`): guardrail tài
     # liệu cần nhất đúng lúc pull request chỉ sửa tài liệu (ADR-024).
     steps:
@@ -124,7 +132,7 @@ jobs:
 
   i18n-view-guardrail:
     name: i18n view guardrail (no new hard-coded Vietnamese)
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     # Chạy LUÔN trên mọi pull request (KHÔNG gate qua `changes`): guardrail grep
     # rẻ, cần bắt đúng lúc pull request đụng .erb (ADR-032, triết lý ADR-024).
     steps:
@@ -134,7 +142,7 @@ jobs:
 
   demo-guardrail:
     name: Demo guardrail (customer-facing PR needs a demo spec)
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     # Chạy LUÔN trên mọi pull request (KHÔNG gate qua `changes`): guardrail nhẹ,
     # cần bắt đúng lúc pull request được gán nhãn customer-facing (ADR-040).
     steps:
@@ -150,7 +158,7 @@ jobs:
 
   tests:
     name: Tests (rspec incl. system specs, zeitwerk, schema drift)
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: changes
     if: ${{ needs.changes.outputs.code_touched == 'true' }} # ADR-021: skip on docs-only
     services:
@@ -200,7 +208,7 @@ jobs:
 
   demo:
     name: Demo recordings (Playwright)
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: changes
     # Record on EVERY code PR to verify the demo still runs green (anti-drift,
     # ADR-021/ADR-036). The Upload + Comment steps below are additionally gated
@@ -284,7 +292,7 @@ jobs:
 
   demo-bundle:
     name: Demo bundle (release PR — delta clips for owner review)
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     # Only on release pull requests (base = main): gom the customer-facing demo
     # delta of the release so the owner can review one set before forwarding to
     # the customer (ADR-047/048). NOT gated by `changes` — a release PR can be
