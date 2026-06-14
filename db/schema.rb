@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_12_000002) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_14_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -41,6 +41,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_12_000002) do
     t.index ["discarded_at"], name: "index_blocks_on_discarded_at"
     t.index ["name", "unit_id"], name: "index_blocks_on_name_and_unit_id", unique: true
     t.index ["unit_id"], name: "index_blocks_on_unit_id"
+  end
+
+  create_table "calculation_states", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "inputs_changed_at"
+    t.datetime "last_calculated_at"
+    t.bigint "period_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "zone_id", null: false
+    t.index ["period_id"], name: "index_calculation_states_on_period_id"
+    t.index ["zone_id", "period_id"], name: "idx_calculation_states_unique", unique: true
+    t.index ["zone_id"], name: "index_calculation_states_on_zone_id"
   end
 
   create_table "calculations", force: :cascade do |t|
@@ -311,6 +323,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_12_000002) do
 
   add_foreign_key "backups", "users", column: "created_by_id", on_delete: :nullify
   add_foreign_key "blocks", "units"
+  add_foreign_key "calculation_states", "periods"
+  add_foreign_key "calculation_states", "zones"
   add_foreign_key "calculations", "contact_points"
   add_foreign_key "calculations", "periods"
   add_foreign_key "contact_points", "blocks"

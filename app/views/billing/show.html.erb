@@ -29,8 +29,15 @@
           class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700"))
       end
       if can?(:read, Calculation)
-        concat(link_to("Xuất Excel",
-          billing_path(billing_filter_params.merge(format: :xlsx)),
+        export_url = billing_path(billing_filter_params.merge(format: :xlsx))
+        concat(link_to("Xuất Excel", export_url,
+          data: {
+            controller: "stale-export",
+            action: "stale-export#confirm",
+            "stale-export-stale-value": @freshness_states.any? { |entry| entry.status == :stale },
+            "stale-export-message-value": t("billing.export.stale_confirm"),
+            "stale-export-url-value": export_url
+          },
           class: "bg-green-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-700"))
       end
     end
@@ -46,6 +53,8 @@
         action_links: billing_action_links %>
 
   <%= render "warnings" %>
+
+  <%= render "shared/freshness_indicator", states: @freshness_states %>
 
   <p class="text-sm text-gray-700 mb-2">
     Đơn giá điện: <strong><%= unit_price_to_vi(@period.unit_price) %> đ/kW</strong>

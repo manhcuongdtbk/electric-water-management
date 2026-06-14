@@ -2,6 +2,7 @@ class BillingController < ApplicationController
   include AuthorizeResource
   include BusinessRoleRequired
   include ZoneUnitFilterable
+  include FreshnessIndicatable
 
   def show
     @available_periods = Period.order(year: :desc, month: :desc)
@@ -10,6 +11,7 @@ class BillingController < ApplicationController
 
     @ranks = @period.ranks.order(:position).to_a
     @base_scope = Billing::Query.base_scope(@period, current_ability)
+    @zone = @unit = nil
 
     if current_user.system_admin?
       scope = apply_sa_zone_unit_filter_with_direct_zone(@base_scope,
@@ -26,6 +28,7 @@ class BillingController < ApplicationController
     @show_unit_column = @unit.nil?
     @total_count = scope.count
     @summary = Billing::Query.summary(scope, period: @period)
+    assign_freshness_states(@period, selected_zone: @zone)
     @warnings = collect_warnings_for_zones(zones_in_scope(@period))
     @loss_summaries = LossSummary.where(period_id: @period.id, zone_id: zones_in_scope(@period).select(:id))
                                  .includes(:zone).to_a.sort_by { |s| s.zone&.name.to_s }
@@ -40,6 +43,16 @@ class BillingController < ApplicationController
         preload_personnel(@calculations)
       end
       format.xlsx do
+        # Layer 2 guard: refuse to generate a file from stale derived data unless the
+        # caller explicitly acknowledged (defends against direct-URL bypass of the JS
+        # confirm). @export_stale is reused by the in-file warning stamp (Layer 3).
+        @export_stale = @period.open? && CalculationFreshness.new(
+          period: @period, zones: freshness_zones(@period, selected_zone: @zone)
+        ).any_stale?
+        if @export_stale && params[:acknowledged_stale].blank?
+          next redirect_to(billing_path(redirect_filter_params),
+                           alert: t("billing.export.stale_blocked"))
+        end
         @calculations = scope.to_a
         preload_personnel(@calculations)
         response.headers["Content-Disposition"] =
@@ -99,19 +112,11 @@ class BillingController < ApplicationController
     zones.flat_map { |z| ZoneWarningCollector.new(zone: z, period: @period).call }
   end
 
-  # Dùng cho recalculate + warnings. Luôn dùng .with_discarded vì:
-  # - Engine cần zone đã xóa để tính kỳ cũ (data còn)
-  # - ZoneWarningCollector tự skip zone không có data cho kỳ đó (zone_has_data_for_period?)
+  # Dùng cho recalculate + warnings. Delegates to FreshnessIndicatable#freshness_zones
+  # so both share one Ability-aligned zone set (with_discarded vì engine cần zone đã
+  # xóa để tính kỳ cũ; ZoneWarningCollector tự skip zone không có data cho kỳ đó).
   def zones_in_scope(period)
-    return Zone.with_discarded.where(id: @zone.id) if @zone
-
-    if current_user.system_admin?
-      Zone.with_discarded.order(:name)
-    else
-      zone_ids = [current_user.unit&.zone_id].compact
-      zone_ids += Zone.kept.where(manager_unit_id: current_user.unit_id).pluck(:id) if current_user.unit_id
-      Zone.with_discarded.where(id: zone_ids.uniq)
-    end
+    freshness_zones(period, selected_zone: @zone)
   end
 
   def redirect_filter_params
