@@ -41,6 +41,18 @@ RSpec.describe Mutation::Runner do
     expect(report.results.map { |r| r[:change].to }).not_to include("-")
   end
 
+  it "ignores only the mutant at the given column when a line has several with the same from->to" do
+    File.write(tmp, "def f(a, b, c)\n  a + b + c\nend\n") # two `+` on line 2 (columns 4 and 8)
+    subject = Mutation::Subject.new(path: tmp, spec_paths: ["spec/none_spec.rb"])
+    ignores = [{ "path" => tmp, "line" => 2, "from" => "+", "to" => "-", "column" => 8 }]
+    report = described_class.new(subjects: [subject], spec_runner: spec_runner, ignores: ignores).run
+
+    ran_columns = report.results.map { |r| r[:change].column }
+    expect(report.ignored).to eq(1)
+    expect(ran_columns).to include(4)     # first `+` still mutated and run
+    expect(ran_columns).not_to include(8) # second `+` excluded by column
+  end
+
   it "restores the file even if the spec runner raises" do
     blowup = Class.new { def passes?(*) = raise("boom") }.new
     subject = Mutation::Subject.new(path: tmp, spec_paths: ["spec/none_spec.rb"])

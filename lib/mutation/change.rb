@@ -12,9 +12,11 @@ module Mutation
       "#{from} -> #{to}  (#{label})"
     end
 
-    # Stable key for the ignore-list (equivalent mutants).
+    # Stable key for the ignore-list (equivalent mutants). `column` lets an
+    # ignore entry target one specific mutant when a line carries several
+    # mutations with the same from->to (e.g. two `+` on one line).
     def ignore_key
-      { "path" => path, "line" => line, "from" => from, "to" => to }
+      { "path" => path, "line" => line, "from" => from, "to" => to, "column" => column }
     end
   end
 end
