@@ -66,6 +66,42 @@ RSpec.describe "Billing", type: :request do
         expect(headers).not_to include(a_string_matching(/\AĐơn vị\z/))
       end
 
+      it "CHIEU-breakdown-tong-theo-loai: bảng đối chiếu hiện đủ dòng + tiêu đề" do
+        get billing_path(zone_id: sample.zone.id)
+        expect(response.body).to include("Đối chiếu tổn hao/sử dụng theo loại đầu mối")
+        expect(response.body).to include("Cộng (công tơ có tổn hao)")
+        expect(response.body).to include("Không tổn hao")
+        expect(response.body).to include("Tổng cộng")
+      end
+
+      it "khớp ví dụ mẫu #332 (số làm tròn tiếng Việt)" do
+        get billing_path(zone_id: sample.zone.id)
+        body = response.body
+        expect(body).to include("38,24")
+        expect(body).to include("12,44")
+        expect(body).to include("9,33")
+        expect(body).to include("60,00") # Tổng tổn hao C ở dòng "Cộng"/"Tổng cộng"
+        expect(body).to include("2.100,00")
+      end
+
+      it "CHIEU-breakdown-lam-tron: có chú thích lệch ±0,01 do làm tròn" do
+        get billing_path(zone_id: sample.zone.id)
+        expect(response.body).to include("±0,01")
+      end
+
+      it "CHIEU-breakdown-i18n: nhãn breakdown tiếng Việt (không lẫn tiếng Anh)" do
+        get billing_path(zone_id: sample.zone.id)
+        expect(response.body).to include("Sử dụng thực tế")
+        expect(response.body).not_to include("loss_bearing_total")
+        expect(response.body).not_to include("grand_total")
+      end
+
+      it "CHIEU-breakdown-chua-tinh: chưa tính → không hiện bảng breakdown" do
+        LossSummary.where(period: sample.period).delete_all
+        get billing_path(zone_id: sample.zone.id)
+        expect(response.body).not_to include("Đối chiếu tổn hao/sử dụng theo loại đầu mối")
+      end
+
       # Dropdown chọn kỳ, filter/cascade, đổi kỳ auto-submit, nút Tính toán lại/Xuất Excel,
       # non-SA dropdown visibility: cover bởi system specs (spec/system/billing_filter_spec.rb).
 
@@ -277,6 +313,16 @@ RSpec.describe "Billing", type: :request do
           expect(all_text).to include("Tổng tổn hao (C = A − B)")
         end
 
+        it "CHIEU-breakdown-excel: các dòng breakdown theo loại ở cuối sheet" do
+          CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
+          get billing_path(format: :xlsx)
+          xlsx = parse_xlsx(response.body)
+          all_text = xlsx.rows.compact.flatten.compact.map(&:to_s).join(" | ")
+          expect(all_text).to include("Đối chiếu tổn hao/sử dụng theo loại đầu mối")
+          expect(all_text).to include("Cộng (công tơ có tổn hao)")
+          expect(all_text).to include("Tổng cộng")
+        end
+
         it "CHIEU-ton-hao-chua-tinh: chưa tính → không có khối A/B/C trong Excel" do
           # describe-level before đã chạy CalculationOrchestrator; xóa snapshot để
           # tái lập trạng thái "chưa tính" (@loss_summaries rỗng).
@@ -367,6 +413,51 @@ RSpec.describe "Billing", type: :request do
     end
   end
 
+  describe "GET /billing — breakdown role + multi-zone (#332)" do
+    let(:sample) { setup_zone_one_full_sample }
+    before { CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call }
+
+    let(:breakdown_title) { "Đối chiếu tổn hao/sử dụng theo loại đầu mối" }
+
+    it "CHIEU-breakdown-vai-tro: unit_admin thấy breakdown khu vực mình" do
+      sign_in create(:user, :unit_admin, unit: sample.unit_b)
+      get billing_path
+      expect(response.body).to include(breakdown_title)
+    end
+
+    it "CHIEU-breakdown-vai-tro: unit_admin quản lý khu vực (UA-ZM) thấy breakdown" do
+      sign_in create(:user, :unit_admin, unit: sample.unit_a)
+      get billing_path
+      expect(response.body).to include(breakdown_title)
+    end
+
+    it "CHIEU-breakdown-vai-tro: commander đơn vị quản lý khu vực (CMD-ZM) thấy breakdown" do
+      sign_in create(:user, :commander, unit: sample.unit_a)
+      get billing_path
+      expect(response.body).to include(breakdown_title)
+    end
+
+    it "CHIEU-breakdown-vai-tro: commander đơn vị thường (CMD) thấy breakdown" do
+      sign_in create(:user, :commander, unit: sample.unit_b)
+      get billing_path
+      expect(response.body).to include(breakdown_title)
+    end
+
+    it "CHIEU-breakdown-vai-tro: technician bị chặn khỏi bảng tính tiền" do
+      sign_in create(:user, :technician)
+      get billing_path
+      expect(response).to redirect_to(users_path)
+    end
+
+    it "CHIEU-breakdown-theo-zone: SA đa khu vực → mỗi zone một bảng breakdown" do
+      sample2 = setup_zone_two_full_sample(period: sample.period)
+      CalculationOrchestrator.new(zone: sample2.zone, period: sample.period).call
+      sign_in create(:user, :system_admin)
+      get billing_path
+      expect(response.body.scan(breakdown_title).size).to be >= 2
+    end
+  end
+
   describe "POST /billing/recalculate" do
     let(:admin) { create(:user, :system_admin) }
     let(:unit_admin_b) { create(:user, :unit_admin, unit: sample.unit_b) }
@@ -424,7 +515,7 @@ RSpec.describe "Billing", type: :request do
       expect(reading.reload.loss).to be_present
 
       get billing_path
-      expect(response.body).to include("Công tơ tổng (A)")
+      expect(response.body).to include("Cộng (công tơ có tổn hao)")
     end
   end
 
@@ -495,7 +586,7 @@ RSpec.describe "Billing", type: :request do
       sample
       sign_in sa
       get billing_path
-      expect(response.body).not_to include("Công tơ tổng (A)")
+      expect(response.body).not_to include("Cộng (công tơ có tổn hao)")
     end
 
     it "CHIEU-ton-hao-sau-tinh: sau tính → A/B/C khớp LossCalculator (HTML)" do
@@ -504,7 +595,7 @@ RSpec.describe "Billing", type: :request do
       sign_in sa
       get billing_path
       ls = LossSummary.find_by(zone: sample.zone, period: sample.period)
-      expect(response.body).to include("Công tơ tổng (A)")
+      expect(response.body).to include("Cộng (công tơ có tổn hao)")
       expect(response.body).to include(vi.number_to_vi(ls.a))
       expect(response.body).to include(vi.number_to_vi(ls.b))
       expect(response.body).to include(vi.number_to_vi(ls.c))
@@ -515,7 +606,7 @@ RSpec.describe "Billing", type: :request do
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
       sign_in sa
       get billing_path
-      expect(response.body).to include("gồm cả công tơ công cộng và bơm nước")
+      expect(response.body).to include("tính trên toàn khu vực")
       expect(response.body).to include("đã trừ điện công tơ không tổn hao")
     end
 
@@ -554,7 +645,7 @@ RSpec.describe "Billing", type: :request do
       ].each do |u|
         sign_in u
         get billing_path
-        expect(response.body).to include("Công tơ tổng (A)")
+        expect(response.body).to include("Cộng (công tơ có tổn hao)")
       end
 
       sign_in create(:user, :technician)
@@ -571,7 +662,7 @@ RSpec.describe "Billing", type: :request do
       ls = LossSummary.find_by(zone: sample.zone, period: sample.period)
       expect(ls.b).to eq(BigDecimal("0"))
       expect(ls.c).to eq(BigDecimal("0"))
-      expect(response.body).to include("Công tơ tổng (A)")
+      expect(response.body).to include("Cộng (công tơ có tổn hao)")
       expect(response.body).to include("Khu vực không có công tơ có tổn hao")
     end
 
@@ -601,7 +692,7 @@ RSpec.describe "Billing", type: :request do
       get billing_path
       ls = LossSummary.find_by(zone: sample.zone, period: sample.period)
       expect(ls.c).to eq(BigDecimal("0"))
-      expect(response.body).to include("Công tơ tổng (A)")
+      expect(response.body).to include("Cộng (công tơ có tổn hao)")
       expect(response.body).to include("Tổng sử dụng các công tơ con lớn hơn công tơ tổng")
     end
   end
