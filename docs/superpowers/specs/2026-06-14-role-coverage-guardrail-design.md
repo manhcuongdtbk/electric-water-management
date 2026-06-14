@@ -114,7 +114,7 @@ Guardrail **chỉ** đảm bảo: mọi controller kế thừa `ApplicationContr
 
 ## Truy vết
 
-- **Issue:** [`#359`](https://github.com/manhcuongdtbk/electric-water-management/issues/359) (`change-request`, milestone `1.3.0`, không `priority-high`) → **`Refs #359`** (đóng khi PR vào develop, theo close-keyword ở PR).
+- **Issue:** [`#359`](https://github.com/manhcuongdtbk/electric-water-management/issues/359) (`change-request`, milestone `1.3.0`, không `priority-high`) → PR mang **`Refs #359`**; phạm vi access-only của #359 hoàn tất ở PR này, chủ dự án đóng #359 khi xác nhận (gate đóng issue thuộc người). Phần hành vi tách sang [`#373`](https://github.com/manhcuongdtbk/electric-water-management/issues/373).
 - **Lên:** [ADR-002](2026-06-07-sdlc-overview-design.md) (luật nào máy ép được thì để máy ép), [ADR-030](2026-06-13-truy-vet-chieu-test-design.md) (họ guardrail truy vết chiều test — mẫu fail-loud/test-kèm), [ADR-029](2026-06-07-sdlc-overview-design.md) (máy lo cơ học, người giữ phán đoán).
 - **Nghiệp vụ/hành vi:** [`V2_HANH_VI_HE_THONG.md` mục 1](../../V2_HANH_VI_HE_THONG.md) (6 vai trò), [`V2_CHIEU_TEST.md`](../../V2_CHIEU_TEST.md) (chiều 2/3 ma trận truy cập).
 - **Xuống (follow-up):** [`#373`](https://github.com/manhcuongdtbk/electric-water-management/issues/373) — độ phủ **hành vi chi tiết** per-role (ngoài phạm vi guardrail access này).

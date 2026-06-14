@@ -1,6 +1,6 @@
 ---
 title: Tự động hoá demo (walkthrough cho chủ dự án trước merge + khách trước release)
-version: 0.2.0
+version: 0.3.0
 date: 2026-06-13
 ---
 
@@ -10,7 +10,7 @@ Thiết kế cho [#343](https://github.com/manhcuongdtbk/electric-water-manageme
 
 Liên quan: tương tác khách mức release & nghiệm thu hands-on trên Acceptance (ADR-013 trong [truy vết & quản lý thay đổi](2026-06-08-truy-vet-quan-ly-thay-doi-design.md)); Acceptance = nhánh `main`, **không** dùng `-rc.N`, promotion (ADR-005/008 trong [quy trình release](2026-06-07-quy-trinh-release-design.md)); **phân biệt** với cổng xác nhận *yêu cầu* trước build (ADR-028 — duyệt tài liệu, chưa có phần mềm; demo thì xem phần mềm đã build); anchor `NV-...` và dấu vết bền trong repo (ADR-013/014); tốc-độ system spec trên CI tách ở [#344](https://github.com/manhcuongdtbk/electric-water-management/issues/344).
 
-> **Cách đọc:** quyết định viết theo **ADR** (Trạng thái → Bối cảnh → Quyết định → Lý do → Tradeoff → Phương án đã loại → Điều kiện xem lại). ADR đánh số toàn cục, tiếp nối **ADR-033**; spec này thêm **ADR-036 … ADR-041**.
+> **Cách đọc:** quyết định viết theo **ADR** (Trạng thái → Bối cảnh → Quyết định → Lý do → Tradeoff → Phương án đã loại → Điều kiện xem lại). ADR đánh số toàn cục, tiếp nối **ADR-033**; spec này thêm **ADR-036 … ADR-041** và **ADR-055**.
 
 ## Goals
 
@@ -182,6 +182,15 @@ Cả ① và ② nếu phát hiện vấn đề đều **lặp lại từ đầu
 - **Phương án đã loại:** *Ghép release reel* — cần lớp ghép/manifest, để dành. *Trang demo trong app Acceptance* — phải build trang + host. *Quay trên Acceptance thật* — data biến động, không nhất quán. *Gắn GitHub Release* — khách không dùng GitHub.
 - **Điều kiện xem lại:** Khi số tính năng/release lớn, khách muốn một video gọn → mở cấp ghép reel; hoặc dựng trang demo trong app.
 
+### ADR-055: Job demo verify mọi code PR, chỉ upload artifact + post comment khi đụng path demo lái qua
+- **Trạng thái:** Accepted · 2026-06-14
+- **Bối cảnh:** Job `Demo recordings (Playwright)` gate qua `code_touched` (ADR-021) → chạy trên **mọi** PR đụng code, kể cả PR thuần infra không đụng `spec/demo/`. Khi review [#365](https://github.com/manhcuongdtbk/electric-water-management/issues/362) (PR test-infra) thấy job vẫn upload artifact + post comment `🎬 … đã được ghi hình` ⇒ reviewer dễ hiểu nhầm "có demo mới" dù video giống hệt bản trên `develop`. Câu chữ comment đã làm rõ trước đó (`94e8cc1`); phần còn lại của [#367](https://github.com/manhcuongdtbk/electric-water-management/issues/367) là **trigger** của hai bước phụ.
+- **Quyết định (Option C):** Giữ job **chạy quay để VERIFY** trên mọi code PR (không đụng `if:` cấp job — anti-drift nguyên vẹn), nhưng **chỉ Upload demo videos + post-demo-comment khi `demo_relevant == 'true'`**. `demo_relevant` là output mới của job `changes`, dò bằng `.github/scripts/detect-demo-relevant.sh` (cùng phong cách fail-safe với `detect-code-changes.sh`): `true` khi PR đụng `spec/demo/**`, `app/views/**`, `app/controllers/**`, `config/routes.rb`, `db/seeds/demo.rb`, `spec/support/**demo**`; bất định → `true`.
+- **Lý do:** Vấn đề người dùng nêu là **nhiễu comment + artifact "tưởng có demo mới"**, không phải bản thân việc verify. C xử đúng cái đó mà **không hi sinh vùng phủ drift** — một thay đổi non-demo (controller/view/route/seed) làm hỏng demo vẫn bị bước "Record demo specs" bắt sớm.
+- **Tradeoff:** (+) Bỏ nhiễu trên PR thuần infra; giữ trọn anti-drift. (−) Vẫn tốn ~2.5′ quay cho mỗi code PR (chấp nhận — đó là giá của verify); danh sách path lái-qua phải bảo trì cùng demo spec khi đường đi của demo đổi.
+- **Phương án đã loại:** *Option A — giữ nguyên* (chạy + comment mọi PR): anti-drift tối đa nhưng giữ nguyên nhiễu. *Option B — thu hẹp cả job theo path-filter*: rẻ nhất nhưng drift từ path ngoài allowlist lọt lưới (mất vùng phủ verify).
+- **Điều kiện xem lại:** Nếu demo lái qua thêm loại path mới (ví dụ helper/asset ngoài danh sách) mà drift lọt lưới comment → mở rộng allowlist trong `detect-demo-relevant.sh`; nếu chi phí ~2.5′/PR thành nút thắt → cân nhắc lại Option B.
+
 ## Truy vết
 
 - Issue: [#343](https://github.com/manhcuongdtbk/electric-water-management/issues/343) (intake change-request). Spike tốc-độ suite: [#344](https://github.com/manhcuongdtbk/electric-water-management/issues/344).
@@ -200,3 +209,4 @@ Cả ① và ② nếu phát hiện vấn đề đều **lặp lại từ đầu
 | 0.1.5 | 2026-06-13 | Tinh chỉnh Glossary "Chặng khách" cho khớp vị trí đã sửa (cửa sổ `release/*` trước merge `main`, đứng trước nghiệm thu hands-on ②). |
 | 0.1.6 | 2026-06-13 | Đánh số lại ADR của spec này: 034..039 → **036..041**, tránh trùng — ADR-034 đã thuộc #328 (merged `develop`, spec `khac-zone-direct-sua-duoc`), ADR-035 đang ở PR #346 (#342). Cập nhật mọi tham chiếu trong spec/plan/code. |
 | 0.2.0 | 2026-06-13 | Hiện thực MVP (xem plan 2026-06-13-tu-dong-hoa-demo.md): demo spec + recorder Playwright + caption/diễn hoạt + seed + transcode + CI job + guardrail. Thuật ngữ demo (Demo spec, Recorder, Caption banner, Diễn hoạt thao tác) bổ sung vào `docs/THUAT_NGU.md` v1.8.0. |
+| 0.3.0 | 2026-06-14 | Thêm **ADR-055** (#367, Option C): job demo verify trên mọi code PR nhưng chỉ Upload artifact + post comment khi `demo_relevant == 'true'` (PR đụng path demo lái qua) — bỏ nhiễu "tưởng có demo mới" trên PR thuần infra, giữ trọn anti-drift. Thêm `.github/scripts/detect-demo-relevant.sh` + output `demo_relevant` ở job `changes`. |
