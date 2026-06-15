@@ -52,7 +52,7 @@ gem "cancancan"
 gem "paper_trail"
 
 # Soft delete
-gem "discard", "~> 1.4"
+gem "discard", "~> 2.0"
 
 # Pagination
 gem "pagy", "~> 9.0"
