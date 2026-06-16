@@ -65,17 +65,25 @@ Capybara.register_driver :headless_chromium do |app|
   # Manager tự tìm trình duyệt.
   options.binary = chromium_binary if File.exist?(chromium_binary)
 
-  # Gom tham số tạo driver. Không có :service → Selenium Manager tự lo chromedriver.
+  # Gom tham số tạo driver.
   driver_arguments = { browser: :chrome, options: options }
+
+  # Mỗi process của parallel_tests (TEST_ENV_NUMBER = "", "2", "3", …) phải dùng một
+  # cổng chromedriver RIÊNG. Nếu không, các lần khởi động chromedriver song song sẽ
+  # tranh nhau cổng khoá dùng chung của Selenium (mặc định cổng dịch vụ 9515 → cổng
+  # khoá 9514) rồi timeout ("unable to bind to locking port 9514 within 45 seconds").
+  # Bước nhảy 10 để cổng dịch vụ và cổng khoá của các process không bao giờ chồng nhau.
+  # TEST_ENV_NUMBER trống (chạy đơn process, vd bin/docker rspec) = 0 → cổng mặc định.
+  chromedriver_port = 9515 + (ENV.fetch("TEST_ENV_NUMBER", "").to_i * 10)
+  service_arguments = { port: chromedriver_port }
 
   # Có chromedriver tại đường dẫn chỉ định (vd trong Docker) → dùng thẳng, bỏ qua
   # Selenium Manager (không tải gì lúc chạy, chạy được cả khi offline, khớp Chromium).
-  # Không có (vd trên host) → để Selenium Manager tải bản chromedriver khớp Chrome.
-  # (Hiếm khi lệch version — vd có chromedriver cũ bị ghim/PATH; cách xử lý ở mục
-  # "Lỗi version Chrome ≠ chromedriver" trong docs/KIEN_THUC_DOCKER.md.)
-  if File.exist?(chromedriver_binary)
-    driver_arguments[:service] = Selenium::WebDriver::Chrome::Service.new(path: chromedriver_binary)
-  end
+  # Không có (vd trên host/CI) → để Selenium Manager tìm chromedriver khớp Chrome;
+  # cổng riêng ở trên vẫn được áp dụng. (Lỗi lệch version: xem mục "Lỗi version
+  # Chrome ≠ chromedriver" trong docs/KIEN_THUC_DOCKER.md.)
+  service_arguments[:path] = chromedriver_binary if File.exist?(chromedriver_binary)
+  driver_arguments[:service] = Selenium::WebDriver::Chrome::Service.new(**service_arguments)
 
   # Tạo driver Capybara bọc Selenium với toàn bộ cấu hình trên.
   Capybara::Selenium::Driver.new(app, **driver_arguments)

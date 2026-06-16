@@ -14,7 +14,20 @@ if ENV["COVERAGE"]
   SimpleCov.start "rails" do
     enable_coverage :branch
     add_filter %r{^/spec/}
-    minimum_coverage line: 96, branch: 81
+    # Under parallel_tests each process reports coverage separately. Give each a
+    # distinct command name so they don't clobber one another — keyed by both the
+    # process (TEST_ENV_NUMBER is "" / "2" / "3" / …) and the run phase
+    # (COVERAGE_PHASE: nonsystem / system; see ci.yml). Widen the merge window so
+    # SimpleCov unions every process across both phases into one report instead of
+    # showing just one process's partial numbers.
+    command_name "RSpec_#{ENV['TEST_ENV_NUMBER']}_#{ENV['COVERAGE_PHASE']}"
+    merge_timeout 3600
+    # Anti-regression ratchet (Issue #381, ADR-060). Only enforce when the WHOLE
+    # suite runs in one process (TEST_ENV_NUMBER unset). Under parallel_tests each
+    # process checks at its own at_exit before the others' results have merged, so a
+    # per-process gate would fail falsely on its partial coverage — exactly the
+    # "subset under-reports" caveat above. The single-process CI still gates it.
+    minimum_coverage line: 96, branch: 81 unless ENV["TEST_ENV_NUMBER"]
   end
 end
 

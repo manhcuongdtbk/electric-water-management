@@ -1,0 +1,31 @@
+# Self-hosted GitHub Actions runner for manhcuongdtbk/electric-water-management.
+# Temporary stopgap to avoid paying for Actions minutes (quota resets monthly).
+#
+# Runs an Ubuntu 24.04 runner with its OWN Docker daemon inside the same
+# container (privileged + START_DOCKER_SERVICE). Running dockerd in the SAME
+# container as the runner is what makes the workflow's `services: postgres`
+# reachable at localhost:5432 from the job steps — exactly like ubuntu-latest.
+#
+# Bring up with ./start.sh (it mints a fresh registration token via gh).
+services:
+  runner:
+    image: myoung34/github-runner:ubuntu-noble
+    container_name: ewm-gh-runner
+    init: true                  # tini as PID 1 → reaps zombie chromedriver from system specs
+    privileged: true            # required to run dockerd inside the container
+    restart: "no"               # predictable: re-run ./start.sh to bring it back
+    environment:
+      RUNNER_SCOPE: repo
+      REPO_URL: https://github.com/manhcuongdtbk/electric-water-management
+      RUNNER_NAME: mac-dev-runner
+      RUNNER_TOKEN: ${RUNNER_TOKEN:?run ./start.sh which mints RUNNER_TOKEN via gh}
+      LABELS: self-hosted,linux,mac-dev
+      START_DOCKER_SERVICE: "true"
+      RUNNER_WORKDIR: /tmp/runner/work
+    volumes:
+      - runner-docker:/var/lib/docker   # persist pulled images (postgres, etc.) across runs
+      - runner-work:/tmp/runner
+
+volumes:
+  runner-docker:
+  runner-work:
