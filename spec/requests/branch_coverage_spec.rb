@@ -222,8 +222,8 @@ RSpec.describe "Branch coverage — controllers and concerns", type: :request do
             personnel_count: "3"
           }
         }
-        # Should fail because non_establishment must belong to zone
-        expect(response).to have_http_status(:unprocessable_content).or redirect_to(root_path)
+        # non_establishment validates zone_id presence → save fails → re-render :new
+        expect(response).to have_http_status(:unprocessable_content)
       end
     end
 
@@ -448,16 +448,14 @@ RSpec.describe "Branch coverage — controllers and concerns", type: :request do
         zone_cp = create(:contact_point, :zone_residential, zone: zone, name: "Zone CP Config",
                          initial_personnel_counts: { ranks.last.id => 1 })
         zone.update!(manager_unit: unit_a)
-        od = OtherDeduction.find_by(contact_point: zone_cp, period: period)
-        if od
-          patch unit_config_path, params: {
-            zone_id: zone.id,
-            other_deductions: {
-              od.id.to_s => { other_type: "fixed", other_value: "100", lock_version: od.lock_version }
-            }
+        od = OtherDeduction.find_by!(contact_point: zone_cp, period: period)
+        patch unit_config_path, params: {
+          zone_id: zone.id,
+          other_deductions: {
+            od.id.to_s => { other_type: "fixed", other_value: "100", lock_version: od.lock_version }
           }
-          expect(response).to redirect_to(unit_config_path(zone_id: zone.id))
-        end
+        }
+        expect(response).to redirect_to(unit_config_path(zone_id: zone.id))
       end
     end
 
@@ -510,16 +508,14 @@ RSpec.describe "Branch coverage — controllers and concerns", type: :request do
     end
 
     describe "PATCH /electricity_supply — new reading save failure" do
-      it "collects errors when new reading save fails" do
+      it "re-renders with error when new reading has negative usage" do
         main_meter = create(:main_meter, name: "MM-new-fail", zone: zone)
-        # No existing reading for this main_meter
 
         patch electricity_supply_path, params: {
           new_main_meter_readings: { main_meter.id.to_s => { usage: "-1" } }
         }
-        # Negative usage might fail validation or succeed — depends on model
-        # Either way, the controller path is exercised
-        expect(response.status).to be_in([200, 302, 422])
+        # usage validates >= 0, so -1 fails → controller collects error → re-render
+        expect(response).to have_http_status(:unprocessable_content)
       end
     end
 
@@ -606,7 +602,8 @@ RSpec.describe "Branch coverage — controllers and concerns", type: :request do
       patch pricing_path, params: {
         period: { unit_price: "" }
       }
-      expect(response).to have_http_status(:ok).or have_http_status(:unprocessable_content)
+      # unit_price blank fails validation → re-render :show
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "close_period with warnings from mismatch" do
@@ -974,8 +971,8 @@ RSpec.describe "Branch coverage — controllers and concerns", type: :request do
       Rank.destroy_all
       sign_in system_admin
       get electricity_supply_path
-      # When no period, should still render (or redirect) — freshness_states = []
-      expect(response.status).to be_in([200, 302])
+      # SA + no period → authorize_or_redirect passes (SA), render show with empty readings
+      expect(response).to have_http_status(:ok)
     end
   end
 
