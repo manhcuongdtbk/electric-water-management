@@ -1,6 +1,6 @@
 ---
 title: Cột "Khác" kiểu hệ số tổng đơn vị (cách nhập thứ ba cho khoản trừ Khác)
-version: 0.2.4
+version: 0.2.5
 date: 2026-06-17
 governed_by: 2026-06-07-sdlc-overview-design.md
 ---
@@ -86,7 +86,7 @@ Mã `CHIEU-<slug>` khai chiều test; test mang mã ở mô tả `it` (CI đối
 | `CHIEU-khac-don-vi-zone-direct` | Đầu mối zone-direct chọn `unit_coefficient` → validate chặn (request) + option bị ẩn (UI) | có test |
 | `CHIEU-khac-don-vi-ke-thua` | Kế thừa sang kỳ mới giữ `unit_coefficient` + hệ số, tính lại theo quân số kỳ mới | có test |
 | `CHIEU-khac-don-vi-vai-tro` | Sáu vai trò: ai sửa được cột Khác giữ nguyên (quản trị viên đơn vị; chỉ huy chỉ xem) | có test |
-| `CHIEU-khac-don-vi-loai-tru-cc-nb` | Defensive: residential-only filter loại public CP khỏi tổng quân số đơn vị ngay cả khi có personnel bất thường (CC không có quân số theo nghiệp vụ; NE không thuộc đơn vị — model chặn) | có test |
+| `CHIEU-khac-don-vi-loai-tru-cc-nb` | Defensive: query filter chỉ đếm đầu mối sinh hoạt, loại đầu mối công cộng thuộc đơn vị khỏi tổng quân số ngay cả khi tồn tại quân số bất thường (đầu mối công cộng không có quân số theo nghiệp vụ mục 4; đầu mối ngoài biên chế không thuộc đơn vị — model chặn) | có test |
 
 ## Giới hạn
 
@@ -101,9 +101,13 @@ Mã `CHIEU-<slug>` khai chiều test; test mang mã ở mô tả `it` (CI đối
 
 ## Lịch sử thay đổi
 
+### 0.2.5 (2026-06-17)
+
+- Sửa viết tắt và lẫn lộn Anh-Việt trong mô tả chiều test `CHIEU-khac-don-vi-loai-tru-cc-nb` và comment test: bỏ "CC", "NE", "public CP", "residential-only filter", "personnel", "defensive" — viết đầy đủ tiếng Việt trong tài liệu, đầy đủ tiếng Anh trong code.
+
 ### 0.2.4 (2026-06-17)
 
-- Sửa lại mô tả chiều test `CHIEU-khac-don-vi-loai-tru-cc-nb`: đánh dấu là **defensive** test — đầu mối công cộng "không có người" theo nghiệp vụ (spec mục 4), nên scenario personnel bất thường trên public CP không xảy ra trong thực tế. Test kiểm chứng query filter `residential_contact_points`, không phải kiểm chứng quy tắc nghiệp vụ.
+- Sửa lại mô tả chiều test `CHIEU-khac-don-vi-loai-tru-cc-nb`: đánh dấu là defensive test — đầu mối công cộng "không có người" theo nghiệp vụ (spec mục 4), nên scenario quân số bất thường trên đầu mối công cộng không xảy ra trong thực tế. Test kiểm chứng query filter `residential_contact_points`, không phải kiểm chứng quy tắc nghiệp vụ.
 
 ### 0.2.3 (2026-06-17)
 

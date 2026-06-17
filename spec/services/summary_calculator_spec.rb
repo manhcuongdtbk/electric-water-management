@@ -235,15 +235,16 @@ RSpec.describe SummaryCalculator do
       end
     end
 
-    describe "unit_coefficient — residential-only filter (defensive)" do
-      # Nghiệp vụ (mục 10.2.1): tổng quân số = "tất cả đầu mối SINH HOẠT trong đơn vị,
-      # không tính NB / CC". Trong thực tế quy tắc này tự thỏa vì:
-      #   - Đầu mối công cộng "không có người" (spec mục 4) → không có quân số để đếm.
-      #   - Đầu mối ngoài biên chế không thuộc đơn vị (model chặn unit_id).
-      # Test này kiểm chứng query filter residential_contact_points hoạt động đúng
-      # NGAY CẢ KHI dữ liệu bất thường tồn tại (defensive — scenario không xảy ra
-      # theo nghiệp vụ nhưng có thể xảy ra nếu DB bị sửa tay hoặc migration lỗi).
-      it "CHIEU-khac-don-vi-loai-tru-cc-nb: residential-only filter loại public CP dù có personnel bất thường" do
+    describe "unit_coefficient — residential-only query filter (defensive)" do
+      # Business rule (section 10.2.1): unit total = "all residential contact points
+      # in the unit, excluding non-establishment and public". In practice the rule is
+      # structurally satisfied because:
+      #   - Public contact points have no personnel (spec section 4).
+      #   - Non-establishment contact points cannot belong to a unit (model validation).
+      # This test verifies the residential_contact_points query filter works correctly
+      # even when abnormal data exists (defensive — scenario impossible per business
+      # rules but possible if the database is manually edited or a migration is buggy).
+      it "CHIEU-khac-don-vi-loai-tru-cc-nb: residential-only filter excludes public contact point even with abnormal personnel" do
         nha_an = sample.contact_points[:nha_an]
         PersonnelEntry.create!(contact_point: nha_an, period: sample.period,
                                rank: sample.ranks[:ha_si_quan], count: 99)
@@ -254,7 +255,7 @@ RSpec.describe SummaryCalculator do
                             loss_results: loss_results, pump_results: pump_results).call
 
         calc = calculation_for(:van_thu)
-        # Filter chỉ đếm residential → -2 × (10 − 2) = -16 (không phải -214).
+        # Filter counts only residential → -2 × (10 − 2) = -16, not -214.
         expect(calc.other_deduction).to eq_display("-16.00")
       end
     end
