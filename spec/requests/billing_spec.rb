@@ -467,12 +467,22 @@ RSpec.describe "Billing", type: :request do
       expect(response).to redirect_to(users_path)
     end
 
-    it "CHIEU-breakdown-theo-zone: SA đa khu vực → mỗi zone một bảng breakdown" do
+    it "CHIEU-breakdown-theo-zone: SA không chọn zone → ẩn breakdown, hiện gợi ý chọn khu vực" do
       sample2 = setup_zone_two_full_sample(period: sample.period)
       CalculationOrchestrator.new(zone: sample2.zone, period: sample.period).call
       sign_in create(:user, :system_admin)
       get billing_path
-      expect(response.body.scan(breakdown_title).size).to be >= 2
+      expect(response.body).not_to include(breakdown_title)
+      expect(response.body).to include("Chọn khu vực để xem chi tiết tổn hao.")
+    end
+
+    it "CHIEU-breakdown-theo-zone: SA chọn zone → hiện breakdown của zone đó" do
+      sample2 = setup_zone_two_full_sample(period: sample.period)
+      CalculationOrchestrator.new(zone: sample2.zone, period: sample.period).call
+      sign_in create(:user, :system_admin)
+      get billing_path(zone_id: sample.zone.id)
+      expect(response.body).to include(breakdown_title)
+      expect(response.body.scan(breakdown_title).size).to eq(1)
     end
   end
 
@@ -532,7 +542,7 @@ RSpec.describe "Billing", type: :request do
       reading = MeterReading.find_by(meter: sample.meters[:ct_a1], period: sample.period)
       expect(reading.reload.loss).to be_present
 
-      get billing_path
+      get billing_path(zone_id: sample.zone.id)
       expect(response.body).to include("Cộng (công tơ có tổn hao)")
     end
   end
@@ -611,7 +621,7 @@ RSpec.describe "Billing", type: :request do
       sample
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
       sign_in sa
-      get billing_path
+      get billing_path(zone_id: sample.zone.id)
       ls = LossSummary.find_by(zone: sample.zone, period: sample.period)
       expect(response.body).to include("Cộng (công tơ có tổn hao)")
       expect(response.body).to include(vi.number_to_vi(ls.a))
@@ -623,7 +633,7 @@ RSpec.describe "Billing", type: :request do
       sample
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
       sign_in sa
-      get billing_path
+      get billing_path(zone_id: sample.zone.id)
       expect(response.body).to include("tính trên toàn khu vực")
       expect(response.body).to include("đã trừ điện công tơ không tổn hao")
     end
@@ -640,7 +650,7 @@ RSpec.describe "Billing", type: :request do
       expect(response.body).not_to include("Khu vực Hai TN3")
     end
 
-    it "CHIEU-ton-hao-theo-zone: SA không chọn zone → mỗi zone một dòng A/B/C" do
+    it "CHIEU-ton-hao-theo-zone: SA không chọn zone → ẩn A/B/C, hiện gợi ý chọn khu vực" do
       sample
       other = create(:zone, name: "Khu vực Hai TN3")
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
@@ -648,21 +658,22 @@ RSpec.describe "Billing", type: :request do
                           a: BigDecimal("500"), b: BigDecimal("480"), c: BigDecimal("20"))
       sign_in sa
       get billing_path
-      expect(response.body).to include(sample.zone.name).and include("Khu vực Hai TN3")
+      expect(response.body).not_to include("Cộng (công tơ có tổn hao)")
+      expect(response.body).to include("Chọn khu vực để xem chi tiết tổn hao.")
     end
 
     it "CHIEU-ton-hao-vai-tro: cả 5 vai trò nghiệp vụ thấy A/B/C; TECH bị chặn" do
       sample
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
       [
-        create(:user, :system_admin),                      # SA
-        create(:user, :unit_admin, unit: sample.unit_a),   # UA-ZM
-        create(:user, :unit_admin, unit: sample.unit_b),   # UA
-        create(:user, :commander, unit: sample.unit_a),    # CMD-ZM
-        create(:user, :commander, unit: sample.unit_b)     # CMD
-      ].each do |u|
+        [create(:user, :system_admin), { zone_id: sample.zone.id }], # SA must select zone
+        [create(:user, :unit_admin, unit: sample.unit_a), {}],       # UA-ZM
+        [create(:user, :unit_admin, unit: sample.unit_b), {}],       # UA
+        [create(:user, :commander, unit: sample.unit_a), {}],        # CMD-ZM
+        [create(:user, :commander, unit: sample.unit_b), {}]         # CMD
+      ].each do |u, extra_params|
         sign_in u
-        get billing_path
+        get billing_path(extra_params)
         expect(response.body).to include("Cộng (công tơ có tổn hao)")
       end
 
@@ -676,7 +687,7 @@ RSpec.describe "Billing", type: :request do
       MeterReading.where(period: sample.period).update_all(no_loss: true)
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
       sign_in sa
-      get billing_path
+      get billing_path(zone_id: sample.zone.id)
       ls = LossSummary.find_by(zone: sample.zone, period: sample.period)
       expect(ls.b).to eq(BigDecimal("0"))
       expect(ls.c).to eq(BigDecimal("0"))
@@ -707,11 +718,52 @@ RSpec.describe "Billing", type: :request do
       sample.main_meter_reading.update!(usage: BigDecimal("1"))
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
       sign_in sa
-      get billing_path
+      get billing_path(zone_id: sample.zone.id)
       ls = LossSummary.find_by(zone: sample.zone, period: sample.period)
       expect(ls.c).to eq(BigDecimal("0"))
       expect(response.body).to include("Cộng (công tơ có tổn hao)")
       expect(response.body).to include("Tổng sử dụng các công tơ con lớn hơn công tơ tổng")
+    end
+  end
+
+  describe "UI/UX improvements (#405)" do
+    let(:sample) { setup_zone_one_full_sample }
+    let(:sa) { create(:user, :system_admin) }
+
+    before do
+      CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
+    end
+
+    it "bảng đối chiếu tổn hao nằm SAU bảng tính tiền (không trước)" do
+      sign_in sa
+      get billing_path(zone_id: sample.zone.id)
+      body = response.body
+      billing_table_pos = body.index("column-resize")
+      breakdown_pos = body.index("Đối chiếu tổn hao/sử dụng theo loại đầu mối")
+      expect(billing_table_pos).to be < breakdown_pos
+    end
+
+    it "SA xem tất cả khu vực → hiện gợi ý, không hiện bảng đối chiếu" do
+      sign_in sa
+      get billing_path
+      expect(response.body).to include("Chọn khu vực để xem chi tiết tổn hao.")
+      expect(response.body).not_to include("Đối chiếu tổn hao/sử dụng theo loại đầu mối")
+    end
+
+    it "non-SA luôn thấy bảng đối chiếu (zone cố định qua đơn vị)" do
+      ua = create(:user, :unit_admin, unit: sample.unit_a)
+      sign_in ua
+      get billing_path
+      expect(response.body).to include("Đối chiếu tổn hao/sử dụng theo loại đầu mối")
+    end
+
+    it "nút Tính toán lại có data-controller submit-loading" do
+      sign_in sa
+      get billing_path
+      doc = Nokogiri::HTML(response.body)
+      form = doc.css("form[data-controller='submit-loading']").first
+      expect(form).to be_present
+      expect(form["data-submit-loading-loading-text-value"]).to eq("Đang tính toán...")
     end
   end
 end

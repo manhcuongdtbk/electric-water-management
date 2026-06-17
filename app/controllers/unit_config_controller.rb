@@ -18,6 +18,7 @@ class UnitConfigController < ApplicationController
     @unit_config = find_or_create_unit_config
     @other_deductions = scope_other_deductions
     @zone_other_deductions = scope_zone_other_deductions
+    preload_personnel_for_preview
   end
 
   def update
@@ -66,6 +67,7 @@ class UnitConfigController < ApplicationController
       # Giữ @zone đã resolve cho nhánh zone-context (||= để không clobber khi @unit nil).
       @zone ||= @unit&.zone if current_user.system_admin?
       set_sa_filter_dropdowns
+      preload_personnel_for_preview
       render :show, status: :unprocessable_content
     else
       redirect_to unit_config_path(@unit ? { unit_id: @unit.id } : { zone_id: @zone&.id }),
@@ -139,6 +141,28 @@ class UnitConfigController < ApplicationController
   # Nguồn zone_ids cho khoản trừ "Khác" của đầu mối zone-direct:
   # - @unit có → các khu vực do đơn vị này quản lý (đường manager-unit, gồm non-SA).
   # - @unit nil & @zone có & SA → đúng khu vực đang chọn (ngữ cảnh khu vực, ADR-034).
+  def preload_personnel_for_preview
+    return unless @period
+    all_ods = (@other_deductions.to_a + @zone_other_deductions.to_a)
+    cp_ids = all_ods.map(&:contact_point_id).uniq
+    entries = PersonnelEntry.where(period_id: @period.id, contact_point_id: cp_ids)
+    @personnel_by_contact_point_id = Hash.new(0)
+    entries.each { |e| @personnel_by_contact_point_id[e.contact_point_id] += e.count }
+
+    unit_ids = all_ods.filter_map { |od| od.contact_point.unit_id }.uniq
+    if unit_ids.any?
+      residential_cp_ids = ContactPoint.where(unit_id: unit_ids, contact_point_type: "residential")
+                                       .pluck(:id)
+      unit_entries = PersonnelEntry.where(period_id: @period.id, contact_point_id: residential_cp_ids)
+                                   .joins(:contact_point)
+                                   .group("contact_points.unit_id")
+                                   .sum(:count)
+      @unit_total_personnel = unit_entries
+    else
+      @unit_total_personnel = {}
+    end
+  end
+
   def zone_other_deduction_zone_ids
     if @unit
       Zone.kept.where(manager_unit_id: @unit.id).pluck(:id)

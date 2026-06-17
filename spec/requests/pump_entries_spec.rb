@@ -171,4 +171,16 @@ RSpec.describe "PumpEntries", type: :request do
       expect(r.reload.reading_start.to_f).to eq(200.0)
     end
   end
+
+  describe "UI/UX improvements (#405)" do
+    it "cột Tổn hao và Sử dụng thực tế có visual separation (border + background)" do
+      sign_in system_admin
+      get pump_entries_path
+      doc = Nokogiri::HTML(response.body)
+      loss_header = doc.css("th").find { |th| th.text.strip == "Tổn hao" }
+      actual_header = doc.css("th").find { |th| th.text.strip == "Sử dụng thực tế" }
+      expect(loss_header["class"]).to include("border-l-2").and include("bg-blue-50")
+      expect(actual_header["class"]).to include("bg-blue-50")
+    end
+  end
 end

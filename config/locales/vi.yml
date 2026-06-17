@@ -447,6 +447,13 @@ vi:
         fixed: "Cố định"
         coefficient: "Theo hệ số"
         unit_coefficient: "Theo hệ số (đơn vị)"
+      type_explanation: "Cố định = số kWh cụ thể. Theo hệ số = hệ số × quân số đầu mối. Theo hệ số (đơn vị) = hệ số × (tổng quân số đơn vị − quân số đầu mối)."
+      placeholder:
+        fixed: "kWh"
+        coefficient: "hệ số"
+        unit_coefficient: "hệ số"
+      preview:
+        estimate_label: "Ước tính theo quân số hiện tại"
   pricing:
     flash:
       updated: "Đã cập nhật đơn giá và các thông số kỳ."
@@ -474,6 +481,7 @@ vi:
       no_data: "Chưa có dữ liệu tính toán. Bấm \"Tính toán lại\" để tính toán kỳ này."
     buttons:
       recalculate: "Tính toán lại"
+      recalculating: "Đang tính toán..."
       export_xlsx: "Xuất Excel"
       search: "Tìm kiếm"
     confirm:
@@ -493,6 +501,7 @@ vi:
         loss_bearing_total: "Cộng (công tơ có tổn hao)"
         no_loss: "Không tổn hao"
         grand_total: "Tổng cộng (= số công tơ tổng)"
+      select_zone_hint: "Chọn khu vực để xem chi tiết tổn hao."
       note_items:
         - "Dòng \"Cộng (công tơ có tổn hao)\" chính là A/B/C: Sử dụng = B, Tổn hao = C, Sử dụng thực tế = A."
         - "A/B/C tính trên toàn khu vực (gồm công cộng + bơm nước), nên có thể khác tổng các cột trên bảng tính tiền — vốn chỉ tính đầu mối sinh hoạt."
