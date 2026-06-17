@@ -558,4 +558,48 @@ RSpec.describe "UnitConfig", type: :request do
       expect(html.css("input[name='commit']")).to be_empty
     end
   end
+
+  describe "UI/UX improvements (#405)" do
+    it "hiển thị giải thích 3 kiểu cột Khác dưới bảng other_deductions" do
+      get unit_config_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Cố định = số kWh cụ thể")
+      expect(response.body).to include("Theo hệ số = hệ số × quân số đầu mối")
+      expect(response.body).to include("Theo hệ số (đơn vị) = hệ số × (tổng quân số đơn vị − quân số đầu mối)")
+    end
+
+    it "placeholder thay đổi theo kiểu other_deduction (server-side default)" do
+      od = OtherDeduction.find_by!(contact_point: cp, period: period)
+      od.update!(other_type: "fixed")
+      get unit_config_path
+      doc = Nokogiri::HTML(response.body)
+      value_input = doc.css("input[name='other_deductions[#{od.id}][other_value]']").first
+      expect(value_input["placeholder"]).to eq("kWh")
+    end
+
+    it "placeholder là 'hệ số' khi kiểu là coefficient" do
+      od = OtherDeduction.find_by!(contact_point: cp, period: period)
+      od.update!(other_type: "coefficient")
+      get unit_config_path
+      doc = Nokogiri::HTML(response.body)
+      value_input = doc.css("input[name='other_deductions[#{od.id}][other_value]']").first
+      expect(value_input["placeholder"]).to eq("hệ số")
+    end
+
+    it "data attributes cho Stimulus other-deduction controller" do
+      get unit_config_path
+      doc = Nokogiri::HTML(response.body)
+      row = doc.css("tr[data-controller='other-deduction']").first
+      expect(row).to be_present
+      expect(row["data-other-deduction-contact-point-personnel-value"]).to be_present
+      expect(row["data-other-deduction-unit-total-personnel-value"]).to be_present
+    end
+
+    it "hiển thị nhãn ước tính cho kiểu hệ số" do
+      od = OtherDeduction.find_by!(contact_point: cp, period: period)
+      od.update!(other_type: "coefficient", other_value: -2)
+      get unit_config_path
+      expect(response.body).to include("Ước tính theo quân số hiện tại")
+    end
+  end
 end

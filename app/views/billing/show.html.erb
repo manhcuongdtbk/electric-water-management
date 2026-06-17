@@ -25,7 +25,11 @@
       if @period.open? && can?(:recalculate, Calculation)
         concat(button_to("Tính toán lại", recalculate_billing_path(billing_filter_params),
           method: :post,
-          form: { data: { turbo_confirm: "Xác nhận tính toán lại bảng tính tiền?" } },
+          form: { data: {
+            turbo_confirm: "Xác nhận tính toán lại bảng tính tiền?",
+            controller: "submit-loading",
+            submit_loading_loading_text_value: t("billing.buttons.recalculating")
+          } },
           class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700"))
       end
       if can?(:read, Calculation)
@@ -63,8 +67,6 @@
     <% end %>
   </p>
 
-  <%= render "loss_summary" %>
-
   <div class="-mx-6">
     <div class="overflow-x-auto px-6 max-h-[70vh] overflow-y-auto"
          data-controller="column-resize"
@@ -75,5 +77,11 @@
 
   <% if @pagy && @pagy.pages > 1 %>
     <div class="mt-4"><%== pagy_nav(@pagy) %></div>
+  <% end %>
+
+  <% if @zone.present? %>
+    <%= render "loss_summary" %>
+  <% elsif current_user.system_admin? %>
+    <p class="mt-4 text-sm text-gray-500"><%= t("billing.loss_breakdown.select_zone_hint") %></p>
   <% end %>
 <% end %>
