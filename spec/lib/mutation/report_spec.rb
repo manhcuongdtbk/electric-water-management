@@ -36,6 +36,17 @@ RSpec.describe Mutation::Report do
     expect(report.to_s).to include("SURVIVED: 1")
   end
 
+  it "to_s omits Survivors section when all killed" do
+    report = described_class.new(
+      results: [{ change: change(line: 10), status: :killed }],
+      ignored_count: 2
+    )
+    output = report.to_s
+    expect(output).to include("SURVIVED: 0")
+    expect(output).to include("IGNORED:  2")
+    expect(output).not_to include("Survivors")
+  end
+
   it "reports clean when nothing survived" do
     report = described_class.new(
       results: [{ change: change(line: 10), status: :killed }],

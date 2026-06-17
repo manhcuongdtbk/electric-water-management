@@ -259,6 +259,70 @@ RSpec.describe PeriodService do
     end
   end
 
+  describe "#open_new_period — previous_rank not found during personnel snapshot (line 157)" do
+    it "defaults personnel count to 0 when previous period has no matching rank position" do
+      zone = create(:zone)
+      unit = create(:unit, zone: zone)
+      period_1 = service.open_new_period(year: 2026, month: 1, unit_price: BigDecimal("2000")).period
+      cp = create(:contact_point, :residential, name: "Test CP", unit: unit,
+                  initial_personnel_counts: { period_1.ranks.find_by!(position: 7).id => 5 })
+
+      period_1.update!(closed: true)
+
+      # Stub copy_ranks_from to add an extra rank at position 99 that has no match
+      # in the previous period, then call original
+      original_method = service.method(:send).call(:method, :copy_ranks_from)
+      allow(service).to receive(:copy_ranks_from).and_wrap_original do |m, prev, new_period|
+        m.call(prev, new_period)
+        new_period.ranks.create!(name: "Extra rank", quota: BigDecimal("50"), position: 99)
+      end
+
+      result = service.open_new_period
+      new_period = result.period
+
+      # Position 99 has no match in period_1 => previous_rank is nil => count defaults to 0
+      rank_99 = new_period.ranks.find_by!(position: 99)
+      entry = PersonnelEntry.find_by(contact_point: cp, period: new_period, rank: rank_99)
+      expect(entry).to be_present
+      expect(entry.count).to eq(0)
+    end
+  end
+
+  describe "#close_period — mismatch check skips nil reading_end and nil next_reading (lines 207, 209)" do
+    let(:sample) { setup_zone_one_full_sample }
+
+    it "skips mismatch check when current period reading_end is nil (line 207)" do
+      sample.period.update!(closed: true)
+      next_period = service.open_new_period.period
+      service.close_period(next_period)
+
+      # Reopen period 1 and set a reading to nil
+      service.reopen_period(sample.period)
+      reading = sample.meters[:ct_a1].meter_readings.find_by(period: sample.period)
+      reading.update!(reading_end: nil)
+
+      result = service.close_period(sample.period)
+      # Should not warn about CT-A1 since reading_end is nil
+      ct_a1_warnings = result.warnings.select { |w| w.include?("CT-A1") }
+      expect(ct_a1_warnings).to be_empty
+    end
+
+    it "skips mismatch check when next period reading does not exist (line 209)" do
+      sample.period.update!(closed: true)
+      next_period = service.open_new_period.period
+      service.close_period(next_period)
+
+      # Delete the next period reading for CT-A1
+      MeterReading.where(meter_id: sample.meters[:ct_a1].id, period_id: next_period.id).delete_all
+
+      service.reopen_period(sample.period)
+      result = service.close_period(sample.period)
+      # Should not warn about CT-A1 since next_reading is nil
+      ct_a1_warnings = result.warnings.select { |w| w.include?("CT-A1") }
+      expect(ct_a1_warnings).to be_empty
+    end
+  end
+
   describe "#reopen_period (T14)" do
     let(:closed_period) { create(:period, year: 2026, month: 5, closed: true) }
 

@@ -133,6 +133,14 @@ RSpec.describe PumpAllocation do
     end
   end
 
+  describe "#calculation_state_targets" do
+    it "returns zone_id and period_id from direct attributes" do
+      allocation = PumpAllocation.new(zone_id: nil, period_id: nil)
+      targets = allocation.send(:calculation_state_targets)
+      expect(targets).to eq([[nil, nil]])
+    end
+  end
+
   describe "optimistic locking" do
     it "có cột lock_version" do
       expect(PumpAllocation.column_names).to include("lock_version")

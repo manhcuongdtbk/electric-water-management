@@ -5,6 +5,50 @@ RSpec.describe PeriodComparison do
   let(:user) { create(:user, :system_admin) }
   let(:ability) { Ability.new(user) }
 
+  describe "#call — early return when no calculations exist (line 22)" do
+    it "returns empty array when neither period has calculations" do
+      period_a = sample.period
+      period_b_result = begin
+        period_a.update!(closed: true)
+        PeriodService.new.open_new_period
+      end
+      period_b = period_b_result.period
+      # No CalculationOrchestrator run => no calculations in either period
+      rows = described_class.new(ability: ability, period_a: period_a, period_b: period_b).call
+      expect(rows).to eq([])
+    end
+  end
+
+  describe "#call — nil guards in sort_rows (lines 65-69)" do
+    it "handles contact points with nil zone, unit, block, and group" do
+      period_a = sample.period
+      CalculationOrchestrator.new(zone: sample.zone, period: period_a).call
+
+      period_a.update!(closed: true)
+      period_b = PeriodService.new.open_new_period.period
+
+      # Create a zone-direct residential CP (no unit, no block, no group)
+      zone_cp = create(:contact_point, :zone_residential, name: "CP zone direct",
+                       zone: sample.zone,
+                       initial_personnel_counts: { period_b.ranks.first.id => 1 })
+      zone_meter = create(:meter, name: "CT-ZD", contact_point: zone_cp, no_loss: false)
+      zone_meter.meter_readings.find_by(period: period_b)
+                .update!(reading_end: BigDecimal("50"))
+      sample.main_meter.main_meter_readings.create!(period: period_b, usage: BigDecimal("2100"))
+      sample.meters.each_value do |meter|
+        reading = meter.meter_readings.find_by(period: period_b)
+        reading&.update!(reading_end: (reading.reading_start || 0) + 100)
+      end
+      CalculationOrchestrator.new(zone: sample.zone, period: period_b).call
+
+      rows = described_class.new(ability: ability, period_a: period_a, period_b: period_b).call
+      # The zone-direct CP should appear with note "moi o ky..." and not crash on nil guards
+      zone_row = rows.find { |r| r.contact_point&.name == "CP zone direct" }
+      expect(zone_row).to be_present
+      expect(zone_row.note).to include("mới ở kỳ")
+    end
+  end
+
   describe "#call" do
     context "2 kỳ cùng có data" do
       let(:period_a) { sample.period }

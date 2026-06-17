@@ -95,6 +95,32 @@ RSpec.describe ZoneWarningCollector do
       end
     end
 
+    context "when contact point belongs to a unit and has missing meter reading (line 53)" do
+      it "warning includes unit name and contact point name" do
+        # Create a unit-level CP with missing meter reading
+        cp = sample.contact_points[:ban_tac_huan]
+        meter = sample.meters[:ct_a1]
+        meter.meter_readings.find_by(period: sample.period).update!(reading_end: nil, manual_usage: nil)
+
+        warnings = described_class.new(zone: sample.zone, period: sample.period).call
+        unit_warning = warnings.find { |w| w.include?("Ban Tác huấn") }
+        expect(unit_warning).to be_present
+        expect(unit_warning).to include("Đơn vị #{cp.unit.name}")
+        expect(unit_warning).to include("chưa nhập chỉ số công tơ")
+      end
+    end
+
+    context "when loss_and_pump_warnings raises StandardError (line 64-68)" do
+      it "rescues the error, logs a warning, and returns empty warnings for that section" do
+        allow(LossCalculator).to receive(:new).and_raise(StandardError, "test explosion")
+        expect(Rails.logger).to receive(:warn).with(/ZoneWarningCollector#loss_and_pump_warnings.*test explosion/)
+
+        warnings = described_class.new(zone: sample.zone, period: sample.period).call
+        # Should not include loss/pump warnings, but may still include meter reading warnings
+        expect(warnings.join(" ")).not_to include("test explosion")
+      end
+    end
+
     context "zone đã xóa — có data kỳ cũ" do
       it "cảnh báo đúng cho kỳ cũ có data, không cảnh báo cho kỳ mới" do
         # Kỳ 1: zone có data đầy đủ → không cảnh báo

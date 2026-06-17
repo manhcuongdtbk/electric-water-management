@@ -52,6 +52,30 @@ RSpec.describe LossBreakdown do
     end
   end
 
+  it "defaults usage to 0 when meter has no reading in the readings hash (line 44 defensive)" do
+    # The || BigDecimal("0") fallback on line 44 is a defensive guard for when a meter
+    # exists in the meters scope but has no corresponding entry in the usages hash.
+    # Simulate by injecting a meter whose reading was deleted after the query was built.
+    breakdown = described_class.new(zone: sample.zone, period: sample.period)
+
+    # Stub meter_readings to return an empty relation so usages hash is empty,
+    # but meters still returns all meters.
+    query_double = instance_double(ZoneQuery)
+    allow(ZoneQuery).to receive(:new).and_return(query_double)
+    allow(query_double).to receive(:meters).and_return(
+      Meter.with_discarded.where(id: sample.meters.values.map(&:id))
+    )
+    allow(query_double).to receive(:meter_readings).and_return(MeterReading.none)
+    allow(query_double).to receive(:main_meter_total_usage).and_return(BigDecimal("2100"))
+
+    fresh_breakdown = described_class.new(zone: sample.zone, period: sample.period,
+                                          summary: LossSummary.find_by!(zone_id: sample.zone.id,
+                                                                         period_id: sample.period.id))
+    result = fresh_breakdown.call
+    # All meters have no readings => usages[meter.id] falls back to BigDecimal("0")
+    expect(result.rows).to all(have_attributes(usage: BigDecimal("0")))
+  end
+
   it "CHIEU-breakdown-chua-tinh: chưa tính (không có LossSummary) → trả nil" do
     LossSummary.where(period: sample.period).delete_all
     expect(described_class.new(zone: sample.zone, period: sample.period).call).to be_nil

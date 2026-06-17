@@ -128,6 +128,13 @@ RSpec.describe "ElectricitySupply", type: :request do
     end
   end
 
+  describe "GET /electricity_supply — no period (readings = none)" do
+    it "render with empty readings when no period" do
+      get electricity_supply_path
+      expect(response).to have_http_status(:ok)
+    end
+  end
+
   describe "T70: không có kỳ đang mở" do
     it "show vẫn render, banner cảnh báo" do
       sample.period.update!(closed: true)

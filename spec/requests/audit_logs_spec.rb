@@ -114,6 +114,19 @@ RSpec.describe "AuditLogs", type: :request do
       expect(response.body).to include("Z Show New")
     end
 
+    it "show with nil object_changes (create event)" do
+      version = PaperTrail::Version.where(item_type: "Zone", event: "create").last
+      get audit_log_path(version)
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "show with invalid YAML in object gracefully handles" do
+      version = PaperTrail::Version.where(item_type: "Zone", event: "update").last
+      version.update_column(:object, "invalid: yaml: [broken")
+      get audit_log_path(version)
+      expect(response).to have_http_status(:ok)
+    end
+
     it "unit_admin bị chặn show" do
       version = PaperTrail::Version.where(item_type: "Zone", item_id: zone_to_update.id).last
       sign_out system_admin

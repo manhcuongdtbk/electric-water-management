@@ -215,6 +215,47 @@ RSpec.describe PumpAllocationCalculator do
       expect(result.warnings).to include(zero_personnel_warning)
     end
 
+    it "allocation with neither unit_id nor contact_point_id returns 0 personnel (line 121)" do
+      zone, period = build_pump_zone(name: "KV orphan")
+      # Bypass XOR validation to exercise the defensive guard
+      alloc = PumpAllocation.new(zone: zone, period: period, unit_id: nil,
+                                 contact_point_id: nil, coefficient: BigDecimal("1"),
+                                 fixed_percentage: nil)
+      alloc.save!(validate: false)
+
+      result = call_pump(zone, period)
+      expect(result.warnings).to include(zero_personnel_warning)
+      expect(result.contact_point_allocations).to be_empty
+    end
+
+    it "unit-based allocation where all residential CPs have zero personnel skips distribution (line 134)" do
+      zone, period = build_pump_zone(name: "KV unit-all-zero")
+      unit = create(:unit, name: "ĐV all-zero", zone: zone)
+      cp = create(:contact_point, :residential, name: "Đầu mối zero", unit: unit,
+                  initial_personnel_counts: { rank_for(period).id => 1 })
+      PersonnelEntry.where(contact_point_id: cp.id, period_id: period.id).delete_all
+      # Use fixed_percentage so the amount is non-zero despite zero personnel
+      create(:pump_allocation, zone: zone, period: period, unit: unit, contact_point: nil,
+             fixed_percentage: BigDecimal("50"), coefficient: BigDecimal("1"))
+
+      result = call_pump(zone, period)
+      # unit_total = 0 => distribute_to_residential_contact_points skips this unit
+      # cp_amounts hash returns BigDecimal("0") for unset keys
+      expect(result.contact_point_allocations).not_to have_key(cp.id)
+    end
+
+    it "direct contact-point-level allocation distributes amount directly (line 141)" do
+      zone, period = build_pump_zone(name: "KV cp-direct")
+      cp = create(:contact_point, :zone_residential, name: "Đầu mối trực tiếp fixed", zone: zone,
+                  initial_personnel_counts: { rank_for(period).id => 3 })
+      create(:pump_allocation, zone: zone, period: period, unit: nil, contact_point: cp,
+             fixed_percentage: BigDecimal("100"), coefficient: BigDecimal("1"))
+
+      result = call_pump(zone, period)
+      # 100% of D = 100 goes directly to this CP via the contact_point branch
+      expect(result.contact_point_allocations[cp.id]).to eq(BigDecimal("100"))
+    end
+
     it "kỳ đã đóng: vẫn tính phân bổ của đầu mối đã discard — khoá `unless closed?` ↛ `if closed?`" do
       zone, period = build_pump_zone(name: "KV closed")
       unit = create(:unit, name: "ĐV closed", zone: zone)

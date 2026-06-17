@@ -6,12 +6,27 @@ RSpec.describe "Ranks", type: :request do
 
   before { sign_in system_admin }
 
+  describe "GET /ranks/:id (show)" do
+    let!(:rank) { create(:rank, period: period, position: 1, name: "Show rank", quota: 50) }
+
+    it "renders show page" do
+      get rank_path(rank)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Show rank")
+    end
+  end
+
   describe "POST /ranks" do
     it "tạo rank cho kỳ đang mở" do
       post ranks_path, params: { rank: { name: "Test rank", quota: "100", position: 99 } }
       expect(response).to redirect_to(ranks_path)
       rank = Rank.find_by!(name: "Test rank")
       expect(rank.period).to eq(period)
+    end
+
+    it "create validation failure renders :new" do
+      post ranks_path, params: { rank: { name: "", quota: "100", position: 99 } }
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 
@@ -25,6 +40,11 @@ RSpec.describe "Ranks", type: :request do
       expect(rank.name).to eq("Rank mới")
       expect(rank.quota).to eq(200)
     end
+
+    it "update validation failure renders :edit" do
+      patch rank_path(rank), params: { rank: { name: "", quota: "0" } }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
   end
 
   describe "ensure_rank_belongs_to_open_period (I9)" do
@@ -36,6 +56,16 @@ RSpec.describe "Ranks", type: :request do
       patch rank_path(old_rank), params: { rank: { name: "Hacked" } }
       expect(response).to have_http_status(:redirect)
       expect(old_rank.reload.name).to eq("Old")
+    end
+  end
+
+  describe "GET /ranks/new — next_position" do
+    it "new rank gets next position automatically" do
+      create(:rank, period: period, position: 5, name: "Existing", quota: 50)
+      get new_rank_path
+      expect(response).to have_http_status(:ok)
+      # Position auto-increments — the form should show 6
+      expect(response.body).to include("6")
     end
   end
 

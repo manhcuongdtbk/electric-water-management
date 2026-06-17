@@ -75,6 +75,16 @@ RSpec.describe "Units", type: :request do
     end
   end
 
+  describe "GET /units/:id (show)" do
+    let!(:unit) { create(:unit, zone: zone, name: "Show unit") }
+
+    it "renders show page" do
+      get unit_path(unit)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Show unit")
+    end
+  end
+
   describe "POST /units (T29, T32)" do
     it "T29: tạo unit" do
       post units_path, params: { unit: { name: "Đơn vị A", zone_id: zone.id } }
@@ -88,6 +98,12 @@ RSpec.describe "Units", type: :request do
       unit = Unit.find_by!(name: "Đơn vị A")
       expect(zone.reload.manager_unit_id).to eq(unit.id)
     end
+
+    it "create validation failure renders :new" do
+      create(:unit, zone: zone, name: "Duplicate")
+      post units_path, params: { unit: { name: "Duplicate", zone_id: zone.id } }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
   end
 
   describe "PATCH /units/:id (T30)" do
@@ -99,6 +115,13 @@ RSpec.describe "Units", type: :request do
       unit.reload
       expect(unit.zone_id).to eq(zone.id)
       expect(unit.name).to eq("Tên mới")
+    end
+
+    it "update validation failure renders :edit" do
+      unit = create(:unit, zone: zone, name: "Unit A")
+      create(:unit, zone: zone, name: "Unit B")
+      patch unit_path(unit), params: { unit: { name: "Unit B" } }
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 
@@ -112,6 +135,15 @@ RSpec.describe "Units", type: :request do
       unit.reload
       expect(unit).not_to be_discarded
       expect(flash[:alert]).to include("Phải xóa hết đầu mối")
+    end
+
+    it "destroy non-manager unit succeeds without zone warning" do
+      non_manager = create(:unit, zone: zone)
+      # non_manager is second unit, so it's NOT the auto-assigned manager
+      zone.update!(manager_unit_id: unit.id)
+      delete unit_path(non_manager)
+      expect(response).to redirect_to(units_path)
+      expect(flash[:notice]).not_to include("Cảnh báo")
     end
 
     it "T41: xóa unit là manager → zone.manager_unit_id = nil" do

@@ -5,6 +5,11 @@ RSpec.describe CalculationFreshness do
   let(:zone_a) { create(:zone, name: "A") }
   let(:zone_b) { create(:zone, name: "B") }
 
+  it "returns empty array when period is nil (line 12)" do
+    result = described_class.new(period: nil, zones: Zone.where(id: zone_a.id)).call
+    expect(result).to eq([])
+  end
+
   it "CHIEU-do-tuoi-per-zone: one entry per zone with a state row, sorted by name" do
     CalculationState.mark_calculated!(zone_id: zone_a.id, period_id: period.id)
     CalculationState.touch_inputs!(zone_id: zone_b.id, period_id: period.id)

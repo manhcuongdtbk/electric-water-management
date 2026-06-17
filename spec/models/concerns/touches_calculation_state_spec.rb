@@ -87,6 +87,20 @@ RSpec.describe TouchesCalculationState do
     }.to change { changed_at(zone, period) }
   end
 
+  it "skips bump when zone_id is nil in calculation_state_targets" do
+    # MeterReading with no meter => zone_id resolves to nil
+    reading = MeterReading.new(reading_start: 0, period: period)
+    expect(CalculationState).not_to receive(:touch_inputs!)
+    # Fire the callback directly since the record is unsaved
+    reading.send(:bump_calculation_state)
+  end
+
+  it "skips bump when period_id is nil in calculation_state_targets" do
+    reading = MeterReading.new(reading_start: 0)
+    expect(CalculationState).not_to receive(:touch_inputs!)
+    reading.send(:bump_calculation_state)
+  end
+
   it "CHIEU-do-tuoi-nguon-input: bumps on personnel_entry update" do
     contact_point = create(:contact_point, :residential, unit: unit)
     personnel_entry = create(:personnel_entry, contact_point: contact_point, period: period)

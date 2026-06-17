@@ -355,6 +355,15 @@ RSpec.describe ContactPoint do
       cp.name = "Tên mới"
       expect(cp).to be_valid
     end
+
+    it "skips validation when no open period exists during update" do
+      unit = create(:unit)
+      cp = create(:contact_point, :residential, unit: unit,
+                  initial_personnel_counts: { rank.id => 2 })
+      period.update_column(:closed, true)
+      cp.name = "Tên mới"
+      expect(cp).to be_valid
+    end
   end
 
   describe "scope :in_zone" do
@@ -382,6 +391,11 @@ RSpec.describe ContactPoint do
       unit = create(:unit)
       cp = create(:contact_point, :residential, unit: unit)
       expect(cp.effective_zone).to eq(unit.zone)
+    end
+
+    it "returns nil when both zone and unit are nil" do
+      cp = ContactPoint.new(zone: nil, unit: nil)
+      expect(cp.effective_zone).to be_nil
     end
   end
 
@@ -434,6 +448,25 @@ RSpec.describe ContactPoint do
 
       cp.update!(personnel_count: 10)
       expect(snapshot.reload.personnel_count).to eq(10)
+    end
+
+    it "does not error when no open period exists" do
+      cp = create(:contact_point, :non_establishment, zone: zone, personnel_count: 5)
+      period.update_column(:closed, true)
+      expect { cp.update!(personnel_count: 8) }.not_to raise_error
+    end
+
+    it "does not error when snapshot is missing for current period" do
+      cp = create(:contact_point, :non_establishment, zone: zone, personnel_count: 5)
+      cp.non_establishment_snapshots.where(period: period).delete_all
+      expect { cp.update!(personnel_count: 8) }.not_to raise_error
+    end
+
+    it "does not touch calculation state when effective_zone is nil" do
+      cp = create(:contact_point, :non_establishment, zone: zone, personnel_count: 5)
+      allow(cp).to receive(:effective_zone).and_return(nil)
+      expect(CalculationState).not_to receive(:touch_inputs!)
+      cp.update!(personnel_count: 9)
     end
   end
 

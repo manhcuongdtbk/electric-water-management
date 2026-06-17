@@ -60,6 +60,12 @@ RSpec.describe Rank do
   describe "after_create :seed_personnel_entries_for_residentials" do
     let(:period) { create(:period, closed: false) }
 
+    it "does not seed entries when period is closed" do
+      closed_period = create(:period, year: 2024, month: 1, closed: true)
+      rank = create(:rank, period: closed_period, position: 99, name: "Closed period rank")
+      expect(rank.personnel_entries.count).to eq(0)
+    end
+
     it "không tạo entries nếu chưa có residential nào active trong period" do
       rank = create(:rank, period: period, position: 99, name: "Mới")
       expect(rank.personnel_entries.count).to eq(0)

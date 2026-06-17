@@ -53,6 +53,11 @@ RSpec.describe Mutation::Operators do
     expect(tos('t("a + b * c")')).to eq([])
   end
 
+  it "mutates a float literal to 0" do
+    pairs = tos("x = 3.14")
+    expect(pairs).to include(%w[3.14 0])
+  end
+
   it "NEVER mutates operators inside comments" do
     pairs = tos("x = 1 # a + b")
     expect(pairs).to include(%w[1 0]).and include(%w[1 2])

@@ -65,8 +65,25 @@ RSpec.describe "Blocks", type: :request do
       expect(zone_options).to include(zone.name, zone2.name)
     end
 
+    it "filter by unit_id auto-selects zone (ZoneUnitFilterable)" do
+      get blocks_path, params: { unit_id: unit2.id }
+      # Only blocks from unit2 should show
+      expect(response.body).to include("Phòng Hậu cần")
+      expect(response.body).not_to include("Phòng Tham mưu")
+    end
+
     # Filter/cascade behavior, tìm kiếm, per_page, confirm delete:
     # cover bởi system specs (spec/system/blocks_spec.rb).
+  end
+
+  describe "GET /blocks/:id (show)" do
+    let!(:block) { create(:block, unit: unit, name: "Show test") }
+
+    it "renders show page" do
+      get block_path(block)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Show test")
+    end
   end
 
   describe "POST /blocks" do
@@ -74,6 +91,19 @@ RSpec.describe "Blocks", type: :request do
       post blocks_path, params: { block: { name: "Phòng mới", unit_id: unit.id } }
       expect(response).to redirect_to(blocks_path)
       expect(Block.find_by(name: "Phòng mới")).to be_present
+    end
+
+    it "create validation failure renders :new" do
+      create(:block, unit: unit, name: "Duplicate")
+      post blocks_path, params: { block: { name: "Duplicate", unit_id: unit.id } }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "SA (no unit_id) assigns unit_id from params" do
+      # system_admin has no unit_id — the branch at line 44 is not entered
+      post blocks_path, params: { block: { name: "SA Block", unit_id: unit.id } }
+      expect(response).to redirect_to(blocks_path)
+      expect(Block.find_by(name: "SA Block").unit_id).to eq(unit.id)
     end
   end
 
@@ -90,6 +120,17 @@ RSpec.describe "Blocks", type: :request do
       create(:block, unit: unit, name: "Phòng trùng")
       patch block_path(block), params: { block: { name: "Phòng trùng" } }
       expect(response).to have_http_status(:unprocessable_content)
+    end
+  end
+
+  describe "DELETE /blocks/:id — discard failure" do
+    it "redirects with alert when discard fails" do
+      block = create(:block, unit: unit, name: "Fail block")
+      allow_any_instance_of(Block).to receive(:discard).and_return(false)
+      allow_any_instance_of(Block).to receive_message_chain(:errors, :full_messages).and_return(["Cannot discard"])
+      delete block_path(block)
+      expect(response).to redirect_to(blocks_path)
+      expect(flash[:alert]).to include("Cannot discard")
     end
   end
 

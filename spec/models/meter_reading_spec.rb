@@ -54,6 +54,14 @@ RSpec.describe MeterReading do
     end
   end
 
+  describe "#calculation_state_targets" do
+    it "returns nil zone_id when meter, contact_point, or zone is nil" do
+      reading = MeterReading.new(period_id: 1)
+      targets = reading.send(:calculation_state_targets)
+      expect(targets).to eq([[nil, 1]])
+    end
+  end
+
   describe "optimistic locking" do
     it "có cột lock_version" do
       expect(MeterReading.column_names).to include("lock_version")

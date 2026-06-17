@@ -413,6 +413,24 @@ RSpec.describe "Billing", type: :request do
     end
   end
 
+  describe "GET /billing — no periods exist" do
+    it "redirect to pricing when no periods" do
+      sign_in create(:user, :system_admin)
+      get billing_path
+      expect(response).to redirect_to(pricing_path)
+      expect(flash[:alert]).to be_present
+    end
+  end
+
+  describe "POST /billing/recalculate — no periods" do
+    it "redirect to pricing when no periods" do
+      sign_in create(:user, :system_admin)
+      post recalculate_billing_path
+      expect(response).to redirect_to(pricing_path)
+      expect(flash[:alert]).to be_present
+    end
+  end
+
   describe "GET /billing — breakdown role + multi-zone (#332)" do
     let(:sample) { setup_zone_one_full_sample }
     before { CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call }

@@ -130,6 +130,15 @@ RSpec.describe "PumpAllocations", type: :request do
 
   end
 
+  describe "GET /pump_allocations/:id/edit" do
+    let!(:alloc) { create(:pump_allocation, zone: zone, period: period, unit: unit, contact_point: nil, coefficient: 1) }
+
+    it "renders edit form" do
+      get edit_pump_allocation_path(alloc)
+      expect(response).to have_http_status(:ok)
+    end
+  end
+
   describe "PATCH /pump_allocations/:id (I10)" do
     let!(:alloc) { create(:pump_allocation, zone: zone, period: period, unit: unit, contact_point: nil, coefficient: 1) }
 
@@ -137,6 +146,12 @@ RSpec.describe "PumpAllocations", type: :request do
       patch pump_allocation_path(alloc), params: { pump_allocation: { coefficient: "2.5" } }
       expect(response).to redirect_to(pump_allocations_path)
       expect(alloc.reload.coefficient.to_f).to eq(2.5)
+    end
+
+    it "update validation failure renders :edit" do
+      # coefficient and fixed_percentage both empty or invalid
+      patch pump_allocation_path(alloc), params: { pump_allocation: { coefficient: "", fixed_percentage: "" } }
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 
@@ -156,6 +171,33 @@ RSpec.describe "PumpAllocations", type: :request do
       patch pump_allocation_path(old_alloc), params: { pump_allocation: { coefficient: "99" } }
       expect(response).to redirect_to(pump_allocations_path)
       expect(old_alloc.reload.coefficient.to_f).not_to eq(99)
+    end
+  end
+
+  describe "zone-manager access to pump_allocations" do
+    it "zone-manager can access index" do
+      zone.update!(manager_unit: unit)
+      zone_manager = create(:user, :unit_admin, unit: unit)
+      sign_in zone_manager
+      get pump_allocations_path
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "technician accesses users page but not pump_allocations" do
+      tech = create(:user)
+      sign_in tech
+      get pump_allocations_path
+      expect(response).to redirect_to(users_path)
+    end
+  end
+
+  describe "POST /pump_allocations — create failure" do
+    it "create validation failure renders :new" do
+      # Missing zone_id
+      post pump_allocations_path, params: {
+        pump_allocation: { zone_id: "", unit_id: unit.id, coefficient: "1" }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 

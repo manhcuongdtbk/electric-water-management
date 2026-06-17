@@ -60,6 +60,14 @@ RSpec.describe OtherDeduction do
     end
   end
 
+  describe "#calculation_state_targets" do
+    it "returns nil zone_id when contact_point is nil" do
+      deduction = OtherDeduction.new(period_id: 1)
+      targets = deduction.send(:calculation_state_targets)
+      expect(targets).to eq([[nil, 1]])
+    end
+  end
+
   describe "optimistic locking" do
     it "có cột lock_version" do
       expect(OtherDeduction.column_names).to include("lock_version")
