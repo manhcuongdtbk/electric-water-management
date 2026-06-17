@@ -1,7 +1,7 @@
 # Thiết kế hệ thống quản lý điện nội bộ Sư đoàn — Hệ thống v2
 
-> **Phiên bản tài liệu:** 2.15.0
-> **Ngày:** 12/06/2026
+> **Phiên bản tài liệu:** 2.16.0
+> **Ngày:** 18/06/2026
 > **Tính chất:** Tài liệu thiết kế hệ thống v2, nguồn sự thật cho implementation.
 > **Nguồn nghiệp vụ:** V2_XAC_NHAN_NGHIEP_VU (phiên bản mới nhất tại thời điểm thiết kế: v2.11.0)
 
@@ -1253,6 +1253,7 @@ Mọi thao tác trên hệ thống đều được ghi lại (PaperTrail). Syste
 
 - Trạm bơm = đầu mối `water_pump`. `pump_allocations`: thêm `pump_contact_point_id` (khóa ngoại trạm, nullable), `block_id`, `group_id`; đối tượng nhận = đúng một trong `{unit_id, block_id, group_id, contact_point_id}`; cho phép `contact_point` cấp đơn vị.
 - `periods`: thêm cờ `pump_allocation_per_station` (boolean). `PumpAllocationCalculator` rẽ nhánh theo cờ (cũ = gộp khu vực; mới = lặp per trạm, D mỗi trạm = Σ usage + loss công tơ của trạm).
+- Ràng buộc phân cấp (toàn zone, xuyên trạm): (1) **không chồng chéo** — tập đầu mối sinh hoạt phân giải từ mỗi recipient phải không giao nhau; (2) **không chia cấp** — toàn bộ đơn vị thuộc một trạm duy nhất. Recipient kiểu `unit`/`block`/`group` phải có ít nhất 1 đầu mối sinh hoạt. `PumpAllocationCalculator` khi gặp recipient có 0 đầu mối sinh hoạt → bỏ qua phân phối + cảnh báo.
 - Spec: [`superpowers/specs/2026-06-11-phan-bo-bom-theo-tram-design.md`](superpowers/specs/2026-06-11-phan-bo-bom-theo-tram-design.md).
 
 ### Hiển thị chi tiết tổn hao — ADR-027
@@ -1264,6 +1265,10 @@ Mọi thao tác trên hệ thống đều được ghi lại (PaperTrail). Syste
 ---
 
 ## Lịch sử thay đổi
+
+### v2.16.0 (18/06/2026)
+
+- ADR-026 phân bổ bơm theo trạm: thêm ràng buộc phân cấp (không chồng chéo + không chia cấp, toàn zone xuyên trạm). Recipient kiểu đơn vị/khối/nhóm phải có ít nhất 1 đầu mối sinh hoạt. PumpAllocationCalculator: bỏ qua phân phối + cảnh báo khi recipient rỗng. Khớp nghiệp vụ v2.17.0 và spec v0.3.0.
 
 ### v2.15.0 (12/06/2026)
 
