@@ -13,6 +13,14 @@ RSpec.describe UnitConfig do
     it { is_expected.to validate_uniqueness_of(:unit_id).scoped_to(:period_id) }
   end
 
+  describe "#calculation_state_targets" do
+    it "returns nil zone_id when unit is nil" do
+      config = UnitConfig.new(period_id: 1)
+      targets = config.send(:calculation_state_targets)
+      expect(targets).to eq([[nil, 1]])
+    end
+  end
+
   describe "optimistic locking" do
     it "có cột lock_version" do
       expect(UnitConfig.column_names).to include("lock_version")

@@ -251,6 +251,17 @@ RSpec.describe Ability do
     end
   end
 
+  describe "unknown role" do
+    it "grants no abilities for an unrecognized role" do
+      user = create(:user)
+      user.define_singleton_method(:role) { "unknown_role" }
+      ability = Ability.new(user)
+      expect(ability).not_to be_able_to(:read, Zone.new)
+      expect(ability).not_to be_able_to(:manage, User.new)
+      expect(ability).not_to be_able_to(:read, ContactPoint.new)
+    end
+  end
+
   describe "Calculation accessible_by + :recalculate" do
     let(:zone_a) { create(:zone, name: "Zone A") }
     let(:zone_b) { create(:zone, name: "Zone B") }

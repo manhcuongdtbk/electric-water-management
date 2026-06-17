@@ -255,6 +255,66 @@ RSpec.describe "ContactPoints", type: :request do
     end
   end
 
+  describe "GET /contact_points/:id (show)" do
+    before { sign_in system_admin }
+
+    it "renders show page" do
+      cp = create(:contact_point, :residential, unit: unit_a, name: "Show CP",
+                  initial_personnel_counts: { ranks.last.id => 1 })
+      get contact_point_path(cp)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Show CP")
+    end
+  end
+
+  describe "GET /contact_points/new — type downgrade for non-ZM UA" do
+    it "UA non-ZM requesting water_pump falls back to residential" do
+      sign_in admin_b  # admin_b is UA of unit_b, not zone manager
+      get new_contact_point_path(type: "water_pump")
+      expect(response).to have_http_status(:ok)
+      # The form should have residential type, not water_pump
+      doc = Nokogiri::HTML(response.body)
+      hidden_type = doc.css("input[name='contact_point[contact_point_type]']")
+      if hidden_type.any?
+        expect(hidden_type.first["value"]).to eq("residential")
+      end
+    end
+
+    it "UA non-ZM requesting non_establishment falls back to residential" do
+      sign_in admin_b
+      get new_contact_point_path(type: "non_establishment")
+      expect(response).to have_http_status(:ok)
+    end
+  end
+
+  describe "DELETE /contact_points/:id — discard failure" do
+    before { sign_in system_admin }
+
+    it "redirects with alert when discard fails" do
+      cp = create(:contact_point, :residential, unit: unit_a, name: "Fail CP",
+                  initial_personnel_counts: { ranks.last.id => 1 })
+      allow_any_instance_of(ContactPoint).to receive(:discard).and_return(false)
+      allow_any_instance_of(ContactPoint).to receive_message_chain(:errors, :full_messages).and_return(["Cannot discard"])
+      delete contact_point_path(cp)
+      expect(response).to redirect_to(contact_points_path)
+      expect(flash[:alert]).to include("Cannot discard")
+    end
+  end
+
+  describe "PATCH /contact_points/:id — update validation failure" do
+    before { sign_in system_admin }
+
+    it "update validation failure re-renders edit" do
+      cp = create(:contact_point, :residential, unit: unit_a, name: "Valid CP",
+                  initial_personnel_counts: { ranks.last.id => 1 })
+      # Send empty name to trigger validation failure
+      patch contact_point_path(cp), params: {
+        contact_point: { name: "" }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+  end
+
   describe "PATCH /contact_points/:id (T48)" do
     before { sign_in system_admin }
 

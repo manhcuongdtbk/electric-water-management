@@ -1,7 +1,7 @@
 ---
 title: Cột "Khác" kiểu hệ số tổng đơn vị (cách nhập thứ ba cho khoản trừ Khác)
-version: 0.2.1
-date: 2026-06-11
+version: 0.2.6
+date: 2026-06-17
 governed_by: 2026-06-07-sdlc-overview-design.md
 ---
 
@@ -86,11 +86,12 @@ Mã `CHIEU-<slug>` khai chiều test; test mang mã ở mô tả `it` (CI đối
 | `CHIEU-khac-don-vi-zone-direct` | Đầu mối zone-direct chọn `unit_coefficient` → validate chặn (request) + option bị ẩn (UI) | có test |
 | `CHIEU-khac-don-vi-ke-thua` | Kế thừa sang kỳ mới giữ `unit_coefficient` + hệ số, tính lại theo quân số kỳ mới | có test |
 | `CHIEU-khac-don-vi-vai-tro` | Sáu vai trò: ai sửa được cột Khác giữ nguyên (quản trị viên đơn vị; chỉ huy chỉ xem) | có test |
+| `CHIEU-khac-don-vi-loai-tru-cc-nb` | Defensive: query filter `residential_contact_points` chỉ chọn đầu mối sinh hoạt khi tính tổng quân số đơn vị — đầu mối công cộng không bao giờ nằm trong tổng (không có quân số theo nghiệp vụ mục 4); đầu mối ngoài biên chế không thuộc đơn vị (model chặn). Test kiểm chứng filter bằng cách tạo dữ liệu bất thường | có test |
 
 ## Giới hạn
 
 - Không đụng cơ chế bốn khoản trừ còn lại.
-- "Tổng quân số đơn vị" cố ý **chỉ** gồm đầu mối residential — khớp đúng chữ "đầu mối sinh hoạt" trong nghiệp vụ và ví dụ số liệu khách đã duyệt.
+- "Tổng quân số đơn vị" cố ý **chỉ** gồm đầu mối sinh hoạt — khớp đúng nghiệp vụ và ví dụ số liệu khách đã duyệt.
 
 ## Truy vết
 
@@ -99,6 +100,26 @@ Mã `CHIEU-<slug>` khai chiều test; test mang mã ở mô tả `it` (CI đối
 - Spec anh em milestone 1.2.0: [phân bổ bơm theo trạm](2026-06-11-phan-bo-bom-theo-tram-design.md), [hiển thị chi tiết tổn hao](2026-06-11-hien-thi-chi-tiet-ton-hao-design.md).
 
 ## Lịch sử thay đổi
+
+### 0.2.6 (2026-06-17)
+
+- Sửa triệt để mô tả chiều test `CHIEU-khac-don-vi-loai-tru-cc-nb` và mục Giới hạn: bỏ "inject" (tiếng Anh) → "tạo"; bỏ "residential" (tiếng Anh) → "sinh hoạt". Sửa lại cách diễn đạt: query filter **chỉ chọn** đầu mối sinh hoạt (đầu mối công cộng không bao giờ nằm trong tổng), thay vì "loại khỏi tổng" (gợi ý sai rằng đầu mối công cộng từng nằm trong tổng).
+
+### 0.2.5 (2026-06-17)
+
+- Sửa viết tắt và lẫn lộn Anh-Việt trong mô tả chiều test `CHIEU-khac-don-vi-loai-tru-cc-nb` và comment test: bỏ "CC", "NE", "public CP", "residential-only filter", "personnel", "defensive" — viết đầy đủ tiếng Việt trong tài liệu, đầy đủ tiếng Anh trong code.
+
+### 0.2.4 (2026-06-17)
+
+- Sửa lại mô tả chiều test `CHIEU-khac-don-vi-loai-tru-cc-nb`: đánh dấu là defensive test — đầu mối công cộng "không có người" theo nghiệp vụ (spec mục 4), nên scenario quân số bất thường trên đầu mối công cộng không xảy ra trong thực tế. Test kiểm chứng query filter `residential_contact_points`, không phải kiểm chứng quy tắc nghiệp vụ.
+
+### 0.2.3 (2026-06-17)
+
+- Sửa mô tả chiều test `CHIEU-khac-don-vi-loai-tru-cc-nb`: làm rõ chỉ public CP thuộc đơn vị mới cần test loại trừ; NE không thể thuộc đơn vị (model validates `unit_id must_be_blank`) nên tự động bị loại — không phải "cùng đơn vị".
+
+### 0.2.2 (2026-06-17)
+
+- Thêm chiều test `CHIEU-khac-don-vi-loai-tru-cc-nb`: quân số đầu mối công cộng thuộc đơn vị không tính vào tổng quân số đơn vị. Phát hiện qua audit spec-to-test tracing (PR #404).
 
 ### 0.2.1 (2026-06-13)
 

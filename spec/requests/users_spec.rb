@@ -50,6 +50,15 @@ RSpec.describe "Users", type: :request do
       end
     end
 
+    describe "GET /users/:id (show)" do
+      it "renders show page" do
+        target = create(:user, :unit_admin, unit: unit, username: "showUser")
+        get user_path(target)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("showUser")
+      end
+    end
+
     describe "POST /users" do
       it "tạo unit_admin" do
         post users_path, params: {
@@ -66,6 +75,20 @@ RSpec.describe "Users", type: :request do
         expect(User.find_by(username: "newAdmin")).to be_present
       end
 
+      it "create validation failure renders :new" do
+        post users_path, params: {
+          user: {
+            username: "",
+            display_name: "Missing username",
+            role: "unit_admin",
+            unit_id: unit.id,
+            password: "Secure@123",
+            password_confirmation: "Secure@123"
+          }
+        }
+        expect(response).to have_http_status(:unprocessable_content)
+      end
+
       it "không cho tạo tài khoản technician" do
         post users_path, params: {
           user: {
@@ -78,6 +101,17 @@ RSpec.describe "Users", type: :request do
         }
         expect(response).to redirect_to(root_path)
         expect(User.find_by(username: "newTech")).to be_nil
+      end
+    end
+
+    describe "PATCH /users/:id — update validation failure" do
+      it "update validation failure renders :edit" do
+        target = create(:user, :unit_admin, unit: unit)
+        # Password mismatch causes validation failure
+        patch user_path(target), params: {
+          user: { password: "New@1234", password_confirmation: "Mismatch@999" }
+        }
+        expect(response).to have_http_status(:unprocessable_content)
       end
     end
 
@@ -180,6 +214,28 @@ RSpec.describe "Users", type: :request do
       technician.reload
       expect(technician.valid_password?("Self@99New")).to be true
       expect(technician.force_password_change).to be false
+    end
+  end
+
+  describe "require_account_manager! blocks non-SA/non-technician" do
+    it "unit_admin cannot access users page" do
+      zone = create(:zone)
+      unit = create(:unit, zone: zone)
+      ua = create(:user, :unit_admin, unit: unit)
+      sign_in ua
+      get users_path
+      expect(response).to redirect_to(root_path)
+      expect(flash[:alert]).to eq(I18n.t("errors.access_denied"))
+    end
+
+    it "commander cannot access users page" do
+      zone = create(:zone)
+      unit = create(:unit, zone: zone)
+      cmd = create(:user, :commander, unit: unit)
+      sign_in cmd
+      get users_path
+      expect(response).to redirect_to(root_path)
+      expect(flash[:alert]).to eq(I18n.t("errors.access_denied"))
     end
   end
 

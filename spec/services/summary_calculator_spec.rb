@@ -235,6 +235,31 @@ RSpec.describe SummaryCalculator do
       end
     end
 
+    describe "unit_coefficient — residential-only query filter (defensive)" do
+      # Business rule (section 10.2.1): unit total = "all residential contact points
+      # in the unit, excluding non-establishment and public". In practice the rule is
+      # structurally satisfied because:
+      #   - Public contact points have no personnel (spec section 4).
+      #   - Non-establishment contact points cannot belong to a unit (model validation).
+      # This test verifies the residential_contact_points query filter works correctly
+      # even when abnormal data exists (defensive — scenario impossible per business
+      # rules but possible if the database is manually edited or a migration is buggy).
+      it "CHIEU-khac-don-vi-loai-tru-cc-nb: residential-only filter excludes public contact point even with abnormal personnel" do
+        nha_an = sample.contact_points[:nha_an]
+        PersonnelEntry.create!(contact_point: nha_an, period: sample.period,
+                               rank: sample.ranks[:ha_si_quan], count: 99)
+
+        apply_other_deduction(sample.contact_points[:van_thu], sample.period,
+                              type: "unit_coefficient", value: -2)
+        described_class.new(zone: sample.zone, period: sample.period,
+                            loss_results: loss_results, pump_results: pump_results).call
+
+        calc = calculation_for(:van_thu)
+        # Filter counts only residential → -2 × (10 − 2) = -16, not -214.
+        expect(calc.other_deduction).to eq_display("-16.00")
+      end
+    end
+
     describe "Chỉ huy khu vực (thuộc khu vực — unit_id null)" do
       let(:calc) { calculation_for(:chi_huy_khu_vuc) }
 

@@ -1,9 +1,15 @@
 class ZonesController < ApplicationController
   include PeriodGuard
   include AuthorizeResource
+  include ActionAuthKeyable
   include StructureChangeGuard
   include BusinessRoleRequired
   include SettingsAccessGuard
+
+  ACTION_AUTH_KEYS = {
+    "show" => :read, "edit" => :update, "update" => :update,
+    "reassign_manager" => :manage, "destroy" => :destroy
+  }.freeze
 
   before_action :require_system_admin!
   before_action :set_zone, only: [:show, :edit, :update, :destroy, :reassign_manager]
@@ -97,14 +103,6 @@ class ZonesController < ApplicationController
     @zone = load_member(Zone, action: action_auth_key)
   end
 
-  def action_auth_key
-    case action_name
-    when "show" then :read
-    when "edit", "update" then :update
-    when "reassign_manager" then :manage
-    when "destroy" then :destroy
-    end
-  end
 
   def zone_params
     params.require(:zone).permit(:name, main_meters_attributes: [:name])

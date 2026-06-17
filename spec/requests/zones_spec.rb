@@ -6,6 +6,27 @@ RSpec.describe "Zones", type: :request do
 
   before { sign_in system_admin }
 
+  describe "GET /zones/:id (show)" do
+    let!(:zone) { Zone.create!(name: "Show Zone", main_meters_attributes: [{ name: "CT-Show" }]) }
+
+    it "renders show page" do
+      get zone_path(zone)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Show Zone")
+    end
+  end
+
+  describe "GET /zones — sort by manager_unit" do
+    let!(:zone1) { Zone.create!(name: "Khu vực sort A", main_meters_attributes: [{ name: "CT-S1" }]) }
+    let!(:zone2) { Zone.create!(name: "Khu vực sort B", main_meters_attributes: [{ name: "CT-S2" }]) }
+    let!(:unit1) { create(:unit, zone: zone1) }
+
+    it "sort by manager_unit joins manager_units table" do
+      get zones_path, params: { sort: "manager_unit", direction: "asc" }
+      expect(response).to have_http_status(:ok)
+    end
+  end
+
   describe "GET /zones — hiển thị, sắp xếp" do
     let!(:zone1) { Zone.create!(name: "Khu vực A", main_meters_attributes: [{ name: "CT-A" }]) }
     let!(:zone2) { Zone.create!(name: "Khu vực B", main_meters_attributes: [{ name: "CT-B" }]) }
@@ -73,6 +94,32 @@ RSpec.describe "Zones", type: :request do
       expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("ít nhất một công tơ tổng")
     end
+
+    it "create zone with units empty shows warning" do
+      post zones_path, params: {
+        zone: { name: "KV No Units", main_meters_attributes: [{ name: "CT-NU" }] }
+      }
+      expect(response).to redirect_to(zones_path)
+      expect(flash[:notice]).to include("Cảnh báo")
+    end
+
+    it "create validation failure with duplicate name" do
+      Zone.create!(name: "Already exists", main_meters_attributes: [{ name: "CT" }])
+      post zones_path, params: {
+        zone: { name: "Already exists", main_meters_attributes: [{ name: "CT2" }] }
+      }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+  end
+
+  describe "PATCH /zones/:id (update)" do
+    let!(:zone) { Zone.create!(name: "Update Zone", main_meters_attributes: [{ name: "CT" }]) }
+
+    it "update validation failure renders :edit" do
+      Zone.create!(name: "Taken name", main_meters_attributes: [{ name: "CT2" }])
+      patch zone_path(zone), params: { zone: { name: "Taken name" } }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
   end
 
   describe "PATCH /zones/:id/reassign_manager (T31)" do
@@ -86,6 +133,12 @@ RSpec.describe "Zones", type: :request do
       expect(zone.reload.manager_unit_id).to eq(unit_a.id)
       patch reassign_manager_zone_path(zone), params: { manager_unit_id: unit_b.id }
       expect(zone.reload.manager_unit_id).to eq(unit_b.id)
+    end
+
+    it "remove manager (empty manager_unit_id)" do
+      patch reassign_manager_zone_path(zone), params: { manager_unit_id: "" }
+      expect(zone.reload.manager_unit_id).to be_nil
+      expect(flash[:notice]).to be_present
     end
 
     it "không cho gán unit thuộc zone khác" do

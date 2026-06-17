@@ -13,6 +13,14 @@ RSpec.describe MainMeterReading do
     it { is_expected.to validate_uniqueness_of(:main_meter_id).scoped_to(:period_id) }
   end
 
+  describe "#calculation_state_targets" do
+    it "returns nil zone_id when main_meter is nil" do
+      reading = MainMeterReading.new(period_id: 1)
+      targets = reading.send(:calculation_state_targets)
+      expect(targets).to eq([[nil, 1]])
+    end
+  end
+
   describe "optimistic locking" do
     it "có cột lock_version" do
       expect(MainMeterReading.column_names).to include("lock_version")

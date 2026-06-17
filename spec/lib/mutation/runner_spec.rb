@@ -53,6 +53,16 @@ RSpec.describe Mutation::Runner do
     expect(ran_columns).not_to include(8) # second `+` excluded by column
   end
 
+  it "marks a mutant as survived when tests still pass" do
+    # always_pass runner: every mutation "survives"
+    always_pass = Class.new { def passes?(*) = true }.new
+    subject = Mutation::Subject.new(path: tmp, spec_paths: ["spec/none_spec.rb"])
+    report = described_class.new(subjects: [subject], spec_runner: always_pass).run
+
+    expect(report.survived).to be > 0
+    expect(report.survivors).not_to be_empty
+  end
+
   it "restores the file even if the spec runner raises" do
     blowup = Class.new { def passes?(*) = raise("boom") }.new
     subject = Mutation::Subject.new(path: tmp, spec_paths: ["spec/none_spec.rb"])

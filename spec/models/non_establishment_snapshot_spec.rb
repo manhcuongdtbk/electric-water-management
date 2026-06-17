@@ -12,4 +12,12 @@ RSpec.describe NonEstablishmentSnapshot do
     it { is_expected.to validate_numericality_of(:personnel_count).only_integer.is_greater_than_or_equal_to(1) }
     it { is_expected.to validate_uniqueness_of(:contact_point_id).scoped_to(:period_id) }
   end
+
+  describe "#calculation_state_targets" do
+    it "returns nil zone_id when contact_point is nil" do
+      snapshot = NonEstablishmentSnapshot.new(period_id: 1)
+      targets = snapshot.send(:calculation_state_targets)
+      expect(targets).to eq([[nil, 1]])
+    end
+  end
 end

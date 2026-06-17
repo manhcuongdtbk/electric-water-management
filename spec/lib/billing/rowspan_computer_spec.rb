@@ -44,6 +44,16 @@ RSpec.describe Billing::RowspanComputer do
       expect(result[0]).to have_key(:block)
     end
 
+    it "handles nil effective_zone gracefully" do
+      calcs = [
+        calc(zone_id: nil, unit_id: 10, block_id: nil, group_id: nil),
+        calc(zone_id: nil, unit_id: 10, block_id: nil, group_id: nil)
+      ]
+      result = described_class.compute(calcs, show_zone: true, show_unit: true)
+      expect(result[0][:zone]).to eq(2)
+      expect(result[0][:unit]).to eq(2)
+    end
+
     it "gộp đầu mối zone-residential (unit_id nil) cùng zone" do
       calcs = [
         calc(zone_id: 1, unit_id: nil, block_id: nil, group_id: nil),

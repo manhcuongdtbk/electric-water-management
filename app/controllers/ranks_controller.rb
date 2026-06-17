@@ -2,8 +2,11 @@ class RanksController < ApplicationController
   include PeriodGuard
   include StructureChangeGuard
   include AuthorizeResource
+  include ActionAuthKeyable
   include BusinessRoleRequired
   include SettingsAccessGuard
+
+  ACTION_AUTH_KEYS = { "show" => :read, "edit" => :update, "update" => :update, "destroy" => :destroy }.freeze
 
   before_action :require_system_admin!
   before_action :set_rank, only: [:show, :edit, :update, :destroy]
@@ -84,13 +87,6 @@ class RanksController < ApplicationController
     redirect_to ranks_path, alert: I18n.t("ranks.flash.belongs_to_closed_period")
   end
 
-  def action_auth_key
-    case action_name
-    when "show" then :read
-    when "edit", "update" then :update
-    when "destroy" then :destroy
-    end
-  end
 
   def rank_params
     params.require(:rank).permit(:name, :quota, :position)

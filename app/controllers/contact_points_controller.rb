@@ -2,8 +2,11 @@ class ContactPointsController < ApplicationController
   include PeriodGuard
   include StructureChangeGuard
   include AuthorizeResource
+  include ActionAuthKeyable
   include BusinessRoleRequired
   include ZoneUnitFilterable
+
+  ACTION_AUTH_KEYS = { "show" => :read, "edit" => :update, "update" => :update, "destroy" => :destroy }.freeze
 
   before_action :set_contact_point, only: [:show, :edit, :update, :destroy]
   before_action :set_available_zones, only: [:new, :edit, :create, :update]
@@ -145,13 +148,6 @@ class ContactPointsController < ApplicationController
     end
   end
 
-  def action_auth_key
-    case action_name
-    when "show" then :read
-    when "edit", "update" then :update
-    when "destroy" then :destroy
-    end
-  end
 
   def needs_meter?(cp)
     cp.type_residential? || cp.type_public? || cp.type_water_pump?

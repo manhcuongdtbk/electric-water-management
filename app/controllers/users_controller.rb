@@ -1,7 +1,10 @@
 class UsersController < ApplicationController
   include AuthorizeResource
+  include ActionAuthKeyable
   include ZoneUnitFilterable
   include SettingsAccessGuard
+
+  ACTION_AUTH_KEYS = { "show" => :read, "edit" => :update, "update" => :update, "destroy" => :destroy }.freeze
 
   before_action :require_account_manager!
   before_action :set_user, only: [:show, :edit, :update, :destroy]
@@ -87,13 +90,6 @@ class UsersController < ApplicationController
     authorize!(action_auth_key, @user)
   end
 
-  def action_auth_key
-    case action_name
-    when "show" then :read
-    when "edit", "update" then :update
-    when "destroy" then :destroy
-    end
-  end
 
   def create_user_params
     params.require(:user).permit(:username, :display_name, :role, :unit_id, :password, :password_confirmation)
