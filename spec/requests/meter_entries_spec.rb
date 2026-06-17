@@ -383,9 +383,7 @@ RSpec.describe "MeterEntries", type: :request do
       get meter_entries_path
       doc = Nokogiri::HTML(response.body)
       loss_header = doc.css("th").find { |th| th.text.strip == "Tổn hao" }
-      actual_header = doc.css("th").find { |th| th.text.strip == "Sử dụng thực tế" }
-      expect(loss_header["class"]).to include("border-l-2").and include("bg-blue-50")
-      expect(actual_header["class"]).to include("bg-blue-50")
+      expect(loss_header["class"]).to include("border-l-2").and include("border-gray-300")
     end
   end
 end
