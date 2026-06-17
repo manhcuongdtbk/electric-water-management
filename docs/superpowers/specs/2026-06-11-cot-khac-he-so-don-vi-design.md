@@ -1,6 +1,6 @@
 ---
 title: Cột "Khác" kiểu hệ số tổng đơn vị (cách nhập thứ ba cho khoản trừ Khác)
-version: 0.2.3
+version: 0.2.4
 date: 2026-06-17
 governed_by: 2026-06-07-sdlc-overview-design.md
 ---
@@ -86,7 +86,7 @@ Mã `CHIEU-<slug>` khai chiều test; test mang mã ở mô tả `it` (CI đối
 | `CHIEU-khac-don-vi-zone-direct` | Đầu mối zone-direct chọn `unit_coefficient` → validate chặn (request) + option bị ẩn (UI) | có test |
 | `CHIEU-khac-don-vi-ke-thua` | Kế thừa sang kỳ mới giữ `unit_coefficient` + hệ số, tính lại theo quân số kỳ mới | có test |
 | `CHIEU-khac-don-vi-vai-tro` | Sáu vai trò: ai sửa được cột Khác giữ nguyên (quản trị viên đơn vị; chỉ huy chỉ xem) | có test |
-| `CHIEU-khac-don-vi-loai-tru-cc-nb` | Quân số đầu mối công cộng thuộc đơn vị không tính vào tổng quân số đơn vị (chỉ đếm residential; NE không thể thuộc đơn vị — model chặn) | có test |
+| `CHIEU-khac-don-vi-loai-tru-cc-nb` | Defensive: residential-only filter loại public CP khỏi tổng quân số đơn vị ngay cả khi có personnel bất thường (CC không có quân số theo nghiệp vụ; NE không thuộc đơn vị — model chặn) | có test |
 
 ## Giới hạn
 
@@ -100,6 +100,10 @@ Mã `CHIEU-<slug>` khai chiều test; test mang mã ở mô tả `it` (CI đối
 - Spec anh em milestone 1.2.0: [phân bổ bơm theo trạm](2026-06-11-phan-bo-bom-theo-tram-design.md), [hiển thị chi tiết tổn hao](2026-06-11-hien-thi-chi-tiet-ton-hao-design.md).
 
 ## Lịch sử thay đổi
+
+### 0.2.4 (2026-06-17)
+
+- Sửa lại mô tả chiều test `CHIEU-khac-don-vi-loai-tru-cc-nb`: đánh dấu là **defensive** test — đầu mối công cộng "không có người" theo nghiệp vụ (spec mục 4), nên scenario personnel bất thường trên public CP không xảy ra trong thực tế. Test kiểm chứng query filter `residential_contact_points`, không phải kiểm chứng quy tắc nghiệp vụ.
 
 ### 0.2.3 (2026-06-17)
 

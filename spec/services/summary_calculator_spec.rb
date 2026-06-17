@@ -235,14 +235,15 @@ RSpec.describe SummaryCalculator do
       end
     end
 
-    describe "unit_coefficient — quân số đầu mối công cộng thuộc đơn vị không tính vào tổng quân số" do
-      # Spec (mục 10.2.1): "tổng quân số tất cả đầu mối SINH HOẠT trong đơn vị, không tính
-      # đầu mối ngoài biên chế / công cộng". Đầu mối ngoài biên chế không thể thuộc đơn vị
-      # (model validates unit_id must_be_blank) nên tự động bị loại. Test này kiểm chứng đầu
-      # mối CÔNG CỘNG thuộc đơn vị (ví dụ: Nhà ăn thuộc Đơn vị A) không bị đếm.
-      it "CHIEU-khac-don-vi-loai-tru-cc-nb: quân số public CP thuộc đơn vị không ảnh hưởng unit_total" do
-        # Đơn vị A: 3 residential CPs (10 người) + 1 public CP (Nhà ăn).
-        # Thêm personnel cho Nhà ăn (public) — bất thường nhưng kiểm chứng filter.
+    describe "unit_coefficient — residential-only filter (defensive)" do
+      # Nghiệp vụ (mục 10.2.1): tổng quân số = "tất cả đầu mối SINH HOẠT trong đơn vị,
+      # không tính NB / CC". Trong thực tế quy tắc này tự thỏa vì:
+      #   - Đầu mối công cộng "không có người" (spec mục 4) → không có quân số để đếm.
+      #   - Đầu mối ngoài biên chế không thuộc đơn vị (model chặn unit_id).
+      # Test này kiểm chứng query filter residential_contact_points hoạt động đúng
+      # NGAY CẢ KHI dữ liệu bất thường tồn tại (defensive — scenario không xảy ra
+      # theo nghiệp vụ nhưng có thể xảy ra nếu DB bị sửa tay hoặc migration lỗi).
+      it "CHIEU-khac-don-vi-loai-tru-cc-nb: residential-only filter loại public CP dù có personnel bất thường" do
         nha_an = sample.contact_points[:nha_an]
         PersonnelEntry.create!(contact_point: nha_an, period: sample.period,
                                rank: sample.ranks[:ha_si_quan], count: 99)
@@ -253,8 +254,7 @@ RSpec.describe SummaryCalculator do
                             loss_results: loss_results, pump_results: pump_results).call
 
         calc = calculation_for(:van_thu)
-        # Nếu 99 người public bị tính vào → -2 × (109 − 2) = -214.
-        # Đúng: chỉ residential → -2 × (10 − 2) = -16.
+        # Filter chỉ đếm residential → -2 × (10 − 2) = -16 (không phải -214).
         expect(calc.other_deduction).to eq_display("-16.00")
       end
     end
