@@ -1,9 +1,12 @@
 class PumpAllocationsController < ApplicationController
   include PeriodGuard
   include AuthorizeResource
+  include ActionAuthKeyable
   include BusinessRoleRequired
   include ZoneUnitFilterable
   include SettingsAccessGuard
+
+  ACTION_AUTH_KEYS = { "edit" => :update, "update" => :update, "destroy" => :destroy }.freeze
 
   before_action :require_system_admin_or_zone_manager!
   before_action :set_allocation, only: [:edit, :update, :destroy]
@@ -86,13 +89,6 @@ class PumpAllocationsController < ApplicationController
                 alert: I18n.t("pump_allocations.flash.belongs_to_closed_period")
   end
 
-  def action_auth_key
-    case action_name
-    when "edit", "update" then :update
-    when "destroy" then :destroy
-    else raise ArgumentError, "no auth key for action #{action_name.inspect}"
-    end
-  end
 
   def allocation_params
     params.require(:pump_allocation).permit(

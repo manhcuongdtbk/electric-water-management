@@ -1,6 +1,6 @@
 ---
 title: Cột "Khác" kiểu hệ số tổng đơn vị (cách nhập thứ ba cho khoản trừ Khác)
-version: 0.2.2
+version: 0.2.3
 date: 2026-06-17
 governed_by: 2026-06-07-sdlc-overview-design.md
 ---
@@ -86,7 +86,7 @@ Mã `CHIEU-<slug>` khai chiều test; test mang mã ở mô tả `it` (CI đối
 | `CHIEU-khac-don-vi-zone-direct` | Đầu mối zone-direct chọn `unit_coefficient` → validate chặn (request) + option bị ẩn (UI) | có test |
 | `CHIEU-khac-don-vi-ke-thua` | Kế thừa sang kỳ mới giữ `unit_coefficient` + hệ số, tính lại theo quân số kỳ mới | có test |
 | `CHIEU-khac-don-vi-vai-tro` | Sáu vai trò: ai sửa được cột Khác giữ nguyên (quản trị viên đơn vị; chỉ huy chỉ xem) | có test |
-| `CHIEU-khac-don-vi-loai-tru-cc-nb` | Đầu mối công cộng/ngoài biên chế cùng đơn vị không tính vào tổng quân số đơn vị (chỉ residential) | có test |
+| `CHIEU-khac-don-vi-loai-tru-cc-nb` | Quân số đầu mối công cộng thuộc đơn vị không tính vào tổng quân số đơn vị (chỉ đếm residential; NE không thể thuộc đơn vị — model chặn) | có test |
 
 ## Giới hạn
 
@@ -101,9 +101,13 @@ Mã `CHIEU-<slug>` khai chiều test; test mang mã ở mô tả `it` (CI đối
 
 ## Lịch sử thay đổi
 
+### 0.2.3 (2026-06-17)
+
+- Sửa mô tả chiều test `CHIEU-khac-don-vi-loai-tru-cc-nb`: làm rõ chỉ public CP thuộc đơn vị mới cần test loại trừ; NE không thể thuộc đơn vị (model validates `unit_id must_be_blank`) nên tự động bị loại — không phải "cùng đơn vị".
+
 ### 0.2.2 (2026-06-17)
 
-- Thêm chiều test `CHIEU-khac-don-vi-loai-tru-cc-nb`: đầu mối công cộng/ngoài biên chế cùng đơn vị không tính vào tổng quân số đơn vị (chỉ residential). Phát hiện qua audit spec-to-test tracing (PR #404).
+- Thêm chiều test `CHIEU-khac-don-vi-loai-tru-cc-nb`: quân số đầu mối công cộng thuộc đơn vị không tính vào tổng quân số đơn vị. Phát hiện qua audit spec-to-test tracing (PR #404).
 
 ### 0.2.1 (2026-06-13)
 

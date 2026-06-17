@@ -235,8 +235,12 @@ RSpec.describe SummaryCalculator do
       end
     end
 
-    describe "unit_coefficient — đầu mối công cộng/ngoài biên chế cùng đơn vị không tính vào tổng quân số" do
-      it "CHIEU-khac-don-vi-loai-tru-cc-nb: quân số public/NB trong đơn vị không ảnh hưởng unit_total" do
+    describe "unit_coefficient — quân số đầu mối công cộng thuộc đơn vị không tính vào tổng quân số" do
+      # Spec (mục 10.2.1): "tổng quân số tất cả đầu mối SINH HOẠT trong đơn vị, không tính
+      # đầu mối ngoài biên chế / công cộng". Đầu mối ngoài biên chế không thể thuộc đơn vị
+      # (model validates unit_id must_be_blank) nên tự động bị loại. Test này kiểm chứng đầu
+      # mối CÔNG CỘNG thuộc đơn vị (ví dụ: Nhà ăn thuộc Đơn vị A) không bị đếm.
+      it "CHIEU-khac-don-vi-loai-tru-cc-nb: quân số public CP thuộc đơn vị không ảnh hưởng unit_total" do
         # Đơn vị A: 3 residential CPs (10 người) + 1 public CP (Nhà ăn).
         # Thêm personnel cho Nhà ăn (public) — bất thường nhưng kiểm chứng filter.
         nha_an = sample.contact_points[:nha_an]
