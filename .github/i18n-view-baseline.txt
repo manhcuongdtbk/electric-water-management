@@ -233,10 +233,10 @@ app/views/meter_entries/show.html.erb	<th class="px-3 py-2 text-left text-xs fon
 app/views/meter_entries/show.html.erb	<th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Khu vực</th>
 app/views/meter_entries/show.html.erb	<th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Đơn vị</th>
 app/views/meter_entries/show.html.erb	<th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Đầu mối</th>
-app/views/meter_entries/show.html.erb	<th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase border-l-2 border-gray-300">Tổn hao</th>
 app/views/meter_entries/show.html.erb	<th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Cuối kỳ</th>
 app/views/meter_entries/show.html.erb	<th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Sử dụng thực tế</th>
 app/views/meter_entries/show.html.erb	<th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Sử dụng</th>
+app/views/meter_entries/show.html.erb	<th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Tổn hao</th>
 app/views/meter_entries/show.html.erb	<th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Đầu kỳ</th>
 app/views/meter_entries/show.html.erb	Bấm "Tính toán lại" ở Bảng tính tiền để làm mới.
 app/views/meter_entries/show.html.erb	Hai cột <strong>Tổn hao</strong> và <strong>Sử dụng thực tế</strong> là kết quả lần tính gần nhất —
@@ -318,10 +318,10 @@ app/views/pump_entries/show.html.erb	<th class="px-3 py-2 text-left text-xs font
 app/views/pump_entries/show.html.erb	<th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Ghi chú</th>
 app/views/pump_entries/show.html.erb	<th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Khu vực</th>
 app/views/pump_entries/show.html.erb	<th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Đầu mối</th>
-app/views/pump_entries/show.html.erb	<th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase border-l-2 border-gray-300">Tổn hao</th>
 app/views/pump_entries/show.html.erb	<th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Cuối kỳ</th>
 app/views/pump_entries/show.html.erb	<th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Sử dụng thực tế</th>
 app/views/pump_entries/show.html.erb	<th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Sử dụng</th>
+app/views/pump_entries/show.html.erb	<th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Tổn hao</th>
 app/views/pump_entries/show.html.erb	<th class="px-3 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Đầu kỳ</th>
 app/views/pump_entries/show.html.erb	Bấm "Tính toán lại" ở Bảng tính tiền để làm mới.
 app/views/pump_entries/show.html.erb	Hai cột <strong>Tổn hao</strong> và <strong>Sử dụng thực tế</strong> là kết quả lần tính gần nhất —

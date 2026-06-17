@@ -377,13 +377,4 @@ RSpec.describe "MeterEntries", type: :request do
     end
   end
 
-  describe "UI/UX improvements (#405)" do
-    it "cột Tổn hao và Sử dụng thực tế có visual separation (border + background)" do
-      sign_in system_admin
-      get meter_entries_path
-      doc = Nokogiri::HTML(response.body)
-      loss_header = doc.css("th").find { |th| th.text.strip == "Tổn hao" }
-      expect(loss_header["class"]).to include("border-l-2").and include("border-gray-300")
-    end
-  end
 end
