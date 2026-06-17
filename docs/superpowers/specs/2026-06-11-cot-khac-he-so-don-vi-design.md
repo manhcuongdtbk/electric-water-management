@@ -1,7 +1,7 @@
 ---
 title: Cột "Khác" kiểu hệ số tổng đơn vị (cách nhập thứ ba cho khoản trừ Khác)
-version: 0.2.1
-date: 2026-06-11
+version: 0.2.2
+date: 2026-06-17
 governed_by: 2026-06-07-sdlc-overview-design.md
 ---
 
@@ -86,6 +86,7 @@ Mã `CHIEU-<slug>` khai chiều test; test mang mã ở mô tả `it` (CI đối
 | `CHIEU-khac-don-vi-zone-direct` | Đầu mối zone-direct chọn `unit_coefficient` → validate chặn (request) + option bị ẩn (UI) | có test |
 | `CHIEU-khac-don-vi-ke-thua` | Kế thừa sang kỳ mới giữ `unit_coefficient` + hệ số, tính lại theo quân số kỳ mới | có test |
 | `CHIEU-khac-don-vi-vai-tro` | Sáu vai trò: ai sửa được cột Khác giữ nguyên (quản trị viên đơn vị; chỉ huy chỉ xem) | có test |
+| `CHIEU-khac-don-vi-loai-tru-cc-nb` | Đầu mối công cộng/ngoài biên chế cùng đơn vị không tính vào tổng quân số đơn vị (chỉ residential) | có test |
 
 ## Giới hạn
 
@@ -99,6 +100,10 @@ Mã `CHIEU-<slug>` khai chiều test; test mang mã ở mô tả `it` (CI đối
 - Spec anh em milestone 1.2.0: [phân bổ bơm theo trạm](2026-06-11-phan-bo-bom-theo-tram-design.md), [hiển thị chi tiết tổn hao](2026-06-11-hien-thi-chi-tiet-ton-hao-design.md).
 
 ## Lịch sử thay đổi
+
+### 0.2.2 (2026-06-17)
+
+- Thêm chiều test `CHIEU-khac-don-vi-loai-tru-cc-nb`: đầu mối công cộng/ngoài biên chế cùng đơn vị không tính vào tổng quân số đơn vị (chỉ residential). Phát hiện qua audit spec-to-test tracing (PR #404).
 
 ### 0.2.1 (2026-06-13)
 
