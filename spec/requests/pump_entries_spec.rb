@@ -171,5 +171,4 @@ RSpec.describe "PumpEntries", type: :request do
       expect(r.reload.reading_start.to_f).to eq(200.0)
     end
   end
-
 end

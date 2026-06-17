@@ -376,5 +376,4 @@ RSpec.describe "MeterEntries", type: :request do
       expect(flash[:alert]).to include("Dữ liệu đã bị thay đổi")
     end
   end
-
 end
