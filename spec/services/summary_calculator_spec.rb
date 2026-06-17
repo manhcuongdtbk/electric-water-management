@@ -235,6 +235,26 @@ RSpec.describe SummaryCalculator do
       end
     end
 
+    describe "unit_coefficient — đầu mối công cộng/ngoài biên chế cùng đơn vị không tính vào tổng quân số" do
+      it "CHIEU-khac-don-vi-loai-tru-cc-nb: quân số public/NB trong đơn vị không ảnh hưởng unit_total" do
+        # Đơn vị A: 3 residential CPs (10 người) + 1 public CP (Nhà ăn).
+        # Thêm personnel cho Nhà ăn (public) — bất thường nhưng kiểm chứng filter.
+        nha_an = sample.contact_points[:nha_an]
+        PersonnelEntry.create!(contact_point: nha_an, period: sample.period,
+                               rank: sample.ranks[:ha_si_quan], count: 99)
+
+        apply_other_deduction(sample.contact_points[:van_thu], sample.period,
+                              type: "unit_coefficient", value: -2)
+        described_class.new(zone: sample.zone, period: sample.period,
+                            loss_results: loss_results, pump_results: pump_results).call
+
+        calc = calculation_for(:van_thu)
+        # Nếu 99 người public bị tính vào → -2 × (109 − 2) = -214.
+        # Đúng: chỉ residential → -2 × (10 − 2) = -16.
+        expect(calc.other_deduction).to eq_display("-16.00")
+      end
+    end
+
     describe "Chỉ huy khu vực (thuộc khu vực — unit_id null)" do
       let(:calc) { calculation_for(:chi_huy_khu_vuc) }
 
