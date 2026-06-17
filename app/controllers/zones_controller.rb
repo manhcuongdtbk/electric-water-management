@@ -103,6 +103,7 @@ class ZonesController < ApplicationController
     when "edit", "update" then :update
     when "reassign_manager" then :manage
     when "destroy" then :destroy
+    else raise ArgumentError, "no auth key for action #{action_name.inspect}"
     end
   end
 

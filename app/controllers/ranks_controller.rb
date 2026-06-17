@@ -89,6 +89,7 @@ class RanksController < ApplicationController
     when "show" then :read
     when "edit", "update" then :update
     when "destroy" then :destroy
+    else raise ArgumentError, "no auth key for action #{action_name.inspect}"
     end
   end
 

@@ -90,6 +90,7 @@ class PumpAllocationsController < ApplicationController
     case action_name
     when "edit", "update" then :update
     when "destroy" then :destroy
+    else raise ArgumentError, "no auth key for action #{action_name.inspect}"
     end
   end
 
