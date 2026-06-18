@@ -1,6 +1,6 @@
 # Xác nhận nghiệp vụ — Hệ thống quản lý điện nội bộ Sư đoàn (Hệ thống v2)
 
-> **Phiên bản:** 2.17.0
+> **Phiên bản:** 2.17.1
 > **Ngày:** 18/06/2026
 > **Tính chất:** Tài liệu nội bộ giữa chủ dự án và đội phát triển. Là nguồn sự thật duy nhất cho thiết kế và triển khai.
 > **Ngôn ngữ hệ thống:** Toàn bộ hệ thống phải được Việt hóa 100% (giao diện, thông báo, cảnh báo, xuất file) vì hệ thống dùng trong Sư đoàn Quân đội nhân dân Việt Nam.
@@ -412,7 +412,7 @@ Lưu ý: đầu mối sinh hoạt thuộc khu vực (zone-level) không nằm tr
 
 - Kỳ mở **trước** khi có tính năng này: giữ nguyên cơ chế gộp toàn khu vực (mục 9.2–9.5).
 - Kỳ mở **sau**: dùng cơ chế phân bổ theo từng trạm. Kỳ phân bổ-theo-trạm kế thừa cấu hình từng trạm từ kỳ phân bổ-theo-trạm trước đó.
-- **Kỳ phân bổ-theo-trạm đầu tiên** (ngay sau khi cập nhật hệ thống): bắt đầu **trống** (cấu hình gộp cũ không gắn được vào trạm cụ thể); quản trị viên cấu hình lại từng trạm.
+- **Kỳ phân bổ-theo-trạm đầu tiên** (ngay sau khi cập nhật hệ thống): bắt đầu **trống**; quản trị viên cấu hình lại từng trạm. Lý do không kế thừa: (1) cấu hình gộp cũ không gắn được vào trạm cụ thể; (2) phần trăm cố định đổi ngữ nghĩa — kỳ gộp là phần trăm của **toàn khu vực**, kỳ per-trạm là phần trăm của **trạm đó** — kế thừa con số cũ sẽ sai ý nghĩa.
 
 > Thiết kế hệ thống & quyết định: [`docs/superpowers/specs/2026-06-11-phan-bo-bom-theo-tram-design.md`](superpowers/specs/2026-06-11-phan-bo-bom-theo-tram-design.md) (ADR-026).
 
@@ -896,6 +896,10 @@ Người dùng chỉ cần sửa chỗ có thay đổi. Mọi thao tác ở kỳ
 ---
 
 ## 29. Lịch sử thay đổi
+
+### v2.17.1 (18/06/2026)
+
+- Mục 9.6 kỳ chuyển tiếp: làm rõ lý do không kế thừa — thêm (2) phần trăm cố định đổi ngữ nghĩa (kỳ gộp = % khu vực, kỳ per-trạm = % trạm).
 
 ### v2.17.0 (18/06/2026)
 
