@@ -1,7 +1,7 @@
 # Hành vi hệ thống — Hệ thống quản lý điện nội bộ Sư đoàn (Hệ thống v2)
 
-> **Phiên bản:** 1.3.0
-> **Ngày:** 11/06/2026
+> **Phiên bản:** 1.4.0
+> **Ngày:** 18/06/2026
 > **Tính chất:** Tài liệu mô tả hành vi thực tế của hệ thống đã được verify qua code và test. Bổ sung cho V2_XAC_NHAN_NGHIEP_VU (cái gì) và V2_THIET_KE_HE_THONG (làm thế nào) bằng cách trả lời "hệ thống hành xử ra sao" trong các kịch bản thực tế.
 > **Nguồn:** Kết quả audit toàn diện codebase, 14 đợt page-by-page, 781+ test cases.
 
@@ -364,6 +364,10 @@ Code từ session AI trước có thể thiếu suy nghĩ sâu về edge cases. 
 - Cờ `Period#pump_allocation_per_station` quyết định cơ chế **theo từng kỳ**: kỳ cũ (đã đóng) giữ gộp toàn khu vực; kỳ mới phân bổ per trạm. Cùng codebase phục vụ cả hai khi xem kỳ cũ/mới.
 - Chuyển tiếp cũ → per-trạm đầu tiên: bắt đầu trống, không kế thừa (cấu hình gộp cũ không ánh xạ được vào trạm). Các kỳ per-trạm sau kế thừa cấu hình từng trạm.
 - Xem kỳ cũ có đối tượng nhận đã xóa: dùng `.with_discarded` (mục 7); trang cấu hình kỳ mở dùng `.kept`.
+- **Ràng buộc phân cấp** (toàn zone, xuyên trạm, validate khi cấu hình và khi di chuyển đầu mối): (1) không chồng chéo — tập đầu mối sinh hoạt phân giải từ mỗi recipient phải không giao nhau; (2) không chia cấp — toàn bộ đơn vị thuộc một trạm duy nhất.
+- **Xóa khối/nhóm đang là recipient** (kỳ đang mở): cleanup allocation + cảnh báo; đầu mối bên trong mất nguồn phân bổ bơm nước — quản trị viên cần cấu hình lại. Kỳ cũ đã đóng giữ nguyên.
+- **Di chuyển đầu mối** giữa khối/nhóm: có thể thay đổi nguồn phân bổ bơm nước. Validate ràng buộc phân cấp khi di chuyển.
+- **Recipient rỗng** (0 đầu mối sinh hoạt bên trong): chặn khi cấu hình; khi tính toán bỏ qua phân phối + cảnh báo.
 - Spec: [`superpowers/specs/2026-06-11-phan-bo-bom-theo-tram-design.md`](superpowers/specs/2026-06-11-phan-bo-bom-theo-tram-design.md).
 
 ### Hiển thị chi tiết tổn hao — snapshot, không tính live
@@ -374,6 +378,10 @@ Code từ session AI trước có thể thiếu suy nghĩ sâu về edge cases. 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.4.0 (18/06/2026)
+
+- Mục 9 phân bổ bơm per-trạm: thêm ràng buộc phân cấp (không chồng chéo + không chia cấp), hành vi xóa khối/nhóm khi là recipient, validate di chuyển đầu mối, xử lý recipient rỗng. Khớp nghiệp vụ v2.17.0 và spec v0.3.0.
 
 ### v1.3.0 (11/06/2026)
 

@@ -1,6 +1,6 @@
 ---
 title: Phân bổ điện bơm nước theo từng trạm bơm (mở rộng đối tượng nhận)
-version: 0.2.1
+version: 0.3.1
 date: 2026-06-11
 governed_by: 2026-06-07-sdlc-overview-design.md
 ---
@@ -53,8 +53,10 @@ Mã nguồn liên quan hiện tại:
 - Ràng buộc `PumpAllocation`:
   - **Đối tượng nhận:** đúng một trong `{unit_id, block_id, group_id, contact_point_id}`.
   - `block`/`group` phải thuộc `zone` (qua đơn vị quản lý / cấu trúc đơn vị); `contact_point` recipient cho phép residential thuộc đơn vị **hoặc** zone-level **hoặc** ngoài biên chế.
-  - **Per-trạm (kỳ `per_station = true`):** `pump_contact_point_id` bắt buộc và trỏ tới đầu mối `water_pump` cùng zone; ràng buộc tổng `fixed_percentage` ≤ 100 và "phải có recipient hệ số nếu chưa đạt 100%" tính **theo từng trạm**.
+  - **Per-trạm (kỳ `per_station = true`):** `pump_contact_point_id` bắt buộc và trỏ tới đầu mối `water_pump` cùng zone; ràng buộc tổng `fixed_percentage` ≤ 100 và "phải có recipient hệ số nếu chưa đạt 100%" tính **theo từng trạm**. Recipient kiểu `unit`/`block`/`group` phải có ít nhất 1 đầu mối sinh hoạt bên trong.
   - **Kỳ cũ (`per_station = false`):** `pump_contact_point_id` để trống; ràng buộc như hiện tại (theo zone).
+  - **Không chồng chéo (toàn zone, xuyên trạm):** tập đầu mối sinh hoạt mà mỗi recipient "phân giải" tới phải không giao nhau — cả trong cùng trạm lẫn giữa các trạm. Ví dụ: `unit` + `block` bên trong = cấm.
+  - **Không chia cấp (toàn zone, xuyên trạm):** toàn bộ đơn vị thuộc một trạm duy nhất. Nếu bất kỳ recipient nào (khối, nhóm, đầu mối) thuộc đơn vị X đã gắn trạm A, thì mọi recipient khác thuộc đơn vị X chỉ được gắn trạm A.
 
 ### Tính toán (`PumpAllocationCalculator`)
 
@@ -66,7 +68,7 @@ Mã nguồn liên quan hiện tại:
     - Đối tượng nhận khối/nhóm: chia đều xuống đầu mối residential bên trong theo quân số (tái dùng `distribute_to_residential_contact_points`, mở rộng nguồn quân số từ `unit` sang `block`/`group`).
     - Đầu mối sinh hoạt thuộc đơn vị nhận trực tiếp.
   - Gộp `contact_point_allocations` của tất cả trạm; tổng = `D` toàn khu vực.
-- Cảnh báo: trạm chưa có đối tượng nhận → cảnh báo (tái dùng cơ chế warnings hiện có). Tổn hao vẫn tính zone-wide ở `LossCalculator` (mục 8 không đổi), chỉ gán `meter_losses` về trạm tương ứng.
+- Cảnh báo: trạm chưa có đối tượng nhận → cảnh báo; recipient kiểu `unit`/`block`/`group` có 0 đầu mối sinh hoạt bên trong → bỏ qua phân phối + cảnh báo (tái dùng cơ chế warnings hiện có). Tổn hao vẫn tính zone-wide ở `LossCalculator` (mục 8 không đổi), chỉ gán `meter_losses` về trạm tương ứng.
 
 ### Trang Phân bổ bơm nước
 
@@ -77,7 +79,7 @@ Mã nguồn liên quan hiện tại:
 ### Kế thừa kỳ & chuyển tiếp
 
 - Kỳ `per_station = true` kế thừa cấu hình **từng trạm** (đối tượng nhận, %, hệ số, `pump_contact_point_id`) từ kỳ `per_station = true` trước đó.
-- **Chuyển tiếp cũ → per-trạm đầu tiên:** **không** kế thừa allocation qua ranh giới này. Kỳ per-trạm đầu tiên bắt đầu **trống**; admin cấu hình lại từng trạm; trạm chưa cấu hình → cảnh báo. (Cấu hình cũ kỳ-gộp không gắn được vào trạm cụ thể, kế thừa sẽ tạo trạng thái lỗi.)
+- **Chuyển tiếp cũ → per-trạm đầu tiên:** **không** kế thừa allocation qua ranh giới này. Kỳ per-trạm đầu tiên bắt đầu **trống**; admin cấu hình lại từng trạm; trạm chưa cấu hình → cảnh báo. Lý do không kế thừa: (1) cấu hình cũ kỳ-gộp không gắn được vào trạm cụ thể; (2) phần trăm cố định đổi ngữ nghĩa — kỳ gộp là phần trăm của toàn khu vực, kỳ per-trạm là phần trăm của trạm đó — kế thừa con số cũ sẽ sai ý nghĩa.
 - `period_service.copy_pump_allocations` cập nhật: chỉ copy khi cả kỳ nguồn lẫn kỳ đích đều `per_station = true`.
 
 ## Truy vết chiều test
@@ -94,6 +96,8 @@ Tính năng **chưa triển khai** — mọi chiều `DEFERRED #319` cho tới k
 | `CHIEU-phan-bo-tram-chuyen-tiep` | Chuyển tiếp: kỳ per-trạm đầu tiên bắt đầu trống; kỳ per-trạm sau kế thừa đúng | DEFERRED #319 |
 | `CHIEU-phan-bo-tram-da-xoa` | Recipient đã xóa (Discard) khi xem kỳ cũ → dùng `.with_discarded` đúng chỗ (mục 7 hành vi hệ thống) | DEFERRED #319 |
 | `CHIEU-phan-bo-tram-vai-tro` | Sáu vai trò + đơn vị quản lý khu vực cấu hình được, chỉ huy chỉ xem | DEFERRED #319 |
+| `CHIEU-phan-bo-tram-khong-chong-cheo` | Ràng buộc không chồng chéo + không chia cấp: recipient chồng phân cấp (đơn vị + khối bên trong) → chặn; recipient cùng đơn vị ở 2 trạm khác nhau → chặn | DEFERRED #319 |
+| `CHIEU-phan-bo-tram-recipient-rong` | Recipient kiểu đơn vị/khối/nhóm có 0 đầu mối sinh hoạt → chặn khi cấu hình; graceful khi tính toán (bỏ qua + cảnh báo) | DEFERRED #319 |
 
 ## Giới hạn
 
@@ -108,6 +112,17 @@ Tính năng **chưa triển khai** — mọi chiều `DEFERRED #319` cho tới k
 - Spec anh em milestone 1.2.0: [cột Khác hệ số đơn vị](2026-06-11-cot-khac-he-so-don-vi-design.md), [hiển thị chi tiết tổn hao](2026-06-11-hien-thi-chi-tiet-ton-hao-design.md).
 
 ## Lịch sử thay đổi
+
+### 0.3.1 (2026-06-18)
+
+- Kế thừa kỳ & chuyển tiếp: thêm lý do (2) phần trăm cố định đổi ngữ nghĩa (kỳ gộp = % khu vực, kỳ per-trạm = % trạm). Khớp nghiệp vụ v2.17.1.
+
+### 0.3.0 (2026-06-18)
+
+- Ràng buộc data model: thêm "không chồng chéo" (tập đầu mối sinh hoạt phân giải từ mỗi recipient phải không giao nhau, xuyên trạm) và "không chia cấp" (toàn bộ đơn vị thuộc một trạm duy nhất). Thêm recipient kiểu đơn vị/khối/nhóm phải có ít nhất 1 đầu mối sinh hoạt.
+- Tính toán: thêm cảnh báo khi recipient có 0 đầu mối sinh hoạt (bỏ qua phân phối).
+- Chiều test: thêm `CHIEU-phan-bo-tram-khong-chong-cheo` và `CHIEU-phan-bo-tram-recipient-rong`.
+- Khớp nghiệp vụ v2.17.0.
 
 ### 0.2.1 (2026-06-13)
 
