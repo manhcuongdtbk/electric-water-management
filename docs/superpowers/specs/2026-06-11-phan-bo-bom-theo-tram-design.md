@@ -1,6 +1,6 @@
 ---
 title: Phân bổ điện bơm nước theo từng trạm bơm (mở rộng đối tượng nhận)
-version: 0.3.0
+version: 0.3.1
 date: 2026-06-11
 governed_by: 2026-06-07-sdlc-overview-design.md
 ---
@@ -79,7 +79,7 @@ Mã nguồn liên quan hiện tại:
 ### Kế thừa kỳ & chuyển tiếp
 
 - Kỳ `per_station = true` kế thừa cấu hình **từng trạm** (đối tượng nhận, %, hệ số, `pump_contact_point_id`) từ kỳ `per_station = true` trước đó.
-- **Chuyển tiếp cũ → per-trạm đầu tiên:** **không** kế thừa allocation qua ranh giới này. Kỳ per-trạm đầu tiên bắt đầu **trống**; admin cấu hình lại từng trạm; trạm chưa cấu hình → cảnh báo. (Cấu hình cũ kỳ-gộp không gắn được vào trạm cụ thể, kế thừa sẽ tạo trạng thái lỗi.)
+- **Chuyển tiếp cũ → per-trạm đầu tiên:** **không** kế thừa allocation qua ranh giới này. Kỳ per-trạm đầu tiên bắt đầu **trống**; admin cấu hình lại từng trạm; trạm chưa cấu hình → cảnh báo. Lý do không kế thừa: (1) cấu hình cũ kỳ-gộp không gắn được vào trạm cụ thể; (2) phần trăm cố định đổi ngữ nghĩa — kỳ gộp là phần trăm của toàn khu vực, kỳ per-trạm là phần trăm của trạm đó — kế thừa con số cũ sẽ sai ý nghĩa.
 - `period_service.copy_pump_allocations` cập nhật: chỉ copy khi cả kỳ nguồn lẫn kỳ đích đều `per_station = true`.
 
 ## Truy vết chiều test
@@ -112,6 +112,10 @@ Tính năng **chưa triển khai** — mọi chiều `DEFERRED #319` cho tới k
 - Spec anh em milestone 1.2.0: [cột Khác hệ số đơn vị](2026-06-11-cot-khac-he-so-don-vi-design.md), [hiển thị chi tiết tổn hao](2026-06-11-hien-thi-chi-tiet-ton-hao-design.md).
 
 ## Lịch sử thay đổi
+
+### 0.3.1 (2026-06-18)
+
+- Kế thừa kỳ & chuyển tiếp: thêm lý do (2) phần trăm cố định đổi ngữ nghĩa (kỳ gộp = % khu vực, kỳ per-trạm = % trạm). Khớp nghiệp vụ v2.17.1.
 
 ### 0.3.0 (2026-06-18)
 
