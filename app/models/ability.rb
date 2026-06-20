@@ -66,6 +66,8 @@ class Ability
     can :read, Zone, id: managed_zone_ids
     can :read, MainMeter, zone_id: managed_zone_ids
     can [:create, :read, :update, :destroy], MainMeterReading, main_meter: { zone_id: managed_zone_ids }
+    can :read, Block, unit: { zone_id: managed_zone_ids }
+    can :read, Group, unit: { zone_id: managed_zone_ids }
     can [:create, :read, :update, :destroy], ContactPoint, zone_id: managed_zone_ids
     can [:create, :read, :update, :destroy], Meter, contact_point: { zone_id: managed_zone_ids }
     can [:create, :read, :update, :destroy], PumpAllocation, zone_id: managed_zone_ids
@@ -103,6 +105,8 @@ class Ability
     can :read, Zone, id: managed_zone_ids
     can :read, MainMeter, zone_id: managed_zone_ids
     can :read, MainMeterReading, main_meter: { zone_id: managed_zone_ids }
+    can :read, Block, unit: { zone_id: managed_zone_ids }
+    can :read, Group, unit: { zone_id: managed_zone_ids }
     can :read, ContactPoint, zone_id: managed_zone_ids
     can :read, Meter, contact_point: { zone_id: managed_zone_ids }
     can :read, PumpAllocation, zone_id: managed_zone_ids

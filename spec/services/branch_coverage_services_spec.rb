@@ -119,7 +119,9 @@ RSpec.describe "Branch coverage — services" do
       it "does not copy pump allocations for discarded zones" do
         zone = create(:zone)
         unit = create(:unit, zone: zone)
+        create(:contact_point, :residential, unit: unit, name: "ĐM discarded zone test")
         period_1 = PeriodService.new.open_new_period(year: 2026, month: 1, unit_price: 100).period
+        period_1.update!(pump_allocation_per_station: false)
         PumpAllocation.create!(zone: zone, unit: unit, period: period_1, coefficient: 1)
 
         # Discard via update_column to bypass callbacks that might interfere
@@ -134,7 +136,9 @@ RSpec.describe "Branch coverage — services" do
       it "does not copy pump allocations for discarded units" do
         zone = create(:zone)
         unit = create(:unit, zone: zone)
+        create(:contact_point, :residential, unit: unit, name: "ĐM discarded unit test")
         period_1 = PeriodService.new.open_new_period(year: 2026, month: 1, unit_price: 100).period
+        period_1.update!(pump_allocation_per_station: false)
         PumpAllocation.create!(zone: zone, unit: unit, period: period_1, coefficient: 1)
 
         unit.update_column(:discarded_at, Time.current)
@@ -238,14 +242,13 @@ RSpec.describe "Branch coverage — services" do
 
   describe PumpAllocationCalculator do
     describe "#call — zero personnel for coefficient allocation (line 50)" do
-      it "warns when coefficient allocation target has zero personnel" do
-        # Create a pump allocation with coefficient targeting an empty unit
+      it "raises IncompleteStationConfig when coefficient allocation target has zero personnel (#401)" do
         empty_zone = create(:zone)
         empty_unit = create(:unit, zone: empty_zone)
+        create(:contact_point, :residential, unit: empty_unit, name: "ĐM empty")
         create(:main_meter, name: "MM-empty", zone: empty_zone)
         period = sample.period
 
-        # Create UnitConfig for the empty unit
         UnitConfig.find_or_create_by!(unit: empty_unit, period: period)
 
         pump_cp = create(:contact_point, :water_pump, zone: empty_zone, name: "Pump Empty")
@@ -257,10 +260,9 @@ RSpec.describe "Branch coverage — services" do
         PumpAllocation.create!(zone: empty_zone, unit: empty_unit, period: period, coefficient: 1)
 
         loss = LossCalculator.new(zone: empty_zone, period: period).call
-        result = described_class.new(zone: empty_zone, period: period, loss_results: loss).call
-        expect(result.warnings).to include(
-          I18n.t("services.pump_allocation_calculator.warnings.zero_personnel")
-        )
+        expect {
+          described_class.new(zone: empty_zone, period: period, loss_results: loss).call
+        }.to raise_error(PumpAllocationCalculator::IncompleteStationConfig)
       end
     end
 
@@ -419,15 +421,14 @@ RSpec.describe "Branch coverage — models" do
   # ---------- pump_allocation.rb ----------
 
   describe PumpAllocation do
-    describe "#validate_contact_point_must_be_zone_level" do
-      it "rejects contact_point that belongs to a unit" do
+    describe "#validate_contact_point_must_be_zone_level — removed by TN2" do
+      it "allows contact_point that belongs to a unit (TN2 relaxed this constraint)" do
         zone = create(:zone)
         unit = create(:unit, zone: zone)
         cp = create(:contact_point, :residential, unit: unit, name: "Unit CP",
                     initial_personnel_counts: { ranks.first.id => 1 })
         alloc = PumpAllocation.new(zone: zone, contact_point: cp, period: period, coefficient: 1)
-        expect(alloc).not_to be_valid
-        expect(alloc.errors[:contact_point_id]).to be_present
+        expect(alloc).to be_valid
       end
     end
   end

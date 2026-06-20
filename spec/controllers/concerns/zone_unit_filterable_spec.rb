@@ -293,6 +293,7 @@ RSpec.describe ZoneUnitFilterable do
 
   describe "#set_sa_available_filters_from" do
     let!(:period) { create(:period, closed: false) }
+    before { create(:contact_point, :residential, unit: unit1, name: "ĐM Đơn vị 1") }
     let!(:alloc1) { PumpAllocation.create!(zone: zone1, period: period, unit: unit1, coefficient: 1) }
     let(:sa) { create(:user, :system_admin) }
 

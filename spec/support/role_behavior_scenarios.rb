@@ -95,15 +95,20 @@ module RoleBehaviorScenarios
   end
 
   # --- blocks (pilot) -------------------------------------------------------
+  # Zone-managers (ua_zm/cmd_zm) read every Block in their managed zone (Task 8b,
+  # Issue #319): they see the other unit's block too, so it is NOT hidden from
+  # them. Only the non-manager roles (ua/cmd, scoped to their own unit) hide the
+  # foreign block.
   def blocks
     w = base_world
     mgr = FactoryBot.create(:block, unit: w[:unit_manager], name: "Khoi-QL-#{SecureRandom.hex(3)}")
     oth = FactoryBot.create(:block, unit: w[:unit_other],   name: "Khoi-Khac-#{SecureRandom.hex(3)}")
     checks = accessible_non_sa_roles("blocks").map do |role|
       user = make_user(role, w)
-      owned = unit_for(role, w) == w[:unit_manager] ? mgr.name : oth.name
-      foreign = owned == mgr.name ? oth.name : mgr.name
-      { user: user, sees: owned, hides: [foreign] }
+      zone_manager = %i[ua_zm cmd_zm].include?(role)
+      owned = zone_manager ? mgr.name : oth.name
+      hides = zone_manager ? [] : [mgr.name]
+      { user: user, sees: owned, hides: hides }
     end
     Scenario.new(path: Rails.application.routes.url_helpers.blocks_path,
                  sa_user: FactoryBot.create(:user, :system_admin),
@@ -113,14 +118,19 @@ module RoleBehaviorScenarios
   end
 
   # --- groups (unit-scoped index, clone of blocks) --------------------------
+  # Same zone-manager read scope as blocks (Task 8b, Issue #319): ua_zm/cmd_zm
+  # see every Group in their managed zone (foreign group not hidden); ua/cmd
+  # stay scoped to their own unit and hide the manager unit's group.
   def groups
     w = base_world
     mgr = FactoryBot.create(:group, unit: w[:unit_manager], name: "Nhom-QL-#{SecureRandom.hex(3)}")
     oth = FactoryBot.create(:group, unit: w[:unit_other],   name: "Nhom-Khac-#{SecureRandom.hex(3)}")
     checks = accessible_non_sa_roles("groups").map do |role|
       user = make_user(role, w)
-      owned = unit_for(role, w) == w[:unit_manager] ? mgr.name : oth.name
-      { user: user, sees: owned, hides: [owned == mgr.name ? oth.name : mgr.name] }
+      zone_manager = %i[ua_zm cmd_zm].include?(role)
+      owned = zone_manager ? mgr.name : oth.name
+      hides = zone_manager ? [] : [mgr.name]
+      { user: user, sees: owned, hides: hides }
     end
     Scenario.new(path: Rails.application.routes.url_helpers.groups_path,
                  sa_user: FactoryBot.create(:user, :system_admin),

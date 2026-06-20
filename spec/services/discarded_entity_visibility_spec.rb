@@ -90,12 +90,19 @@ RSpec.describe "Hiển thị data kỳ cũ cho entity đã xóa" do
     # tương tự ContactPoint — cleanup allocation kỳ đang mở.
     let(:unit_b) { sample.unit_b }
 
+    # Kỳ 6 chạy theo cơ chế per-trạm (TN2) → allocation phải gắn trạm bơm.
+    # Trạm bơm 1 (water_pump trong cùng khu vực) là trạm hợp lệ.
+    let(:station) { sample.contact_points[:tram_bom_1] }
+
     before do
-      # Tạo allocation cho unit_b (find_or_create vì PeriodService có thể đã copy)
+      # Tạo allocation cho unit_b (find_or_create vì PeriodService có thể đã copy).
+      # Kỳ 5 còn legacy (zone-wide) nên allocation không gắn trạm.
       @alloc_p5 = PumpAllocation.find_or_create_by!(zone: sample.zone, period: period_5, unit: unit_b) do |a|
         a.coefficient = 1
       end
-      @alloc_p6 = PumpAllocation.find_or_create_by!(zone: sample.zone, period: period_6, unit: unit_b) do |a|
+      # Kỳ 6 per-trạm → bắt buộc pump_contact_point (trạm bơm cùng khu vực).
+      @alloc_p6 = PumpAllocation.find_or_create_by!(zone: sample.zone, period: period_6, unit: unit_b,
+                                                    pump_contact_point: station) do |a|
         a.coefficient = 1
       end
       # Xóa hết CPs + users để unit discard được

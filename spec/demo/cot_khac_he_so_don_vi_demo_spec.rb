@@ -10,7 +10,7 @@ require "rails_helper"
 # Tells the whole customer story for the feature (#363): the pain it removes
 # (the kitchen credit used to be hand-computed and re-done every period), the
 # setup, the correct result mirroring the customer's example (nghiệp vụ 10.2.1,
-# Tiểu đoàn Alpha has 22 residential people outside the kitchen → −2 × 22 = −44),
+# Tiểu đoàn 1 has 22 residential people outside the kitchen → −2 × 22 = −44),
 # the self-recalculation across periods (grow Đại đội 1 by 4 → the credit
 # auto-moves to −52 with nothing re-entered), and who may change it (an admin
 # sets it; a commander only views — controls are locked).
@@ -21,11 +21,11 @@ RSpec.describe "Demo: cột Khác hệ số đơn vị", type: :demo do
     demo_nv: %w[NV-cot-khac-he-so-don-vi] do
     demo = DemoRecorder.new(self)
 
-    zone = Zone.find_by!(name: "Khu vực Trung tâm")
-    unit = Unit.find_by!(name: "Tiểu đoàn Alpha")
-    period = Period.order(:id).last
+    zone = Zone.find_by!(name: "Khu vực 1")
+    unit = Unit.find_by!(name: "Tiểu đoàn 1")
+    period = Period.find_by!(closed: false)
     kitchen = ContactPoint.find_by!(
-      name: "Bếp ăn Tiểu đoàn Alpha", contact_point_type: "residential", unit_id: unit.id
+      name: "Bếp ăn Tiểu đoàn 1", contact_point_type: "residential", unit_id: unit.id
     )
     dai_doi_1 = ContactPoint.find_by!(
       name: "Đại đội 1", contact_point_type: "residential", unit_id: unit.id
@@ -38,18 +38,15 @@ RSpec.describe "Demo: cột Khác hệ số đơn vị", type: :demo do
     other_cell = "[data-other-deduction-cp-id='#{kitchen.id}']"
     dai_doi_1_personnel = "[data-total-personnel-cp-id='#{dai_doi_1.id}']"
 
-    # Sign in as the seeded admin (db/seeds/demo.rb).
-    demo.visit("/users/sign_in", caption: "Mở trang đăng nhập")
-    demo.fill("Tên đăng nhập", with: "demo_admin", caption: "Nhập tên đăng nhập")
-    demo.fill("Mật khẩu", with: "Demo@1234", caption: "Nhập mật khẩu")
-    demo.click("Đăng nhập", caption: "Nhấn Đăng nhập")
+    # Sign in as the seeded admin (db/seeds/demo.rb) — programmatic, no login page.
+    demo.sign_in_as(User.find_by!(username: "demo_admin"), role_label: "Quản trị viên")
     expect(page).to have_current_path("/", wait: 10)
 
     # Open the unit's config directly (zone + unit in the query so we land on the
     # "Khác" table without driving the filter dropdowns).
     demo.visit(
       "/unit_config?zone_id=#{zone.id}&unit_id=#{unit.id}",
-      caption: "Mở Cấu hình đơn vị — Tiểu đoàn Alpha, kỳ tháng 6/2026"
+      caption: "Mở Cấu hình đơn vị — Tiểu đoàn 1, kỳ tháng 6/2026"
     )
     demo.narrate("Bếp ăn phục vụ cả tiểu đoàn — mỗi người góp một phần tiêu chuẩn, bếp nhận lại tổng")
     demo.narrate(%(Trước phải tính tay mỗi kỳ; cách "Theo hệ số (đơn vị)" nhập một lần, hệ thống tự tính))
@@ -75,8 +72,8 @@ RSpec.describe "Demo: cột Khác hệ số đơn vị", type: :demo do
     demo.click("Tính toán lại", confirm: true, caption: "Tính toán lại theo cấu hình vừa lưu")
     expect(page).to have_content("Đã tính toán lại bảng tính tiền.", wait: 15)
     demo.visit("/billing?zone_id=#{zone.id}", caption: "Mở lại bảng tính tiền để xem kết quả")
-    expect(page).to have_content("Bếp ăn Tiểu đoàn Alpha", wait: 15)
-    demo.highlight(name_cell, caption: "Đầu mối Bếp ăn Tiểu đoàn Alpha — bếp ăn chung của tiểu đoàn")
+    expect(page).to have_content("Bếp ăn Tiểu đoàn 1", wait: 15)
+    demo.highlight(name_cell, caption: "Đầu mối Bếp ăn Tiểu đoàn 1 — bếp ăn chung của tiểu đoàn")
     demo.highlight(
       other_cell,
       caption: "Cột Khác của Bếp ăn = −44 kW — bếp được cộng ngược theo quân số phần còn lại của tiểu đoàn"
@@ -115,7 +112,7 @@ RSpec.describe "Demo: cột Khác hệ số đơn vị", type: :demo do
     demo.click("Tính toán lại", confirm: true, caption: "Tính toán lại kỳ mới")
     expect(page).to have_content("Đã tính toán lại bảng tính tiền.", wait: 15)
     demo.visit("/billing?zone_id=#{zone.id}", caption: "Xem lại kết quả kỳ mới")
-    expect(page).to have_content("Bếp ăn Tiểu đoàn Alpha", wait: 15)
+    expect(page).to have_content("Bếp ăn Tiểu đoàn 1", wait: 15)
     # Show cause then effect, both on screen: Đại đội 1's headcount grew (16 → 20)…
     demo.highlight(
       dai_doi_1_personnel,
@@ -137,14 +134,11 @@ RSpec.describe "Demo: cột Khác hệ số đơn vị", type: :demo do
     # Who may change this? An admin sets it; a commander only views — the type
     # select is locked and there is no save button (CHIEU-khac-don-vi-vai-tro).
     demo.narrate("Ai được đổi cấu hình tính tiền? Quản trị viên đơn vị đặt — còn chỉ huy thì sao?")
-    demo.click("Đăng xuất", caption: "Đăng xuất quản trị viên")
-    demo.fill("Tên đăng nhập", with: "demo_commander", caption: "Đăng nhập bằng tài khoản Chỉ huy")
-    demo.fill("Mật khẩu", with: "Demo@1234", caption: "Nhập mật khẩu")
-    demo.click("Đăng nhập", caption: "Nhấn Đăng nhập")
+    demo.sign_in_as(User.find_by!(username: "demo_commander"), role_label: "Chỉ huy")
     expect(page).to have_current_path("/", wait: 10)
 
     demo.visit("/unit_config", caption: "Chỉ huy mở Cấu hình đơn vị — đúng trang vừa rồi")
-    expect(page).to have_content("Bếp ăn Tiểu đoàn Alpha", wait: 10)
+    expect(page).to have_content("Bếp ăn Tiểu đoàn 1", wait: 10)
     commander_type_select = "select[name=\"other_deductions[#{other_deduction_next.id}][other_type]\"]"
     demo.highlight(
       commander_type_select,

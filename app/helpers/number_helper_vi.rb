@@ -22,6 +22,13 @@ module NumberHelperVi
     number_with_delimiter(str, delimiter: ".", separator: ",")
   end
 
+  # Phần trăm điện bơm của trạm trong khu vực — hiển thị gọn (số nguyên + "%"),
+  # ví dụ 65 → "65%". nil (chưa có chỉ số / D_khu_vực = 0) → "—".
+  def pump_zone_share_percent(share)
+    return t("pump_allocations.index.empty_cell") if share.nil?
+    "#{number_to_vi(share, precision: 0)}%"
+  end
+
   def money_to_vi_plain(number)
     return "" if number.nil?
     number_with_delimiter(

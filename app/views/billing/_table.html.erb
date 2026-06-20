@@ -48,7 +48,7 @@
           <td class="<%= num_cell %>"><%= number_to_vi(calc.total_deduction) %></td>
           <td class="<%= num_cell %>"><%= number_to_vi(calc.remaining_standard) %></td>
           <td class="<%= num_cell %>"><%= number_to_vi(calc.residential_usage) %></td>
-          <td class="<%= num_cell %>"><%= number_to_vi(calc.water_pump_usage) %></td>
+          <td class="<%= num_cell %>" data-water-pump-usage-cp-id="<%= cp.id %>"><%= number_to_vi(calc.water_pump_usage) %></td>
           <td class="<%= num_cell %>"><%= number_to_vi(calc.total_usage) %></td>
           <td class="<%= num_cell %> text-green-700"><%= calc.surplus > 0 ? number_to_vi(calc.surplus) : "" %></td>
           <td class="<%= num_cell %> text-red-700"><%= calc.deficit > 0 ? number_to_vi(calc.deficit) : "" %></td>

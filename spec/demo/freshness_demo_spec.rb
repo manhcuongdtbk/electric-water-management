@@ -20,7 +20,7 @@ RSpec.describe "Demo: chỉ báo độ tươi dữ liệu dẫn xuất", type: :
      demo_nv: %w[CHIEU-do-tuoi-5-trang] do
     demo = DemoRecorder.new(self)
 
-    # The seeded world: zone "Khu vực Trung tâm", open period tháng 6/2026, with
+    # The seeded world: zone "Khu vực 1", open period tháng 6/2026, with
     # meters + readings (db/seeds/demo.rb). We edit one reading on the seeded
     # contact point "Đại đội 1" (meter CT-A2) to bump the zone's CalculationState.
     period = Period.find_by!(year: 2026, month: 6)

@@ -35,13 +35,13 @@ RSpec.describe "Demo: <%= file_name.humanize %>", type: :demo do
   it "walks through <%= file_name.humanize.downcase %>", demo_nv: %w[NV-TODO] do
     demo = DemoRecorder.new(self)
 
-    # Sign in as the seeded demo admin (db/seeds/demo.rb). Adjust the role if
-    # this feature is shown to a different one; delete these steps if the journey
-    # continues from an already-authenticated state.
-    demo.visit("/users/sign_in", caption: "Mở trang đăng nhập")
-    demo.fill("Tên đăng nhập", with: "demo_admin", caption: "Nhập tên đăng nhập")
-    demo.fill("Mật khẩu", with: "Demo@1234", caption: "Nhập mật khẩu")
-    demo.click("Đăng nhập", caption: "Nhấn Đăng nhập")
+    # Sign in as the seeded demo admin (db/seeds/demo.rb) — programmatic, no login
+    # page. Demos must NOT render /users/sign_in (it is slow and tells the customer
+    # nothing); sign_in_as authenticates server-side via Warden and shows a single
+    # caption naming the role. Adjust the user/role for this feature, or reuse
+    # sign_in_as to switch roles later (e.g. admin → commander) instead of a
+    # visible logout+login.
+    demo.sign_in_as(User.find_by!(username: "demo_admin"), role_label: "Quản trị viên")
     expect(page).to have_current_path("/", wait: 10)
 
     # TODO(demo-author): set the scene in the customer's own terms before acting

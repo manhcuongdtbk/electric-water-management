@@ -11,6 +11,7 @@ class CalculationOrchestrator
       loss = LossCalculator.new(zone: @zone, period: @period).call
       LossSnapshotWriter.new(zone: @zone, period: @period, loss_results: loss).call
       pump = PumpAllocationCalculator.new(zone: @zone, period: @period, loss_results: loss).call
+      PumpStationChargeWriter.new(zone: @zone, period: @period, pump_results: pump).call
       summary = SummaryCalculator.new(
         zone: @zone, period: @period, loss_results: loss, pump_results: pump
       ).call

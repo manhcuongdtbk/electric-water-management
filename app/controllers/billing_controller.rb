@@ -36,6 +36,7 @@ class BillingController < ApplicationController
       next unless summary.zone
       hash[summary.zone_id] = LossBreakdown.new(zone: summary.zone, period: @period, summary: summary).call
     end
+    @pump_station_matrices = build_pump_station_matrices(zones_in_scope(@period))
 
     respond_to do |format|
       format.html do
@@ -69,11 +70,17 @@ class BillingController < ApplicationController
 
     @zone, @unit = resolve_filter
     warnings = []
-    ActiveRecord::Base.transaction do
-      zones_in_scope(@period).find_each do |zone|
-        result = CalculationOrchestrator.new(zone: zone, period: @period).call
-        warnings += result.warnings.map { |w| "#{zone.name}: #{w}" }
+    begin
+      ActiveRecord::Base.transaction do
+        zones_in_scope(@period).find_each do |zone|
+          result = CalculationOrchestrator.new(zone: zone, period: @period).call
+          warnings += result.warnings.map { |w| "#{zone.name}: #{w}" }
+        end
       end
+    rescue PumpAllocationCalculator::IncompleteStationConfig => e
+      # Cấu hình trạm chưa đủ → transaction đã rollback, không persist gì. Báo lỗi rõ.
+      flash[:alert] = e.message
+      return redirect_to billing_path(redirect_filter_params)
     end
 
     flash[:notice] = t("billing.flash.recalculated")
@@ -110,6 +117,44 @@ class BillingController < ApplicationController
 
   def collect_warnings_for_zones(zones)
     zones.flat_map { |z| ZoneWarningCollector.new(zone: z, period: @period).call }
+  end
+
+  # Build, per displayed zone, the recipient × station matrix of pump-water
+  # electricity (PumpStationCharge). Only zones with ≥1 charge row appear (legacy/gộp
+  # periods store no rows → no section). Stations are columns A→Z, recipients rows A→Z;
+  # cells missing a charge row mean 0 (only non-zero contributions are persisted).
+  def build_pump_station_matrices(zones)
+    charges = PumpStationCharge
+                .where(period_id: @period.id, zone_id: zones.select(:id))
+                .includes(:contact_point, :pump_contact_point)
+                .to_a
+    zones_by_id = zones.index_by(&:id)
+    charges.group_by(&:zone_id).transform_values do |zone_charges|
+      stations = zone_charges.map(&:pump_contact_point).uniq.sort_by { |s| s.name.to_s }
+      recipients = zone_charges.map(&:contact_point).uniq.sort_by { |r| r.name.to_s }
+      amounts = zone_charges.each_with_object({}) do |charge, hash|
+        hash[[charge.contact_point_id, charge.pump_contact_point_id]] = charge.amount
+      end
+      PumpStationMatrix.new(zone: zones_by_id[zone_charges.first.zone_id],
+                            stations: stations, recipients: recipients, amounts: amounts)
+    end
+  end
+
+  # Lightweight value object the partial renders: zone (for the caption), stations
+  # (columns), recipients (rows), per-cell amount lookup (0 default), per-station column
+  # totals, and grand total.
+  PumpStationMatrix = Struct.new(:zone, :stations, :recipients, :amounts, keyword_init: true) do
+    def amount_for(recipient, station)
+      amounts.fetch([recipient.id, station.id], BigDecimal("0"))
+    end
+
+    def station_total(station)
+      recipients.sum { |recipient| amount_for(recipient, station) }
+    end
+
+    def grand_total
+      stations.sum { |station| station_total(station) }
+    end
   end
 
   # Dùng cho recalculate + warnings. Delegates to FreshnessIndicatable#freshness_zones

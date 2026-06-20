@@ -37,6 +37,13 @@ RSpec.configure do |config|
   config.include Capybara::DSL, type: :demo
   config.include Capybara::RSpecMatchers, type: :demo
 
+  # Programmatic login for demos (DemoRecorder#sign_in_as) uses Devise's sign_in
+  # helper, which injects the user through Warden's test middleware server-side —
+  # so it works with the real-browser Playwright driver and skips rendering
+  # /users/sign_in. Devise::Test::IntegrationHelpers (included for type: :demo in
+  # spec/support/auth_helpers.rb) manages Warden's test mode and reset itself, so
+  # no manual Warden.test_mode!/test_reset! is needed here.
+
   config.before(:each, type: :demo) do
     FileUtils.mkdir_p(DEMO_VIDEO_DIR)
     # Switch to the Playwright driver for this example.

@@ -1,0 +1,72 @@
+<% @pump_station_matrices.each do |zone_id, matrix| %>
+  <div class="mb-4">
+    <div class="overflow-x-auto">
+      <table class="text-sm border border-gray-200" data-pump-station-table>
+        <caption class="text-left font-semibold text-gray-700 px-2 py-1">
+          <%# Append the zone name only when multiple zones are in view (SA, no zone
+              filter). Once filtered to a single zone, repeating it per table is noise. %>
+          <%= t("billing.pump_station_breakdown.title") %><% if @zone.nil? %> — <%= matrix.zone&.name %><% end %>
+        </caption>
+        <thead class="bg-gray-100 text-gray-700">
+          <tr>
+            <th class="px-2 py-1 text-left"><%= t("billing.pump_station_breakdown.columns.recipient") %></th>
+            <% grand = matrix.grand_total %>
+            <% matrix.stations.each do |station| %>
+              <%# Phan tram khu vuc moi tram = dien tram / tong dien bom (= grand_total).
+                  Nhat quan voi trang Phan bo bom nuoc: so nguyen + dau "%". %>
+              <% share = grand.zero? ? nil : matrix.station_total(station) * BigDecimal("100") / grand %>
+              <th class="px-2 py-1 text-right">
+                <div><%= station.name %></div>
+                <div class="font-normal text-gray-500"
+                     data-pump-station-zone-share="<%= station.id %>">
+                  <%= t("billing.pump_station_breakdown.station_zone_share",
+                        percent: pump_zone_share_percent(share)) %>
+                </div>
+              </th>
+            <% end %>
+            <th class="px-2 py-1 text-right"><%= t("billing.pump_station_breakdown.columns.total") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% matrix.recipients.each do |recipient| %>
+            <tr data-pump-charge-row="<%= recipient.id %>">
+              <%# Billed contact point in bold; muted parent path unit > block > group
+                  for context (keep all info, no merge). Zone-level CP has no
+                  unit/block/group → name only. %>
+              <td class="px-2 py-1">
+                <div class="font-medium text-gray-900"><%= recipient.name %></div>
+                <% recipient_path = [recipient.unit&.name, recipient.block&.name, recipient.group&.name].compact %>
+                <% if recipient_path.any? %>
+                  <div class="text-xs text-gray-400"><%= recipient_path.join(" › ") %></div>
+                <% end %>
+              </td>
+              <% matrix.stations.each do |station| %>
+                <% amount = matrix.amount_for(recipient, station) %>
+                <td class="px-2 py-1 text-right <%= "text-gray-400" if amount.zero? %>"
+                    data-pump-charge-cell="<%= recipient.id %>-<%= station.id %>">
+                  <%= number_to_vi(amount) %>
+                </td>
+              <% end %>
+              <td class="px-2 py-1 text-right font-medium"
+                  data-pump-charge-total="<%= recipient.id %>">
+                <%= number_to_vi(matrix.stations.sum { |station| matrix.amount_for(recipient, station) }) %>
+              </td>
+            </tr>
+          <% end %>
+          <tr class="font-semibold border-t border-gray-300">
+            <td class="px-2 py-1"><%= t("billing.pump_station_breakdown.rows.grand_total") %></td>
+            <% matrix.stations.each do |station| %>
+              <td class="px-2 py-1 text-right"><%= number_to_vi(matrix.station_total(station)) %></td>
+            <% end %>
+            <td class="px-2 py-1 text-right"><%= number_to_vi(matrix.grand_total) %></td>
+          </tr>
+        </tbody>
+      </table>
+      <ul class="mt-1 text-xs text-gray-500 max-w-3xl list-disc pl-5 space-y-0.5">
+        <% t("billing.pump_station_breakdown.note_items").each do |item| %>
+          <li><%= item %></li>
+        <% end %>
+      </ul>
+    </div>
+  </div>
+<% end %>

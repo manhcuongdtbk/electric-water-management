@@ -1,8 +1,9 @@
 <% page_title t("sidebar.items.pump_allocations") %>
 
-
 <%
-  add_link = (@period && can?(:create, PumpAllocation)) ?
+  # Ky per-station: moi the tram da co nut them-doi-tuong rieng, nen nut them-phan-bo
+  # tong o dau trang la thua, chi hien cho ky cu (legacy, khong co the tram).
+  add_link = (@period && !@per_station && can?(:create, PumpAllocation)) ?
     link_to(t("common.actions.add") + " " + t("resources.pump_allocation"), new_pump_allocation_path,
       class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700") : nil
 %>
@@ -11,82 +12,179 @@
   toolbar_filters = []
   if current_user.system_admin?
     toolbar_filters = [
-      { label: "Khu vực:", param: :zone_id,
+      { label: t("pump_allocations.index.zone_filter_label"), param: :zone_id,
         options: @available_zones.pluck(:name, :id), selected: @zone&.id }
     ]
   end
 %>
 
+<%# Nhóm theo trạm: bỏ per_page + sort (xem comment ở controller#index). %>
 <%= render "shared/list_toolbar",
       url: pump_allocations_path,
-      search_placeholder: "Tìm theo tên đối tượng...",
+      search_placeholder: t("pump_allocations.index.search_placeholder"),
       total_count: @total_count,
       add_link: add_link,
-      per_page_storage_key: "pump_allocations_per_page",
+      show_per_page: false,
       filters: toolbar_filters %>
 
-<div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
-  <table class="min-w-full divide-y divide-gray-200">
-    <thead class="bg-gray-50">
-      <tr>
-        <%= sortable_header :target, "Đối tượng",
-              current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: { q: params[:q], per_page: params[:per_page], zone_id: params[:zone_id] } %>
-        <%= sortable_header :target_type, "Loại",
-              current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: { q: params[:q], per_page: params[:per_page], zone_id: params[:zone_id] } %>
-        <%= sortable_header :zone, "Khu vực",
-              current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: { q: params[:q], per_page: params[:per_page], zone_id: params[:zone_id] } %>
-        <%= sortable_header :percentage, "% cố định",
-              current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: { q: params[:q], per_page: params[:per_page], zone_id: params[:zone_id] }, align: :right %>
-        <%= sortable_header :coefficient, "Hệ số",
-              current_sort: params[:sort], current_dir: params[:dir],
-              extra_params: { q: params[:q], per_page: params[:per_page], zone_id: params[:zone_id] }, align: :right %>
-        <%= list_header t("common.list.actions"), align: :right %>
-      </tr>
-    </thead>
-    <tbody class="divide-y divide-gray-200">
-      <% if @pump_allocations.empty? %>
-        <tr><td colspan="6" class="px-4 py-6 text-center text-gray-500"><%= t("common.list.no_records") %></td></tr>
-      <% end %>
-      <% @pump_allocations.each do |alloc| %>
-        <tr class="hover:bg-gray-50 transition-colors">
-          <td class="px-4 py-2 text-sm font-medium text-gray-900">
-            <%= alloc.unit&.name || alloc.contact_point&.name %>
-          </td>
-          <td class="px-4 py-2 text-sm text-gray-600">
-            <%= alloc.unit ? t("resources.unit").capitalize : t("resources.contact_point").capitalize %>
-          </td>
-          <td class="px-4 py-2 text-sm text-gray-600"><%= alloc.zone.name %></td>
-          <td class="px-4 py-2 text-sm text-right text-gray-600">
-            <%= alloc.fixed_percentage.present? ? "#{number_to_vi(alloc.fixed_percentage)}%" : "—" %>
-          </td>
-          <td class="px-4 py-2 text-sm text-right text-gray-600">
-            <%= alloc.fixed_percentage.present? ? "—" : number_to_vi(alloc.coefficient) %>
-          </td>
-          <td class="px-4 py-2 text-sm text-right space-x-2">
-            <% if can?(:update, alloc) || can?(:destroy, alloc) %>
-              <% if can?(:update, alloc) %>
-                <%= link_to t("common.actions.edit"), edit_pump_allocation_path(alloc),
-                      class: "text-blue-600 hover:text-blue-800" %>
-              <% end %>
-              <% if can?(:destroy, alloc) %>
-                <%= button_to t("common.actions.destroy"), pump_allocation_path(alloc), method: :delete,
-                      form: { class: "inline", data: { turbo_confirm: t("common.confirm.destroy") } },
-                      class: "text-red-600 hover:text-red-800 underline inline cursor-pointer bg-transparent border-0 p-0" %>
-              <% end %>
-            <% else %>
-              <%= empty_actions_dash %>
-            <% end %>
-          </td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
-</div>
+<% unless @station_groups.empty? %>
+  <p class="mb-4 text-sm text-gray-600 max-w-3xl"><%= t("pump_allocations.index.page_note") %></p>
+<% end %>
 
-<div class="mt-4">
-  <%== pagy_nav(@pagy) if @pagy.pages > 1 %>
+<% if @station_groups.empty? %>
+  <div class="bg-white rounded-lg shadow border border-gray-200 p-6 text-center text-gray-500">
+    <%= t("common.list.no_records") %>
+  </div>
+<% end %>
+
+<div class="space-y-4">
+  <% @station_groups.each do |group| %>
+    <%
+      station = group[:station]
+      station_id = station&.id
+      # SA xem nhieu khu vuc (chua loc khu vuc): kem ten khu vuc vao tieu de the de
+      # phan biet khi hai khu vuc co tram trung ten. Loc mot khu vuc thi khoi can.
+      show_zone_in_card = station && current_user.system_admin? && @zone.nil?
+      base_title =
+        if station && show_zone_in_card
+          t("pump_allocations.index.station_card_with_zone", station: station.name, zone: station.zone&.name)
+        elsif station
+          station.name
+        else
+          t("pump_allocations.index.legacy_card_title")
+        end
+      # Phan tram khu vuc: suy tu chi so hien tai (controller#build_station_zone_shares).
+      # Co tram + co so -> "Tram X - chiem 65% dien bom ..."; con lai chi ten tram.
+      share = station_id ? @station_zone_shares[station_id] : nil
+      card_title =
+        if station && @station_zone_shares.key?(station_id)
+          t("pump_allocations.index.station_zone_share",
+            station: base_title, percent: pump_zone_share_percent(share))
+        else
+          base_title
+        end
+      allocs = group[:allocations]
+    %>
+    <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden"
+         data-pump-station-card="<%= station_id %>">
+      <div class="px-4 py-3 border-b border-gray-200 bg-gray-50 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h3 class="text-sm font-semibold text-gray-900" data-pump-station-name="<%= station_id %>">
+            <%= card_title %>
+          </h3>
+        </div>
+        <%# E2: thêm đối tượng vào đúng trạm này (chỉ kỳ per-station). %>
+        <% if station && can?(:create, PumpAllocation) %>
+          <%= link_to t("pump_allocations.index.add_recipient_to_station"),
+                new_pump_allocation_path(pump_contact_point_id: station_id),
+                class: "text-sm font-medium text-blue-600 hover:text-blue-800" %>
+        <% end %>
+      </div>
+
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-white">
+          <tr>
+            <%= list_header t("pump_allocations.index.column_unit") %>
+            <%= list_header t("pump_allocations.index.column_block") %>
+            <%= list_header t("pump_allocations.index.column_group") %>
+            <%= list_header t("pump_allocations.index.column_contact_point") %>
+            <%= list_header t("pump_allocations.index.column_fixed_percentage"), align: :right %>
+            <%= list_header t("pump_allocations.index.column_coefficient"), align: :right %>
+            <%= list_header t("common.list.actions"), align: :right %>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <% if allocs.empty? %>
+            <tr>
+              <td colspan="7" class="px-4 py-4 text-sm text-amber-700 bg-amber-50">
+                <%= t("pump_allocations.index.station_without_recipient") %>
+              </td>
+            </tr>
+          <% end %>
+          <% dash = t("pump_allocations.index.empty_cell") %>
+          <% allocs.each do |alloc| %>
+            <%
+              # Doi tuong nhan co the la don vi / khoi / nhom / dau moi. Moi cap nam o
+              # COT RIENG cua no; don vi cha luon dien vao cot "Don vi" de moi dong co
+              # quy chieu (dau moi cap khu vuc khong co don vi -> dau gach "—").
+              owning_unit =
+                alloc.unit ||
+                alloc.block&.unit ||
+                alloc.group&.unit ||
+                alloc.contact_point&.unit
+              block_name =
+                alloc.block&.name ||
+                alloc.group&.block&.name ||
+                alloc.contact_point&.block&.name
+              group_name = alloc.group&.name || alloc.contact_point&.group&.name
+              # Dau moi: chi dien cot "Dau moi" khi doi tuong nhan CHINH la dau moi
+              # (khong suy tu khoi/nhom — chung gop nhieu dau moi).
+              contact_point_name = alloc.contact_point&.name
+              # Cap cua doi tuong nhan = FK nao duoc set. O dung cap nay duoc to dam +
+              # nen; o cha chi la ngu canh (mo). Giu DU 4 cot, khong gop, khong mat thong tin.
+              recipient_level =
+                if alloc.unit then :unit
+                elsif alloc.block then :block
+                elsif alloc.group then :group
+                elsif alloc.contact_point then :contact_point
+                end
+              recipient_cell = "bg-blue-50 font-semibold text-blue-900"
+              context_cell = "text-gray-400"
+            %>
+            <tr class="hover:bg-gray-50 transition-colors"
+                data-pump-allocation-target-id="<%= alloc.id %>">
+              <td class="px-4 py-2 text-sm <%= recipient_level == :unit ? recipient_cell : context_cell %>">
+                <%= owning_unit&.name || dash %>
+              </td>
+              <td class="px-4 py-2 text-sm <%= recipient_level == :block ? recipient_cell : context_cell %>">
+                <%= block_name || dash %>
+              </td>
+              <td class="px-4 py-2 text-sm <%= recipient_level == :group ? recipient_cell : context_cell %>">
+                <%= group_name || dash %>
+              </td>
+              <td class="px-4 py-2 text-sm <%= recipient_level == :contact_point ? recipient_cell : context_cell %>">
+                <%= contact_point_name || dash %>
+              </td>
+              <td class="px-4 py-2 text-sm text-right text-gray-600">
+                <%= alloc.fixed_percentage.present? ? "#{number_to_vi(alloc.fixed_percentage)}%" : dash %>
+              </td>
+              <td class="px-4 py-2 text-sm text-right text-gray-600">
+                <%= alloc.fixed_percentage.present? ? dash : number_to_vi(alloc.coefficient) %>
+              </td>
+              <td class="px-4 py-2 text-sm text-right space-x-2">
+                <% if can?(:update, alloc) || can?(:destroy, alloc) %>
+                  <% if can?(:update, alloc) %>
+                    <%= link_to t("common.actions.edit"), edit_pump_allocation_path(alloc),
+                          class: "text-blue-600 hover:text-blue-800" %>
+                  <% end %>
+                  <% if can?(:destroy, alloc) %>
+                    <%= button_to t("common.actions.destroy"), pump_allocation_path(alloc), method: :delete,
+                          form: { class: "inline", data: { turbo_confirm: t("common.confirm.destroy") } },
+                          class: "text-red-600 hover:text-red-800 underline inline cursor-pointer bg-transparent border-0 p-0" %>
+                  <% end %>
+                <% else %>
+                  <%= empty_actions_dash %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+        <%# Hàng "Tổng": nhãn trải các cột cấp, rồi Σ % cố định dưới đúng cột của nó. %>
+        <% if allocs.any? %>
+          <tfoot class="bg-gray-50 border-t border-gray-300 text-gray-700">
+            <tr>
+              <td colspan="4" class="px-4 py-2 text-sm font-medium text-gray-700">
+                <%= t("pump_allocations.index.total_label") %>
+              </td>
+              <td class="px-4 py-2 text-sm text-right font-medium">
+                <%= number_to_vi(group[:fixed_percentage_sum]) %>%
+              </td>
+              <td class="px-4 py-2"></td>
+              <td class="px-4 py-2"></td>
+            </tr>
+          </tfoot>
+        <% end %>
+      </table>
+    </div>
+  <% end %>
 </div>
