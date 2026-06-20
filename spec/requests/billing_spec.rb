@@ -80,7 +80,7 @@ RSpec.describe "Billing", type: :request do
 
       it "CHIEU-breakdown-tong-theo-loai: bảng đối chiếu hiện đủ dòng + tiêu đề" do
         get billing_path(zone_id: sample.zone.id)
-        expect(response.body).to include("Đối chiếu tổn hao/sử dụng theo loại đầu mối")
+        expect(response.body).to include("Đối chiếu sử dụng và tổn hao theo loại đầu mối")
         expect(response.body).to include("Cộng (công tơ có tổn hao)")
         expect(response.body).to include("Không tổn hao")
         expect(response.body).to include("Tổng cộng")
@@ -111,7 +111,7 @@ RSpec.describe "Billing", type: :request do
       it "CHIEU-breakdown-chua-tinh: chưa tính → không hiện bảng breakdown" do
         LossSummary.where(period: sample.period).delete_all
         get billing_path(zone_id: sample.zone.id)
-        expect(response.body).not_to include("Đối chiếu tổn hao/sử dụng theo loại đầu mối")
+        expect(response.body).not_to include("Đối chiếu sử dụng và tổn hao theo loại đầu mối")
       end
 
       context "bảng chi tiết điện bơm nước theo trạm (S1)" do
@@ -246,7 +246,7 @@ RSpec.describe "Billing", type: :request do
         # Dựng hai khu vực có pump_station_charges + loss_summary để kiểm tra cả hai bảng
         # chi tiết khi xem nhiều khu vực (chưa lọc) so với khi đã lọc một khu vực.
         let!(:sample2) { setup_zone_two_full_sample(period: sample.period) }
-        let(:loss_caption) { "Đối chiếu tổn hao/sử dụng theo loại đầu mối" }
+        let(:loss_caption) { "Đối chiếu sử dụng và tổn hao theo loại đầu mối" }
         let(:pump_caption) { "Đối chiếu điện bơm nước theo trạm" }
 
         before do
@@ -522,7 +522,7 @@ RSpec.describe "Billing", type: :request do
           get billing_path(format: :xlsx)
           xlsx = parse_xlsx(response.body)
           all_text = xlsx.rows.compact.flatten.compact.map(&:to_s).join(" | ")
-          expect(all_text).to include("Đối chiếu tổn hao/sử dụng theo loại đầu mối")
+          expect(all_text).to include("Đối chiếu sử dụng và tổn hao theo loại đầu mối")
           expect(all_text).to include("Cộng (công tơ có tổn hao)")
           expect(all_text).to include("Tổng cộng")
         end
@@ -639,7 +639,7 @@ RSpec.describe "Billing", type: :request do
     let(:sample) { setup_zone_one_full_sample }
     before { CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call }
 
-    let(:breakdown_title) { "Đối chiếu tổn hao/sử dụng theo loại đầu mối" }
+    let(:breakdown_title) { "Đối chiếu sử dụng và tổn hao theo loại đầu mối" }
 
     it "CHIEU-breakdown-vai-tro: unit_admin thấy breakdown khu vực mình" do
       sign_in create(:user, :unit_admin, unit: sample.unit_b)
@@ -1044,7 +1044,7 @@ RSpec.describe "Billing", type: :request do
       get billing_path(zone_id: sample.zone.id)
       body = response.body
       billing_table_pos = body.index("column-resize")
-      breakdown_pos = body.index("Đối chiếu tổn hao/sử dụng theo loại đầu mối")
+      breakdown_pos = body.index("Đối chiếu sử dụng và tổn hao theo loại đầu mối")
       expect(billing_table_pos).to be < breakdown_pos
     end
 
@@ -1052,14 +1052,14 @@ RSpec.describe "Billing", type: :request do
       sign_in sa
       get billing_path
       expect(response.body).not_to include("Chọn khu vực để xem chi tiết tổn hao.")
-      expect(response.body).to include("Đối chiếu tổn hao/sử dụng theo loại đầu mối")
+      expect(response.body).to include("Đối chiếu sử dụng và tổn hao theo loại đầu mối")
     end
 
     it "non-SA luôn thấy bảng đối chiếu (zone cố định qua đơn vị)" do
       ua = create(:user, :unit_admin, unit: sample.unit_a)
       sign_in ua
       get billing_path
-      expect(response.body).to include("Đối chiếu tổn hao/sử dụng theo loại đầu mối")
+      expect(response.body).to include("Đối chiếu sử dụng và tổn hao theo loại đầu mối")
     end
 
     it "nút Tính toán lại có data-controller submit-loading" do
