@@ -55,7 +55,7 @@
                       <% end %>
                       <td class="px-2 py-1 text-right font-medium"
                           data-pump-charge-total="<%= recipient.id %>">
-                        <%= number_to_vi(pump_matrix.stations.sum { |station| pump_matrix.amount_for(recipient, station) }) %>
+                        <%= number_to_vi(pump_matrix.stations.sum { |station| pump_matrix.amount_for(recipient, station) }) %><span class="text-blue-500">*</span>
                       </td>
                     </tr>
                   <% end %>
@@ -95,7 +95,7 @@
                     <tr>
                       <td class="px-2 py-1"><%= t("activerecord.attributes.contact_point.types.#{row.type}", default: row.type) %></td>
                       <td class="px-2 py-1 text-right"><%= number_to_vi(row.usage) %></td>
-                      <td class="px-2 py-1 text-right"><%= number_to_vi(row.loss) %></td>
+                      <td class="px-2 py-1 text-right"><%= number_to_vi(row.loss) %><%= '<span class="text-blue-500">*</span>'.html_safe if row.type == "residential" %></td>
                       <td class="px-2 py-1 text-right"><%= number_to_vi(row.actual) %></td>
                     </tr>
                   <% end %>
@@ -113,9 +113,9 @@
                   </tr>
                   <tr class="font-semibold border-t border-gray-300">
                     <td class="px-2 py-1"><%= t("billing.loss_breakdown.rows.grand_total") %></td>
-                    <td class="px-2 py-1 text-right"><%= number_to_vi(loss_breakdown.grand_total.usage) %></td>
-                    <td class="px-2 py-1 text-right"><%= number_to_vi(loss_breakdown.grand_total.loss) %></td>
-                    <td class="px-2 py-1 text-right"><%= number_to_vi(loss_breakdown.grand_total.actual) %></td>
+                    <td class="px-2 py-1 text-right"><%= number_to_vi(loss_breakdown.grand_total.usage) %><span class="text-blue-500">*</span></td>
+                    <td class="px-2 py-1 text-right"><%= number_to_vi(loss_breakdown.grand_total.loss) %><span class="text-blue-500">*</span></td>
+                    <td class="px-2 py-1 text-right"><%= number_to_vi(loss_breakdown.grand_total.actual) %><span class="text-blue-500">*</span></td>
                   </tr>
                 </tbody>
               </table>
