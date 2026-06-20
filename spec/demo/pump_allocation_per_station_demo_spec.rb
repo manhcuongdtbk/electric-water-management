@@ -189,9 +189,9 @@ RSpec.describe "Demo: phân bổ điện bơm theo từng trạm bơm", type: :d
     #     (cấp khu vực) vẫn đủ các trạm để đối chiếu.
     demo.visit(
       "/billing?zone_id=#{zone.id}&unit_id=#{unit_beta.id}",
-      caption: "Lọc Khu vực 1 và Tiểu đoàn 2 — chỉ còn đầu mối của Tiểu đoàn 2"
+      caption: "Lọc Khu vực 1 và Tiểu đoàn 2 — bảng tính tiền chính chỉ còn đầu mối của đơn vị này, bảng chi tiết theo trạm vẫn hiện toàn khu vực để đối chiếu"
     )
-    demo.narrate("Chọn cả khu vực và đơn vị thì bảng chính chỉ còn đầu mối của đơn vị đó — ở đây là Tiểu đoàn 2")
+    demo.narrate("Chọn cả khu vực và đơn vị thì bảng chính chỉ còn đầu mối của đơn vị đó — bảng chi tiết theo trạm vẫn hiện toàn khu vực vì điện bơm tính ở cấp khu vực")
     expect(page).to have_css("[data-pump-station-table]", wait: 10)
     expect(page).to have_css("[data-water-pump-usage-cp-id='#{dai_doi_1_beta.id}']", wait: 10)
 

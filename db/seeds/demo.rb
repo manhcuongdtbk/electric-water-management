@@ -138,13 +138,13 @@ ActiveRecord::Base.transaction do
 
   # Residential: Ban Chỉ huy (chỉ huy tiểu đoàn rank, position 3)
   cp_ban_chi_huy = ContactPoint.find_by(
-    name: "Ban Chỉ huy Tiểu đoàn 1",
+    name: "Nhà Ban Chỉ huy",
     contact_point_type: "residential",
     unit_id: unit_alpha.id
   )
   unless cp_ban_chi_huy
     cp_ban_chi_huy = ContactPoint.new(
-      name: "Ban Chỉ huy Tiểu đoàn 1",
+      name: "Nhà Ban Chỉ huy",
       contact_point_type: "residential",
       unit: unit_alpha,
       block: block_ban_chi_huy,
@@ -215,13 +215,13 @@ ActiveRecord::Base.transaction do
   # "Tổ Quân y" so the eastern pump station can allocate to that Nhóm by hệ số.
   # Holds real personnel so the group's by-coefficient share has somewhere to land.
   cp_to_quan_y_beta = ContactPoint.find_by(
-    name: "Tổ Quân y Tiểu đoàn 2",
+    name: "Nhà Quân y",
     contact_point_type: "residential",
     unit_id: unit_beta.id
   )
   unless cp_to_quan_y_beta
     cp_to_quan_y_beta = ContactPoint.new(
-      name: "Tổ Quân y Tiểu đoàn 2",
+      name: "Nhà Quân y",
       contact_point_type: "residential",
       unit: unit_beta,
       block: block_hau_can_beta,
