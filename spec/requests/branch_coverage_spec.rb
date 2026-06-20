@@ -806,7 +806,10 @@ RSpec.describe "Branch coverage — controllers and concerns", type: :request do
   # ---------- pump_allocations_controller.rb ----------
 
   describe "PumpAllocationsController uncovered branches" do
-    before { sign_in system_admin }
+    before do
+      sign_in system_admin
+      create(:contact_point, :residential, unit: unit_a, name: "ĐM Unit A branch-cov")
+    end
 
     it "create with invalid params re-renders new" do
       post pump_allocations_path, params: {

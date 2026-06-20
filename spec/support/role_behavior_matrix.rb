@@ -30,13 +30,13 @@ module RoleBehaviorMatrix
       data_scoping:         { applies: { scenario: :blocks } },
       zone_unit_columns:    { applies: { scenario: :blocks } },
       commander_readonly:   { na: "Commander chỉ :read — không vào được form new/edit; index không có input nội dòng; nút Sửa/Thêm bị ẩn." },
-      zone_manager_variant: { na: "blocks không có hành vi riêng cho zone-manager — UA-ZM hành xử như UA." }
+      zone_manager_variant: { na: "Khác biệt UA-ZM (đọc Block toàn khu vực quản lý, Task 8b #319) vs UA (chỉ đơn vị mình) là thuần read-scope — đã ép ở data_scoping. Không có biến thể UI riêng (cột/filter) chỉ cho zone-manager." }
     },
     "groups" => {
       data_scoping:         { applies: { scenario: :groups } },
       zone_unit_columns:    { applies: { scenario: :groups } },
       commander_readonly:   { na: "Commander chỉ :read — không vào được form; index không có input nội dòng; nút Sửa/Thêm bị ẩn." },
-      zone_manager_variant: { na: "groups không có biến thể zone-manager — UA-ZM như UA." }
+      zone_manager_variant: { na: "Khác biệt UA-ZM (đọc Group toàn khu vực quản lý, Task 8b #319) vs UA (chỉ đơn vị mình) là thuần read-scope — đã ép ở data_scoping. Không có biến thể UI riêng (cột/filter) chỉ cho zone-manager." }
     },
     "contact_points" => {
       data_scoping:         { applies: { scenario: :contact_points_index } },

@@ -165,6 +165,44 @@ RSpec.describe Ability do
     end
   end
 
+  # CHIEU-phan-bo-tram-vai-tro: đơn vị quản lý khu vực CRUD/đọc pump_allocations và đọc
+  # Block/Group trong khu vực; chỉ huy chỉ xem (xem các example pump_allocations + Block/Group).
+  describe "unit_admin zone-manager đọc Block/Group trong khu vực quản lý (Task 8b)" do
+    let(:managed_zone) { create(:zone) }
+    let(:other_zone) { create(:zone) }
+    let!(:my_unit) { create(:unit, zone: managed_zone) }
+    let!(:peer_unit) { create(:unit, zone: managed_zone) }
+    let!(:other_unit) { create(:unit, zone: other_zone) }
+    let(:user) { create(:user, :unit_admin, unit: my_unit) }
+    subject(:ability) { Ability.new(user) }
+
+    before { managed_zone.update!(manager_unit_id: my_unit.id) }
+
+    it "đọc được Block của đơn vị khác trong khu vực mình quản lý" do
+      block = create(:block, unit: peer_unit)
+      expect(ability).to be_able_to(:read, block)
+      expect(Block.accessible_by(ability).pluck(:id)).to include(block.id)
+    end
+
+    it "đọc được Group của đơn vị khác trong khu vực mình quản lý" do
+      group = create(:group, unit: peer_unit)
+      expect(ability).to be_able_to(:read, group)
+      expect(Group.accessible_by(ability).pluck(:id)).to include(group.id)
+    end
+
+    it "KHÔNG đọc được Block của khu vực mình không quản lý" do
+      block_other = create(:block, unit: other_unit)
+      expect(ability).not_to be_able_to(:read, block_other)
+      expect(Block.accessible_by(ability).pluck(:id)).not_to include(block_other.id)
+    end
+
+    it "KHÔNG đọc được Group của khu vực mình không quản lý" do
+      group_other = create(:group, unit: other_unit)
+      expect(ability).not_to be_able_to(:read, group_other)
+      expect(Group.accessible_by(ability).pluck(:id)).not_to include(group_other.id)
+    end
+  end
+
   describe "commander (T63)" do
     let(:zone) { create(:zone) }
     let!(:my_unit) { create(:unit, zone: zone) }

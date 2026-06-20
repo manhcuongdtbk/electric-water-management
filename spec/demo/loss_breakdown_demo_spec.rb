@@ -15,7 +15,7 @@ RSpec.describe "Demo: Loss breakdown", type: :demo do
   include_context "demo seeded world"
 
   before do
-    zone = Zone.find_by!(name: "Khu vực Trung tâm")
+    zone = Zone.find_by!(name: "Khu vực 1")
     period = Period.find_by!(year: 2026, month: 6)
     CalculationOrchestrator.new(zone: zone, period: period).call
   end

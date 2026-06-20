@@ -50,6 +50,18 @@ RSpec.describe "Billing", type: :request do
         expect(response.body).to include("2.336,4 đ/kW")
       end
 
+      it "khu vực KHÔNG có dòng billing: ?zone_id=X vẫn giữ chọn X (regression bug filter kỳ rỗng)" do
+        # Bug cũ: @available_zones chỉ gồm khu vực có dòng dữ liệu → khu vực chưa
+        # tính/không có dòng nào bị rớt khỏi dropdown → hiện "Tất cả" dù URL có zone_id.
+        empty_zone = create(:zone, name: "Khu vực chưa có dữ liệu")
+        get billing_path(zone_id: empty_zone.id)
+        zone_select = Nokogiri::HTML(response.body).at_css("select[name='zone_id']")
+        selected = zone_select.css("option[selected]")
+        expect(selected.size).to eq(1)
+        expect(selected.first["value"]).to eq(empty_zone.id.to_s)
+        expect(selected.first.text).to eq(empty_zone.name)
+      end
+
       it "SA chọn zone → ẩn cột Khu vực (I17)" do
         get billing_path(zone_id: sample.zone.id)
         doc = Nokogiri::HTML(response.body)
@@ -102,8 +114,199 @@ RSpec.describe "Billing", type: :request do
         expect(response.body).not_to include("Đối chiếu tổn hao/sử dụng theo loại đầu mối")
       end
 
+      context "bảng chi tiết điện bơm nước theo trạm (S1)" do
+        # Dựng ma trận đối tượng nhận × trạm: Đại đội 1 chỉ nhận điện từ Trạm bơm 1
+        # (không từ Trạm bơm Đông) để chứng minh không trộn điện giữa các trạm.
+        let!(:tram_bom_dong) do
+          create(:contact_point, :water_pump, name: "Trạm bơm Đông", zone: sample.zone)
+        end
+        let(:ban_tac_huan) { sample.contact_points[:ban_tac_huan] }
+        let(:dai_doi_1) { sample.contact_points[:dai_doi_1] }
+        let(:tram_bom_1) { sample.contact_points[:tram_bom_1] }
+
+        before do
+          # Chỉ lưu đóng góp khác 0 (mirror PumpStationChargeWriter).
+          PumpStationCharge.create!(period: sample.period, zone: sample.zone,
+                                    contact_point: ban_tac_huan, pump_contact_point: tram_bom_1,
+                                    amount: BigDecimal("12.5"))
+          PumpStationCharge.create!(period: sample.period, zone: sample.zone,
+                                    contact_point: ban_tac_huan, pump_contact_point: tram_bom_dong,
+                                    amount: BigDecimal("7.25"))
+          PumpStationCharge.create!(period: sample.period, zone: sample.zone,
+                                    contact_point: dai_doi_1, pump_contact_point: tram_bom_1,
+                                    amount: BigDecimal("4"))
+        end
+
+        it "render bảng + tiêu đề + cột tên trạm + dòng đối tượng nhận" do
+          get billing_path(zone_id: sample.zone.id)
+          expect(response.body).to include("Chi tiết điện bơm nước theo trạm")
+          doc = Nokogiri::HTML(response.body)
+          table = doc.at_css("[data-pump-station-table]")
+          expect(table).to be_present
+          # Tên trạm nằm trong div đầu của th (div thứ hai là % của khu vực).
+          station_names = table.css("thead th > div:first-child").map(&:text).map(&:strip)
+          expect(station_names).to include("Trạm bơm 1", "Trạm bơm Đông")
+          recipient_header = table.at_css("thead th").text.strip
+          expect(recipient_header).to eq("Đối tượng nhận")
+          expect(table.css("thead th").last.text.strip).to eq("Tổng (kW)")
+          expect(table.text).to include("Ban Tác huấn").and include("Đại đội 1")
+        end
+
+        it "ô khác 0 hiện đúng số (tiếng Việt), kèm hook hàng + ô" do
+          get billing_path(zone_id: sample.zone.id)
+          doc = Nokogiri::HTML(response.body)
+          row = doc.at_css(%([data-pump-charge-row="#{dai_doi_1.id}"]))
+          expect(row).to be_present
+          cell = doc.at_css(%([data-pump-charge-cell="#{dai_doi_1.id}-#{tram_bom_1.id}"]))
+          expect(cell.text.strip).to eq("4,00")
+        end
+
+        it "ô 0 (Đại đội 1 × Trạm bơm Đông) hiện 0,00 với style mờ — không trộn điện" do
+          get billing_path(zone_id: sample.zone.id)
+          doc = Nokogiri::HTML(response.body)
+          cell = doc.at_css(%([data-pump-charge-cell="#{dai_doi_1.id}-#{tram_bom_dong.id}"]))
+          expect(cell.text.strip).to eq("0,00")
+          expect(cell["class"]).to include("text-gray-400")
+        end
+
+        it "dòng tổng cộng = tổng mỗi trạm + tổng toàn bộ" do
+          get billing_path(zone_id: sample.zone.id)
+          doc = Nokogiri::HTML(response.body)
+          total_row = doc.at_css("[data-pump-station-table] tbody tr:last-child")
+          expect(total_row.text).to include("Tổng cộng (= điện mỗi trạm)")
+          cells = total_row.css("td").map(&:text).map(&:strip)
+          # Trạm bơm 1 = 12,5 + 4 = 16,50; Trạm bơm Đông = 7,25; tổng = 23,75
+          expect(cells).to include("16,50", "7,25", "23,75")
+        end
+
+        it "có chú thích ô 0,00 tiếng Việt" do
+          get billing_path(zone_id: sample.zone.id)
+          expect(response.body).to include("Ô 0,00 = đối tượng không nhận điện từ trạm đó.")
+        end
+
+        # B — % của khu vực mỗi trạm dưới đầu cột trạm = điện trạm / tổng điện bơm.
+        # Trạm bơm 1 = 16,50/23,75 = 69,47% → "69% khu vực"; Trạm bơm Đông = 7,25/23,75
+        # = 30,53% → "31% khu vực"; tổng phần trăm = 100.
+        it "B: đầu mỗi cột trạm hiện % của khu vực (suy từ tổng cột trạm)" do
+          get billing_path(zone_id: sample.zone.id)
+          doc = Nokogiri::HTML(response.body)
+          share_1 = doc.at_css(%([data-pump-station-zone-share="#{tram_bom_1.id}"]))
+          share_dong = doc.at_css(%([data-pump-station-zone-share="#{tram_bom_dong.id}"]))
+          expect(share_1.text.strip).to eq("69% khu vực")
+          expect(share_dong.text.strip).to eq("31% khu vực")
+        end
+
+        it "có chú thích lệch ±0,01 do làm tròn (parity với bảng tổn hao)" do
+          get billing_path(zone_id: sample.zone.id)
+          doc = Nokogiri::HTML(response.body)
+          note = doc.at_css("[data-pump-station-table]").parent
+          expect(note.text).to include("±0,01")
+        end
+
+        it "đã lọc một khu vực → caption bảng trạm KHÔNG lặp tên khu vực (#12)" do
+          get billing_path(zone_id: sample.zone.id)
+          doc = Nokogiri::HTML(response.body)
+          caption = doc.at_css("[data-pump-station-table] caption")
+          expect(caption.text.strip).to eq("Chi tiết điện bơm nước theo trạm")
+          expect(caption.text).not_to include(sample.zone.name)
+        end
+
+        it "dòng đối tượng nhận: tên đầu mối in đậm + đường dẫn cha mờ (R5-6)" do
+          get billing_path(zone_id: sample.zone.id)
+          doc = Nokogiri::HTML(response.body)
+          # Đầu mối bị tính tiền in đậm; đường dẫn cha (Đơn vị › Khối › Nhóm) ở div mờ
+          # riêng để giữ ngữ cảnh mà không gộp/nén thông tin.
+          cell = doc.at_css(%([data-pump-charge-row="#{dai_doi_1.id}"] td))
+          expect(cell.at_css("div.font-medium").text.strip).to eq("Đại đội 1")
+          path = cell.at_css("div.text-gray-400")
+          expect(path).to be_present
+          expect(path.text).to include(dai_doi_1.unit.name)
+        end
+
+        it "có chú thích giải thích cách chia điện theo trạm (#6)" do
+          get billing_path(zone_id: sample.zone.id)
+          expect(response.body).to include(
+            "Điện mỗi trạm bơm được chia hết cho các đối tượng nhận của trạm đó; " \
+            "tổng các trạm bằng tổng điện bơm nước toàn khu vực."
+          )
+        end
+
+        it "kỳ gộp/legacy (không có pump_station_charges) → KHÔNG render bảng" do
+          PumpStationCharge.where(period: sample.period).delete_all
+          get billing_path(zone_id: sample.zone.id)
+          expect(response.body).not_to include("Chi tiết điện bơm nước theo trạm")
+          expect(response.body).not_to include("data-pump-station-table")
+        end
+      end
+
       # Dropdown chọn kỳ, filter/cascade, đổi kỳ auto-submit, nút Tính toán lại/Xuất Excel,
       # non-SA dropdown visibility: cover bởi system specs (spec/system/billing_filter_spec.rb).
+
+      context "bộ lọc khu vực phản chiếu ?zone_id + caption đa khu vực (#9, #12)" do
+        # Dựng hai khu vực có pump_station_charges + loss_summary để kiểm tra cả hai bảng
+        # chi tiết khi xem nhiều khu vực (chưa lọc) so với khi đã lọc một khu vực.
+        let!(:sample2) { setup_zone_two_full_sample(period: sample.period) }
+        let(:loss_caption) { "Đối chiếu tổn hao/sử dụng theo loại đầu mối" }
+        let(:pump_caption) { "Chi tiết điện bơm nước theo trạm" }
+
+        before do
+          CalculationOrchestrator.new(zone: sample2.zone, period: sample.period).call
+          PumpStationCharge.create!(
+            period: sample.period, zone: sample.zone,
+            contact_point: sample.contact_points[:dai_doi_1],
+            pump_contact_point: sample.contact_points[:tram_bom_1],
+            amount: BigDecimal("5")
+          )
+          PumpStationCharge.create!(
+            period: sample.period, zone: sample2.zone,
+            contact_point: sample2.contact_points[:quan_y],
+            pump_contact_point: sample2.contact_points[:tram_bom_2],
+            amount: BigDecimal("5")
+          )
+        end
+
+        it "đã lọc: ?zone_id=X → dropdown khu vực chọn X (không phải 'Tất cả')" do
+          get billing_path(zone_id: sample.zone.id)
+          doc = Nokogiri::HTML(response.body)
+          zone_select = doc.at_css("select[name='zone_id']")
+          selected = zone_select.css("option[selected]")
+          expect(selected.size).to eq(1)
+          expect(selected.first["value"]).to eq(sample.zone.id.to_s)
+          expect(selected.first.text).to eq(sample.zone.name)
+        end
+
+        it "đã lọc: trang giới hạn về khu vực X — chỉ một bảng mỗi loại (của X)" do
+          get billing_path(zone_id: sample.zone.id)
+          # Một bảng trạm + một bảng tổn hao (chỉ khu vực đã lọc).
+          expect(response.body.scan(pump_caption).size).to eq(1)
+          expect(response.body.scan(loss_caption).size).to eq(1)
+          doc = Nokogiri::HTML(response.body)
+          # Bảng trạm chỉ chứa trạm của khu vực 1 (Trạm bơm 1), không có Trạm bơm 2.
+          pump_table = doc.at_css("[data-pump-station-table]")
+          expect(pump_table.text).to include("Trạm bơm 1")
+          expect(pump_table.text).not_to include("Trạm bơm 2")
+        end
+
+        it "chưa lọc: dropdown khu vực chọn 'Tất cả' (option trống selected)" do
+          get billing_path
+          doc = Nokogiri::HTML(response.body)
+          zone_select = doc.at_css("select[name='zone_id']")
+          selected = zone_select.css("option[selected]")
+          # options_for_select không đánh dấu selected cho giá trị nil → mặc định 'Tất cả'.
+          expect(selected).to be_empty
+          expect(zone_select.css("option").first.text).to eq("Tất cả")
+        end
+
+        it "chưa lọc: bảng bơm render cho mỗi khu vực caption KÈM tên; bảng tổn hao chờ chọn khu vực (#12)" do
+          get billing_path
+          expect(response.body.scan(pump_caption).size).to eq(2)
+          expect(response.body.scan(loss_caption).size).to eq(0)
+          expect(response.body).to include(I18n.t("billing.loss_breakdown.select_zone_hint"))
+          pump_table = Nokogiri::HTML(response.body).css("[data-pump-station-table] caption").map(&:text)
+          expect(pump_table).to include(a_string_including(sample.zone.name))
+                            .and include(a_string_including(sample2.zone.name))
+        end
+      end
 
       it "xem kỳ cũ qua period_id" do
         sample.period.update!(closed: true)
@@ -527,6 +730,107 @@ RSpec.describe "Billing", type: :request do
       post recalculate_billing_path(period_id: sample.period.id)
       expect(response).to redirect_to(billing_path(period_id: sample.period.id))
       expect(flash[:alert]).to include("đã đóng")
+    end
+
+    # CHIEU-phan-bo-tram-config-completeness (#401): khu vực chưa phân bổ hết điện bơm nước
+    # → recalc bị chặn, không persist Calculation, hiển thị lỗi tiếng Việt nêu tên khu vực.
+    # Dùng kỳ mẫu (đang mở, legacy zone-wide) + một khu vực mới chỉ có % cố định < 100%.
+    it "khu vực chưa phân bổ hết điện → recalc bị chặn với lỗi, không ghi Calculation" do
+      period = sample.period # kỳ đang mở, pump_allocation_per_station = false
+      zone = create(:zone, name: "KV recalc chặn")
+      pump_cp = create(:contact_point, :water_pump, name: "Bơm recalc chặn", zone: zone)
+      meter = create(:meter, name: "CT-recalc-chặn", contact_point: pump_cp, no_loss: true)
+      meter.meter_readings.find_by!(period: period).update!(reading_start: 0, reading_end: 100)
+      unit = create(:unit, name: "ĐV recalc chặn", zone: zone)
+      # Zone-wide (không gắn trạm): chỉ % cố định 40%, không recipient hệ số → còn 60% điện thừa.
+      create(:pump_allocation, zone: zone, period: period, pump_contact_point: nil,
+             unit: unit, contact_point: nil, block: nil, group: nil,
+             fixed_percentage: BigDecimal("40"), coefficient: BigDecimal("1"))
+
+      sign_in admin
+      expect {
+        post recalculate_billing_path(period_id: period.id)
+      }.not_to change { Calculation.where(period: period).count }
+      expect(response).to redirect_to(billing_path(period_id: period.id))
+      expect(flash[:alert]).to include("KV recalc chặn")
+      expect(flash[:alert]).to include("chưa phân bổ hết điện")
+    end
+
+    # CHIEU-phan-bo-tram-config-completeness (#401) — biến thể PER-TRẠM: một trạm có recipient
+    # % cố định < 100% và KHÔNG có recipient hệ số → recalc bị chặn. Khác test legacy ở trên
+    # (kỳ per-station true, recipient gắn pump_contact_point). Khẳng định KHÔNG persist gì:
+    # PumpStationCharge và Calculation đều giữ 0 cho (zone, period).
+    it "per-trạm: trạm chưa phân bổ hết điện → recalc bị chặn, KHÔNG ghi PumpStationCharge/Calculation" do
+      sample.period.update!(closed: true) # đóng kỳ mẫu để mở kỳ per-trạm mới
+      period = PeriodService.new.open_new_period(
+        year: 2032, month: 1, unit_price: BigDecimal("2000")
+      ).period
+      expect(period.pump_allocation_per_station).to be(true)
+
+      zone = create(:zone, name: "KV per-trạm chặn")
+      station = create(:contact_point, :water_pump, name: "Trạm per chặn", zone: zone)
+      meter = create(:meter, name: "CT-per-chặn", contact_point: station, no_loss: true)
+      meter.meter_readings.find_by!(period: period).update!(reading_start: 0, reading_end: 100)
+      unit = create(:unit, name: "ĐV per chặn", zone: zone)
+      # Chỉ % cố định 40% gắn trạm, không recipient hệ số → còn 60% điện thừa của trạm.
+      create(:pump_allocation, zone: zone, period: period, pump_contact_point: station,
+             unit: unit, contact_point: nil, block: nil, group: nil,
+             fixed_percentage: BigDecimal("40"), coefficient: BigDecimal("1"))
+
+      sign_in admin
+      expect {
+        post recalculate_billing_path(period_id: period.id, zone_id: zone.id)
+      }.to change { PumpStationCharge.where(zone: zone, period: period).count }.by(0)
+        .and change { Calculation.where(period: period).count }.by(0)
+      expect(PumpStationCharge.where(zone: zone, period: period).count).to eq(0)
+      expect(Calculation.where(period: period).count).to eq(0)
+      expect(response).to redirect_to(billing_path(period_id: period.id, zone_id: zone.id))
+      expect(flash[:alert]).to include("Trạm per chặn")
+      expect(flash[:alert]).to include("chưa phân bổ hết điện")
+    end
+
+    # CHIEU-phan-bo-tram-tong: đối chiếu end-to-end calc→write→read. Sau một lượt orchestrator
+    # THẬT trên kỳ per-trạm, tổng dòng bảng per-trạm của một recipient (Σ PumpStationCharge.amount)
+    # PHẢI bằng Calculation#water_pump_usage của đầu mối đó (không dựng fixture tay).
+    it "per-trạm: tổng dòng bảng trạm của recipient == Calculation#water_pump_usage (calc→write→read)" do
+      sample.period.update!(closed: true)
+      period = PeriodService.new.open_new_period(
+        year: 2033, month: 1, unit_price: BigDecimal("2000")
+      ).period
+      zone = create(:zone, name: "KV đối chiếu")
+      station_a = create(:contact_point, :water_pump, name: "Trạm ĐC A", zone: zone)
+      station_b = create(:contact_point, :water_pump, name: "Trạm ĐC B", zone: zone)
+      meter_a = create(:meter, name: "CT-ĐC-A", contact_point: station_a, no_loss: true)
+      meter_b = create(:meter, name: "CT-ĐC-B", contact_point: station_b, no_loss: true)
+      meter_a.meter_readings.find_by!(period: period).update!(reading_start: 0, reading_end: 100)
+      meter_b.meter_readings.find_by!(period: period).update!(reading_start: 0, reading_end: 60)
+
+      rank = period.ranks.order(:position).first
+      unit_a = create(:unit, name: "ĐV ĐC A", zone: zone)
+      unit_b = create(:unit, name: "ĐV ĐC B", zone: zone)
+      cp_a = create(:contact_point, :residential, name: "ĐM ĐC A", unit: unit_a,
+                    initial_personnel_counts: { rank.id => 1 })
+      cp_b = create(:contact_point, :residential, name: "ĐM ĐC B", unit: unit_b,
+                    initial_personnel_counts: { rank.id => 1 })
+      create(:meter, name: "CT-ĐM-ĐC-A", contact_point: cp_a, no_loss: true)
+        .meter_readings.find_by!(period: period).update!(reading_start: 0, reading_end: 0)
+      create(:meter, name: "CT-ĐM-ĐC-B", contact_point: cp_b, no_loss: true)
+        .meter_readings.find_by!(period: period).update!(reading_start: 0, reading_end: 0)
+      create(:pump_allocation, zone: zone, period: period, pump_contact_point: station_a,
+             unit: unit_a, contact_point: nil, block: nil, group: nil, coefficient: 1)
+      create(:pump_allocation, zone: zone, period: period, pump_contact_point: station_b,
+             unit: unit_b, contact_point: nil, block: nil, group: nil, coefficient: 1)
+
+      sign_in admin
+      post recalculate_billing_path(period_id: period.id, zone_id: zone.id)
+
+      calc_a = Calculation.find_by!(period: period, contact_point: cp_a)
+      calc_b = Calculation.find_by!(period: period, contact_point: cp_b)
+      charge_a = PumpStationCharge.where(period: period, zone: zone, contact_point: cp_a).sum(:amount)
+      charge_b = PumpStationCharge.where(period: period, zone: zone, contact_point: cp_b).sum(:amount)
+      expect(charge_a).to eq(calc_a.water_pump_usage)
+      expect(charge_b).to eq(calc_b.water_pump_usage)
+      expect(charge_a + charge_b).to eq(BigDecimal("160"))
     end
 
     it "bấm Tính toán lại → ghi snapshot tổn hao và hiển thị A/B/C (luồng end-to-end)" do

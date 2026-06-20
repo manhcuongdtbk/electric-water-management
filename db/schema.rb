@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_14_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_16_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -210,6 +210,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_14_120000) do
     t.datetime "created_at", null: false
     t.decimal "division_public_rate", default: "10.0", null: false
     t.integer "month", null: false
+    t.boolean "pump_allocation_per_station", default: false, null: false
     t.decimal "savings_rate", default: "5.0", null: false
     t.decimal "unit_price", null: false
     t.datetime "updated_at", null: false
@@ -234,19 +235,42 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_14_120000) do
   end
 
   create_table "pump_allocations", force: :cascade do |t|
+    t.bigint "block_id"
     t.decimal "coefficient", default: "1.0", null: false
     t.bigint "contact_point_id"
     t.datetime "created_at", null: false
     t.decimal "fixed_percentage"
+    t.bigint "group_id"
     t.integer "lock_version", default: 0, null: false
     t.bigint "period_id", null: false
+    t.bigint "pump_contact_point_id"
     t.bigint "unit_id"
     t.datetime "updated_at", null: false
     t.bigint "zone_id", null: false
+    t.index ["block_id"], name: "index_pump_allocations_on_block_id"
     t.index ["contact_point_id"], name: "index_pump_allocations_on_contact_point_id"
+    t.index ["group_id"], name: "index_pump_allocations_on_group_id"
     t.index ["period_id"], name: "index_pump_allocations_on_period_id"
+    t.index ["pump_contact_point_id"], name: "index_pump_allocations_on_pump_contact_point_id"
     t.index ["unit_id"], name: "index_pump_allocations_on_unit_id"
+    t.index ["zone_id", "period_id", "pump_contact_point_id"], name: "index_pump_allocations_on_zone_period_station"
     t.index ["zone_id"], name: "index_pump_allocations_on_zone_id"
+  end
+
+  create_table "pump_station_charges", force: :cascade do |t|
+    t.decimal "amount", null: false
+    t.bigint "contact_point_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "period_id", null: false
+    t.bigint "pump_contact_point_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "zone_id", null: false
+    t.index ["contact_point_id"], name: "index_pump_station_charges_on_contact_point_id"
+    t.index ["period_id", "contact_point_id"], name: "index_pump_station_charges_on_period_id_and_contact_point_id"
+    t.index ["period_id"], name: "index_pump_station_charges_on_period_id"
+    t.index ["pump_contact_point_id"], name: "index_pump_station_charges_on_pump_contact_point_id"
+    t.index ["zone_id", "period_id"], name: "index_pump_station_charges_on_zone_id_and_period_id"
+    t.index ["zone_id"], name: "index_pump_station_charges_on_zone_id"
   end
 
   create_table "ranks", force: :cascade do |t|
@@ -348,10 +372,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_14_120000) do
   add_foreign_key "personnel_entries", "contact_points"
   add_foreign_key "personnel_entries", "periods"
   add_foreign_key "personnel_entries", "ranks"
+  add_foreign_key "pump_allocations", "blocks"
   add_foreign_key "pump_allocations", "contact_points"
+  add_foreign_key "pump_allocations", "contact_points", column: "pump_contact_point_id"
+  add_foreign_key "pump_allocations", "groups"
   add_foreign_key "pump_allocations", "periods"
   add_foreign_key "pump_allocations", "units"
   add_foreign_key "pump_allocations", "zones"
+  add_foreign_key "pump_station_charges", "contact_points"
+  add_foreign_key "pump_station_charges", "contact_points", column: "pump_contact_point_id"
+  add_foreign_key "pump_station_charges", "periods"
+  add_foreign_key "pump_station_charges", "zones"
   add_foreign_key "ranks", "periods"
   add_foreign_key "unit_configs", "periods"
   add_foreign_key "unit_configs", "units"

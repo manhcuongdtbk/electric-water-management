@@ -126,12 +126,19 @@ vi:
         other_type: "Loại khoản trừ khác"
         other_value: "Giá trị khoản trừ khác"
       pump_allocation:
+        target: "Đối tượng"
         zone: "Khu vực"
         zone_id: "Khu vực"
         unit: "Đơn vị"
         unit_id: "Đơn vị"
+        block: "Khối"
+        block_id: "Khối"
+        group: "Nhóm"
+        group_id: "Nhóm"
         contact_point: "Đầu mối"
         contact_point_id: "Đầu mối"
+        pump_contact_point: "Trạm bơm"
+        pump_contact_point_id: "Trạm bơm"
         period: "Kỳ tính toán"
         period_id: "Kỳ tính toán"
         fixed_percentage: "Phần trăm cố định"
@@ -195,14 +202,26 @@ vi:
         pump_allocation:
           attributes:
             base:
-              target_required: "Vui lòng chọn đối tượng nhận phân bổ (đơn vị hoặc đầu mối)."
-              target_must_be_one: "Chỉ được chọn 1 đối tượng nhận phân bổ — đơn vị hoặc đầu mối, không phải cả 2."
-              fixed_percentage_sum_exceeds_one_hundred: "Tổng phần trăm cố định của tất cả phân bổ trong khu vực không được vượt quá 100"
+              recipient_required: "Vui lòng chọn đối tượng nhận phân bổ (đơn vị, khối, nhóm hoặc đầu mối)."
+              recipient_must_be_one: "Chỉ được chọn 1 đối tượng nhận phân bổ — đơn vị, khối, nhóm hoặc đầu mối."
+              fixed_percentage_sum_exceeds_one_hundred: "Tổng phần trăm cố định của các phân bổ trong cùng trạm bơm không được vượt quá 100"
+              overlapping_recipients: "Đối tượng nhận chồng chéo với phân bổ khác — các đầu mối sinh hoạt được phân bổ tới phải không trùng nhau."
+              split_across_stations: "Đối tượng thuộc cùng đơn vị phải nằm trong cùng một trạm bơm — không được chia ra nhiều trạm."
             unit_id:
               zone_mismatch: "phải thuộc cùng khu vực với phân bổ"
+              no_residential_contact_points: "không có đầu mối sinh hoạt nào bên trong — không thể phân phối điện bơm nước."
+            block_id:
+              zone_mismatch: "phải thuộc cùng khu vực với phân bổ"
+              no_residential_contact_points: "không có đầu mối sinh hoạt nào bên trong — không thể phân phối điện bơm nước."
+            group_id:
+              zone_mismatch: "phải thuộc cùng khu vực với phân bổ"
+              no_residential_contact_points: "không có đầu mối sinh hoạt nào bên trong — không thể phân phối điện bơm nước."
             contact_point_id:
               zone_mismatch: "phải thuộc cùng khu vực với phân bổ"
-              must_be_zone_level: "phải là đầu mối thuộc khu vực (không thuộc đơn vị). Đầu mối thuộc đơn vị nhận phân bổ gián tiếp qua đơn vị."
+            pump_contact_point_id:
+              required_for_station: "phải chọn trạm bơm cho phân bổ của kỳ này"
+              must_be_water_pump: "phải là một trạm bơm (đầu mối bơm nước) thuộc khu vực"
+              not_allowed_legacy: "kỳ cũ không phân bổ theo trạm — không được chọn trạm bơm"
         group:
           attributes:
             block_id:
@@ -226,6 +245,10 @@ vi:
       warnings:
         zero_personnel: "Đối tượng phân bổ không có quân số — không phân bổ cho đối tượng này"
         no_pump_meter: "Khu vực không có công tơ bơm nước — bỏ qua phân bổ bơm nước"
+        station_without_recipient: "Trạm bơm %{station} chưa có đối tượng nhận phân bổ — điện trạm này chưa được chia."
+        empty_recipient: "Đối tượng nhận \"%{name}\" không có đầu mối sinh hoạt nào bên trong — phần điện bơm nước phân bổ cho đối tượng này không chia được."
+      errors:
+        incomplete_station_config: "Trạm bơm %{station} chưa phân bổ hết điện: cần thêm đối tượng nhận theo hệ số, hoặc tổng phần trăm cố định đủ 100%."
     period_service:
       errors:
         no_open_period: "Không có kỳ đang mở. Vui lòng liên hệ quản trị viên hệ thống."
@@ -464,8 +487,47 @@ vi:
     flash:
       belongs_to_closed_period: "Nhóm cấp bậc này thuộc kỳ đã đóng. Chỉ được sửa nhóm cấp bậc của kỳ đang mở."
   pump_allocations:
+    new:
+      title: "Thêm phân bổ bơm nước"
+    edit:
+      title: "Sửa phân bổ bơm nước"
+    index:
+      zone_filter_label: "Khu vực:"
+      station_card_with_zone: "%{station} · %{zone}"
+      search_placeholder: "Tìm theo tên đối tượng hoặc trạm bơm..."
+      legacy_card_title: "Gộp toàn khu vực (kỳ cũ)"
+      total_label: "Tổng"
+      coefficient_count: "%{count} đối tượng hệ số"
+      add_recipient_to_station: "Thêm đối tượng vào trạm này"
+      station_without_recipient: "Trạm bơm này chưa có đối tượng nhận — điện của trạm chưa được chia."
+      column_unit: "Đơn vị"
+      column_block: "Khối"
+      column_group: "Nhóm"
+      column_contact_point: "Đầu mối"
+      column_fixed_percentage: "% cố định"
+      column_coefficient: "Hệ số"
+      page_note: "Mỗi trạm bơm chia hết điện bơm nước của trạm đó cho các đối tượng bên dưới: đối tượng nào có phần trăm cố định thì nhận đúng phần trăm đó của điện trạm; phần còn lại chia cho các đối tượng có hệ số theo quân số. Trong mỗi dòng, ô tô đậm nền xanh là cấp của đối tượng nhận (đơn vị, khối, nhóm hay đầu mối); các ô mờ chỉ là cấp cha để tra cứu ngữ cảnh, không phải đối tượng nhận."
+      station_zone_share: "%{station} — chiếm %{percent} điện bơm của khu vực"
+      empty_cell: "—"
     flash:
       belongs_to_closed_period: "Phân bổ này thuộc kỳ đã đóng. Chỉ được sửa phân bổ của kỳ đang mở."
+    form:
+      select_unit: "Chọn đơn vị"
+      select_block: "Chọn khối"
+      select_group: "Chọn nhóm"
+      select_contact_point: "Chọn đầu mối"
+      blank_unit: "— Chọn đơn vị —"
+      blank_block: "— Chọn khối —"
+      blank_group: "— Chọn nhóm —"
+      blank_contact_point: "— Chọn đầu mối —"
+      blank_station: "— Chọn trạm bơm —"
+      target_legend: "Đối tượng nhận phân bổ"
+      alloc_legend: "Chế độ phân bổ"
+      alloc_coefficient: "Theo hệ số"
+      alloc_fixed: "Theo phần trăm cố định"
+      help_fixed_percentage_station: "Đối tượng nhận đúng X% điện của trạm bơm này. Tổng phần trăm cố định trong cùng một trạm bơm không quá 100%."
+      help_fixed_percentage_zone: "Đối tượng nhận đúng X% tổng điện bơm nước khu vực. Tổng phần trăm cố định không quá 100%."
+      help_coefficient: "Trọng số phân bổ = hệ số × quân số. Mặc định: 1."
   zones:
     flash:
       manager_must_belong_to_zone: "Đơn vị mới phải thuộc khu vực này."
@@ -507,6 +569,18 @@ vi:
         - "A/B/C tính trên toàn khu vực (gồm công cộng + bơm nước), nên có thể khác tổng các cột trên bảng tính tiền — vốn chỉ tính đầu mối sinh hoạt."
         - "A (Sử dụng thực tế của dòng \"Cộng\") đã trừ điện công tơ không tổn hao nên nhỏ hơn số công tơ tổng; dòng \"Tổng cộng\" mới bằng số công tơ tổng."
         - "Làm tròn 2 chữ số nên tổng các dòng có thể lệch ±0,01 — số chuẩn để đối chiếu là A/B/C và số công tơ tổng."
+    pump_station_breakdown:
+      title: "Chi tiết điện bơm nước theo trạm"
+      columns:
+        recipient: "Đối tượng nhận"
+        total: "Tổng (kW)"
+      station_zone_share: "%{percent} khu vực"
+      rows:
+        grand_total: "Tổng cộng (= điện mỗi trạm)"
+      note_items:
+        - "Điện mỗi trạm bơm được chia hết cho các đối tượng nhận của trạm đó; tổng các trạm bằng tổng điện bơm nước toàn khu vực."
+        - "Ô 0,00 = đối tượng không nhận điện từ trạm đó."
+        - "Làm tròn 2 chữ số thập phân nên tổng có thể lệch ±0,01."
   dashboard:
     sections:
       public_total: "Sử dụng điện công cộng toàn khu vực"

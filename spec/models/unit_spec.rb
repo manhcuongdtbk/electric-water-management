@@ -117,10 +117,12 @@ RSpec.describe Unit do
     end
 
     it "hard delete pump_allocations kỳ đang mở, giữ kỳ cũ" do
+      cp = create(:contact_point, :residential, unit: unit, name: "ĐM unit cleanup")
       alloc_current = PumpAllocation.create!(zone: zone, period: period, unit: unit, coefficient: 1)
       old_period = create(:period, year: 2025, month: 1, closed: true)
       alloc_old = PumpAllocation.create!(zone: zone, period: old_period, unit: unit, coefficient: 1)
 
+      cp.discard
       unit.discard
       expect(PumpAllocation.find_by(id: alloc_current.id)).to be_nil
       expect(PumpAllocation.find_by(id: alloc_old.id)).to be_present

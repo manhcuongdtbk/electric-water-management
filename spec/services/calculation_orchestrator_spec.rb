@@ -122,6 +122,29 @@ RSpec.describe CalculationOrchestrator do
     end
   end
 
+  # CHIEU-phan-bo-tram-config-completeness (#401): khi một trạm chưa phân bổ hết điện,
+  # PumpAllocationCalculator raise → transaction rollback → KHÔNG persist gì.
+  describe "#call — cấu hình trạm chưa đủ → chặn, không persist (#401)" do
+    it "raise IncompleteStationConfig và không ghi Calculation/PumpStationCharge nào" do
+      zone = create(:zone, name: "KV chặn #401")
+      period = PeriodService.new.open_new_period(year: 2032, month: 1, unit_price: BigDecimal("2000")).period
+      station = create(:contact_point, :water_pump, name: "Trạm chặn", zone: zone)
+      meter = create(:meter, name: "CT-chặn", contact_point: station, no_loss: true)
+      meter.meter_readings.find_by!(period: period).update!(reading_start: 0, reading_end: 100)
+      unit = create(:unit, name: "ĐV chặn", zone: zone)
+      create(:pump_allocation, zone: zone, period: period, pump_contact_point: station,
+             unit: unit, contact_point: nil, block: nil, group: nil,
+             fixed_percentage: BigDecimal("40"), coefficient: BigDecimal("1"))
+
+      expect {
+        described_class.new(zone: zone, period: period).call
+      }.to raise_error(PumpAllocationCalculator::IncompleteStationConfig)
+
+      expect(Calculation.where(period: period)).to be_empty
+      expect(PumpStationCharge.where(period: period)).to be_empty
+    end
+  end
+
   describe "loss snapshot persistence" do
     let(:sample) { setup_zone_one_full_sample }
 

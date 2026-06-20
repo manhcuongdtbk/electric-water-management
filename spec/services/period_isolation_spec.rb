@@ -131,11 +131,18 @@ RSpec.describe "Cách ly kỳ giữa các period" do
     include_context "với kỳ tháng 5 đã đóng + kỳ tháng 6 mở"
 
     it "sửa fixed_percentage kỳ 6 không ảnh hưởng kỳ 5" do
-      chi_huy_alloc_p6 = period_6.pump_allocations.find_by(contact_point: sample.contact_points[:chi_huy_khu_vuc])
+      # Kỳ 5 còn legacy (zone-wide) nên KHÔNG copy allocation qua ranh giới sang kỳ 6 per-trạm
+      # (ADR-026). Tạo allocation per-trạm cho kỳ 6 (trạm bơm cùng khu vực) để có gì mà sửa —
+      # bản chất kiểm thử vẫn là: sửa allocation kỳ 6 không đụng allocation/calculation kỳ 5.
+      chi_huy = sample.contact_points[:chi_huy_khu_vuc]
+      station = sample.contact_points[:tram_bom_1]
+      chi_huy_alloc_p6 = PumpAllocation.create!(zone: sample.zone, period: period_6,
+                                                contact_point: chi_huy, pump_contact_point: station,
+                                                fixed_percentage: BigDecimal("20"), coefficient: 1)
       chi_huy_alloc_p6.update!(fixed_percentage: BigDecimal("30"))
 
       expect(snapshot_calculations(period_5)).to eq(snapshot_period_5_before)
-      chi_huy_alloc_p5 = period_5.pump_allocations.find_by(contact_point: sample.contact_points[:chi_huy_khu_vuc])
+      chi_huy_alloc_p5 = period_5.pump_allocations.find_by(contact_point: chi_huy)
       expect(chi_huy_alloc_p5.fixed_percentage).to eq(BigDecimal("20"))
     end
   end

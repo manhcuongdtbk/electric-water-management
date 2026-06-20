@@ -1,5 +1,9 @@
 <%
-  target_mode_default = pump_allocation.contact_point_id.present? ? "contact_point" : "unit"
+  target_mode_default =
+    if pump_allocation.block_id.present? then "block"
+    elsif pump_allocation.group_id.present? then "group"
+    elsif pump_allocation.contact_point_id.present? then "contact_point"
+    else "unit" end
   alloc_mode_default  = pump_allocation.fixed_percentage.present? ? "fixed" : "coefficient"
 %>
 
@@ -18,7 +22,7 @@
   <%= f.hidden_field :lock_version if pump_allocation.persisted? %>
 
   <div>
-    <%= f.label :zone_id, "Khu vực", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.label :zone_id, t("activerecord.attributes.pump_allocation.zone"), class: "block text-sm font-medium text-gray-700 mb-1" %>
     <% if current_zone_manager? %>
       <%= f.hidden_field :zone_id, data: { pump_allocation_form_target: "zoneSelect" } %>
       <input type="text" disabled value="<%= pump_allocation.zone&.name %>"
@@ -31,48 +35,83 @@
     <% end %>
   </div>
 
-  <%# ====== Đối tượng nhận: Đơn vị HOẶC Đầu mối ====== %>
+  <%# ====== Trạm bơm: chỉ hiện khi kỳ phân bổ theo từng trạm ====== %>
+  <% per_station = pump_allocation.period&.pump_allocation_per_station %>
+  <% if per_station %>
+    <div data-pump-allocation-form-target="stationWrap">
+      <%= f.label :pump_contact_point_id, t("activerecord.attributes.pump_allocation.pump_contact_point"), class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%
+        station_options = ContactPoint.kept.accessible_by(current_ability)
+          .where(contact_point_type: "water_pump").order(:name)
+          .map { |s| [s.name, s.id, { "data-zone-id": s.zone_id }] }
+      %>
+      <%= f.select :pump_contact_point_id, station_options,
+          { include_blank: t("pump_allocations.form.blank_station") },
+          class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
+          data: { pump_allocation_form_target: "stationSelect" } %>
+    </div>
+  <% end %>
+
+  <%# ====== Đối tượng nhận: Đơn vị / Khối / Nhóm / Đầu mối ====== %>
   <fieldset class="border border-gray-200 rounded p-3"
             data-pump-allocation-form-target="targetFieldset">
-    <legend class="text-sm font-medium text-gray-700 px-1">Đối tượng nhận phân bổ</legend>
+    <legend class="text-sm font-medium text-gray-700 px-1"><%= t("pump_allocations.form.target_legend") %></legend>
 
-    <div class="flex gap-4 mb-3">
-      <label class="flex items-center gap-2 text-sm">
-        <input type="radio" name="target_mode" value="unit"
-               <%= "checked" if target_mode_default == "unit" %>
-               data-pump-allocation-form-target="targetMode"
-               data-action="change->pump-allocation-form#refreshTarget">
-        <span>Đơn vị</span>
-      </label>
-      <label class="flex items-center gap-2 text-sm">
-        <input type="radio" name="target_mode" value="contact_point"
-               <%= "checked" if target_mode_default == "contact_point" %>
-               data-pump-allocation-form-target="targetMode"
-               data-action="change->pump-allocation-form#refreshTarget">
-        <span>Đầu mối</span>
-      </label>
+    <div class="flex flex-wrap gap-4 mb-3">
+      <% [["unit", t("activerecord.attributes.pump_allocation.unit")],
+          ["block", t("activerecord.attributes.pump_allocation.block")],
+          ["group", t("activerecord.attributes.pump_allocation.group")],
+          ["contact_point", t("activerecord.attributes.pump_allocation.contact_point")]].each do |val, lbl| %>
+        <label class="flex items-center gap-2 text-sm">
+          <input type="radio" name="target_mode" value="<%= val %>"
+                 <%= "checked" if target_mode_default == val %>
+                 data-pump-allocation-form-target="targetMode"
+                 data-action="change->pump-allocation-form#refreshTarget">
+          <span><%= lbl %></span>
+        </label>
+      <% end %>
     </div>
 
     <div data-pump-allocation-form-target="targetUnit">
-      <%= f.label :unit_id, "Chọn đơn vị", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.label :unit_id, t("pump_allocations.form.select_unit"), class: "block text-sm font-medium text-gray-700 mb-1" %>
       <%= f.select :unit_id,
           Unit.kept.accessible_by(current_ability).order(:name)
               .map { |u| [u.name, u.id, { "data-zone-id": u.zone_id }] },
-          { include_blank: "— Chọn đơn vị —" },
+          { include_blank: t("pump_allocations.form.blank_unit") },
           class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
           data: { pump_allocation_form_target: "unitSelect" } %>
     </div>
 
+    <div data-pump-allocation-form-target="targetBlock">
+      <%= f.label :block_id, t("pump_allocations.form.select_block"), class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.select :block_id,
+          Block.kept.accessible_by(current_ability).includes(:unit).order(:name)
+               .map { |b| [b.name, b.id, { "data-zone-id": b.unit&.zone_id }] },
+          { include_blank: t("pump_allocations.form.blank_block") },
+          class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
+          data: { pump_allocation_form_target: "blockSelect" } %>
+    </div>
+
+    <div data-pump-allocation-form-target="targetGroup">
+      <%= f.label :group_id, t("pump_allocations.form.select_group"), class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.select :group_id,
+          Group.kept.accessible_by(current_ability).includes(:unit).order(:name)
+               .map { |g| [g.name, g.id, { "data-zone-id": g.unit&.zone_id }] },
+          { include_blank: t("pump_allocations.form.blank_group") },
+          class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
+          data: { pump_allocation_form_target: "groupSelect" } %>
+    </div>
+
     <div data-pump-allocation-form-target="targetContact">
-      <%= f.label :contact_point_id, "Chọn đầu mối", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.label :contact_point_id, t("pump_allocations.form.select_contact_point"), class: "block text-sm font-medium text-gray-700 mb-1" %>
       <%
         contact_point_options = ContactPoint.kept.accessible_by(current_ability)
-          .where(contact_point_type: ["residential", "non_establishment"], unit_id: nil)
+          .where(contact_point_type: ["residential", "public", "non_establishment"])
           .order(:name)
-          .map { |cp| [cp.name, cp.id, { "data-zone-id": cp.zone_id }] }
+          .map { |cp| [cp.name, cp.id, { "data-zone-id": (cp.zone_id || cp.unit&.zone_id) }] }
       %>
       <%= f.select :contact_point_id, contact_point_options,
-          { include_blank: "— Chọn đầu mối —" },
+          { include_blank: t("pump_allocations.form.blank_contact_point") },
           class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm",
           data: { pump_allocation_form_target: "contactSelect" } %>
     </div>
@@ -81,7 +120,7 @@
   <%# ====== Chế độ phân bổ: % cố định HOẶC Hệ số ====== %>
   <fieldset class="border border-gray-200 rounded p-3"
             data-pump-allocation-form-target="allocFieldset">
-    <legend class="text-sm font-medium text-gray-700 px-1">Chế độ phân bổ</legend>
+    <legend class="text-sm font-medium text-gray-700 px-1"><%= t("pump_allocations.form.alloc_legend") %></legend>
 
     <div class="flex gap-4 mb-3">
       <label class="flex items-center gap-2 text-sm">
@@ -89,29 +128,29 @@
                <%= "checked" if alloc_mode_default == "coefficient" %>
                data-pump-allocation-form-target="allocMode"
                data-action="change->pump-allocation-form#refreshAlloc">
-        <span>Theo hệ số</span>
+        <span><%= t("pump_allocations.form.alloc_coefficient") %></span>
       </label>
       <label class="flex items-center gap-2 text-sm">
         <input type="radio" name="alloc_mode" value="fixed"
                <%= "checked" if alloc_mode_default == "fixed" %>
                data-pump-allocation-form-target="allocMode"
                data-action="change->pump-allocation-form#refreshAlloc">
-        <span>Theo phần trăm cố định</span>
+        <span><%= t("pump_allocations.form.alloc_fixed") %></span>
       </label>
     </div>
 
     <div data-pump-allocation-form-target="allocFixed">
-      <%= f.label :fixed_percentage, "% cố định", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.label :fixed_percentage, t("activerecord.attributes.pump_allocation.fixed_percentage"), class: "block text-sm font-medium text-gray-700 mb-1" %>
       <%= f.number_field :fixed_percentage, step: "0.01",
           class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
-      <p class="text-xs text-gray-500 mt-1">Đối tượng nhận đúng X% của tổng bơm nước. Tổng % cố định trong khu vực không quá 100.</p>
+      <p class="text-xs text-gray-500 mt-1"><%= t(per_station ? "pump_allocations.form.help_fixed_percentage_station" : "pump_allocations.form.help_fixed_percentage_zone") %></p>
     </div>
 
     <div data-pump-allocation-form-target="allocCoefficient">
-      <%= f.label :coefficient, "Hệ số", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.label :coefficient, t("activerecord.attributes.pump_allocation.coefficient"), class: "block text-sm font-medium text-gray-700 mb-1" %>
       <%= f.number_field :coefficient, step: "0.01",
           class: "block w-full rounded border border-gray-300 px-3 py-2 text-sm" %>
-      <p class="text-xs text-gray-500 mt-1">Trọng số phân bổ = hệ số × quân số. Mặc định: 1.</p>
+      <p class="text-xs text-gray-500 mt-1"><%= t("pump_allocations.form.help_coefficient") %></p>
     </div>
   </fieldset>
 

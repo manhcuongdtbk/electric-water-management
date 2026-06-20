@@ -6,7 +6,8 @@
       <div class="overflow-x-auto">
         <table class="text-sm border border-gray-200">
           <caption class="text-left font-semibold text-gray-700 px-2 py-1">
-            <%= t("billing.loss_breakdown.title") %> — <%= s.zone&.name %>
+            <%# Append the zone name only when multiple zones are in view (SA, no zone filter). %>
+            <%= t("billing.loss_breakdown.title") %><% if @zone.nil? %> — <%= s.zone&.name %><% end %>
           </caption>
           <thead class="bg-gray-100 text-gray-700">
             <tr>

@@ -56,6 +56,9 @@ module SampleData
     zone.update!(manager_unit: unit_a)
 
     period = PeriodService.new.open_new_period(year: 2026, month: 5, unit_price: BigDecimal("2336.4")).period
+    # Mẫu T02 mô hình phân bổ bơm zone-wide (trước TN2): pump_allocations dùng đối tượng
+    # cấp khu vực không gắn trạm bơm. Ép kỳ về legacy để giữ ngữ nghĩa zone-wide.
+    period.update!(pump_allocation_per_station: false)
 
     ranks = build_sample_ranks_lookup(period)
 

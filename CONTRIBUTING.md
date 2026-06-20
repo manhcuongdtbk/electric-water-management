@@ -201,6 +201,7 @@ Guardrail + CI ép demo **tồn tại** và **chạy**; chúng **không** ép de
 
 **Tầng 1 — Bộ công cụ (neo kỹ thuật vào `DemoRecorder`, đừng tự chế tại chỗ).** Primitive tái dùng (`spec/support/demo_recorder.rb`):
 
+- `sign_in_as(user, role_label:, caption:)` — đăng nhập **lập trình** qua Warden (server-side), **không dựng trang đăng nhập**. Demo **không được** diễn trang `/users/sign_in` (chậm, không kể gì cho khách); chỉ một caption nêu vai trò. Dùng cho cả lúc đổi vai (vd quản trị viên → chỉ huy) thay vì đăng xuất + đăng nhập lại.
 - `visit(path, caption:)` — mở thẳng path (kèm query) vào đúng màn, không lái qua filter.
 - `click(locator, caption:, confirm:)` — `confirm: true` chấp nhận hộp xác nhận Turbo (`data-turbo-confirm`); thiếu cờ này form không submit (driver Playwright mặc định dismiss dialog — bài học #363).
 - `fill(field, with:, caption:)` · `select(option, from:, caption:)` — nhập/chọn có trỏ + nhịp đọc được.

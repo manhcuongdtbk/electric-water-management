@@ -133,17 +133,21 @@ module ZoneUnitFilterable
   end
 
   # Danh sách khu vực cho dropdown filter.
+  # zone_ids suy từ dữ liệu (vd dòng billing): kỳ CHƯA tính → rỗng. Khu vực đang
+  # chọn phải LUÔN nằm trong danh sách, nếu không dropdown rớt về "Tất cả" dù URL
+  # có zone_id (bug filter billing kỳ rỗng). Nhét @zone&.id vào trước khi where.
   def available_zones_for_filter(zone_scope: zone_filter_scope, zone_ids: nil)
     scope = zone_scope.order(:name)
-    scope = scope.where(id: zone_ids) if zone_ids
+    scope = scope.where(id: (zone_ids + [@zone&.id]).compact.uniq) if zone_ids
     scope
   end
 
-  # Danh sách đơn vị cho dropdown filter.
+  # Danh sách đơn vị cho dropdown filter. Tương tự khu vực: đơn vị đang chọn phải
+  # luôn có trong danh sách kể cả khi unit_ids (suy từ dữ liệu) rỗng.
   def available_units_for_filter(zone, unit_scope: unit_filter_scope, unit_ids: nil)
     scope = unit_scope.order(:name)
     scope = scope.where(zone_id: zone.id) if zone
-    scope = scope.where(id: unit_ids) if unit_ids
+    scope = scope.where(id: (unit_ids + [@unit&.id]).compact.uniq) if unit_ids
     scope
   end
 end

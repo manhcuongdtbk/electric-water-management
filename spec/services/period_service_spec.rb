@@ -119,12 +119,20 @@ RSpec.describe PeriodService do
       expect(deduction.other_value).to eq(BigDecimal("-2.5"))
     end
 
-    it "pump_allocations kế thừa cấu hình" do
+    it "pump_allocations kế thừa cấu hình (per-trạm → per-trạm)" do
+      # Kế thừa phân bổ bơm chỉ xảy ra khi cả nguồn lẫn đích cùng cơ chế per-trạm (ADR-026).
+      # Sample mẫu pin legacy (zone-wide); chuyển kỳ nguồn sang per-trạm và gắn trạm bơm
+      # cho từng allocation để giữ nguyên ý định "kế thừa copy cấu hình bơm".
+      station = sample.contact_points[:tram_bom_1]
+      sample.period.update!(pump_allocation_per_station: true)
+      sample.period.pump_allocations.find_each { |a| a.update!(pump_contact_point: station) }
+
       sample.period.update!(closed: true)
       result = service.open_new_period
       expect(result.period.pump_allocations.count).to eq(sample.period.pump_allocations.count)
       chi_huy = result.period.pump_allocations.find_by(contact_point: sample.contact_points[:chi_huy_khu_vuc])
       expect(chi_huy.fixed_percentage).to eq(BigDecimal("20"))
+      expect(chi_huy.pump_contact_point_id).to eq(station.id)
     end
 
     it "KHÔNG kế thừa main_meter_readings (nhập mới)" do
@@ -252,10 +260,56 @@ RSpec.describe PeriodService do
     end
 
     it "vẫn copy allocations cho thực thể kept" do
+      # Kế thừa per-trạm → per-trạm (ADR-026): chuyển kỳ nguồn sang per-trạm và gắn trạm bơm.
+      station = sample.contact_points[:tram_bom_1]
+      sample.period.update!(pump_allocation_per_station: true)
+      sample.period.pump_allocations.find_each { |a| a.update!(pump_contact_point: station) }
+
       sample.period.update!(closed: true)
       result = service.open_new_period
       kept_allocation_count = result.period.pump_allocations.count
       expect(kept_allocation_count).to eq(sample.period.pump_allocations.count)
+    end
+  end
+
+  describe "#open_new_period — cờ pump_allocation_per_station (TN2)" do
+    it "kỳ mới mở có pump_allocation_per_station = true" do
+      result = described_class.new.open_new_period(year: 2030, month: 1, unit_price: BigDecimal("3500"))
+      expect(result.period.pump_allocation_per_station).to be(true)
+    end
+  end
+
+  # CHIEU-phan-bo-tram-chuyen-tiep: kỳ per-trạm đầu tiên bắt đầu trống; kỳ per-trạm
+  # sau kế thừa đúng (chỉ kế thừa khi cả nguồn lẫn đích đều per-trạm — ADR-026).
+  describe "#open_new_period — kế thừa phân bổ bơm per-trạm (TN2)" do
+    it "KHÔNG kế thừa qua ranh giới cũ→per-trạm: kỳ per-trạm đầu tiên bắt đầu trống" do
+      zone = create(:zone)
+      old = create(:period, closed: false, pump_allocation_per_station: false)
+      unit = create(:unit, zone: zone)
+      create(:pump_allocation, zone: zone, period: old, unit: unit, contact_point: nil,
+             block: nil, group: nil, pump_contact_point: nil, coefficient: 1)
+      old.update!(closed: true)
+
+      result = PeriodService.new.open_new_period(year: 2032, month: 1, unit_price: BigDecimal("3500"))
+      expect(result.period.pump_allocation_per_station).to be(true)
+      expect(result.period.pump_allocations).to be_empty
+    end
+
+    it "kế thừa khi cả nguồn lẫn đích đều per-trạm (gồm pump_contact_point_id, block_id, group_id)" do
+      zone = create(:zone)
+      src = create(:period, closed: false, pump_allocation_per_station: true)
+      station = create(:contact_point, :water_pump, zone: zone)
+      unit = create(:unit, zone: zone)
+      create(:pump_allocation, zone: zone, period: src, unit: unit, contact_point: nil,
+             block: nil, group: nil, pump_contact_point: station, coefficient: 2, fixed_percentage: nil)
+      src.update!(closed: true)
+
+      result = PeriodService.new.open_new_period(year: 2033, month: 1, unit_price: BigDecimal("3500"))
+      copied = result.period.pump_allocations
+      expect(copied.size).to eq(1)
+      expect(copied.first.pump_contact_point_id).to eq(station.id)
+      expect(copied.first.unit_id).to eq(unit.id)
+      expect(copied.first.coefficient).to eq(BigDecimal("2"))
     end
   end
 

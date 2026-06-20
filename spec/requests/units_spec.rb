@@ -174,11 +174,13 @@ RSpec.describe "Units", type: :request do
   describe "Unit#discard cleanup (model level)" do
     it "cleanup pump_allocations kỳ đang mở, giữ kỳ cũ" do
       u = create(:unit, zone: zone)
+      cp = create(:contact_point, :residential, unit: u, name: "ĐM unit cleanup")
       alloc_current = PumpAllocation.create!(zone: zone, period: open_period, unit: u, coefficient: 1)
 
       old_period = create(:period, year: 2025, month: 1, closed: true)
       alloc_old = PumpAllocation.create!(zone: zone, period: old_period, unit: u, coefficient: 1)
 
+      cp.discard
       u.discard
       expect(PumpAllocation.find_by(id: alloc_current.id)).to be_nil
       expect(PumpAllocation.find_by(id: alloc_old.id)).to be_present

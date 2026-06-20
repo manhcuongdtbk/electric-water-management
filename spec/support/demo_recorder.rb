@@ -67,6 +67,26 @@ class DemoRecorder
     show_caption(caption)
   end
 
+  # Authenticate as `user` (a User record) WITHOUT rendering /users/sign_in.
+  # Replaces the 4-step visit→fill→fill→click login that every demo used to
+  # repeat — showing the login form is slow and tells the customer nothing.
+  #
+  # Uses Devise's sign_in helper (Devise::Test::IntegrationHelpers, mixed into
+  # the example for type: :demo in spec/support/auth_helpers.rb) — the SAME
+  # mechanism system specs use (`sign_in system_admin`). It injects the user
+  # through Warden's test middleware server-side, so the session is established
+  # for the real-browser Playwright driver. We then open the app root already
+  # authenticated and show a single caption naming the role.
+  #
+  # Use this for role switches too (e.g. admin → commander). Devise's sign_in
+  # replaces the Warden user, so a second call switches the authenticated user
+  # without a visible logout+login.
+  def sign_in_as(user, role_label:, caption: nil)
+    @spec.sign_in(user)
+    page.visit("/")
+    show_caption(caption || "Đăng nhập bằng tài khoản #{role_label}")
+  end
+
   private
 
   def page
