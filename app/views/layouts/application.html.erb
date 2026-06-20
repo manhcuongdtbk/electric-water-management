@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="vi">
   <head>
-    <title><%= content_for(:title).presence || "Hệ thống quản lý điện nội bộ Sư đoàn" %></title>
+    <title><%= content_for(:title).presence || t("application.name") %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Hệ thống quản lý điện">
+    <meta name="application-name" content="<%= t('application.name') %>">
     <meta name="mobile-web-app-capable" content="yes">
     <link rel="icon" href="/favicon.png" type="image/png">
     <link rel="apple-touch-icon" href="/favicon.png">

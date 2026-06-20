@@ -447,7 +447,7 @@ vi:
       special: "Có ký tự đặc biệt (ví dụ: ! @ # $ %)"
       match: "Mật khẩu xác nhận khớp"
   application:
-    name: "Hệ thống quản lý điện nội bộ Sư đoàn"
+    name: "Hệ thống quản lý điện nước nội bộ"
   system_info:
     excel_footer: "Phiên bản hệ thống: v%{version} · Môi trường ứng dụng: %{application_environment}"
   meter_entries:
