@@ -54,7 +54,7 @@ RSpec.configure do |config|
     # after hooks) calls driver.reset! which invokes this callback with the path.
     page.driver.on_save_screenrecord do |video_path|
       example = RSpec.current_example
-      safe = example.full_description.parameterize(separator: "_")
+      safe = (example.metadata[:demo_id] || example.full_description).parameterize(separator: "_")
       dest = DEMO_VIDEO_DIR.join("#{safe}.webm")
       FileUtils.mv(video_path, dest)
 

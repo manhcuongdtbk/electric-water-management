@@ -14,20 +14,21 @@ require "rails_helper"
 # and their distinct recipient lists, expands a Khối + a Nhóm recipient (TN2 adds
 # Khối, Nhóm và đầu mối sinh hoạt thuộc đơn vị as recipient types, on top of the
 # đơn vị + đầu mối khu vực that already existed), ADDS a real recipient to one
-# station through the live
-# form, recalculates billing, and proves on the per-station table that Đại đội 1
-# (Tiểu đoàn 2) draws electricity from Trạm bơm Đông and 0,00 from Trạm bơm
-# Tây — the two stations' electricity never mixes. It then reconciles the
-# per-station row total against the main billing table's "Sử dụng điện bơm nước".
+# station through the live form, recalculates billing, and proves on the per-station
+# table that Đại đội 1 (Tiểu đoàn 2) draws electricity from Trạm bơm Đông and 0,00
+# from Trạm bơm Tây — the two stations' electricity never mixes. It then reopens an
+# OLD period (pre-TN2) and proves backward compatibility: zone-wide pooling still
+# works, TN2 changed nothing for legacy data.
 RSpec.describe "Demo: phân bổ điện bơm theo từng trạm bơm", type: :demo do
   include_context "demo seeded world"
 
-  it "mỗi trạm bơm có danh sách đối tượng nhận riêng — điện trạm chỉ chia trong danh sách đó, không lẫn nhau",
-    demo_nv: %w[NV-phan-bo-bom-theo-tram] do
+  it "mỗi trạm bơm có danh sách đối tượng nhận riêng, kỳ cũ vẫn gộp toàn khu vực",
+    demo_id: "tn2_phan_bo_bom", demo_nv: %w[NV-phan-bo-bom-theo-tram] do
     demo = DemoRecorder.new(self)
 
     zone = Zone.find_by!(name: "Khu vực 1")
     period = Period.find_by!(year: 2026, month: 6)
+    legacy_period = Period.find_by!(year: 2026, month: 5)
     station_tay = ContactPoint.find_by!(
       name: "Trạm bơm Tây", contact_point_type: "water_pump", zone_id: zone.id
     )
@@ -65,8 +66,17 @@ RSpec.describe "Demo: phân bổ điện bơm theo từng trạm bơm", type: :d
       .where(name: "Đại đội 1", contact_point_type: "residential", unit_id: unit_beta.id)
       .first!
 
-    # 1. Đăng nhập — programmatic, no login page (showing the form tells the customer
-    #    nothing). Land on the app already authenticated as an admin.
+    # Backward-compat data: the legacy period (pre-TN2) uses zone-wide pooling.
+    cp_chi_huy_kv = ContactPoint.find_by!(
+      name: "Chỉ huy khu vực 1", contact_point_type: "residential",
+      zone_id: zone.id, unit_id: nil
+    )
+
+    # =========================================================================
+    # PHẦN 1: Kỳ mới — phân bổ theo từng trạm bơm
+    # =========================================================================
+
+    # 1. Đăng nhập — programmatic, no login page.
     demo.sign_in_as(User.find_by!(username: "demo_admin"), role_label: "Quản trị viên hệ thống")
     expect(page).to have_current_path("/", wait: 10)
 
@@ -213,8 +223,7 @@ RSpec.describe "Demo: phân bổ điện bơm theo từng trạm bơm", type: :d
     )
     demo.narrate("Đại đội 1 chỉ nhận điện từ Trạm bơm Đông, 0 từ Trạm bơm Tây — mỗi trạm chia điện trong danh sách riêng của mình")
 
-    # Real proof on screen AND in the data: non-zero from Đông, exactly 0 from Trung
-    # tâm (no PumpStationCharge row → the matrix cell renders 0,00).
+    # Real proof on screen AND in the data: non-zero from Đông, exactly 0 from Tây.
     charge_from_dong = PumpStationCharge.find_by(
       period_id: period.id, contact_point_id: dai_doi_1_beta.id,
       pump_contact_point_id: station_dong.id
@@ -233,8 +242,6 @@ RSpec.describe "Demo: phân bổ điện bơm theo từng trạm bơm", type: :d
 
     # 7. Đối chiếu THẤY ĐƯỢC: trong CÙNG một màn (đã lọc Tiểu đoàn 2), đọc đúng con số
     #    ở ô tổng theo trạm và ô "Sử dụng điện bơm nước", rồi khẳng định chúng bằng nhau.
-    #    Bảng chi tiết theo trạm chỉ là phần bóc tách của cùng một con số, không phải
-    #    một phép tính riêng — caption nêu thẳng con số để người xem thấy hai ô khớp.
     total_cell = page.find("[data-pump-charge-total='#{dai_doi_1_beta.id}']")
     usage_cell = page.find("[data-water-pump-usage-cp-id='#{dai_doi_1_beta.id}']")
     total_text = total_cell.text.strip.delete("*")
@@ -249,61 +256,33 @@ RSpec.describe "Demo: phân bổ điện bơm theo từng trạm bơm", type: :d
     )
     demo.narrate("Cả hai ô đều là #{total_text} — tổng theo trạm của Đại đội 1 khớp đúng ô Sử dụng điện bơm nước trên bảng chính, bảng theo trạm chỉ bóc tách cùng một con số")
 
-    # Real proof ON SCREEN: the two rendered cells show the SAME formatted number for
-    # this đầu mối (a viewer sees the equal values side by side, not just a claim).
     expect(usage_text).to eq(total_text)
-
-    # Real proof IN THE DATA: the per-station row total equals the cp's
-    # water_pump_usage on the main billing table (a model-level equality → real).
     per_station_total = PumpStationCharge
       .where(period_id: period.id, contact_point_id: dai_doi_1_beta.id)
       .sum(:amount)
     calc_dai_doi_1 = Calculation.find_by!(period_id: period.id, contact_point_id: dai_doi_1_beta.id)
     expect(per_station_total).to eq(calc_dai_doi_1.water_pump_usage)
     expect(per_station_total).to be > BigDecimal("0")
-  end
 
-  # Backward-compatibility demo: an OLD period that predates TN2 still pools all pump
-  # electricity zone-wide. Production has such periods (pump_allocation_per_station =
-  # false). The demo REOPENS one and proves TN2 changed nothing for it — a single
-  # "Gộp toàn khu vực (kỳ cũ)" card on Phân bổ bơm nước, and a pooled "Sử dụng điện bơm
-  # nước" on Bảng tính tiền with NO per-station detail table. The seed (db/seeds/demo.rb)
-  # creates the closed legacy period May 2026 with zone-wide allocations
-  # (pump_contact_point_id = NULL) and runs its billing calculation.
-  it "kỳ cũ trước TN2 mở lại vẫn gộp điện bơm toàn khu vực — TN2 chỉ áp cho kỳ mới",
-    demo_nv: %w[NV-phan-bo-bom-theo-tram] do
-    demo = DemoRecorder.new(self)
+    # =========================================================================
+    # PHẦN 2: Kỳ cũ trước TN2 — gộp toàn khu vực, không đổi
+    # =========================================================================
 
-    zone = Zone.find_by!(name: "Khu vực 1")
-    legacy_period = Period.find_by!(year: 2026, month: 5)
-    open_period = Period.find_by!(year: 2026, month: 6)
-    unit_beta = Unit.find_by!(name: "Tiểu đoàn 2")
-    cp_chi_huy_kv = ContactPoint.find_by!(
-      name: "Chỉ huy khu vực 1", contact_point_type: "residential",
-      zone_id: zone.id, unit_id: nil
-    )
+    demo.narrate("Kỳ cũ trước khi có tính năng phân bổ theo từng trạm thì sao? Mở lại kỳ cũ để kiểm chứng")
 
     # Precondition: the seed left May 2026 closed + legacy (gộp toàn khu vực), June
-    # 2026 open + per-station. The demo story only makes sense if that holds.
+    # 2026 open + per-station.
     expect(legacy_period.pump_allocation_per_station).to be(false)
     expect(legacy_period.closed?).to be(true)
-    expect(open_period.pump_allocation_per_station).to be(true)
     expect(legacy_period.pump_allocations.where(zone_id: zone.id, pump_contact_point_id: nil).count).to eq(2)
 
-    # Reopen the old period the way the app does — through PeriodService. Only one
-    # period may be open at a time (DB partial unique index), so close June first,
-    # then reopen May. Now current_period = May → the system is in "Trạng thái C: Kỳ
-    # cũ mở lại" (V2_HANH_VI_HE_THONG.md mục 3): viewing an old period zone-wide.
-    PeriodService.new.close_period(open_period)
+    # Reopen the old period: close June first, then reopen May. Now current_period =
+    # May → "Trạng thái C: Kỳ cũ mở lại" (V2_HANH_VI_HE_THONG.md mục 3).
+    PeriodService.new.close_period(period)
     PeriodService.new.reopen_period(legacy_period)
     expect(Period.current).to eq(legacy_period)
 
-    # 1. Đăng nhập quản trị viên hệ thống (lập trình, không qua trang đăng nhập).
-    demo.sign_in_as(User.find_by!(username: "demo_admin"), role_label: "Quản trị viên hệ thống")
-    expect(page).to have_current_path("/", wait: 10)
-
-    # 2. Mở Phân bổ bơm nước cho kỳ cũ đã mở lại — chỉ còn MỘT thẻ gộp, không có thẻ
-    #    theo từng trạm như kỳ mới.
+    # 8. Mở Phân bổ bơm nước cho kỳ cũ — chỉ còn MỘT thẻ gộp, không có thẻ theo trạm.
     demo.visit(
       "/pump_allocations?zone_id=#{zone.id}",
       caption: "Mở Phân bổ bơm nước — kỳ cũ tháng 5/2026 vừa mở lại"
@@ -311,7 +290,6 @@ RSpec.describe "Demo: phân bổ điện bơm theo từng trạm bơm", type: :d
     demo.narrate("Đây là kỳ cũ trước khi có tính năng phân bổ theo từng trạm — toàn bộ điện bơm của khu vực vẫn gộp chung thành một")
     demo.narrate("Kỳ cũ giữ nguyên cách gộp toàn khu vực — tính năng phân bổ theo từng trạm chỉ áp dụng cho kỳ mới, không đụng tới kỳ đã đóng")
     expect(page).to have_content("Gộp toàn khu vực (kỳ cũ)", wait: 10)
-    # Đúng MỘT thẻ gộp (station_id rỗng), không có thẻ theo từng trạm.
     expect(page).to have_css("[data-pump-station-card='']", wait: 10)
     expect(page).to have_no_content("Trạm bơm Tây")
     expect(page).to have_no_content("Trạm bơm Đông")
@@ -321,16 +299,13 @@ RSpec.describe "Demo: phân bổ điện bơm theo từng trạm bơm", type: :d
       caption: "Thẻ \"Gộp toàn khu vực (kỳ cũ)\" — một danh sách chung cho cả khu vực, đúng cách kỳ cũ vẫn làm"
     )
 
-    # Real assertion on screen AND data: the legacy card renders; the two zone-wide
-    # recipients (đơn vị Tiểu đoàn 2 + đầu mối khu vực Chỉ huy khu vực 1) sit in it.
     within("[data-pump-station-card='']") do
       expect(page).to have_content("Tiểu đoàn 2", wait: 10)
       expect(page).to have_content("Chỉ huy khu vực 1")
     end
 
-    # 3. Mở Bảng tính tiền cho kỳ cũ — cột "Sử dụng điện bơm nước" hiện điện bơm GỘP
-    #    cho từng đối tượng nhận; KHÔNG có bảng "Chi tiết điện bơm nước theo trạm"
-    #    (kỳ cũ không bóc tách theo trạm).
+    # 9. Bảng tính tiền kỳ cũ — cột "Sử dụng điện bơm nước" vẫn gộp, KHÔNG có bảng
+    #    chi tiết theo trạm.
     demo.visit(
       "/billing?zone_id=#{zone.id}&period_id=#{legacy_period.id}",
       caption: "Mở Bảng tính tiền — kỳ cũ tháng 5/2026"
@@ -339,21 +314,16 @@ RSpec.describe "Demo: phân bổ điện bơm theo từng trạm bơm", type: :d
     demo.narrate("Không có bảng chi tiết điện bơm nước theo trạm — kỳ cũ không bóc tách theo trạm, đúng như trước khi có tính năng mới")
     expect(page).to have_content("Sử dụng điện bơm nước", wait: 10)
 
-    # Đầu mối khu vực "Chỉ huy khu vực 1" nhận 30% điện bơm gộp → ô điện bơm > 0.
     usage_cell = page.find("[data-water-pump-usage-cp-id='#{cp_chi_huy_kv.id}']")
     demo.highlight(
       "[data-water-pump-usage-cp-id='#{cp_chi_huy_kv.id}']",
       caption: "Chỉ huy khu vực 1 — điện bơm gộp toàn khu vực: #{usage_cell.text.strip}"
     )
 
-    # Real proof ON SCREEN: kỳ cũ KHÔNG render bảng chi tiết theo trạm.
     expect(page).to have_no_css("[data-pump-station-table]")
     expect(page).to have_no_content("Chi tiết điện bơm nước theo trạm")
 
-    # Backward-compat correctness IN THE DATA: the zone-wide branch distributed the
-    # WHOLE zone pump pool and nothing more — Σ recipients' water_pump_usage == the
-    # zone's pump total D (Σ sử dụng + tổn hao của mọi công tơ bơm). If TN2 had
-    # silently dropped or double-counted legacy electricity, this equality would break.
+    # Backward-compat correctness: Σ recipients' water_pump_usage == zone's pump total.
     pooled_water_pump_usage = Calculation.where(period_id: legacy_period.id).sum(:water_pump_usage)
     loss = LossCalculator.new(zone: zone, period: legacy_period).call
     query = ZoneQuery.new(zone: zone, period: legacy_period)
@@ -363,9 +333,6 @@ RSpec.describe "Demo: phân bổ điện bơm theo từng trạm bơm", type: :d
     end
     expect(zone_pump_total).to be > BigDecimal("0")
     expect(pooled_water_pump_usage).to eq(zone_pump_total)
-
-    # And no per-station rows were written for the legacy period (the per-station
-    # detail is a per-station-mode artifact only).
     expect(PumpStationCharge.where(period_id: legacy_period.id).count).to eq(0)
 
     demo.narrate("Tổng điện bơm chia cho các đối tượng nhận đúng bằng điện bơm thật của cả khu vực — kỳ cũ tính y hệt trước đây, tính năng mới không làm sai lệch số liệu kỳ đã đóng")

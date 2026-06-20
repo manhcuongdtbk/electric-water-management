@@ -18,7 +18,7 @@ RSpec.describe "Demo: cột Khác hệ số đơn vị", type: :demo do
   include_context "demo seeded world"
 
   it "đặt khoản trừ Khác theo hệ số đơn vị cho bếp, tự tính lại sang kỳ sau, chỉ huy chỉ xem",
-    demo_nv: %w[NV-cot-khac-he-so-don-vi] do
+    demo_id: "tn1_cot_khac_he_so", demo_nv: %w[NV-cot-khac-he-so-don-vi] do
     demo = DemoRecorder.new(self)
 
     zone = Zone.find_by!(name: "Khu vực 1")
@@ -39,7 +39,7 @@ RSpec.describe "Demo: cột Khác hệ số đơn vị", type: :demo do
     dai_doi_1_personnel = "[data-total-personnel-cp-id='#{dai_doi_1.id}']"
 
     # Sign in as the seeded admin (db/seeds/demo.rb) — programmatic, no login page.
-    demo.sign_in_as(User.find_by!(username: "demo_admin"), role_label: "Quản trị viên")
+    demo.sign_in_as(User.find_by!(username: "demo_admin"), role_label: "Quản trị viên hệ thống")
     expect(page).to have_current_path("/", wait: 10)
 
     # Open the unit's config directly (zone + unit in the query so we land on the
@@ -71,7 +71,6 @@ RSpec.describe "Demo: cột Khác hệ số đơn vị", type: :demo do
     demo.visit("/billing?zone_id=#{zone.id}", caption: "Mở bảng tính tiền của khu vực")
     demo.click("Tính toán lại", confirm: true, caption: "Tính toán lại theo cấu hình vừa lưu")
     expect(page).to have_content("Đã tính toán lại bảng tính tiền.", wait: 15)
-    demo.visit("/billing?zone_id=#{zone.id}", caption: "Mở lại bảng tính tiền để xem kết quả")
     expect(page).to have_content("Bếp ăn Tiểu đoàn 1", wait: 15)
     demo.highlight(name_cell, caption: "Đầu mối Bếp ăn Tiểu đoàn 1 — bếp ăn chung của tiểu đoàn")
     demo.highlight(
@@ -111,7 +110,6 @@ RSpec.describe "Demo: cột Khác hệ số đơn vị", type: :demo do
     demo.visit("/billing?zone_id=#{zone.id}", caption: "Mở bảng tính tiền kỳ tháng 7/2026")
     demo.click("Tính toán lại", confirm: true, caption: "Tính toán lại kỳ mới")
     expect(page).to have_content("Đã tính toán lại bảng tính tiền.", wait: 15)
-    demo.visit("/billing?zone_id=#{zone.id}", caption: "Xem lại kết quả kỳ mới")
     expect(page).to have_content("Bếp ăn Tiểu đoàn 1", wait: 15)
     # Show cause then effect, both on screen: Đại đội 1's headcount grew (16 → 20)…
     demo.highlight(
@@ -134,7 +132,7 @@ RSpec.describe "Demo: cột Khác hệ số đơn vị", type: :demo do
     # Who may change this? An admin sets it; a commander only views — the type
     # select is locked and there is no save button (CHIEU-khac-don-vi-vai-tro).
     demo.narrate("Ai được đổi cấu hình tính tiền? Quản trị viên đơn vị đặt — còn chỉ huy thì sao?")
-    demo.sign_in_as(User.find_by!(username: "demo_commander"), role_label: "Chỉ huy")
+    demo.sign_in_as(User.find_by!(username: "demo_commander"), role_label: "Chỉ huy đơn vị")
     expect(page).to have_current_path("/", wait: 10)
 
     demo.visit("/unit_config", caption: "Chỉ huy mở Cấu hình đơn vị — đúng trang vừa rồi")
@@ -146,5 +144,7 @@ RSpec.describe "Demo: cột Khác hệ số đơn vị", type: :demo do
     )
     expect(page).to have_css("#{commander_type_select}[disabled]", wait: 10)
     expect(page).to have_no_button("Lưu cấu hình")
+
+    demo.narrate("Hệ thống có 6 vai trò: quản trị viên hệ thống, quản trị viên đơn vị, chỉ huy đơn vị, quản trị viên khu vực, chỉ huy khu vực, kỹ thuật viên — quyền truy cập mỗi trang được kiểm thử tự động đủ cả 6 vai trò")
   end
 end
