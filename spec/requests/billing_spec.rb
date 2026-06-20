@@ -297,11 +297,11 @@ RSpec.describe "Billing", type: :request do
           expect(zone_select.css("option").first.text).to eq("Tất cả")
         end
 
-        it "chưa lọc: bảng bơm render cho mỗi khu vực caption KÈM tên; bảng tổn hao chờ chọn khu vực (#12)" do
+        it "chưa lọc: bảng bơm và bảng tổn hao đều render cho mỗi khu vực caption kèm tên (#410)" do
           get billing_path
           expect(response.body.scan(pump_caption).size).to eq(2)
-          expect(response.body.scan(loss_caption).size).to eq(0)
-          expect(response.body).to include(I18n.t("billing.loss_breakdown.select_zone_hint"))
+          expect(response.body.scan(loss_caption).size).to eq(2)
+          expect(response.body).not_to include(I18n.t("billing.loss_breakdown.select_zone_hint"))
           pump_table = Nokogiri::HTML(response.body).css("[data-pump-station-table] caption").map(&:text)
           expect(pump_table).to include(a_string_including(sample.zone.name))
                             .and include(a_string_including(sample2.zone.name))
@@ -670,13 +670,13 @@ RSpec.describe "Billing", type: :request do
       expect(response).to redirect_to(users_path)
     end
 
-    it "CHIEU-breakdown-theo-zone: SA không chọn zone → ẩn breakdown, hiện gợi ý chọn khu vực" do
+    it "CHIEU-breakdown-theo-zone: SA không chọn zone → hiện breakdown cho mỗi khu vực (#410)" do
       sample2 = setup_zone_two_full_sample(period: sample.period)
       CalculationOrchestrator.new(zone: sample2.zone, period: sample.period).call
       sign_in create(:user, :system_admin)
       get billing_path
-      expect(response.body).not_to include(breakdown_title)
-      expect(response.body).to include("Chọn khu vực để xem chi tiết tổn hao.")
+      expect(response.body.scan(breakdown_title).size).to eq(2)
+      expect(response.body).not_to include("Chọn khu vực để xem chi tiết tổn hao.")
     end
 
     it "CHIEU-breakdown-theo-zone: SA chọn zone → hiện breakdown của zone đó" do
@@ -954,7 +954,7 @@ RSpec.describe "Billing", type: :request do
       expect(response.body).not_to include("Khu vực Hai TN3")
     end
 
-    it "CHIEU-ton-hao-theo-zone: SA không chọn zone → ẩn A/B/C, hiện gợi ý chọn khu vực" do
+    it "CHIEU-ton-hao-theo-zone: SA không chọn zone → hiện A/B/C cho mỗi khu vực (#410)" do
       sample
       other = create(:zone, name: "Khu vực Hai TN3")
       CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
@@ -962,8 +962,8 @@ RSpec.describe "Billing", type: :request do
                           a: BigDecimal("500"), b: BigDecimal("480"), c: BigDecimal("20"))
       sign_in sa
       get billing_path
-      expect(response.body).not_to include("Cộng (công tơ có tổn hao)")
-      expect(response.body).to include("Chọn khu vực để xem chi tiết tổn hao.")
+      expect(response.body.scan("Cộng (công tơ có tổn hao)").size).to be >= 2
+      expect(response.body).not_to include("Chọn khu vực để xem chi tiết tổn hao.")
     end
 
     it "CHIEU-ton-hao-vai-tro: cả 5 vai trò nghiệp vụ thấy A/B/C; TECH bị chặn" do
@@ -1047,11 +1047,11 @@ RSpec.describe "Billing", type: :request do
       expect(billing_table_pos).to be < breakdown_pos
     end
 
-    it "SA xem tất cả khu vực → hiện gợi ý, không hiện bảng đối chiếu" do
+    it "SA xem tất cả khu vực → hiện bảng đối chiếu cho mỗi khu vực (#410)" do
       sign_in sa
       get billing_path
-      expect(response.body).to include("Chọn khu vực để xem chi tiết tổn hao.")
-      expect(response.body).not_to include("Đối chiếu tổn hao/sử dụng theo loại đầu mối")
+      expect(response.body).not_to include("Chọn khu vực để xem chi tiết tổn hao.")
+      expect(response.body).to include("Đối chiếu tổn hao/sử dụng theo loại đầu mối")
     end
 
     it "non-SA luôn thấy bảng đối chiếu (zone cố định qua đơn vị)" do

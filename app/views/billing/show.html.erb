@@ -82,9 +82,5 @@
     <div class="mt-4"><%== pagy_nav(@pagy) %></div>
   <% end %>
 
-  <% if @zone.present? %>
-    <%= render "loss_summary" %>
-  <% elsif current_user.system_admin? %>
-    <p class="mt-4 text-sm text-gray-500"><%= t("billing.loss_breakdown.select_zone_hint") %></p>
-  <% end %>
+  <%= render "loss_summary" %>
 <% end %>
