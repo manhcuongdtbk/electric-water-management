@@ -2,7 +2,6 @@
 # Vietnamese literals outside t(...) in app/views/**/*.erb.
 # Regenerate: UPDATE_BASELINE=1 bash .github/scripts/check-view-i18n.sh
 # Format: <relpath><TAB><whitespace-normalized offending text>
-app/views/billing/_summary_row.html.erb	<td class="<%= text_cell %>">TỔNG</td>
 app/views/billing/_table.html.erb	Chưa có dữ liệu tính toán. Bấm "Tính toán lại" để tính toán kỳ này.
 app/views/billing/_table_header.html.erb	<% if @show_unit_column %><th rowspan="2" class="<%= header_cell %>">Đơn vị</th><% end %>
 app/views/billing/_table_header.html.erb	<% if @show_zone_column %><th rowspan="2" class="<%= header_cell %>">Khu vực</th><% end %>

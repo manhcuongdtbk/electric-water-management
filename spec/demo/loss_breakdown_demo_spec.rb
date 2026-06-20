@@ -33,9 +33,9 @@ RSpec.describe "Demo: Loss breakdown", type: :demo do
     # Bước 2 — mở Bảng tính tiền, chọn khu vực để hiện bảng đối chiếu tổn hao.
     zone = Zone.find_by!(name: "Khu vực 1")
     demo.visit("/billing?zone_id=#{zone.id}", caption: "Mở Bảng tính tiền tháng 6/2026 — chọn Khu vực 1")
-    expect(page).to have_content("Đối chiếu tổn hao/sử dụng theo loại đầu mối", wait: 10)
+    expect(page).to have_content("Đối chiếu sử dụng và tổn hao theo loại đầu mối", wait: 10)
 
-    demo.narrate("Bảng đối chiếu tổn hao/sử dụng theo từng loại đầu mối (Sinh hoạt / Công cộng / Bơm nước)")
+    demo.narrate("Bảng đối chiếu sử dụng và tổn hao theo từng loại đầu mối (Sinh hoạt / Công cộng / Bơm nước)")
     demo.narrate("Dòng \"Cộng\" chính là A/B/C; \"Tổng cộng\" bằng số công tơ tổng")
 
     # Assert nội dung bảng breakdown: các dòng tổng + cột Tổn hao

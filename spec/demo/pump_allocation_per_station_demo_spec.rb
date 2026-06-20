@@ -237,7 +237,7 @@ RSpec.describe "Demo: phân bổ điện bơm theo từng trạm bơm", type: :d
     #    một phép tính riêng — caption nêu thẳng con số để người xem thấy hai ô khớp.
     total_cell = page.find("[data-pump-charge-total='#{dai_doi_1_beta.id}']")
     usage_cell = page.find("[data-water-pump-usage-cp-id='#{dai_doi_1_beta.id}']")
-    total_text = total_cell.text.strip
+    total_text = total_cell.text.strip.delete("*")
     usage_text = usage_cell.text.strip
     demo.highlight(
       "[data-pump-charge-total='#{dai_doi_1_beta.id}']",

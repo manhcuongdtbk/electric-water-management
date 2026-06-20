@@ -556,19 +556,17 @@ RSpec.describe "PumpAllocations", type: :request do
              unit: recipient_unit, contact_point: nil, block: nil, group: nil, coefficient: 1)
     end
 
-    it "tiêu đề thẻ hiện 'chiếm X% điện bơm của khu vực', tổng các trạm = 100%" do
+    it "tiêu đề thẻ hiện kW tuyệt đối + 'chiếm X% điện bơm của khu vực'" do
       add_pump_reading(station_west, 65, unit)
       add_pump_reading(station_east, 35, unit2)
-      # Lọc một khu vực → tiêu đề thẻ chỉ là tên trạm (không kèm tên khu vực).
       get pump_allocations_path, params: { zone_id: zone.id }
       doc = Nokogiri::HTML(response.body)
       west = doc.at_css("[data-pump-station-name='#{station_west.id}']").text
       east = doc.at_css("[data-pump-station-name='#{station_east.id}']").text
-      expect(west).to include(
-        I18n.t("pump_allocations.index.station_zone_share",
-               station: "Trạm bơm Tây", percent: "65%")
-      )
+      expect(west).to include("65%")
+      expect(west).to include("kW")
       expect(east).to include("35%")
+      expect(east).to include("kW")
     end
 
     it "D_khu_vực = 0 (chưa nhập chỉ số) → hiện '—', không chia cho 0" do

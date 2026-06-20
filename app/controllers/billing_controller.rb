@@ -37,6 +37,7 @@ class BillingController < ApplicationController
       hash[summary.zone_id] = LossBreakdown.new(zone: summary.zone, period: @period, summary: summary).call
     end
     @pump_station_matrices = build_pump_station_matrices(zones_in_scope(@period))
+    @reconciliation_zones = build_reconciliation_zones
 
     respond_to do |format|
       format.html do
@@ -126,12 +127,14 @@ class BillingController < ApplicationController
   def build_pump_station_matrices(zones)
     charges = PumpStationCharge
                 .where(period_id: @period.id, zone_id: zones.select(:id))
-                .includes(:contact_point, :pump_contact_point)
+                .includes(contact_point: [:unit, :block, :group], pump_contact_point: [])
                 .to_a
     zones_by_id = zones.index_by(&:id)
     charges.group_by(&:zone_id).transform_values do |zone_charges|
       stations = zone_charges.map(&:pump_contact_point).uniq.sort_by { |s| s.name.to_s }
-      recipients = zone_charges.map(&:contact_point).uniq.sort_by { |r| r.name.to_s }
+      recipients = zone_charges.map(&:contact_point).uniq.sort_by do |r|
+        [r.unit&.name.to_s, r.block&.name.to_s, r.group&.name.to_s, r.name.to_s]
+      end
       amounts = zone_charges.each_with_object({}) do |charge, hash|
         hash[[charge.contact_point_id, charge.pump_contact_point_id]] = charge.amount
       end
@@ -155,6 +158,12 @@ class BillingController < ApplicationController
     def grand_total
       stations.sum { |station| station_total(station) }
     end
+  end
+
+  def build_reconciliation_zones
+    zone_ids = (@pump_station_matrices.keys + @loss_breakdowns.keys).uniq
+    zones_by_id = (@loss_summaries.map(&:zone) + @pump_station_matrices.values.map(&:zone)).compact.uniq.index_by(&:id)
+    zone_ids.filter_map { |id| zones_by_id[id] }.sort_by { |z| z.name.to_s }
   end
 
   # Dùng cho recalculate + warnings. Delegates to FreshnessIndicatable#freshness_zones

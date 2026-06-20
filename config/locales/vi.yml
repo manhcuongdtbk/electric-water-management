@@ -284,6 +284,9 @@ vi:
       users: "Tài khoản"
       audit_logs: "Nhật ký hoạt động"
       backups: "Sao lưu dữ liệu"
+  contact_points:
+    form:
+      water_pump_note: "Đầu mối bơm nước này tương ứng một trạm bơm trên trang Phân bổ bơm nước. Thay đổi tên hoặc công tơ ở đây sẽ ảnh hưởng tới trạm bơm đó."
   flash:
     no_open_period: "Không có kỳ đang mở. Mọi ô nhập đã bị khóa. Vui lòng liên hệ quản trị viên hệ thống."
     no_periods_yet: "Chưa có kỳ nào trong hệ thống. Vui lòng mở kỳ đầu tiên."
@@ -497,6 +500,7 @@ vi:
       search_placeholder: "Tìm theo tên đối tượng hoặc trạm bơm..."
       legacy_card_title: "Gộp toàn khu vực (kỳ cũ)"
       total_label: "Tổng"
+      remainder_by_coefficient: "theo hệ số"
       coefficient_count: "%{count} đối tượng hệ số"
       add_recipient_to_station: "Thêm đối tượng vào trạm này"
       station_without_recipient: "Trạm bơm này chưa có đối tượng nhận — điện của trạm chưa được chia."
@@ -506,8 +510,11 @@ vi:
       column_contact_point: "Đầu mối"
       column_fixed_percentage: "% cố định"
       column_coefficient: "Hệ số"
-      page_note: "Mỗi trạm bơm chia hết điện bơm nước của trạm đó cho các đối tượng bên dưới: đối tượng nào có phần trăm cố định thì nhận đúng phần trăm đó của điện trạm; phần còn lại chia cho các đối tượng có hệ số theo quân số. Trong mỗi dòng, ô tô đậm nền xanh là cấp của đối tượng nhận (đơn vị, khối, nhóm hay đầu mối); các ô mờ chỉ là cấp cha để tra cứu ngữ cảnh, không phải đối tượng nhận."
-      station_zone_share: "%{station} — chiếm %{percent} điện bơm của khu vực"
+      page_note_items:
+        - "Trạm bơm chính là đầu mối bơm nước đã tạo ở trang Đầu mối — mỗi đầu mối bơm nước tương ứng một trạm ở đây."
+        - "Mỗi trạm chia hết điện bơm nước của trạm đó cho các đối tượng bên dưới: đối tượng nào có phần trăm cố định thì nhận đúng phần trăm đó của điện trạm; phần còn lại chia cho các đối tượng có hệ số theo quân số."
+        - "Trong mỗi dòng, ô tô đậm nền xanh là cấp của đối tượng nhận (đơn vị, khối, nhóm hay đầu mối); các ô mờ chỉ là cấp cha để tra cứu ngữ cảnh, không phải đối tượng nhận."
+      station_zone_share: "%{station} — %{kw} kW (chiếm %{percent} điện bơm của khu vực)"
       empty_cell: "—"
     flash:
       belongs_to_closed_period: "Phân bổ này thuộc kỳ đã đóng. Chỉ được sửa phân bổ của kỳ đang mở."
@@ -537,6 +544,8 @@ vi:
     stale_zone: "Khu vực %{zone}: cần tính toán lại (dữ liệu đã đổi sau lần tính gần nhất)"
     recalculate_hint: "Vào Bảng tính tiền và bấm \"Tính toán lại\" để cập nhật."
   billing:
+    summary:
+      total_all: "TỔNG (tất cả đầu mối)"
     flash:
       recalculated: "Đã tính toán lại bảng tính tiền."
       period_closed: "Kỳ đã đóng, không thể tính toán lại."
@@ -552,8 +561,10 @@ vi:
       stale_confirm: "Dữ liệu một số khu vực đã cũ so với lần tính gần nhất. Vẫn xuất Excel?"
       stale_blocked: "Không thể xuất Excel: dữ liệu đã cũ so với lần tính gần nhất. Hãy Tính toán lại hoặc xác nhận xuất bản cũ."
       stale_stamp: "CẢNH BÁO: Dữ liệu trong file có thể đã cũ so với chỉ số hiện tại. Hãy Tính toán lại để cập nhật."
+    reconciliation:
+      section_title: "Đối chiếu — %{zone}"
     loss_breakdown:
-      title: "Đối chiếu tổn hao/sử dụng theo loại đầu mối"
+      title: "Đối chiếu sử dụng và tổn hao theo loại đầu mối"
       columns:
         type: "Loại"
         usage: "Sử dụng"
@@ -565,12 +576,12 @@ vi:
         grand_total: "Tổng cộng (= số công tơ tổng)"
       select_zone_hint: "Chọn khu vực để xem chi tiết tổn hao."
       note_items:
-        - "Dòng \"Cộng (công tơ có tổn hao)\" chính là A/B/C: Sử dụng = B, Tổn hao = C, Sử dụng thực tế = A."
-        - "A/B/C tính trên toàn khu vực (gồm công cộng + bơm nước), nên có thể khác tổng các cột trên bảng tính tiền — vốn chỉ tính đầu mối sinh hoạt."
-        - "A (Sử dụng thực tế của dòng \"Cộng\") đã trừ điện công tơ không tổn hao nên nhỏ hơn số công tơ tổng; dòng \"Tổng cộng\" mới bằng số công tơ tổng."
-        - "Làm tròn 2 chữ số nên tổng các dòng có thể lệch ±0,01 — số chuẩn để đối chiếu là A/B/C và số công tơ tổng."
+        - "* đối chiếu được: dòng Sinh hoạt cột Tổn hao = tổng cột Tổn hao trên bảng tính tiền chính; dòng Tổng cộng cột Sử dụng thực tế = số công tơ tổng trên trang Nhập số điện lực."
+        - "Cột Sử dụng chỉ tính công tơ có tổn hao — có thể khác tổng cột Sử dụng trên bảng tính tiền chính (vốn tính tất cả công tơ kể cả không tổn hao)."
+        - "A/B/C tính trên toàn khu vực (sinh hoạt, công cộng, và bơm nước), nên có thể khác tổng trên bảng tính tiền chính — vốn chỉ tính đầu mối sinh hoạt."
+        - "Đúng khi A = B + C. Làm tròn 2 chữ số nên có thể lệch ±0,01."
     pump_station_breakdown:
-      title: "Chi tiết điện bơm nước theo trạm"
+      title: "Đối chiếu điện bơm nước theo trạm"
       columns:
         recipient: "Đối tượng nhận"
         total: "Tổng (kW)"
@@ -578,9 +589,9 @@ vi:
       rows:
         grand_total: "Tổng cộng (= điện mỗi trạm)"
       note_items:
-        - "Điện mỗi trạm bơm được chia hết cho các đối tượng nhận của trạm đó; tổng các trạm bằng tổng điện bơm nước toàn khu vực."
-        - "Ô 0,00 = đối tượng không nhận điện từ trạm đó."
-        - "Làm tròn 2 chữ số thập phân nên tổng có thể lệch ±0,01."
+        - "* đối chiếu được: tổng dòng mỗi đầu mối = cột Sử dụng điện bơm nước của đầu mối đó trên bảng tính tiền chính."
+        - "Ô 0,00 = đầu mối không nhận điện từ trạm đó (trạm khác phục vụ)."
+        - "Tổng các trạm = tổng điện bơm nước toàn khu vực. Làm tròn 2 chữ số nên có thể lệch ±0,01."
   dashboard:
     sections:
       public_total: "Sử dụng điện công cộng toàn khu vực"

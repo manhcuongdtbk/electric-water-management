@@ -129,15 +129,15 @@ class PumpAllocationsController < ApplicationController
     by_station = allocations.group_by(&:pump_contact_point_id)
 
     unless @per_station
-      allocs = (by_station[nil] || []).sort_by { |a| recipient_name(a).to_s }
+      allocs = (by_station[nil] || []).sort_by { |a| recipient_sort_key(a) }
       return [] if allocs.empty? && @search_active
       return [station_group(nil, allocs)]
     end
 
     stations = accessible_pump_stations
     stations = stations.select { |s| (by_station[s.id] || []).any? } if @search_active
-    stations.sort_by { |s| s.name.to_s }.map do |station|
-      allocs = (by_station[station.id] || []).sort_by { |a| recipient_name(a).to_s }
+    stations.sort_by { |s| [s.zone&.name.to_s, s.name.to_s] }.map do |station|
+      allocs = (by_station[station.id] || []).sort_by { |a| recipient_sort_key(a) }
       station_group(station, allocs)
     end
   end
@@ -148,8 +148,9 @@ class PumpAllocationsController < ApplicationController
   # PumpAllocationCalculator dựng d_station: usage (ZoneQuery#meter_usages) + tổn hao
   # (LossCalculator#meter_losses) cộng theo công tơ, gộp theo trạm (contact_point_id).
   #
-  # Trả Hash[station_contact_point_id => BigDecimal phần trăm]. Trạm nào không có công
-  # tơ bơm (hoặc D_khu_vực = 0, chưa nhập chỉ số) → không có khóa → view hiện "—".
+  # Trả Hash[station_contact_point_id => { percent: BigDecimal, kw: BigDecimal }].
+  # Trạm nào không có công tơ bơm (hoặc D_khu_vực = 0, chưa nhập chỉ số) → không
+  # có khóa → view hiện "—".
   def build_station_zone_shares
     return {} unless @period
 
@@ -172,7 +173,10 @@ class PumpAllocationsController < ApplicationController
 
       pump_meters.group_by(&:contact_point_id).each do |station_cp_id, station_meters|
         d_station = station_meters.sum(BigDecimal("0")) { |m| d_by_meter[m.id] || BigDecimal("0") }
-        shares[station_cp_id] = d_station * BigDecimal("100") / d_zone
+        shares[station_cp_id] = {
+          percent: d_station * BigDecimal("100") / d_zone,
+          kw: d_station
+        }
       end
     end
     shares
@@ -189,6 +193,16 @@ class PumpAllocationsController < ApplicationController
 
   def recipient_name(alloc)
     alloc.unit&.name || alloc.block&.name || alloc.group&.name || alloc.contact_point&.name
+  end
+
+  def recipient_sort_key(alloc)
+    owning_unit = alloc.unit || alloc.block&.unit || alloc.group&.unit || alloc.contact_point&.unit
+    [
+      owning_unit&.name.to_s,
+      (alloc.block || alloc.group&.block || alloc.contact_point&.block)&.name.to_s,
+      (alloc.group || alloc.contact_point&.group)&.name.to_s,
+      recipient_name(alloc).to_s
+    ]
   end
 
   # Trạm bơm (water_pump) mà người dùng hiện tại được phép thấy, trong phạm vi
