@@ -506,7 +506,7 @@ vi:
       column_contact_point: "Đầu mối"
       column_fixed_percentage: "% cố định"
       column_coefficient: "Hệ số"
-      page_note: "Mỗi trạm bơm chia hết điện bơm nước của trạm đó cho các đối tượng bên dưới: đối tượng nào có phần trăm cố định thì nhận đúng phần trăm đó của điện trạm; phần còn lại chia cho các đối tượng có hệ số theo quân số. Trong mỗi dòng, ô tô đậm nền xanh là cấp của đối tượng nhận (đơn vị, khối, nhóm hay đầu mối); các ô mờ chỉ là cấp cha để tra cứu ngữ cảnh, không phải đối tượng nhận."
+      page_note: "Trạm bơm chính là đầu mối bơm nước đã tạo ở trang Đầu mối — mỗi đầu mối bơm nước tương ứng một trạm ở đây. Mỗi trạm chia hết điện bơm nước của trạm đó cho các đối tượng bên dưới: đối tượng nào có phần trăm cố định thì nhận đúng phần trăm đó của điện trạm; phần còn lại chia cho các đối tượng có hệ số theo quân số. Trong mỗi dòng, ô tô đậm nền xanh là cấp của đối tượng nhận (đơn vị, khối, nhóm hay đầu mối); các ô mờ chỉ là cấp cha để tra cứu ngữ cảnh, không phải đối tượng nhận."
       station_zone_share: "%{station} — chiếm %{percent} điện bơm của khu vực"
       empty_cell: "—"
     flash:
