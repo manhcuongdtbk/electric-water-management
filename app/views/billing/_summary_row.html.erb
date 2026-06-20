@@ -6,7 +6,7 @@
 %>
 <tr class="bg-gray-100 font-semibold">
   <% empty_info_cols.times do %><td class="<%= text_cell %>"></td><% end %>
-  <td class="<%= text_cell %>">TỔNG (<%= @total_count %> đầu mối)</td>
+  <td class="<%= text_cell %>">TỔNG (tất cả đầu mối)</td>
   <% @ranks.each do |rank| %>
     <td class="<%= num_cell %>"><%= @summary[:personnel_by_rank][rank.id] || 0 %></td>
   <% end %>
