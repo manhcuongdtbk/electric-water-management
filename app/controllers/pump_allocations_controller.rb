@@ -148,8 +148,9 @@ class PumpAllocationsController < ApplicationController
   # PumpAllocationCalculator dựng d_station: usage (ZoneQuery#meter_usages) + tổn hao
   # (LossCalculator#meter_losses) cộng theo công tơ, gộp theo trạm (contact_point_id).
   #
-  # Trả Hash[station_contact_point_id => BigDecimal phần trăm]. Trạm nào không có công
-  # tơ bơm (hoặc D_khu_vực = 0, chưa nhập chỉ số) → không có khóa → view hiện "—".
+  # Trả Hash[station_contact_point_id => { percent: BigDecimal, kw: BigDecimal }].
+  # Trạm nào không có công tơ bơm (hoặc D_khu_vực = 0, chưa nhập chỉ số) → không
+  # có khóa → view hiện "—".
   def build_station_zone_shares
     return {} unless @period
 
@@ -172,7 +173,10 @@ class PumpAllocationsController < ApplicationController
 
       pump_meters.group_by(&:contact_point_id).each do |station_cp_id, station_meters|
         d_station = station_meters.sum(BigDecimal("0")) { |m| d_by_meter[m.id] || BigDecimal("0") }
-        shares[station_cp_id] = d_station * BigDecimal("100") / d_zone
+        shares[station_cp_id] = {
+          percent: d_station * BigDecimal("100") / d_zone,
+          kw: d_station
+        }
       end
     end
     shares

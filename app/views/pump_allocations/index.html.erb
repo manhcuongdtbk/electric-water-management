@@ -55,11 +55,13 @@
         end
       # Phan tram khu vuc: suy tu chi so hien tai (controller#build_station_zone_shares).
       # Co tram + co so -> "Tram X - chiem 65% dien bom ..."; con lai chi ten tram.
-      share = station_id ? @station_zone_shares[station_id] : nil
+      share_data = station_id ? @station_zone_shares[station_id] : nil
       card_title =
-        if station && @station_zone_shares.key?(station_id)
+        if station && share_data
           t("pump_allocations.index.station_zone_share",
-            station: base_title, percent: pump_zone_share_percent(share))
+            station: base_title,
+            kw: number_to_vi(share_data[:kw]),
+            percent: pump_zone_share_percent(share_data[:percent]))
         else
           base_title
         end
@@ -179,7 +181,12 @@
               <td class="px-4 py-2 text-sm text-right font-medium">
                 <%= number_to_vi(group[:fixed_percentage_sum]) %>%
               </td>
-              <td class="px-4 py-2"></td>
+              <td class="px-4 py-2 text-sm text-gray-500">
+                <% remainder = BigDecimal("100") - group[:fixed_percentage_sum] %>
+                <% if remainder > 0 && group[:coefficient_count] > 0 %>
+                  + <%= number_to_vi(remainder) %>% <%= t("pump_allocations.index.remainder_by_coefficient") %>
+                <% end %>
+              </td>
               <td class="px-4 py-2"></td>
             </tr>
           </tfoot>
