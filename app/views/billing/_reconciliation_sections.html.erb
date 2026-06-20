@@ -14,7 +14,7 @@
         <div class="p-4 space-y-4">
           <% if pump_matrix %>
             <div class="overflow-x-auto">
-              <table class="text-sm border border-gray-200" data-pump-station-table>
+              <table class="text-sm border border-gray-200 reconciliation-table" data-pump-station-table>
                 <caption class="text-left font-semibold text-gray-700 px-2 py-1">
                   <%= t("billing.pump_station_breakdown.title") %>
                 </caption>
@@ -38,7 +38,7 @@
                 </thead>
                 <tbody>
                   <% pump_matrix.recipients.each do |recipient| %>
-                    <tr class="hover:bg-gray-50 transition-colors" data-pump-charge-row="<%= recipient.id %>">
+                    <tr class="reconciliation-row" data-pump-charge-row="<%= recipient.id %>">
                       <td class="px-2 py-1">
                         <div class="font-medium text-gray-900"><%= recipient.name %></div>
                         <% recipient_path = [recipient.unit&.name, recipient.block&.name, recipient.group&.name].compact %>
@@ -78,7 +78,7 @@
 
           <% if loss_breakdown && loss_summary %>
             <div class="overflow-x-auto">
-              <table class="text-sm border border-gray-200">
+              <table class="text-sm border border-gray-200 reconciliation-table">
                 <caption class="text-left font-semibold text-gray-700 px-2 py-1">
                   <%= t("billing.loss_breakdown.title") %>
                 </caption>
@@ -92,7 +92,7 @@
                 </thead>
                 <tbody>
                   <% loss_breakdown.rows.each do |row| %>
-                    <tr class="hover:bg-gray-50 transition-colors">
+                    <tr class="reconciliation-row">
                       <td class="px-2 py-1"><%= t("activerecord.attributes.contact_point.types.#{row.type}", default: row.type) %></td>
                       <td class="px-2 py-1 text-right"><%= number_to_vi(row.usage) %></td>
                       <td class="px-2 py-1 text-right"><%= number_to_vi(row.loss) %><%= '<span class="text-blue-500">*</span>'.html_safe if row.type == "residential" %></td>
