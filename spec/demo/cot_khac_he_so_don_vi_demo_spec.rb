@@ -23,7 +23,7 @@ RSpec.describe "Demo: cột Khác hệ số đơn vị", type: :demo do
 
     zone = Zone.find_by!(name: "Khu vực 1")
     unit = Unit.find_by!(name: "Tiểu đoàn 1")
-    period = Period.order(:id).last
+    period = Period.find_by!(closed: false)
     kitchen = ContactPoint.find_by!(
       name: "Bếp ăn Tiểu đoàn 1", contact_point_type: "residential", unit_id: unit.id
     )
