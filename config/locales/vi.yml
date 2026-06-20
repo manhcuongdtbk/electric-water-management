@@ -284,6 +284,9 @@ vi:
       users: "Tài khoản"
       audit_logs: "Nhật ký hoạt động"
       backups: "Sao lưu dữ liệu"
+  contact_points:
+    form:
+      water_pump_note: "Đầu mối bơm nước này tương ứng một trạm bơm trên trang Phân bổ bơm nước. Thay đổi tên hoặc công tơ ở đây sẽ ảnh hưởng tới trạm bơm đó."
   flash:
     no_open_period: "Không có kỳ đang mở. Mọi ô nhập đã bị khóa. Vui lòng liên hệ quản trị viên hệ thống."
     no_periods_yet: "Chưa có kỳ nào trong hệ thống. Vui lòng mở kỳ đầu tiên."
