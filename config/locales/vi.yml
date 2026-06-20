@@ -559,6 +559,8 @@ vi:
       stale_confirm: "Dữ liệu một số khu vực đã cũ so với lần tính gần nhất. Vẫn xuất Excel?"
       stale_blocked: "Không thể xuất Excel: dữ liệu đã cũ so với lần tính gần nhất. Hãy Tính toán lại hoặc xác nhận xuất bản cũ."
       stale_stamp: "CẢNH BÁO: Dữ liệu trong file có thể đã cũ so với chỉ số hiện tại. Hãy Tính toán lại để cập nhật."
+    reconciliation:
+      section_title: "Đối chiếu — %{zone}"
     loss_breakdown:
       title: "Đối chiếu tổn hao/sử dụng theo loại đầu mối"
       columns:
@@ -577,7 +579,7 @@ vi:
         - "A/B/C tính trên toàn khu vực (gồm công cộng + bơm nước), nên có thể khác tổng các cột trên bảng tính tiền — vốn chỉ tính đầu mối sinh hoạt."
         - "Làm tròn 2 chữ số nên tổng các dòng có thể lệch ±0,01 — số chuẩn để đối chiếu là A/B/C và số công tơ tổng."
     pump_station_breakdown:
-      title: "Chi tiết điện bơm nước theo trạm"
+      title: "Đối chiếu điện bơm nước theo trạm"
       columns:
         recipient: "Đối tượng nhận"
         total: "Tổng (kW)"

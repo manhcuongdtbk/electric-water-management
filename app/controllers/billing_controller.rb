@@ -37,6 +37,7 @@ class BillingController < ApplicationController
       hash[summary.zone_id] = LossBreakdown.new(zone: summary.zone, period: @period, summary: summary).call
     end
     @pump_station_matrices = build_pump_station_matrices(zones_in_scope(@period))
+    @reconciliation_zones = build_reconciliation_zones
 
     respond_to do |format|
       format.html do
@@ -157,6 +158,12 @@ class BillingController < ApplicationController
     def grand_total
       stations.sum { |station| station_total(station) }
     end
+  end
+
+  def build_reconciliation_zones
+    zone_ids = (@pump_station_matrices.keys + @loss_breakdowns.keys).uniq
+    zones_by_id = (@loss_summaries.map(&:zone) + @pump_station_matrices.values.map(&:zone)).compact.uniq.index_by(&:id)
+    zone_ids.filter_map { |id| zones_by_id[id] }.sort_by { |z| z.name.to_s }
   end
 
   # Dùng cho recalculate + warnings. Delegates to FreshnessIndicatable#freshness_zones

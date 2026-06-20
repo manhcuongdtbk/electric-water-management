@@ -139,7 +139,7 @@ RSpec.describe "Billing", type: :request do
 
         it "render bảng + tiêu đề + cột tên trạm + dòng đối tượng nhận" do
           get billing_path(zone_id: sample.zone.id)
-          expect(response.body).to include("Chi tiết điện bơm nước theo trạm")
+          expect(response.body).to include("Đối chiếu điện bơm nước theo trạm")
           doc = Nokogiri::HTML(response.body)
           table = doc.at_css("[data-pump-station-table]")
           expect(table).to be_present
@@ -207,7 +207,7 @@ RSpec.describe "Billing", type: :request do
           get billing_path(zone_id: sample.zone.id)
           doc = Nokogiri::HTML(response.body)
           caption = doc.at_css("[data-pump-station-table] caption")
-          expect(caption.text.strip).to eq("Chi tiết điện bơm nước theo trạm")
+          expect(caption.text.strip).to eq("Đối chiếu điện bơm nước theo trạm")
           expect(caption.text).not_to include(sample.zone.name)
         end
 
@@ -234,7 +234,7 @@ RSpec.describe "Billing", type: :request do
         it "kỳ gộp/legacy (không có pump_station_charges) → KHÔNG render bảng" do
           PumpStationCharge.where(period: sample.period).delete_all
           get billing_path(zone_id: sample.zone.id)
-          expect(response.body).not_to include("Chi tiết điện bơm nước theo trạm")
+          expect(response.body).not_to include("Đối chiếu điện bơm nước theo trạm")
           expect(response.body).not_to include("data-pump-station-table")
         end
       end
@@ -247,7 +247,7 @@ RSpec.describe "Billing", type: :request do
         # chi tiết khi xem nhiều khu vực (chưa lọc) so với khi đã lọc một khu vực.
         let!(:sample2) { setup_zone_two_full_sample(period: sample.period) }
         let(:loss_caption) { "Đối chiếu tổn hao/sử dụng theo loại đầu mối" }
-        let(:pump_caption) { "Chi tiết điện bơm nước theo trạm" }
+        let(:pump_caption) { "Đối chiếu điện bơm nước theo trạm" }
 
         before do
           CalculationOrchestrator.new(zone: sample2.zone, period: sample.period).call
@@ -297,14 +297,15 @@ RSpec.describe "Billing", type: :request do
           expect(zone_select.css("option").first.text).to eq("Tất cả")
         end
 
-        it "chưa lọc: bảng bơm và bảng tổn hao đều render cho mỗi khu vực caption kèm tên (#410)" do
+        it "chưa lọc: mỗi khu vực một section đối chiếu thu gọn kèm tên khu vực (#410)" do
           get billing_path
+          doc = Nokogiri::HTML(response.body)
+          sections = doc.css("details summary")
+          zone_names = sections.map { |s| s.text.strip }
+          expect(zone_names).to include(a_string_including(sample.zone.name))
+                            .and include(a_string_including(sample2.zone.name))
           expect(response.body.scan(pump_caption).size).to eq(2)
           expect(response.body.scan(loss_caption).size).to eq(2)
-          expect(response.body).not_to include(I18n.t("billing.loss_breakdown.select_zone_hint"))
-          pump_table = Nokogiri::HTML(response.body).css("[data-pump-station-table] caption").map(&:text)
-          expect(pump_table).to include(a_string_including(sample.zone.name))
-                            .and include(a_string_including(sample2.zone.name))
         end
       end
 
