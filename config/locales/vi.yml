@@ -576,7 +576,7 @@ vi:
       note_items:
         - "* đối chiếu được: dòng Sinh hoạt cột Tổn hao = tổng cột Tổn hao trên bảng tính tiền chính; dòng Tổng cộng cột Sử dụng thực tế = số công tơ tổng trên trang Nhập số điện lực."
         - "Cột Sử dụng chỉ tính công tơ có tổn hao — có thể khác tổng cột Sử dụng trên bảng tính tiền chính (vốn tính tất cả công tơ kể cả không tổn hao)."
-        - "A/B/C tính trên toàn khu vực (gồm công cộng + bơm nước), nên có thể khác tổng trên bảng tính tiền chính — vốn chỉ tính đầu mối sinh hoạt."
+        - "A/B/C tính trên toàn khu vực (sinh hoạt, công cộng, và bơm nước), nên có thể khác tổng trên bảng tính tiền chính — vốn chỉ tính đầu mối sinh hoạt."
         - "Đúng khi A = B + C. Làm tròn 2 chữ số nên có thể lệch ±0,01."
     pump_station_breakdown:
       title: "Đối chiếu điện bơm nước theo trạm"
