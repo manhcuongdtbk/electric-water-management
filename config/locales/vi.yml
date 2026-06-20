@@ -544,6 +544,8 @@ vi:
     stale_zone: "Khu vực %{zone}: cần tính toán lại (dữ liệu đã đổi sau lần tính gần nhất)"
     recalculate_hint: "Vào Bảng tính tiền và bấm \"Tính toán lại\" để cập nhật."
   billing:
+    summary:
+      total_all: "TỔNG (tất cả đầu mối)"
     flash:
       recalculated: "Đã tính toán lại bảng tính tiền."
       period_closed: "Kỳ đã đóng, không thể tính toán lại."
