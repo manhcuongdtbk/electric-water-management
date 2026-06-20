@@ -126,12 +126,14 @@ class BillingController < ApplicationController
   def build_pump_station_matrices(zones)
     charges = PumpStationCharge
                 .where(period_id: @period.id, zone_id: zones.select(:id))
-                .includes(:contact_point, :pump_contact_point)
+                .includes(contact_point: [:unit, :block, :group], pump_contact_point: [])
                 .to_a
     zones_by_id = zones.index_by(&:id)
     charges.group_by(&:zone_id).transform_values do |zone_charges|
       stations = zone_charges.map(&:pump_contact_point).uniq.sort_by { |s| s.name.to_s }
-      recipients = zone_charges.map(&:contact_point).uniq.sort_by { |r| r.name.to_s }
+      recipients = zone_charges.map(&:contact_point).uniq.sort_by do |r|
+        [r.unit&.name.to_s, r.block&.name.to_s, r.group&.name.to_s, r.name.to_s]
+      end
       amounts = zone_charges.each_with_object({}) do |charge, hash|
         hash[[charge.contact_point_id, charge.pump_contact_point_id]] = charge.amount
       end

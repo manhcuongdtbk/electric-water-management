@@ -566,9 +566,9 @@ vi:
         grand_total: "Tổng cộng (= số công tơ tổng)"
       select_zone_hint: "Chọn khu vực để xem chi tiết tổn hao."
       note_items:
-        - "Dòng \"Cộng (công tơ có tổn hao)\" chính là A/B/C: Sử dụng = B, Tổn hao = C, Sử dụng thực tế = A."
+        - "Bảng này đối chiếu tổn hao: Sử dụng thực tế (A) = tổng sử dụng các công tơ có tổn hao, Tổn hao (C) = phần điện hao hụt trên đường dây, Sử dụng (B) = điện các công tơ con dùng thật. Đúng khi A = B + C."
+        - "Dòng \"Cộng (công tơ có tổn hao)\" chính là A/B/C. Dòng \"Tổng cộng\" bằng số công tơ tổng (gồm cả công tơ không tổn hao)."
         - "A/B/C tính trên toàn khu vực (gồm công cộng + bơm nước), nên có thể khác tổng các cột trên bảng tính tiền — vốn chỉ tính đầu mối sinh hoạt."
-        - "A (Sử dụng thực tế của dòng \"Cộng\") đã trừ điện công tơ không tổn hao nên nhỏ hơn số công tơ tổng; dòng \"Tổng cộng\" mới bằng số công tơ tổng."
         - "Làm tròn 2 chữ số nên tổng các dòng có thể lệch ±0,01 — số chuẩn để đối chiếu là A/B/C và số công tơ tổng."
     pump_station_breakdown:
       title: "Chi tiết điện bơm nước theo trạm"
@@ -580,7 +580,8 @@ vi:
         grand_total: "Tổng cộng (= điện mỗi trạm)"
       note_items:
         - "Điện mỗi trạm bơm được chia hết cho các đối tượng nhận của trạm đó; tổng các trạm bằng tổng điện bơm nước toàn khu vực."
-        - "Ô 0,00 = đối tượng không nhận điện từ trạm đó."
+        - "Tổng dòng mỗi đầu mối phải bằng cột \"Sử dụng điện bơm nước\" của đầu mối đó trên bảng tính tiền chính — đây là cách đối chiếu."
+        - "Ô 0,00 = đầu mối không nhận điện từ trạm đó (trạm khác phục vụ)."
         - "Làm tròn 2 chữ số thập phân nên tổng có thể lệch ±0,01."
   dashboard:
     sections:

@@ -181,7 +181,7 @@ RSpec.describe "Billing", type: :request do
 
         it "có chú thích ô 0,00 tiếng Việt" do
           get billing_path(zone_id: sample.zone.id)
-          expect(response.body).to include("Ô 0,00 = đối tượng không nhận điện từ trạm đó.")
+          expect(response.body).to include("Ô 0,00 = đầu mối không nhận điện từ trạm đó")
         end
 
         # B — % của khu vực mỗi trạm dưới đầu cột trạm = điện trạm / tổng điện bơm.
@@ -939,7 +939,7 @@ RSpec.describe "Billing", type: :request do
       sign_in sa
       get billing_path(zone_id: sample.zone.id)
       expect(response.body).to include("tính trên toàn khu vực")
-      expect(response.body).to include("đã trừ điện công tơ không tổn hao")
+      expect(response.body).to include("Đúng khi A = B + C")
     end
 
     it "CHIEU-ton-hao-theo-zone: SA chọn zone → chỉ A/B/C của zone đó" do
