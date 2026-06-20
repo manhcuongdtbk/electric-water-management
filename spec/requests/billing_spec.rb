@@ -223,12 +223,10 @@ RSpec.describe "Billing", type: :request do
           expect(path.text).to include(dai_doi_1.unit.name)
         end
 
-        it "có chú thích giải thích cách chia điện theo trạm (#6)" do
+        it "có chú thích giải thích cách đối chiếu (#6)" do
           get billing_path(zone_id: sample.zone.id)
-          expect(response.body).to include(
-            "Điện mỗi trạm bơm được chia hết cho các đối tượng nhận của trạm đó; " \
-            "tổng các trạm bằng tổng điện bơm nước toàn khu vực."
-          )
+          expect(response.body).to include("đối chiếu được")
+          expect(response.body).to include("Tổng các trạm = tổng điện bơm nước toàn khu vực")
         end
 
         it "kỳ gộp/legacy (không có pump_station_charges) → KHÔNG render bảng" do

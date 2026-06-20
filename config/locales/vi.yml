@@ -574,12 +574,10 @@ vi:
         grand_total: "Tổng cộng (= số công tơ tổng)"
       select_zone_hint: "Chọn khu vực để xem chi tiết tổn hao."
       note_items:
-        - "Bảng này đối chiếu tổn hao: Sử dụng thực tế (A) = tổng sử dụng các công tơ có tổn hao, Tổn hao (C) = phần điện hao hụt trên đường dây, Sử dụng (B) = điện các công tơ con dùng thật. Đúng khi A = B + C."
-        - "Dòng \"Cộng (công tơ có tổn hao)\" chính là A/B/C. Dòng \"Tổng cộng\" phải bằng số công tơ tổng trên trang Nhập số điện lực — đây là cách đối chiếu."
-        - "Cột \"Tổn hao\" dòng \"Sinh hoạt\" phải bằng tổng cột \"Tổn hao\" trên bảng tính tiền chính (chỉ tính đầu mối sinh hoạt). Nếu khác nhau thì cần kiểm tra lại dữ liệu."
-        - "A/B/C tính trên toàn khu vực (gồm công cộng + bơm nước), nên tổng cộng có thể khác tổng các cột trên bảng tính tiền — vốn chỉ tính đầu mối sinh hoạt."
-        - "Làm tròn 2 chữ số nên tổng các dòng có thể lệch ±0,01 — số chuẩn để đối chiếu là A/B/C và số công tơ tổng."
-        - "* = số này đối chiếu được: dòng \"Sinh hoạt\" cột \"Tổn hao\" phải bằng tổng cột Tổn hao trên bảng tính tiền chính; dòng \"Tổng cộng\" cột \"Sử dụng thực tế\" phải bằng số công tơ tổng trên trang Nhập số điện lực."
+        - "* đối chiếu được: dòng Sinh hoạt cột Tổn hao = tổng cột Tổn hao trên bảng tính tiền chính; dòng Tổng cộng cột Sử dụng thực tế = số công tơ tổng trên trang Nhập số điện lực."
+        - "Cột Sử dụng chỉ tính công tơ có tổn hao — có thể khác tổng cột Sử dụng trên bảng tính tiền chính (vốn tính tất cả công tơ kể cả không tổn hao)."
+        - "A/B/C tính trên toàn khu vực (gồm công cộng + bơm nước), nên có thể khác tổng trên bảng tính tiền chính — vốn chỉ tính đầu mối sinh hoạt."
+        - "Đúng khi A = B + C. Làm tròn 2 chữ số nên có thể lệch ±0,01."
     pump_station_breakdown:
       title: "Đối chiếu điện bơm nước theo trạm"
       columns:
@@ -589,11 +587,9 @@ vi:
       rows:
         grand_total: "Tổng cộng (= điện mỗi trạm)"
       note_items:
-        - "Điện mỗi trạm bơm được chia hết cho các đối tượng nhận của trạm đó; tổng các trạm bằng tổng điện bơm nước toàn khu vực."
-        - "Tổng dòng mỗi đầu mối phải bằng cột \"Sử dụng điện bơm nước\" của đầu mối đó trên bảng tính tiền chính — đây là cách đối chiếu."
+        - "* đối chiếu được: tổng dòng mỗi đầu mối = cột Sử dụng điện bơm nước của đầu mối đó trên bảng tính tiền chính."
         - "Ô 0,00 = đầu mối không nhận điện từ trạm đó (trạm khác phục vụ)."
-        - "Làm tròn 2 chữ số thập phân nên tổng có thể lệch ±0,01."
-        - "* = số này đối chiếu được với cột \"Sử dụng điện bơm nước\" trên bảng tính tiền chính."
+        - "Tổng các trạm = tổng điện bơm nước toàn khu vực. Làm tròn 2 chữ số nên có thể lệch ±0,01."
   dashboard:
     sections:
       public_total: "Sử dụng điện công cộng toàn khu vực"
