@@ -28,7 +28,11 @@
       filters: toolbar_filters %>
 
 <% unless @station_groups.empty? %>
-  <p class="mb-4 text-sm text-gray-600 max-w-3xl"><%= t("pump_allocations.index.page_note") %></p>
+  <ul class="mb-4 text-sm text-gray-600 list-disc pl-5 space-y-0.5">
+    <% t("pump_allocations.index.page_note_items").each do |item| %>
+      <li><%= item %></li>
+    <% end %>
+  </ul>
 <% end %>
 
 <% if @station_groups.empty? %>
