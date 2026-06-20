@@ -9,6 +9,14 @@ require "rails_helper"
 # feature (ADR-049). The narrated journey mirrors the "Demo (ADR-040)" section
 # of that spec; the assertions cover dimension CHIEU-do-tuoi-5-trang
 # (chỉ báo hiện trên trang billing + meter_entries) plus the appear/clear cycle.
+#
+# Refined to the ADR-059 "demo tốt" standard (#393): the stale badge — the thing
+# the feature IS — is now scrolled into view with highlight() so the caption's
+# claim is visible on screen, not merely asserted in the DOM; the narration is
+# framed around the customer's pain (sau khi sửa chỉ số, số liệu tính tiền cũ đi
+# trong khi vẫn nằm trên màn hình — xuất Excel lúc này gửi số SAI lên cấp trên);
+# and the recalculation uses the recorder's confirm: primitive (mirroring the
+# TN1 golden example spec/demo/cot_khac_he_so_don_vi_demo_spec.rb).
 RSpec.describe "Demo: chỉ báo độ tươi dữ liệu dẫn xuất", type: :demo do
   include_context "demo seeded world"
 
@@ -27,50 +35,61 @@ RSpec.describe "Demo: chỉ báo độ tươi dữ liệu dẫn xuất", type: :
     meter = Meter.find_by!(name: "CT-A2")
     reading = meter.meter_readings.find_by!(period: period)
     reading_end_field = "meter_readings[#{reading.id}][reading_end]"
+    stale_badge = "[data-testid='freshness-stale']"
 
-    # Step 1 — sign in as the seeded admin (db/seeds/demo.rb).
-    demo.visit("/users/sign_in", caption: "Mở trang đăng nhập")
-    demo.fill("Tên đăng nhập", with: "demo_admin", caption: "Nhập tên đăng nhập")
-    demo.fill("Mật khẩu", with: "Demo@1234", caption: "Nhập mật khẩu")
-    demo.click("Đăng nhập", caption: "Nhấn Đăng nhập")
+    # Sign in as the seeded admin (db/seeds/demo.rb) — programmatic, no login page.
+    demo.sign_in_as(User.find_by!(username: "demo_admin"), role_label: "Quản trị viên")
     expect(page).to have_current_path("/", wait: 10)
 
-    # Step 2 — open Billing and recalculate so the zone has fresh results. The
-    # "Tính toán lại" button confirms via Turbo (turbo_confirm) — accept it.
+    # The pain this feature removes: bảng tính tiền là số liệu dẫn xuất từ chỉ số
+    # công tơ. Ai đó sửa một chỉ số là bảng cũ đi ngay — nhưng số cũ vẫn nằm trên
+    # màn hình, dễ tưởng còn đúng mà xuất Excel gửi lên cấp trên.
     demo.visit("/billing", caption: "Mở Bảng tính tiền — kỳ tháng 6/2026")
-    demo.narrate("Tính một lần để có kết quả mới — sau đó chỉ báo 'cần tính lại' sẽ ẩn")
-    accept_confirm do
-      demo.click("Tính toán lại", caption: "Bấm 'Tính toán lại' — hệ thống tính cho khu vực")
-    end
-    expect(page).to have_content("Đã tính toán lại", wait: 10)
-    expect(page).not_to have_css('[data-testid="freshness-stale"]')
-    demo.narrate("Trạng thái: đã tính và còn đúng — chưa có chỉ báo cần tính lại")
+    demo.narrate("Bảng tính tiền là số liệu dẫn xuất từ chỉ số công tơ — sửa chỉ số là bảng cũ đi")
 
-    # Step 3 — go to meter entries and edit one reading.
-    demo.visit("/meter_entries", caption: "Sang trang nhập chỉ số đầu mối")
-    demo.fill(reading_end_field, with: "3400", caption: "Sửa một chỉ số đầu mối")
-    demo.click("Lưu toàn bộ", caption: "Lưu chỉ số vừa sửa")
+    # Recalculate once so the zone has fresh results and no stale badge. The
+    # "Tính toán lại" button confirms via Turbo (data-turbo-confirm) — confirm: true
+    # accepts it (mirrors the TN1 golden example).
+    demo.click(
+      "Tính toán lại", confirm: true,
+      caption: "Tính một lần để có kết quả mới — khi đã khớp, không có chỉ báo nào"
+    )
+    expect(page).to have_content("Đã tính toán lại", wait: 10)
+    expect(page).not_to have_css(stale_badge)
+    demo.narrate("Trạng thái sạch: đã tính và còn khớp — chưa có chỉ báo 'cần tính lại'")
+
+    # Someone edits a meter reading on another page — the everyday case that
+    # silently invalidates the billing table.
+    demo.visit("/meter_entries", caption: "Một người sang trang nhập chỉ số đầu mối")
+    demo.fill(reading_end_field, with: "3400", caption: "Sửa một chỉ số công tơ (đầu mối Đại đội 1)")
+    demo.click("Lưu toàn bộ", caption: "Lưu chỉ số vừa sửa — bảng tính tiền giờ đã lệch")
     expect(page).to have_content(I18n.t("meter_entries.flash.saved"), wait: 10)
 
-    # Step 4 — back to Billing; the stale banner now appears for the edited zone.
-    demo.visit("/billing", caption: "Quay lại Bảng tính tiền")
-    expect(page).to have_css('[data-testid="freshness-stale"]', wait: 10)
-    demo.narrate("Chỉ báo 'cần tính lại' xuất hiện")
+    # Back on Billing: the numbers still sit on screen looking authoritative, but
+    # the stale badge now warns the zone needs recalculation. SHOW it — scroll the
+    # badge into view so the caption's claim is visible, not just in the DOM.
+    demo.visit("/billing", caption: "Quay lại Bảng tính tiền — số cũ vẫn nằm đó, trông như còn đúng")
+    expect(page).to have_css(stale_badge, wait: 10)
+    demo.highlight(
+      stale_badge,
+      caption: "Chỉ báo 'cần tính lại' hiện ngay trên đầu bảng — số đang xem KHÔNG khớp chỉ số mới"
+    )
 
-    # Step 5 — attempt Xuất Excel while stale → the system asks for confirmation.
-    # Dismiss it (cancel the navigation) so no stale file is exported.
-    demo.narrate("Khi dữ liệu đã cũ, bấm Xuất Excel → hệ thống hỏi xác nhận trước khi xuất")
+    # The export guard: with stale data, Xuất Excel asks before letting a wrong
+    # file go to higher command. We cancel — no stale file is exported. (We do not
+    # render the .xlsx in the browser; that medium is covered by billing_spec's
+    # :xlsx request specs — criterion 4, honest about medium.)
+    demo.narrate("Xuất Excel lúc này là gửi số SAI lên cấp trên — nên hệ thống chặn lại hỏi trước")
     dismiss_confirm do
-      demo.click("Xuất Excel", caption: "Bấm Xuất Excel — hệ thống hỏi xác nhận, ta huỷ")
+      demo.click("Xuất Excel", caption: "Bấm Xuất Excel khi đang cũ → hệ thống hỏi xác nhận, ta huỷ")
     end
     expect(page).to have_current_path(/billing/, wait: 10)
+    demo.narrate("Huỷ — không có file số liệu cũ nào lọt ra ngoài")
 
-    # Step 6 — recalculate again; the banner clears.
-    accept_confirm do
-      demo.click("Tính toán lại", caption: "Tính lại để dữ liệu khớp hiện trạng")
-    end
+    # Recalculate again; the warning clears — the table is trustworthy to export.
+    demo.click("Tính toán lại", confirm: true, caption: "Tính lại để bảng khớp chỉ số mới")
     expect(page).to have_content("Đã tính toán lại", wait: 10)
-    expect(page).not_to have_css('[data-testid="freshness-stale"]')
-    demo.narrate("Tính lại → chỉ báo biến mất")
+    expect(page).not_to have_css(stale_badge)
+    demo.narrate("Tính lại xong → chỉ báo biến mất, bảng đã khớp và yên tâm xuất")
   end
 end
