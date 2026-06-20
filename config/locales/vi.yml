@@ -579,7 +579,7 @@ vi:
         - "Cột \"Tổn hao\" dòng \"Sinh hoạt\" phải bằng tổng cột \"Tổn hao\" trên bảng tính tiền chính (chỉ tính đầu mối sinh hoạt). Nếu khác nhau thì cần kiểm tra lại dữ liệu."
         - "A/B/C tính trên toàn khu vực (gồm công cộng + bơm nước), nên tổng cộng có thể khác tổng các cột trên bảng tính tiền — vốn chỉ tính đầu mối sinh hoạt."
         - "Làm tròn 2 chữ số nên tổng các dòng có thể lệch ±0,01 — số chuẩn để đối chiếu là A/B/C và số công tơ tổng."
-        - "* = số này đối chiếu được với bảng tính tiền chính hoặc trang Nhập số điện lực."
+        - "* = số này đối chiếu được: dòng \"Sinh hoạt\" cột \"Tổn hao\" phải bằng tổng cột Tổn hao trên bảng tính tiền chính; dòng \"Tổng cộng\" cột \"Sử dụng thực tế\" phải bằng số công tơ tổng trên trang Nhập số điện lực."
     pump_station_breakdown:
       title: "Đối chiếu điện bơm nước theo trạm"
       columns:
