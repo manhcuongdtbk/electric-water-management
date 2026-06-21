@@ -1,6 +1,6 @@
 # Hướng dẫn sử dụng — Hệ thống quản lý điện nước nội bộ
 
-> **Phiên bản:** 1.9.0
+> **Phiên bản:** 1.9.1
 > **Ngày:** 22/06/2026
 > **Đối tượng:** Tất cả người dùng hệ thống (kỹ thuật viên, quản trị viên hệ thống, Chỉ huy Sư đoàn, quản trị viên đơn vị, chỉ huy đơn vị)
 > **Ghi chú:** Tài liệu sẽ được cập nhật theo phản hồi thực tế.
@@ -514,7 +514,7 @@ Khi xem gộp (tất cả khu vực hoặc nhiều đơn vị), bảng thêm 2 c
 
 **Tìm kiếm:** Tìm theo tên đầu mối.
 
-**Nút "Tính toán lại":** Bấm khi có thay đổi dữ liệu (sửa chỉ số, cập nhật quân số, thay đổi cấu hình). Hệ thống tính lại toàn bộ và cập nhật bảng. Nút này vẫn hoạt động khi xem kỳ đã đóng (tính toán lại dùng dữ liệu của kỳ đó, không dùng dữ liệu hiện tại).
+**Nút "Tính toán lại":** Bấm khi có thay đổi dữ liệu (sửa chỉ số, cập nhật quân số, thay đổi cấu hình). Hệ thống tính lại toàn bộ và cập nhật bảng. Nút chỉ hiện khi xem kỳ đang mở — kỳ đã đóng không có nút này (dữ liệu đã đông cứng).
 
 **Cảnh báo:** Khi thiếu dữ liệu (đơn vị chưa nhập, khu vực thiếu công tơ tổng, trạm bơm chưa có số liệu), hệ thống hiển thị cảnh báo phía trên bảng.
 
@@ -881,6 +881,10 @@ Hệ thống hiện thông tin bản sao lưu (tên, kích thước, ngày tạo
 ---
 
 ## Lịch sử thay đổi
+
+### v1.9.1 (22/06/2026)
+
+- Mục E2: sửa sai nút "Tính toán lại" — nút chỉ hiện khi kỳ đang mở, không hiện khi xem kỳ đã đóng. Mô tả cũ (từ v1.2.0) nói "vẫn hoạt động khi xem kỳ đã đóng" nhưng code chặn (`@period.open?` trong view + controller redirect).
 
 ### v1.9.0 (22/06/2026)
 
