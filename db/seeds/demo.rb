@@ -66,6 +66,18 @@ ActiveRecord::Base.transaction do
   end
   puts "  User: #{demo_commander.username} (#{demo_commander.role})"
 
+  # Demo division commander — system-wide read-only (no unit), so the demo can
+  # show that DC sees everything SA sees but cannot edit anything (#419).
+  demo_dc = User.find_or_create_by!(username: "demo_dc") do |u|
+    u.display_name          = "Chỉ huy Sư đoàn Demo"
+    u.role                  = :division_commander
+    u.password              = "Demo@1234"
+    u.password_confirmation = "Demo@1234"
+    u.force_password_change = false
+    u.default_account       = false
+  end
+  puts "  User: #{demo_dc.username} (#{demo_dc.role})"
+
   # Ensure unit_alpha is the zone manager (auto-assigned if it was the first,
   # but we set it explicitly so idempotent re-runs are consistent).
   zone.reload
