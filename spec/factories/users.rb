@@ -22,6 +22,10 @@ FactoryBot.define do
       association :unit
     end
 
+    trait :division_commander do
+      role { "division_commander" }
+    end
+
     trait :default_account do
       default_account { true }
     end
