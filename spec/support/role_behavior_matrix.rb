@@ -5,7 +5,7 @@
 # says, for each page, which detailed per-role BEHAVIORS are tested:
 #   - data_scoping        — non-SA sees only its unit/zone data
 #   - zone_unit_columns   — SA sees Khu vực/Đơn vị columns, non-SA does not
-#   - commander_readonly  — CMD/CMD-ZM: inputs disabled + Lưu hidden/disabled
+#   - commander_readonly  — CMD/CMD-ZM/DC: inputs disabled + Lưu hidden/disabled
 #   - zone_manager_variant— UA-ZM/CMD-ZM behave differently once both are IN
 #
 # Each (page, dimension) is either { applies: {params} } or { na: "reason" }.
@@ -87,39 +87,39 @@ module RoleBehaviorMatrix
       zone_manager_variant: { applies: { scenario: :unit_config_zm } }
     },
     "zones" => {
-      data_scoping:         { na: "Chỉ SA truy cập (access #359) — không có non-SA để scope." },
-      zone_unit_columns:    { na: "Chỉ SA truy cập — không có non-SA để so cột." },
-      commander_readonly:   { na: "Commander không truy cập (redirect ở access #359)." },
-      zone_manager_variant: { na: "Chỉ SA — không có biến thể ZM." }
+      data_scoping:         { na: "Chỉ SA/DC truy cập (access #359) — cả hai có scope toàn cục, không scope theo đơn vị." },
+      zone_unit_columns:    { na: "Chỉ SA/DC truy cập — không có unit-scoped role để so cột." },
+      commander_readonly:   { na: "Commander không truy cập (redirect ở access #359). DC read-only nhưng trang CRUD không có input nội dòng." },
+      zone_manager_variant: { na: "Chỉ SA/DC — không có biến thể ZM." }
     },
     "units" => {
-      data_scoping:         { na: "Chỉ SA truy cập — không có non-SA để scope." },
-      zone_unit_columns:    { na: "Chỉ SA truy cập — không có non-SA để so cột." },
-      commander_readonly:   { na: "Commander không truy cập (redirect ở access #359)." },
-      zone_manager_variant: { na: "Chỉ SA — không có biến thể ZM." }
+      data_scoping:         { na: "Chỉ SA/DC truy cập — cả hai có scope toàn cục, không scope theo đơn vị." },
+      zone_unit_columns:    { na: "Chỉ SA/DC truy cập — không có unit-scoped role để so cột." },
+      commander_readonly:   { na: "Commander không truy cập (redirect ở access #359). DC read-only nhưng trang CRUD không có input nội dòng." },
+      zone_manager_variant: { na: "Chỉ SA/DC — không có biến thể ZM." }
     },
     "pricing" => {
-      data_scoping:         { na: "Chỉ SA truy cập — không có non-SA để scope." },
-      zone_unit_columns:    { na: "Chỉ SA truy cập — không có non-SA để so cột." },
-      commander_readonly:   { na: "Commander không truy cập (redirect ở access #359)." },
-      zone_manager_variant: { na: "Chỉ SA — không có biến thể ZM." }
+      data_scoping:         { na: "Chỉ SA/DC truy cập — cả hai có scope toàn cục, không scope theo đơn vị." },
+      zone_unit_columns:    { na: "Chỉ SA/DC truy cập — không có unit-scoped role để so cột." },
+      commander_readonly:   { na: "Commander không truy cập (redirect ở access #359). DC read-only nhưng trang CRUD không có input nội dòng." },
+      zone_manager_variant: { na: "Chỉ SA/DC — không có biến thể ZM." }
     },
     "ranks" => {
-      data_scoping:         { na: "Chỉ SA truy cập — không có non-SA để scope." },
-      zone_unit_columns:    { na: "Chỉ SA truy cập — không có non-SA để so cột." },
-      commander_readonly:   { na: "Commander không truy cập (redirect ở access #359)." },
-      zone_manager_variant: { na: "Chỉ SA — không có biến thể ZM." }
+      data_scoping:         { na: "Chỉ SA/DC truy cập — cả hai có scope toàn cục, không scope theo đơn vị." },
+      zone_unit_columns:    { na: "Chỉ SA/DC truy cập — không có unit-scoped role để so cột." },
+      commander_readonly:   { na: "Commander không truy cập (redirect ở access #359). DC read-only nhưng trang CRUD không có input nội dòng." },
+      zone_manager_variant: { na: "Chỉ SA/DC — không có biến thể ZM." }
     },
     "users" => {
-      data_scoping:         { na: "Quản trị tài khoản SA/TECH toàn cục — không scope theo đơn vị nghiệp vụ." },
+      data_scoping:         { na: "Quản trị tài khoản SA/TECH toàn cục — không scope theo đơn vị nghiệp vụ. DC không truy cập." },
       zone_unit_columns:    { na: "Bảng người dùng không có cột Khu vực/Đơn vị gated theo SA." },
-      commander_readonly:   { na: "Commander không truy cập (redirect ở access #359)." },
+      commander_readonly:   { na: "Commander và DC không truy cập (redirect ở access #359)." },
       zone_manager_variant: { na: "Không có biến thể ZM cho quản trị tài khoản." }
     },
     "audit_logs" => {
-      data_scoping:         { na: "Nhật ký hệ thống SA/TECH toàn cục — không scope theo đơn vị nghiệp vụ." },
+      data_scoping:         { na: "Nhật ký hệ thống SA/DC/TECH toàn cục — không scope theo đơn vị nghiệp vụ." },
       zone_unit_columns:    { na: "Bảng nhật ký không có cột Khu vực/Đơn vị gated theo SA." },
-      commander_readonly:   { na: "Commander không truy cập (redirect ở access #359)." },
+      commander_readonly:   { na: "Commander không truy cập (redirect ở access #359). DC read-only nhưng trang chỉ xem — không có input." },
       zone_manager_variant: { na: "Không có biến thể ZM cho nhật ký." }
     },
     "backups" => {

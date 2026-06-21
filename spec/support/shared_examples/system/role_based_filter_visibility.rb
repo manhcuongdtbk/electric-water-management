@@ -23,6 +23,20 @@ RSpec.shared_examples "role-based filter visibility" do
     end
   end
 
+  context "as division_commander" do
+    before do
+      user = create(:user, :division_commander)
+      sign_in user
+    end
+
+    it "hiển thị dropdown filters" do
+      visit path
+      filter_select_ids.each do |select_id|
+        expect(page).to have_select(select_id)
+      end
+    end
+  end
+
   %w[unit_admin commander].each do |role|
     context "as #{role} - zone manager" do
       before do

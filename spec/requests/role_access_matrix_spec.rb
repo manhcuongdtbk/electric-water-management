@@ -1,4 +1,4 @@
-# Chiều 2-3 — ma trận truy cập: mọi trang × 6 vai trò (200 hay redirect).
+# Chiều 2-3 — ma trận truy cập: mọi trang × 7 vai trò (200 hay redirect).
 # "Ai vào được trang nào". Hành vi chi tiết per vai trò (data scoping, disabled
 # input, ẩn/hiện cột) test ở spec riêng per trang — và độ phủ hành vi đó theo dõi
 # ở #373; KHÔNG thuộc file này.
@@ -21,6 +21,7 @@ RSpec.describe "Role access matrix (chiều 2-3)", type: :request do
   def build_user(role)
     case role
     when :sa     then create(:user, :system_admin)
+    when :dc     then create(:user, :division_commander)
     when :ua_zm  then create(:user, :unit_admin, unit: unit_manager)
     when :ua     then create(:user, :unit_admin, unit: unit_other)
     when :cmd_zm then create(:user, :commander, unit: unit_manager)
@@ -44,7 +45,7 @@ RSpec.describe "Role access matrix (chiều 2-3)", type: :request do
     end
   end
 
-  # Sinh test: gom theo category cho dễ đọc output, mỗi trang 6 vai trò.
+  # Sinh test: gom theo category cho dễ đọc output, mỗi trang 7 vai trò.
   RoleAccessMatrix::PAGES.group_by { |_slug, config| config[:category] }.each do |category, pages|
     describe category do
       pages.each do |slug, config|
@@ -60,7 +61,7 @@ RSpec.describe "Role access matrix (chiều 2-3)", type: :request do
     end
   end
 
-  # --- Guardrail #359: ép đủ TRANG và đủ 6 VAI TRÒ -------------------------
+  # --- Guardrail #359: ép đủ TRANG và đủ 7 VAI TRÒ -------------------------
   describe "completeness (guardrail #359)" do
     it "ma trận phủ mọi controller-trang (không thiếu, không stale)" do
       Rails.application.eager_load!
@@ -76,13 +77,13 @@ RSpec.describe "Role access matrix (chiều 2-3)", type: :request do
 
       expect(gaps[:missing]).to be_empty,
         "Controller-trang chưa có trong ma trận: #{gaps[:missing].join(', ')}. " \
-        "Thêm vào RoleAccessMatrix::PAGES (test đủ 6 vai trò) — hoặc nếu không phân vai trò, " \
+        "Thêm vào RoleAccessMatrix::PAGES (test đủ 7 vai trò) — hoặc nếu không phân vai trò, " \
         "thêm vào RoleAccessMatrix::EXCLUDED_CONTROLLERS kèm lý do."
       expect(gaps[:stale]).to be_empty,
         "Entry ma trận không còn controller tương ứng (đổi tên/xóa?): #{gaps[:stale].join(', ')}."
     end
 
-    it "mỗi trang nêu kỳ vọng cho đủ 6 vai trò" do
+    it "mỗi trang nêu kỳ vọng cho đủ 7 vai trò" do
       gaps = RoleAccessMatrix.role_gaps
       expect(gaps).to be_empty,
         "Trang thiếu vai trò: #{gaps.map { |slug, roles| "#{slug} (#{roles.join(', ')})" }.join('; ')}."
