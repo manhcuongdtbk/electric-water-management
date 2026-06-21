@@ -1,7 +1,7 @@
 <% available_roles = if current_user.technician?
-                       %w[technician system_admin unit_admin commander]
+                       %w[technician system_admin unit_admin commander division_commander]
                      else
-                       %w[system_admin unit_admin commander]
+                       %w[system_admin unit_admin commander division_commander]
                      end %>
 <% available_units = Unit.kept.accessible_by(current_ability).order(:name) %>
 

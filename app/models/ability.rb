@@ -15,7 +15,8 @@ class Ability
     when :technician   then technician_abilities(user)
     when :system_admin then system_admin_abilities(user)
     when :unit_admin   then unit_admin_abilities(user)
-    when :commander    then commander_abilities(user)
+    when :commander          then commander_abilities(user)
+    when :division_commander then division_commander_abilities(user)
     end
   end
 
@@ -81,6 +82,17 @@ class Ability
       contact_point: { zone_id: managed_zone_ids, contact_point_type: "residential" }
     can :read, Calculation, contact_point: { zone_id: managed_zone_ids }
     can :recalculate, Calculation, contact_point: { zone_id: managed_zone_ids }
+  end
+
+  def division_commander_abilities(_user)
+    [Unit, ContactPoint, Meter, MainMeter, Block, Group,
+     Period, Rank, PumpAllocation,
+     MeterReading, MainMeterReading, PersonnelEntry,
+     NonEstablishmentSnapshot, UnitConfig, OtherDeduction, Calculation
+    ].each { |m| can :read, m }
+    can :read, Zone, discarded_at: nil
+
+    can :read, PaperTrail::Version
   end
 
   def commander_abilities(user)

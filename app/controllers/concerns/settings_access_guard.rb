@@ -13,12 +13,12 @@ module SettingsAccessGuard
   private
 
   def require_system_admin!
-    return if current_user&.system_admin?
+    return if current_user&.system_admin? || current_user&.division_commander?
     deny_settings_access
   end
 
   def require_system_admin_or_zone_manager!
-    return if current_user&.system_admin? || current_zone_manager?
+    return if current_user&.system_admin? || current_user&.division_commander? || current_zone_manager?
     deny_settings_access
   end
 
