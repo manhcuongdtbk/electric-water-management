@@ -1,6 +1,6 @@
 # Thuật ngữ & từ viết tắt — Hệ thống quản lý điện nước nội bộ
 
-> **Phiên bản:** 1.11.0
+> **Phiên bản:** 1.11.1
 > **Ngày:** 14/06/2026
 > **Tính chất:** Nguồn **duy nhất** (canonical) cho định nghĩa thuật ngữ, từ viết tắt và các gloss khái niệm của dự án. Mọi tài liệu khác **trỏ về đây**, không chép lại. Gặp thuật ngữ mới, hoặc thấy một giải thích cũ chưa đủ dễ hiểu → cập nhật ở file này. Kể cả thuật ngữ chỉ còn xuất hiện trong tài liệu **lịch sử** (không sửa được, ví dụ spec/ADR cũ) — vẫn định nghĩa ở đây để bản ghi đó đọc hiểu được, **không phải viết lại** nó.
 

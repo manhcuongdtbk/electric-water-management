@@ -1,6 +1,6 @@
 # Các chiều kiểm thử — Hệ thống quản lý điện nước nội bộ (Hệ thống v2)
 
-> **Phiên bản:** 1.4.1
+> **Phiên bản:** 1.4.2
 > **Ngày:** 14/06/2026
 > **Tính chất:** Định nghĩa không gian kiểm thử. Mỗi chiều là một biến độc lập tạo code path khác nhau trong hệ thống. Giao điểm giữa các chiều là nơi bug dễ xảy ra nhất.
 > **Nguồn:** Audit toàn bộ codebase, đối chiếu 4 tài liệu, 1378 test cases.

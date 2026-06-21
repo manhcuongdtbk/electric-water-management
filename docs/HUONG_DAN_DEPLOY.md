@@ -1,6 +1,6 @@
 # Hướng dẫn deploy — Hệ thống quản lý điện nước nội bộ
 
-> **Phiên bản:** 1.3.0
+> **Phiên bản:** 1.3.1
 > **Ngày:** 10/06/2026
 > **Đối tượng:** Người thực hiện deploy (kỹ thuật viên, cố vấn IT, hoặc developer).
 > **Server:** Ubuntu 24.04, Docker, LAN nội bộ, không có internet.

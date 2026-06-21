@@ -1,6 +1,6 @@
 # Bản đồ tài liệu — Hệ thống quản lý điện nước nội bộ
 
-> **Phiên bản:** 1.5.0
+> **Phiên bản:** 1.5.1
 > **Ngày:** 21/06/2026
 > **Tính chất:** Canonical — liệt kê mọi tài liệu của dự án kèm **mục đích, đối tượng, loại**, để người và công cụ AI biết **một fact nằm ở đâu** và **sửa ở đâu** thay vì thêm nơi mới. Hỗ trợ trực tiếp quy tắc "sửa đừng thêm" (`AGENTS.md` mục "Quản trị tài liệu"; ADR-023).
 
