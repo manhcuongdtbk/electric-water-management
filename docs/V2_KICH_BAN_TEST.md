@@ -1,7 +1,7 @@
 # V2 — Kịch bản kiểm thử (số liệu cụ thể)
 
-> **Phiên bản:** 2.0.3
-> **Ngày:** 31/05/2026
+> **Phiên bản:** 2.1.0
+> **Ngày:** 22/06/2026
 > **Nguồn nghiệp vụ:** `docs/V2_XAC_NHAN_NGHIEP_VU.md` v2.13.0
 > **Nguồn thiết kế:** `docs/V2_THIET_KE_HE_THONG.md` v2.13.0
 > **Nguồn hành vi runtime:** `docs/V2_HANH_VI_HE_THONG.md` v1.2.1
@@ -246,12 +246,13 @@ Phân bổ bơm nước Khu vực 2 là **thuần hệ số**: không có đối
 
 > **Ghi chú DATA-KV2:** Khu vực 2 bổ sung những lỗ hổng mà Khu vực 1 không có: vị trí phân cấp thứ ba theo V2_CHIEU_TEST chiều 10 (nhóm trực tiếp dưới đơn vị, không khối), bối cảnh đa khu vực (quản trị viên hệ thống lọc theo khu vực, cách ly dữ liệu giữa hai khu vực, phân biệt UA-ZM/CMD-ZM và UA/CMD giữa các khu vực), và phân bổ bơm nước thuần hệ số (tổng phần trăm cố định bằng 0 — nhánh code khác với Khu vực 1). Khu vực 2 KHÔNG có đầu mối ngoài biên chế và KHÔNG có công tơ không tổn hao, vì Khu vực 1 đã bao phủ hai trường hợp này.
 
-### 1C. Tài khoản (6 vai trò × 2 khu vực)
+### 1C. Tài khoản (7 vai trò × 2 khu vực)
 
 | Tên đăng nhập | role | Đơn vị | Vai trò thực tế |
 |---|---|---|---|
 | kyThuat | technician | — | TECH |
 | quanTri | system_admin | — | SA |
+| chiHuySuDoan | division_commander | — | DC |
 | adminA | unit_admin | Đơn vị A (quản lý Khu vực 1) | UA-ZM |
 | adminB | unit_admin | Đơn vị B | UA |
 | chiHuyA | commander | Đơn vị A | CMD-ZM |
@@ -261,14 +262,15 @@ Phân bổ bơm nước Khu vực 2 là **thuần hệ số**: không có đối
 | chiHuyC | commander | Đơn vị C | CMD-ZM |
 | chiHuyD | commander | Đơn vị D | CMD |
 
-Hệ thống có 6 vai trò thực tế dù model User chỉ có 4 enum (`system_admin`, `unit_admin`, `commander`, `technician`). Hai role `unit_admin` và `commander` mỗi role tách thành 2 biến thể tùy đơn vị có quản lý khu vực hay không:
+Hệ thống có 7 vai trò thực tế dù model User chỉ có 5 enum (`system_admin`, `division_commander`, `unit_admin`, `commander`, `technician`). Hai role `unit_admin` và `commander` mỗi role tách thành 2 biến thể tùy đơn vị có quản lý khu vực hay không:
 
+- **DC** (Chỉ huy Sư đoàn): là `division_commander`, không thuộc đơn vị nào. Phạm vi: toàn hệ thống, chỉ xem — tương tự SA nhưng không có quyền tạo/sửa/xóa. Có quyền tính toán lại. Sidebar 16 mục (tất cả trừ Tài khoản và Sao lưu). Ví dụ: chiHuySuDoan. Chỉ cần 1 tài khoản (không phân biệt theo khu vực vì scope toàn hệ thống).
 - **UA-ZM** (quản trị viên đơn vị quản lý khu vực): là `unit_admin` mà đơn vị của họ được chỉ định quản lý một khu vực (`Zone.kept.exists?(manager_unit_id: unit_id)`). Phạm vi: đơn vị mình cộng toàn bộ đầu mối và công tơ của khu vực mình quản lý. Ví dụ: adminA (Đơn vị A quản lý Khu vực 1), adminC (Đơn vị C quản lý Khu vực 2).
 - **UA** (quản trị viên đơn vị không quản lý khu vực): là `unit_admin` mà đơn vị không quản lý khu vực nào. Phạm vi: chỉ đơn vị mình. Ví dụ: adminB, adminD.
 - **CMD-ZM** (chỉ huy đơn vị quản lý khu vực): là `commander` mà đơn vị quản lý khu vực. Phạm vi xem giống UA-ZM, chỉ xem (các ô nhập liệu bị vô hiệu hóa, nút lưu bị ẩn). Ví dụ: chiHuyA, chiHuyC.
 - **CMD** (chỉ huy đơn vị không quản lý khu vực): là `commander` mà đơn vị không quản lý khu vực. Phạm vi xem giống UA, chỉ xem. Ví dụ: chiHuyB, chiHuyD.
 
-Khu vực 1 cung cấp đủ cả 6 vai trò; Khu vực 2 lặp lại bốn vai trò UA-ZM, UA, CMD-ZM, CMD để kiểm thử cách ly dữ liệu và lọc theo khu vực giữa hai khu vực.
+Khu vực 1 cung cấp đủ cả 7 vai trò (DC chỉ cần 1 tài khoản — scope toàn hệ thống, không phân biệt khu vực); Khu vực 2 lặp lại bốn vai trò UA-ZM, UA, CMD-ZM, CMD để kiểm thử cách ly dữ liệu và lọc theo khu vực giữa hai khu vực.
 
 ---
 
@@ -1066,7 +1068,7 @@ Suite này instance hóa Nhóm 6 (giao điểm chiều 11 × 1 × 5). Kiểm ba 
 
 ## Phần 4 — Walkthrough theo trang × vai trò
 
-Phần này instance hóa **ma trận 18 trang × 6 vai trò** của `V2_CHIEU_TEST.md` chiều 3 (cùng phần kiểm soát truy cập) và danh mục "Expected output hiển thị" (cột, nội dung ô, gộp ô, hàng tổng, nút, trạng thái ô nhập, dropdown, cảnh báo, sidebar, trạng thái rỗng, thông tin kỳ, phân trang, di chuột) bằng dữ liệu thật của Phần 1 và golden numbers của Phần 2. Đây là tài liệu kiểm thử thủ công cho QA: với mỗi trang, đăng nhập lần lượt 6 vai trò và đối chiếu đầu ra hiển thị cụ thể.
+Phần này instance hóa **ma trận 18 trang × 7 vai trò** của `V2_CHIEU_TEST.md` chiều 3 (cùng phần kiểm soát truy cập) và danh mục "Expected output hiển thị" (cột, nội dung ô, gộp ô, hàng tổng, nút, trạng thái ô nhập, dropdown, cảnh báo, sidebar, trạng thái rỗng, thông tin kỳ, phân trang, di chuột) bằng dữ liệu thật của Phần 1 và golden numbers của Phần 2. Đây là tài liệu kiểm thử thủ công cho QA: với mỗi trang, đăng nhập lần lượt 7 vai trò và đối chiếu đầu ra hiển thị cụ thể.
 
 Tài liệu này **không chép lại** ma trận chiều 3; mỗi trang ghi phần giới thiệu ngắn (route + lớp bảo vệ + trỏ tới chiều 3) rồi đầu ra cụ thể per vai trò. Mã kịch bản: `TR-<trang>-<vaitro>` (ví dụ TR-billing-SA, TR-meter_entries-UAZM, TR-users-TECH).
 
@@ -1074,7 +1076,7 @@ Quy ước Phần 4:
 
 - Mọi con số tính toán trích dẫn đều **trỏ về Phần 2** (golden numbers engine-verified), nêu rõ mã EN-* nguồn. Phần 4 không tính lại; với trang không mang số liệu, chỉ mô tả đầu ra hiển thị mong đợi.
 - Cả hai khu vực dùng cùng kỳ tháng 5 năm 2026 đang mở (trạng thái B), đã tính toán (golden numbers Phần 2 hiển thị đúng) trừ khi kịch bản ghi khác.
-- **Số mục sidebar (toàn tài liệu):** SA 17 mục, UA 8 mục, UA-ZM 11 mục, CMD 8 mục (khớp UA), CMD-ZM 11 mục (khớp UA-ZM), TECH 3 mục. Nguồn: `V2_THIET_KE_HE_THONG.md` mục "Sidebar per role" + `V2_CHIEU_TEST.md` danh mục Sidebar.
+- **Số mục sidebar (toàn tài liệu):** SA 17 mục, DC 16 mục (tất cả trừ Tài khoản và Sao lưu), UA 8 mục, UA-ZM 11 mục, CMD 8 mục (khớp UA), CMD-ZM 11 mục (khớp UA-ZM), TECH 3 mục. Nguồn: `V2_THIET_KE_HE_THONG.md` mục "Sidebar per role" + `V2_CHIEU_TEST.md` danh mục Sidebar.
 - **Phạm vi billing của UA-ZM (dùng nhất quán toàn Phần 4):** đầu mối đơn vị mình **cộng** đầu mối sinh hoạt **thuộc khu vực trực tiếp** (`unit_id` null, `zone_id` có giá trị) — **KHÔNG** bao gồm đầu mối của các đơn vị khác trong cùng khu vực. Cụ thể (theo GD3-05 và Phần 2):
   - adminA (UA-ZM Khu vực 1) thấy 4 hàng billing: Ban Tác huấn, Văn thư, Kho vật tư (Đơn vị A) cộng Chỉ huy khu vực (thuộc khu vực trực tiếp). KHÔNG thấy Đại đội 1 (Đơn vị B).
   - adminB (UA Khu vực 1) thấy 1 hàng: Đại đội 1 (Đơn vị B).
@@ -1117,7 +1119,7 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 
 **Trạng thái rỗng/đặc biệt:** nếu kỳ chưa tính (xem GD4-01), dashboard hiển thị thâm điện và số dư bằng 0, không lỗi 500.
 
-- **Chiều liên quan:** chiều 2 (6 vai trò), chiều 3 (Tổng quan), chiều 8 (trạng thái tính toán), chiều 9 (cảnh báo per phạm vi).
+- **Chiều liên quan:** chiều 2 (7 vai trò), chiều 3 (Tổng quan), chiều 8 (trạng thái tính toán), chiều 9 (cảnh báo per phạm vi).
 
 ### TR-billing — Bảng tính tiền (/billing)
 
@@ -1410,7 +1412,7 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 
 ---
 
-> **Tổng kết Phần 4:** 18 trang × 6 vai trò được instance hóa cụ thể bằng dữ liệu Phần 1 và golden numbers Phần 2. Phạm vi billing/history của UA-ZM nhất quán là **đầu mối đơn vị mình cộng đầu mối sinh hoạt thuộc khu vực trực tiếp** (KHÔNG gồm đầu mối các đơn vị khác cùng khu vực): adminA 4 hàng, adminC 2 hàng, adminB/adminD 1 hàng, SA gộp 8 hàng. CMD/CMD-ZM khớp UA/UA-ZM về phạm vi nhưng chỉ xem. TECH chặn khỏi mọi trang nghiệp vụ. Design issue truy cập trực tiếp URL `/zones`, `/units`, `/pricing`, `/pump_allocations`, `/ranks`, `/users` qua thừa quyền `can :read, Zone/Unit` (CLAUDE.md) **đã được fix** bằng concern `SettingsAccessGuard` (page-level guard chặn theo vai trò) và việc thu hẹp `can :read, Zone` còn khu vực do đơn vị quản lý — không còn là điểm cần xác nhận khi triển khai. Sau khi fix, **không còn điểm mở nào cần xác nhận khi triển khai** trong Phần 4.
+> **Tổng kết Phần 4:** 18 trang × 7 vai trò được instance hóa cụ thể bằng dữ liệu Phần 1 và golden numbers Phần 2. Phạm vi billing/history của UA-ZM nhất quán là **đầu mối đơn vị mình cộng đầu mối sinh hoạt thuộc khu vực trực tiếp** (KHÔNG gồm đầu mối các đơn vị khác cùng khu vực): adminA 4 hàng, adminC 2 hàng, adminB/adminD 1 hàng, SA gộp 8 hàng. CMD/CMD-ZM khớp UA/UA-ZM về phạm vi nhưng chỉ xem. TECH chặn khỏi mọi trang nghiệp vụ. Design issue truy cập trực tiếp URL `/zones`, `/units`, `/pricing`, `/pump_allocations`, `/ranks`, `/users` qua thừa quyền `can :read, Zone/Unit` (CLAUDE.md) **đã được fix** bằng concern `SettingsAccessGuard` (page-level guard chặn theo vai trò) và việc thu hẹp `can :read, Zone` còn khu vực do đơn vị quản lý — không còn là điểm cần xác nhận khi triển khai. Sau khi fix, **không còn điểm mở nào cần xác nhận khi triển khai** trong Phần 4.
 
 ---
 
@@ -1758,7 +1760,7 @@ Phần này lập bản đồ từ mỗi **nhóm kịch bản** (không phải t
 | TR — users | chiều 2, 3 | — | `spec/requests/users_spec.rb`, `spec/system/users_spec.rb`, `spec/models/user_spec.rb` |
 | TR — audit_logs | chiều 2, 3 | — | `spec/requests/audit_logs_spec.rb`, `spec/requests/audit_pr_137_spec.rb`, `spec/system/audit_logs_spec.rb` |
 | TR — backups | chiều 2, 3 | — | `spec/requests/backups_spec.rb`, `spec/models/backup_spec.rb`, `spec/services/backup_service_spec.rb` |
-| Phân quyền chung (6 vai trò × mọi trang) | chiều 2, 3 | Nhóm 1, 3 | `spec/requests/role_access_matrix_spec.rb`, `spec/requests/business_role_required_integration_spec.rb`, `spec/requests/dimension_coverage_spec.rb` |
+| Phân quyền chung (7 vai trò × mọi trang) | chiều 2, 3 | Nhóm 1, 3 | `spec/requests/role_access_matrix_spec.rb`, `spec/requests/business_role_required_integration_spec.rb`, `spec/requests/dimension_coverage_spec.rb` |
 | VH-period — vòng đời kỳ | chiều 1, 11 | — | `spec/services/period_service_spec.rb`, `spec/services/period_isolation_spec.rb`, `spec/models/period_spec.rb`, `spec/requests/pricing_spec.rb`, `spec/system/pricing_spec.rb`, `spec/requests/period_indicator_spec.rb` |
 | VH-period — mở lại kỳ cũ / StructureChangeGuard | chiều 1 (C) | — | `spec/requests/v230_structure_change_guard_integration_spec.rb`, `spec/requests/old_period_contact_point_edit_spec.rb` |
 | VH-validation — ràng buộc CRUD | chiều C/U/D | — | `spec/models/meter_reading_spec.rb`, `spec/models/pump_allocation_spec.rb`, `spec/models/unit_config_spec.rb`, `spec/models/personnel_entry_spec.rb`, `spec/models/other_deduction_spec.rb`, `spec/models/contact_point_spec.rb`, `spec/models/zone_spec.rb`, `spec/models/unit_spec.rb`, `spec/models/rank_spec.rb`, `spec/models/user_spec.rb`; ràng buộc xóa: `spec/requests/zones_spec.rb`, `spec/requests/units_spec.rb`, `spec/requests/contact_points_spec.rb` |
@@ -1775,7 +1777,7 @@ Phần này lập bản đồ từ mỗi **nhóm kịch bản** (không phải t
 
 - **Engine tính toán** (EN-*, GD2, GD4 phần số): golden numbers Phần 2 verify trực tiếp bằng `loss_calculator_spec`, `pump_allocation_calculator_spec`, `summary_calculator_spec`, `calculation_orchestrator_spec`. Đây là tầng phải tự động hóa trước nhất — số sai là sai nghiêm trọng nhất.
 - **Cách ly kỳ** (period isolation, GD1, GD2, GD4, VH-period): `period_isolation_spec`, `period_service_spec`, `period_comparison_spec`, `discarded_entity_visibility_spec` (cả request lẫn service) — kiểm dữ liệu kỳ cũ giữ nguyên, entity đã xóa hiện ở kỳ cũ, cleanup kỳ đang mở.
-- **Phân quyền** (GD3, TR-*, phân quyền chung): `role_access_matrix_spec`, `business_role_required_integration_spec`, `dimension_coverage_spec` + request spec per trang — kiểm 6 vai trò thấy/không thấy/bị chặn đúng.
+- **Phân quyền** (GD3, TR-*, phân quyền chung): `role_access_matrix_spec`, `business_role_required_integration_spec`, `dimension_coverage_spec` + request spec per trang — kiểm 7 vai trò thấy/không thấy/bị chặn đúng.
 - **Validation** (VH-validation): model spec per model (`meter_reading_spec`, `pump_allocation_spec`, `unit_config_spec`, `personnel_entry_spec`, `other_deduction_spec`...) cho ràng buộc giá trị; request spec (`zones_spec`, `units_spec`, `contact_points_spec`) cho ràng buộc xóa cascade.
 - **Edge cases** (StructureChangeGuard, mở lại kỳ cũ, cuối < đầu kỳ, lock_version logic): `v230_structure_change_guard_integration_spec`, `old_period_contact_point_edit_spec`, `meter_entries_spec`, `unit_config_spec`.
 - **Vòng đời kỳ + mật khẩu + backup logic**: `pricing_spec` (request + system), `period_service_spec`, `password_changes_spec`, `sessions_spec`, `backups_spec`, `backup_service_spec`.
@@ -1790,11 +1792,16 @@ Phần này lập bản đồ từ mỗi **nhóm kịch bản** (không phải t
 - **Restore qua dòng lệnh** (VH-backup-02): không có nút giao diện — kiểm bằng lệnh trên server.
 - **Việt hóa 100%** (mọi trang): rà soát ngôn ngữ giao diện/thông báo/xuất file bằng mắt.
 
-**Thứ tự ưu tiên automation:** (1) engine golden numbers → (2) cách ly kỳ + cleanup → (3) phân quyền 6 vai trò → (4) validation + ràng buộc xóa → (5) edge cases (StructureChangeGuard, mở lại kỳ cũ, lock_version) → (6) vòng đời kỳ + auth + backup logic. Tầng giao diện/Excel/merge để kiểm thủ công sau cùng theo Phần 4 và GD5.
+**Thứ tự ưu tiên automation:** (1) engine golden numbers → (2) cách ly kỳ + cleanup → (3) phân quyền 7 vai trò → (4) validation + ràng buộc xóa → (5) edge cases (StructureChangeGuard, mở lại kỳ cũ, lock_version) → (6) vòng đời kỳ + auth + backup logic. Tầng giao diện/Excel/merge để kiểm thủ công sau cùng theo Phần 4 và GD5.
 
 ---
 
 ## Lịch sử thay đổi
+
+### v2.1.0 (22/06/2026)
+
+- **Thêm vai trò DC (Chỉ huy Sư đoàn, `division_commander`):** cập nhật toàn bộ "6 vai trò" → "7 vai trò", "4 enum" → "5 enum". Phần 1C: thêm tài khoản chiHuySuDoan, thêm mô tả DC (scope toàn hệ thống, chỉ xem + tính toán lại, sidebar 16 mục, 1 tài khoản không phân biệt khu vực). Phần 4: cập nhật mô tả ma trận, sidebar count, tổng kết. Phần 6: cập nhật bảng truy vết và ghi chú automation.
+- Lịch sử v2.0.0: ghi rõ "(chưa có DC)" ở hai entry viết tại thời điểm chỉ 6 vai trò.
 
 ### v2.0.3 (31/05/2026)
 
@@ -1816,11 +1823,11 @@ Phần này lập bản đồ từ mỗi **nhóm kịch bản** (không phải t
 ### v2.0.0 (31/05/2026)
 
 - **Viết lại toàn bộ** tài liệu theo cấu trúc 6 phần (Phần 0 Mở đầu → Phần 6 Bản đồ truy vết), thay cho cấu trúc T01–T113 cũ (v1.2.0, lỗi thời).
-- **Chuyển từ 4 vai trò sang 6 vai trò thực tế:** bổ sung phân biệt UA-ZM/UA và CMD-ZM/CMD; CMD/CMD-ZM thấy trang chỉ-xem (ô nhập vô hiệu hóa, nút ẩn) thay vì bị chặn hoàn toàn như mô tả 4 vai trò cũ.
+- **Chuyển từ 4 vai trò sang 6 vai trò thực tế (chưa có DC):** bổ sung phân biệt UA-ZM/UA và CMD-ZM/CMD; CMD/CMD-ZM thấy trang chỉ-xem (ô nhập vô hiệu hóa, nút ẩn) thay vì bị chặn hoàn toàn như mô tả 4 vai trò cũ.
 - **Thêm Khu vực 2 (đa khu vực):** dữ liệu mẫu mới lấp lỗ hổng Khu vực 1 chưa có — vị trí phân cấp thứ ba (nhóm trực tiếp dưới đơn vị, không khối), bối cảnh đa khu vực (lọc theo khu vực, cách ly cross-zone, phân biệt vai trò giữa hai khu vực), phân bổ bơm nước thuần hệ số.
 - **Golden numbers kiểm chứng bằng engine:** mọi con số tính toán (tổn hao, phân bổ bơm nước, tổng hợp, hàng tổng) của cả hai khu vực xuất ra từ `CalculationOrchestrator` chạy trên dữ liệu mẫu, không tính tay. Phần 2 là nguồn số duy nhất.
 - **6 nhóm giao điểm nguy hiểm (GD1–GD6):** instance hóa cụ thể bằng dữ liệu thật và golden numbers.
-- **Walkthrough 18 trang × 6 vai trò (Phần 4):** đầu ra hiển thị cụ thể per vai trò (số cột, số hàng dữ liệu, trạng thái ô nhập, nút, sidebar, cảnh báo, trạng thái rỗng).
+- **Walkthrough 18 trang × 6 vai trò (Phần 4, chưa có DC):** đầu ra hiển thị cụ thể per vai trò (số cột, số hàng dữ liệu, trạng thái ô nhập, nút, sidebar, cảnh báo, trạng thái rỗng).
 - **Phần 5 Vận hành:** vòng đời kỳ (VH-period), CRUD/validation (VH-validation), xác thực/sao lưu/nhật ký (VH-auth, VH-backup).
 - **Phần 6 Bản đồ truy vết:** map mỗi nhóm kịch bản → chiều `V2_CHIEU_TEST.md` + nhóm giao điểm + tập tin RSpec hiện có (đã xác minh tồn tại); ghi chú ưu tiên automation.
 - Cập nhật version nguồn: NGHIEP_VU v2.13.0, THIET_KE v2.13.0, HANH_VI v1.2.1, CHIEU_TEST v1.2.1.
