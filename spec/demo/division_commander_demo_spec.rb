@@ -136,8 +136,9 @@ RSpec.describe "Demo: vai trò Chỉ huy Sư đoàn", type: :demo do
     demo.visit("/billing?zone_id=#{zone.id}", caption: "Bảng tính tiền — chi tiết từng đầu mối, có ô lọc khu vực/đơn vị")
     expect(page).to have_css("select#zone_id", wait: 10)
     expect(page).to have_content("Xuất Excel")
-    expect(page).to have_no_button("Tính toán lại")
-    demo.narrate("Xem bảng tính tiền đầy đủ, xuất Excel được — nhưng không tính toán lại")
+    demo.click("Tính toán lại", confirm: true, caption: "Tính toán lại — Chỉ huy Sư đoàn dùng được, giống chỉ huy đơn vị")
+    expect(page).to have_content("Đã tính toán lại", wait: 15)
+    demo.narrate("Xem bảng tính tiền đầy đủ, xuất Excel được, tính toán lại được")
 
     # 6c. Tra cứu lịch sử
     demo.visit("/history", caption: "Tra cứu lịch sử — so sánh kỳ và xem theo khoảng thời gian")

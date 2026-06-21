@@ -316,8 +316,8 @@ RSpec.describe Ability do
       end
     end
 
-    it "cannot recalculate" do
-      expect(ability).not_to be_able_to(:recalculate, Calculation.new)
+    it "can recalculate (same as commander)" do
+      expect(ability).to be_able_to(:recalculate, Calculation.new)
     end
 
     it "read audit logs" do

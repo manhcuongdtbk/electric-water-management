@@ -55,9 +55,9 @@ RSpec.describe "Division commander view behavior", type: :request do
       expect(html.css("select#unit_id")).to be_present
     end
 
-    it "shows the export link but not the recalculate button" do
+    it "shows the export link and the recalculate button" do
       expect(response.body).to include("Xuất Excel")
-      expect(response.body).not_to include("Tính toán lại")
+      expect(response.body).to include("Tính toán lại")
     end
 
     it "shows zone and unit columns in the billing table" do

@@ -91,6 +91,7 @@ class Ability
      NonEstablishmentSnapshot, UnitConfig, OtherDeduction, Calculation
     ].each { |m| can :read, m }
     can :read, Zone, discarded_at: nil
+    can :recalculate, Calculation
 
     can :read, PaperTrail::Version
   end

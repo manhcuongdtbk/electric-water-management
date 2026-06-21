@@ -1,6 +1,6 @@
 # Hành vi hệ thống — Hệ thống quản lý điện nước nội bộ (Hệ thống v2)
 
-> **Phiên bản:** 1.5.0
+> **Phiên bản:** 1.5.1
 > **Ngày:** 21/06/2026
 > **Tính chất:** Tài liệu mô tả hành vi thực tế của hệ thống đã được verify qua code và test. Bổ sung cho V2_XAC_NHAN_NGHIEP_VU (cái gì) và V2_THIET_KE_HE_THONG (làm thế nào) bằng cách trả lời "hệ thống hành xử ra sao" trong các kịch bản thực tế.
 > **Nguồn:** Kết quả audit toàn diện codebase, 14 đợt page-by-page, 781+ test cases.
@@ -34,7 +34,7 @@ User model có 5 enum values (`system_admin`, `division_commander`, `unit_admin`
 | CMD | Chỉ huy đơn vị không quản lý khu vực | `role == "commander"` + không quản lý khu vực | Chỉ xem, phạm vi như UA |
 | TECH | Kỹ thuật viên | `role == "technician"` | Tài khoản, sao lưu, nhật ký. Không thấy dữ liệu nghiệp vụ |
 
-DC là giá trị enum riêng trong database (khác với UA-ZM/CMD-ZM là variant runtime). DC không thuộc đơn vị, không có biến thể zone-manager. Scope toàn hệ thống, chỉ xem — tương tự SA nhưng không có quyền tạo/sửa/xóa/tính toán.
+DC là giá trị enum riêng trong database (khác với UA-ZM/CMD-ZM là variant runtime). DC không thuộc đơn vị, không có biến thể zone-manager. Scope toàn hệ thống, chỉ xem — tương tự SA nhưng không có quyền tạo/sửa/xóa. Có quyền tính toán lại (giống các loại chỉ huy khác).
 
 UA-ZM và CMD-ZM không phải role riêng trong database — là unit_admin/commander có đơn vị được chỉ định quản lý khu vực. Code xác định qua `current_zone_manager?` (kiểm tra `Zone.kept.exists?(manager_unit_id: current_user.unit_id)`). Zone đã xóa → user mất vai trò zone-manager (`.kept` loại zone discarded).
 
@@ -141,7 +141,7 @@ Bảng tính tiền chỉ hiển thị đầu mối **sinh hoạt** (residential
 | Vai trò | Filter | Dữ liệu | Cột | Recalculate |
 |---|---|---|---|---|
 | SA | Dropdown zone + unit | Tất cả đầu mối sinh hoạt | 30 (có Khu vực + Đơn vị) | Có |
-| DC | Dropdown zone + unit | Tất cả đầu mối sinh hoạt | 30 (có Khu vực + Đơn vị) | Không |
+| DC | Dropdown zone + unit | Tất cả đầu mối sinh hoạt | 30 (có Khu vực + Đơn vị) | Có |
 | UA-ZM | Cố định zone + unit (hiển thị từ current_user) | Đơn vị mình + đầu mối sinh hoạt khu vực | 29 (có Đơn vị, ẩn Khu vực) | Có |
 | UA | Cố định zone + unit | Chỉ đầu mối sinh hoạt đơn vị mình | 28 (ẩn cả 2) | Có |
 | CMD-ZM | Cố định zone + unit | Như UA-ZM | 29 | Không |
@@ -388,9 +388,14 @@ Code từ session AI trước có thể thiếu suy nghĩ sâu về edge cases. 
 
 ## Lịch sử thay đổi
 
+### v1.5.1 (21/06/2026)
+
+- Mục 1: sửa mô tả Chỉ huy Sư đoàn — có quyền tính toán lại (giống các loại chỉ huy khác), không phải "không có quyền tính toán".
+- Mục 4 bảng billing: Chỉ huy Sư đoàn cột Recalculate đổi "Không" → "Có".
+
 ### v1.5.0 (21/06/2026)
 
-- Mục 1: 6→7 vai trò thực tế — thêm Chỉ huy Sư đoàn (DC, `division_commander`). Vai trò database riêng (không phải variant runtime), scope toàn hệ thống chỉ xem (tương tự SA nhưng không có quyền tạo/sửa/xóa/tính toán). Không thuộc đơn vị, không có biến thể zone-manager.
+- Mục 1: 6→7 vai trò thực tế — thêm Chỉ huy Sư đoàn (DC, `division_commander`). Vai trò database riêng (không phải variant runtime), scope toàn hệ thống chỉ xem (tương tự SA nhưng không có quyền tạo/sửa/xóa). Không thuộc đơn vị, không có biến thể zone-manager.
 - Mục 4: thêm dòng DC vào mọi bảng hành vi trang. DC xem dữ liệu như SA (dropdown filter zone/unit, cột Khu vực + Đơn vị), inputs disabled, nút CRUD ẩn.
 
 ### v1.4.1 (21/06/2026)

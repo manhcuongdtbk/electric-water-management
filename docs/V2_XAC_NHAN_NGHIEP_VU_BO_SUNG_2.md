@@ -1,6 +1,6 @@
 # Xác nhận nghiệp vụ bổ sung (đợt 2) — Hệ thống quản lý điện nước nội bộ (Hệ thống v2)
 
-> **Phiên bản:** 2.4.0
+> **Phiên bản:** 2.5.0
 > **Ngày:** 21/06/2026
 > **Bối cảnh:** Quản trị viên hệ thống kiểm thử trên môi trường Acceptance và đưa ra 2 mong muốn mới.
 
@@ -59,7 +59,7 @@ Chỉ huy Sư đoàn thấy cùng các trang với quản trị viên hệ thố
 | Trang | Chỉ huy Sư đoàn thấy | Sửa được |
 |---|---|---|
 | Tổng quan | Tổng quan toàn hệ thống (như quản trị viên hệ thống) | Không |
-| Bảng tính tiền | Tất cả đơn vị, có ô lọc khu vực/đơn vị | Không (không có nút Tính toán lại) |
+| Bảng tính tiền | Tất cả đơn vị, có ô lọc khu vực/đơn vị | Không (có nút Tính toán lại — giống chỉ huy đơn vị) |
 | Tra cứu lịch sử | Tất cả | Không |
 | Chỉ số đầu mối | Tất cả, có ô lọc khu vực/đơn vị | Không (tất cả ô nhập vô hiệu hóa) |
 | Chỉ số bơm nước | Tất cả, có ô lọc khu vực | Không |
@@ -80,7 +80,7 @@ Chỉ huy Sư đoàn thấy cùng các trang với quản trị viên hệ thố
 
 - Chỉ huy Sư đoàn không thuộc đơn vị nào — trang tạo tài khoản không yêu cầu chọn đơn vị cho vai trò này.
 - Kỹ thuật viên hoặc quản trị viên hệ thống tạo tài khoản chỉ huy Sư đoàn.
-- Giao diện giống quản trị viên hệ thống nhưng tất cả ô nhập vô hiệu hóa, các nút tạo/sửa/xóa/lưu/tính toán lại/mở kỳ/đóng kỳ ẩn đi.
+- Giao diện giống quản trị viên hệ thống nhưng tất cả ô nhập vô hiệu hóa, các nút tạo/sửa/xóa/lưu/mở kỳ/đóng kỳ ẩn đi. Nút Tính toán lại hiện (giống các loại chỉ huy khác).
 - Sidebar hiển thị cùng các mục với quản trị viên hệ thống, trừ Tài khoản. (Sao lưu dữ liệu vốn chỉ hiện cho kỹ thuật viên — quản trị viên hệ thống cũng không thấy mục này trên sidebar.)
 - Xuất Excel: cho phép (chỉ đọc, không ảnh hưởng dữ liệu).
 
@@ -112,6 +112,11 @@ Thêm vai trò mới "Chỉ huy Sư đoàn" — xem tất cả như quản trị
 - Issue vai trò Chỉ huy Sư đoàn: [#419](https://github.com/manhcuongdtbk/electric-water-management/issues/419)
 
 ## Lịch sử thay đổi
+
+### v2.5.0 (21/06/2026)
+
+- Mục 2 bảng quyền: Chỉ huy Sư đoàn có nút Tính toán lại trên bảng tính tiền (giống các loại chỉ huy khác).
+- Mục 2 quy tắc: bỏ "tính toán lại" khỏi danh sách nút ẩn.
 
 ### v2.4.0 (21/06/2026)
 
