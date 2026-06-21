@@ -89,7 +89,7 @@ RSpec.describe "Demo: vai trò Chỉ huy Sư đoàn", type: :demo do
 
     # 4b. Nhóm cấp bậc
     demo.visit("/ranks", caption: "Nhóm cấp bậc — xem định mức điện từng cấp bậc")
-    expect(page).to have_content("kW/người/tháng", wait: 10)
+    expect(page).to have_css("thead", text: /KWH\/NGƯỜI/i, wait: 10)
     expect(page).to have_no_link("Thêm nhóm cấp bậc")
 
     # 4c. Phân bổ bơm nước
