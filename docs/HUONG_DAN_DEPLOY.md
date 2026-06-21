@@ -465,6 +465,10 @@ docker --version
 
 ## Lịch sử thay đổi
 
+### v1.3.1 (21/06/2026)
+
+- Đổi tên hệ thống trong tiêu đề + dòng 190: "Hệ thống quản lý điện nước nội bộ" (Issue #420).
+
 ### v1.3.0 (10/06/2026)
 
 - Làm rõ chính sách sao lưu theo ADR-016/017: gán nhãn đủ **3 lớp** khớp ADR-017 — **Lớp 1** (snapshot qua giao diện) / **Lớp 2** (khôi phục qua dòng lệnh) / **Lớp 3** (tự động sang ổ phụ, nguồn cậy chính, 7 bản); thêm câu mở đầu giải thích 3 lớp; thêm cảnh báo **tạo bản sao lưu Lớp 1 trước khi khôi phục** và **trước khi cập nhật phiên bản**. (Issue #307)

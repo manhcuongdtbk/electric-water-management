@@ -823,6 +823,10 @@ Hệ thống hiện thông tin bản sao lưu (tên, kích thước, ngày tạo
 
 ## Lịch sử thay đổi
 
+### v1.7.1 (21/06/2026)
+
+- Đổi tên hệ thống trong tiêu đề + mô tả: "Hệ thống quản lý điện nước nội bộ" (Issue #420).
+
 ### v1.7.0 (26/05/2026)
 
 - Chụp lại tất cả ảnh vừa khít nội dung (bỏ khoảng trống thừa), sidebar hiện đầy đủ item và highlight đúng.
