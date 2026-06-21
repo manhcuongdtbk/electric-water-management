@@ -733,34 +733,150 @@ git commit -m "docs: update V2_HANH_VI_HE_THONG for 7th role division_commander"
 
 ---
 
-## Task 7: Final Verification
+## Task 7: View behavior tests — Chỉ huy Sư đoàn per trang
+
+> **Bối cảnh (brainstorm retro):** Task 4-5 chỉ cover access (200/redirect), ability (can/cannot), và commander_readonly trên 4 trang nhập liệu. 10 trang còn lại Chỉ huy Sư đoàn truy cập được nhưng chưa có test verify view behavior (nút ẩn, filter hiện, partial đúng). Task này bổ sung.
+
+**Files:**
+- Create: `spec/requests/division_commander_view_behavior_spec.rb`
+
+**Bảng hành vi cần test (nguồn: audit view code + bảng behavior per trang):**
+
+| Trang | Hành vi cần verify |
+|---|---|
+| dashboard | Render partial `_system_admin` (bảng khu vực + đơn vị), không phải `_unit_view`. Không thấy banner kỳ mở. |
+| billing | Có filter zone/unit (select#zone_id, select#unit_id). Có cột Khu vực. Có nút Xuất Excel. KHÔNG có nút Tính toán lại. |
+| contact_points | Có filter zone/unit. Có cột Khu vực + Đơn vị. KHÔNG có link Thêm. Cột Thao tác không có Sửa/Xóa (hiện "—"). |
+| blocks | Có cột Khu vực + Đơn vị. KHÔNG có link Thêm. Cột Thao tác hiện "—". |
+| groups | Có cột Khu vực + Đơn vị. KHÔNG có link Thêm. Cột Thao tác hiện "—". |
+| zones | KHÔNG có link Thêm. Cột Thao tác hiện "—". |
+| units | Có filter zone. KHÔNG có link Thêm. Cột Thao tác hiện "—". |
+| pump_allocations | Có filter zone. KHÔNG có link Thêm. Cột Thao tác hiện "—". |
+| pricing | Hiện read-only display (không phải form sửa). KHÔNG có nút Đóng kỳ/Mở kỳ mới/Mở lại. |
+| ranks | KHÔNG có link Thêm. Cột Thao tác hiện "—". |
+
+**Không cần test thêm (đã đủ hoặc chỉ xem):**
+- meter_entries, pump_entries, electricity_supply, unit_config — đã có commander_readonly shared example
+- history — chỉ xem, không có hành vi khác SA
+- audit_logs — chỉ xem, không có action buttons
+
+- [ ] **Step 1: Write request spec**
+
+Tạo `spec/requests/division_commander_view_behavior_spec.rb`. Một describe block, sign in Chỉ huy Sư đoàn, setup data (zone, units, period, contact_points, meters, readings, calculations). Mỗi trang 1 context với assertions từ bảng trên.
+
+Pattern cho mỗi trang:
+```ruby
+context "trang [tên]" do
+  it "Chỉ huy Sư đoàn xem [mô tả] — [hành vi read-only]" do
+    get [path]
+    expect(response).to have_http_status(:ok)
+    # Assert visible elements
+    # Assert hidden elements (have_no_link, not include)
+  end
+end
+```
+
+Dùng Nokogiri parse response.body cho assertions chính xác (CSS selectors). Không dùng Capybara (đây là request spec, không system spec).
+
+- [ ] **Step 2: Run spec**
+
+Run: `bin/docker rspec spec/requests/division_commander_view_behavior_spec.rb --no-color`
+Expected: All examples pass.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add spec/requests/division_commander_view_behavior_spec.rb
+git commit -m "test(role): add division_commander view behavior tests for 10 pages"
+```
+
+---
+
+## Task 8: Coverage fix — branch coverage floor
+
+> CI fail: branch coverage 90.98% < floor 91%. Code mới thêm branches (`system_wide_scope?`, `|| division_commander?` trong guards, `when :division_commander` trong case) chưa fully exercised.
+
+- [ ] **Step 1: Identify uncovered branches**
+
+Chạy `COVERAGE=1 bin/docker rspec` với coverage report. Đọc `coverage/index.html` hoặc `.last_run.json` để xác định chính xác file + line nào thiếu branch coverage.
+
+Nếu không đọc được report trong Docker, phân tích bằng logic: branches mới nằm ở `SettingsAccessGuard` (2 methods × `|| division_commander?`), `SidebarHelper` (`when :division_commander`), `User#system_wide_scope?`, `User#clear_unit_for_non_unit_scoped_roles`.
+
+- [ ] **Step 2: Thêm test cover branches thiếu**
+
+Test thêm phải có ý nghĩa (verify hành vi thật, không chỉ chạm branch để pass coverage). Ví dụ: test SettingsAccessGuard cho phép Chỉ huy Sư đoàn qua `require_system_admin!` nhưng chặn ở `require_account_manager!`.
+
+- [ ] **Step 3: Tăng floor nếu coverage tăng**
+
+Nếu branch coverage sau khi thêm test > 91%, tăng floor trong `spec/spec_helper.rb`:
+```ruby
+minimum_coverage line: 99, branch: [new_floor]
+```
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add spec/ .simplecov
+git commit -m "test(role): cover division_commander branches, raise coverage floor"
+```
+
+---
+
+## Task 9: Demo spec — Chỉ huy Sư đoàn walkthrough
+
+> ADR-040: issue #419 có label `customer-facing` → bắt buộc demo spec.
+
+**Files:**
+- Create: `spec/demo/division_commander_demo_spec.rb`
+- Modify: `db/seeds/demo.rb` (đã thêm `demo_dc` user)
+
+**Kịch bản demo (chờ duyệt trước khi implement):**
+
+Câu chuyện khách: "Chỉ huy Sư đoàn cần nắm tình hình điện toàn Sư đoàn mà không sửa số liệu."
+
+Arc dự kiến — chờ user duyệt beats cụ thể trước khi viết code.
+
+Tuân thủ 6 tiêu chí ADR-059:
+1. Cho thấy, đừng nói (dùng `highlight`)
+2. Kể đúng chuyện khách
+3. Diễn kết quả + cái đau được xoá, không diễn thao tác
+4. Trung thực với medium (không diễn Excel export)
+5. Đủ cung đường khách quan tâm
+6. Ổn định (dùng primitive `confirm:`/`unpoint`)
+
+- [ ] **Step 1: Trình kịch bản demo cho user duyệt**
+- [ ] **Step 2: Implement demo spec theo kịch bản đã duyệt**
+- [ ] **Step 3: Chạy `bin/docker demo spec/demo/division_commander_demo_spec.rb`**
+- [ ] **Step 4: Xem lại bản quay như khách (6 tiêu chí ADR-059)**
+- [ ] **Step 5: Commit**
+
+```bash
+git add spec/demo/division_commander_demo_spec.rb db/seeds/demo.rb
+git commit -m "test(demo): add division commander role walkthrough demo (#419)"
+```
+
+---
+
+## Task 10: Final Verification
 
 - [ ] **Step 1: Run full test suite**
 
 Run: `bin/docker rspec`
-Expected: All tests pass including guardrail completeness.
+Expected: All tests pass including guardrail completeness + coverage floor.
 
 - [ ] **Step 2: Run demo specs**
 
 Run: `bin/docker demo`
-Expected: Demo specs still pass (existing functionality unaffected).
+Expected: All demo specs pass including new Chỉ huy Sư đoàn demo.
 
-- [ ] **Step 3: Run i18n/view checks**
+- [ ] **Step 3: Push + CI**
 
-Run: `bin/docker bash -c "bin/check-view-i18n.sh"` (if it exists)
-Run: `bin/docker bash -c "bin/check-test-dimensions.sh"` (if it exists)
+Push updated branch, verify CI green.
 
 - [ ] **Step 4: Verify in browser (preview)**
 
-Start dev server with `preview_start docker-dev`. Sign in as DC user. Verify:
-1. Sidebar shows SA items minus Tài khoản (no users link)
-2. Dashboard shows system-wide view (units table + zones table)
-3. Billing shows all data with zone/unit filters + columns, no Tính toán lại button
-4. Meter entries shows all data, inputs disabled
-5. Contact points shows all data, no Thêm/Sửa/Xóa buttons
-6. Zones page shows all zones, no CRUD buttons
-7. Users page: DC gets redirected (cannot access)
+Start dev server with `preview_start docker-dev`. Sign in as Chỉ huy Sư đoàn. Verify theo bảng hành vi 16 trang.
 
-- [ ] **Step 5: Final commit (if any fixes)**
+- [ ] **Step 5: Update PR**
 
-Fix any issues found during verification, commit with descriptive message.
+Update PR #422 description + test plan checkmarks.
