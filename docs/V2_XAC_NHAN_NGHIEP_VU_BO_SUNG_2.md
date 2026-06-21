@@ -1,6 +1,6 @@
 # Xác nhận nghiệp vụ bổ sung (đợt 2) — Hệ thống quản lý điện nước nội bộ (Hệ thống v2)
 
-> **Phiên bản:** 2.3.0
+> **Phiên bản:** 2.4.0
 > **Ngày:** 21/06/2026
 > **Bối cảnh:** Quản trị viên hệ thống kiểm thử trên môi trường Acceptance và đưa ra 2 mong muốn mới.
 
@@ -102,7 +102,7 @@ Hiển thị "Hệ thống quản lý điện nước nội bộ" nổi bật tr
 
 Thêm vai trò mới "Chỉ huy Sư đoàn" — xem tất cả như quản trị viên hệ thống, không sửa được gì. Chi tiết ở mục 2.
 
-→ **Đề xuất: thêm theo yêu cầu.** Chưa triển khai (issue #419 đang mở).
+→ **Đã triển khai** (PR #422, issue #419).
 
 ---
 
@@ -112,6 +112,10 @@ Thêm vai trò mới "Chỉ huy Sư đoàn" — xem tất cả như quản trị
 - Issue vai trò Chỉ huy Sư đoàn: [#419](https://github.com/manhcuongdtbk/electric-water-management/issues/419)
 
 ## Lịch sử thay đổi
+
+### v2.4.0 (21/06/2026)
+
+- Mục 3 câu 2: đánh dấu "Đã triển khai" (PR #422, issue #419).
 
 ### v2.3.0 (21/06/2026)
 
