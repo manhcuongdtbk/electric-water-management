@@ -580,4 +580,7 @@ ActiveRecord::Base.transaction do
 end
 
 puts "Demo dataset loaded successfully."
-puts "  Demo admin credentials: username=demo_admin  password=Demo@1234"
+puts "  Demo credentials (password: Demo@1234 for all):"
+puts "    demo_admin     — Quản trị viên hệ thống"
+puts "    demo_commander — Chỉ huy đơn vị (Tiểu đoàn 1)"
+puts "    demo_dc        — Chỉ huy Sư đoàn"
