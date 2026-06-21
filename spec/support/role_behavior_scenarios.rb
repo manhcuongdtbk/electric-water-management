@@ -9,10 +9,11 @@ module RoleBehaviorScenarios
   module_function
 
   # Non-SA roles that can OPEN the page per the access matrix (so are subject to
-  # scoping / commander / column behavior). Derived from the single source.
+  # scoping / commander / column behavior). DC excluded: system-wide scope like SA,
+  # not unit-scoped — should not appear in unit_scoped_checks.
   def accessible_non_sa_roles(slug)
     RoleAccessMatrix::PAGES.fetch(slug)[:expect]
-      .select { |_role, outcome| outcome == :ok }.keys - %i[sa tech]
+      .select { |_role, outcome| outcome == :ok }.keys - %i[sa dc tech]
   end
 
   # A zone with a manager-unit and an other-unit, plus an open period.
@@ -34,6 +35,7 @@ module RoleBehaviorScenarios
   def make_user(role, world)
     case role
     when :sa     then FactoryBot.create(:user, :system_admin)
+    when :dc     then FactoryBot.create(:user, :division_commander)
     when :ua_zm, :ua  then FactoryBot.create(:user, :unit_admin, unit: unit_for(role, world))
     when :cmd_zm, :cmd then FactoryBot.create(:user, :commander, unit: unit_for(role, world))
     when :tech   then FactoryBot.create(:user, :technician)
@@ -190,7 +192,8 @@ module RoleBehaviorScenarios
     sample = sample_world
     path = Rails.application.routes.url_helpers.meter_entries_path
     commander_users = [FactoryBot.create(:user, :commander, unit: sample.unit_a),
-                       FactoryBot.create(:user, :commander, unit: sample.unit_b)]
+                       FactoryBot.create(:user, :commander, unit: sample.unit_b),
+                       FactoryBot.create(:user, :division_commander)]
     control_user = FactoryBot.create(:user, :unit_admin, unit: sample.unit_a)
     Scenario.new(
       path: path, sa_user: FactoryBot.create(:user, :system_admin),
@@ -247,17 +250,20 @@ module RoleBehaviorScenarios
     sample = sample_world
     commander_users = [
       FactoryBot.create(:user, :commander, unit: sample.unit_a),
-      FactoryBot.create(:user, :commander, unit: sample.unit_b)
+      FactoryBot.create(:user, :commander, unit: sample.unit_b),
+      FactoryBot.create(:user, :division_commander)
     ]
     control_user = FactoryBot.create(:user, :unit_admin, unit: sample.unit_b)
+    # Use unit_id param so DC (unitless, system_wide_scope) also renders the data form.
+    # CMD users ignore the param — their unit is loaded from current_user.unit.
     Scenario.new(
-      path: Rails.application.routes.url_helpers.unit_config_path,
+      path: Rails.application.routes.url_helpers.unit_config_path(unit_id: sample.unit_b.id),
       sa_user: FactoryBot.create(:user, :system_admin),
       all_texts: [], checks: [], columns: [], column_users: [],
       commander: {
         commander_users: commander_users,
         control_user:    control_user,
-        input_css:       "form input[type='number'], form select",
+        input_css:       "form[method='post'] input[type='number'], form[method='post'] select",
         submit_css:      "input[name='commit']",
         submit_optional: true
       }
@@ -293,7 +299,8 @@ module RoleBehaviorScenarios
   # control_user = unit_admin of the zone-manager unit (UA-ZM).
   def electricity_supply
     sample = sample_world
-    commander_users = [FactoryBot.create(:user, :commander, unit: sample.unit_a)]
+    commander_users = [FactoryBot.create(:user, :commander, unit: sample.unit_a),
+                       FactoryBot.create(:user, :division_commander)]
     control_user    = FactoryBot.create(:user, :unit_admin,  unit: sample.unit_a)
     Scenario.new(
       path: Rails.application.routes.url_helpers.electricity_supply_path,
@@ -367,7 +374,8 @@ module RoleBehaviorScenarios
   # CMD would see an empty table (no pumps) → would fail the "inputs not empty" check.
   def pump_entries_commander
     sample = sample_world
-    commander_users = [FactoryBot.create(:user, :commander, unit: sample.unit_a)]
+    commander_users = [FactoryBot.create(:user, :commander, unit: sample.unit_a),
+                       FactoryBot.create(:user, :division_commander)]
     control_user    = FactoryBot.create(:user, :unit_admin,  unit: sample.unit_a)
     Scenario.new(
       path: Rails.application.routes.url_helpers.pump_entries_path,

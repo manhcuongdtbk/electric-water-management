@@ -17,7 +17,7 @@ class UsersController < ApplicationController
     unit:         "units.name"
   }.freeze
 
-  ROLES = %w[system_admin unit_admin commander technician].freeze
+  ROLES = %w[system_admin unit_admin commander division_commander technician].freeze
 
   def index
     scope = User.accessible_by(current_ability).includes(unit: :zone).left_joins(:unit)

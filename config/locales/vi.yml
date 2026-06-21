@@ -60,6 +60,7 @@ vi:
           system_admin: "Quản trị viên hệ thống"
           unit_admin: "Quản trị viên đơn vị"
           commander: "Chỉ huy đơn vị"
+          division_commander: "Chỉ huy Sư đoàn"
       backup:
         filename: "Tên file"
         size_bytes: "Kích thước"

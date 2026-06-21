@@ -4,7 +4,7 @@
 
 <%
   toolbar_filters = []
-  if current_user.system_admin?
+  if current_user.system_wide_scope?
     toolbar_filters = [
       { label: "Khu vực:", param: :zone_id,
         options: @available_zones&.map { |z| [z.name, z.id] } || [],

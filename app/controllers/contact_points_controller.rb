@@ -39,7 +39,7 @@ class ContactPointsController < ApplicationController
     scope = apply_sa_zone_unit_filter_with_direct_zone(scope)
 
     @visible_types = %w[residential public]
-    @visible_types += %w[water_pump non_establishment] if current_user.system_admin? || current_zone_manager?
+    @visible_types += %w[water_pump non_establishment] if current_user.system_wide_scope? || current_zone_manager?
 
     scope = apply_search(scope, columns: "contact_points.name")
     scope = apply_sort(scope, allowed: SORT_COLUMNS, default: [:created_at, :desc])
@@ -141,7 +141,7 @@ class ContactPointsController < ApplicationController
   end
 
   def set_available_zones
-    @available_zones = if current_user.system_admin?
+    @available_zones = if current_user.system_wide_scope?
       Zone.kept
     else
       Zone.kept.where(id: current_user.unit&.zone_id)

@@ -8,7 +8,7 @@ class UnitConfigController < ApplicationController
 
   def show
     @period = current_period
-    if current_user.system_admin?
+    if current_user.system_wide_scope?
       @zone, @unit = resolve_zone_unit_filter
       @unit ||= @zone ? nil : load_unit_fallback
       set_sa_filter_dropdowns
@@ -65,7 +65,7 @@ class UnitConfigController < ApplicationController
       @zone_other_deductions = scope_zone_other_deductions
       # View show.html.erb đọc @available_zones/@available_units vô điều kiện cho SA → phải set lại khi re-render.
       # Giữ @zone đã resolve cho nhánh zone-context (||= để không clobber khi @unit nil).
-      @zone ||= @unit&.zone if current_user.system_admin?
+      @zone ||= @unit&.zone if current_user.system_wide_scope?
       set_sa_filter_dropdowns
       preload_personnel_for_preview
       render :show, status: :unprocessable_content
@@ -80,7 +80,7 @@ class UnitConfigController < ApplicationController
   # SA-only: danh sách khu vực/đơn vị cho dropdown filter ở show.html.erb.
   # Dùng chung giữa #show và nhánh re-render lỗi của #update.
   def set_sa_filter_dropdowns
-    return unless current_user.system_admin?
+    return unless current_user.system_wide_scope?
     @available_zones = available_zones_for_filter
     us = unit_filter_scope
     us = us.where(id: UnitConfig.where(period: @period).pluck(:unit_id)) if reopened_old_period?
@@ -99,7 +99,7 @@ class UnitConfigController < ApplicationController
   end
 
   def resolve_unit_for_update
-    if current_user.system_admin? && params[:unit_id].present?
+    if current_user.system_wide_scope? && params[:unit_id].present?
       scope = reopened_old_period? ? Unit.with_discarded : Unit.kept
       scope.find(params[:unit_id])
     else
@@ -110,7 +110,7 @@ class UnitConfigController < ApplicationController
   # Ngữ cảnh khu vực cho #update: chỉ SA, khi không chọn đơn vị mà có zone_id.
   # Tôn trọng reopened_old_period? như đường unit (with_discarded khi xem kỳ cũ mở lại).
   def resolve_zone_for_update
-    return nil unless current_user.system_admin? && @unit.nil? && params[:zone_id].present?
+    return nil unless current_user.system_wide_scope? && @unit.nil? && params[:zone_id].present?
     zone_scope = reopened_old_period? ? Zone.with_discarded : Zone.kept
     zone_scope.find(params[:zone_id])
   end
@@ -166,7 +166,7 @@ class UnitConfigController < ApplicationController
   def zone_other_deduction_zone_ids
     if @unit
       Zone.kept.where(manager_unit_id: @unit.id).pluck(:id)
-    elsif @zone && current_user.system_admin?
+    elsif @zone && current_user.system_wide_scope?
       [@zone.id]
     else
       []

@@ -68,6 +68,13 @@ RSpec.describe "Freshness indicator across the six roles", type: :request do
       expect(response.body).to include("freshness-stale")
       expect(response.body).to include(zone.name)
     end
+
+    it "CHIEU-do-tuoi-vai-tro: DC (division commander) sees the stale banner" do
+      sign_in create(:user, :division_commander)
+      get billing_path(period_id: period.id)
+      expect(response.body).to include("freshness-stale")
+      expect(response.body).to include(zone.name)
+    end
   end
 
   # The "Tính toán lại" button is gated by can?(:recalculate, Calculation) in the

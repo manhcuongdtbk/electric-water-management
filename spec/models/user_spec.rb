@@ -38,8 +38,44 @@ RSpec.describe User do
   end
 
   describe "enum :role" do
-    it "có 4 giá trị" do
-      expect(User.roles.keys).to match_array(%w[technician system_admin unit_admin commander])
+    it "có 5 giá trị" do
+      expect(User.roles.keys).to match_array(%w[technician system_admin unit_admin commander division_commander])
+    end
+  end
+
+  describe "#system_wide_scope?" do
+    it "trả về true khi role = system_admin" do
+      expect(build(:user, :system_admin).system_wide_scope?).to be true
+    end
+
+    it "trả về true khi role = division_commander" do
+      expect(build(:user, :division_commander).system_wide_scope?).to be true
+    end
+
+    it "trả về false khi role = unit_admin" do
+      expect(build(:user, :unit_admin).system_wide_scope?).to be false
+    end
+
+    it "trả về false khi role = commander" do
+      expect(build(:user, :commander).system_wide_scope?).to be false
+    end
+
+    it "trả về false khi role = technician" do
+      expect(build(:user).system_wide_scope?).to be false
+    end
+  end
+
+  describe "conditional unit_id validation for division_commander" do
+    it "không yêu cầu unit_id khi role = division_commander" do
+      user = build(:user, role: "division_commander", unit: nil)
+      expect(user).to be_valid
+    end
+
+    it "tự xóa unit_id khi role = division_commander" do
+      unit = create(:unit)
+      user = build(:user, role: "division_commander", unit: unit)
+      user.valid?
+      expect(user.unit_id).to be_nil
     end
   end
 

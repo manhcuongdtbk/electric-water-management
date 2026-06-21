@@ -10,7 +10,7 @@ module FreshnessIndicatable
   def freshness_zones(period, selected_zone: nil)
     return Zone.with_discarded.where(id: selected_zone.id).order(:name) if selected_zone
 
-    if current_user.system_admin?
+    if current_user.system_wide_scope?
       Zone.with_discarded.order(:name)
     else
       zone_ids = [current_user.unit&.zone_id].compact

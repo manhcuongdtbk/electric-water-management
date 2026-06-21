@@ -9,7 +9,8 @@ class User < ApplicationRecord
     technician: "technician",
     system_admin: "system_admin",
     unit_admin: "unit_admin",
-    commander: "commander"
+    commander: "commander",
+    division_commander: "division_commander"
   }
 
   belongs_to :unit, optional: true
@@ -46,10 +47,14 @@ class User < ApplicationRecord
     2.hours
   end
 
+  def system_wide_scope?
+    system_admin? || division_commander?
+  end
+
   private
 
   def clear_unit_for_non_unit_scoped_roles
-    self.unit_id = nil if technician? || system_admin?
+    self.unit_id = nil if technician? || system_admin? || division_commander?
   end
 
   def password_complexity

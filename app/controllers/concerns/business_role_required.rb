@@ -4,7 +4,7 @@ module BusinessRoleRequired
   # Mapping sidebar trong V2_THIET_KE_HE_THONG.md: tổng quan, bảng tính tiền,
   # tra cứu lịch sử, nhập liệu, cấu hình đơn vị chỉ dành cho 3 role nghiệp vụ.
   # Technician chỉ làm task hệ thống (users, audit_logs, backups).
-  ALLOWED_ROLES = %w[system_admin unit_admin commander].freeze
+  ALLOWED_ROLES = %w[system_admin unit_admin commander division_commander].freeze
 
   included do
     before_action :ensure_business_role

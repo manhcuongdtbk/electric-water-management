@@ -15,7 +15,7 @@
     Đơn giá điện: <strong><%= unit_price_to_vi(@period.unit_price) %> đ/kW</strong>
   </p>
 
-  <% if @summary.role == :system_admin %>
+  <% if current_user.system_wide_scope? %>
     <%= render "system_admin" %>
   <% else %>
     <%= render "unit_view" %>

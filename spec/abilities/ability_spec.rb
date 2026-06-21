@@ -289,6 +289,51 @@ RSpec.describe Ability do
     end
   end
 
+  describe "division_commander" do
+    let(:user) { create(:user, :division_commander) }
+    subject(:ability) { Ability.new(user) }
+
+    it "read all business models system-wide" do
+      [Zone, Unit, ContactPoint, Meter, MainMeter, Block, Group,
+       Period, Rank, PumpAllocation,
+       MeterReading, MainMeterReading, PersonnelEntry,
+       NonEstablishmentSnapshot, UnitConfig, OtherDeduction, Calculation
+      ].each do |klass|
+        expect(ability).to be_able_to(:read, klass.new), "Expected read #{klass}"
+      end
+    end
+
+    it "cannot create/update/destroy any business model" do
+      [Zone, Unit, ContactPoint, Meter, MainMeter, Block, Group,
+       Period, Rank, PumpAllocation,
+       MeterReading, MainMeterReading, PersonnelEntry,
+       NonEstablishmentSnapshot, UnitConfig, OtherDeduction, Calculation
+      ].each do |klass|
+        %i[create update destroy].each do |action|
+          expect(ability).not_to be_able_to(action, klass.new),
+            "Expected cannot #{action} #{klass}"
+        end
+      end
+    end
+
+    it "can recalculate (same as commander)" do
+      expect(ability).to be_able_to(:recalculate, Calculation.new)
+    end
+
+    it "read audit logs" do
+      expect(ability).to be_able_to(:read, PaperTrail::Version.new)
+    end
+
+    it "cannot access users (business doc: Tài khoản Không thấy)" do
+      expect(ability).not_to be_able_to(:read, User.new)
+      expect(ability).not_to be_able_to(:manage, User.new)
+    end
+
+    it "cannot manage backups" do
+      expect(ability).not_to be_able_to(:manage, Backup.new)
+    end
+  end
+
   describe "unknown role" do
     it "grants no abilities for an unrecognized role" do
       user = create(:user)

@@ -6,7 +6,7 @@ require "rails_helper"
 
 RSpec.describe RoleAccessMatrix do
   describe "PAGES data integrity" do
-    it "covers all 6 roles for every page (no role gaps in the real matrix)" do
+    it "covers all 7 roles for every page (no role gaps in the real matrix)" do
       expect(described_class.role_gaps).to eq({})
     end
 
@@ -57,7 +57,7 @@ RSpec.describe RoleAccessMatrix do
 
   describe ".role_gaps" do
     it "would flag a page that omits a role (proves the role check bites)" do
-      incomplete = { sa: :ok, ua_zm: :ok, ua: :ok, cmd_zm: :ok, cmd: :ok } # missing :tech
+      incomplete = { sa: :ok, dc: :ok, ua_zm: :ok, ua: :ok, cmd_zm: :ok, cmd: :ok } # missing :tech
       stub = { "fake_page" => { category: "X", path: :root_path, expect: incomplete } }
       stub_const("RoleAccessMatrix::PAGES", stub)
       expect(described_class.role_gaps).to eq("fake_page" => [:tech])

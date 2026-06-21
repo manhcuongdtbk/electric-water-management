@@ -1,6 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 
-const NON_UNIT_SCOPED_ROLES = ["system_admin", "technician"]
+const NON_UNIT_SCOPED_ROLES = ["system_admin", "technician", "division_commander"]
 
 export default class extends Controller {
   static targets = ["role", "unitContainer", "unitSelect"]
