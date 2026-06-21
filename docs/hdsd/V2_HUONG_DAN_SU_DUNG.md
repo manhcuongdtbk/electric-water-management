@@ -1,8 +1,8 @@
 # Hướng dẫn sử dụng — Hệ thống quản lý điện nước nội bộ
 
-> **Phiên bản:** 1.7.1
-> **Ngày:** 26/05/2026
-> **Đối tượng:** Tất cả người dùng hệ thống (kỹ thuật viên, quản trị viên hệ thống, quản trị viên đơn vị, chỉ huy đơn vị)
+> **Phiên bản:** 1.8.0
+> **Ngày:** 22/06/2026
+> **Đối tượng:** Tất cả người dùng hệ thống (kỹ thuật viên, quản trị viên hệ thống, Chỉ huy Sư đoàn, quản trị viên đơn vị, chỉ huy đơn vị)
 > **Ghi chú:** Tài liệu sẽ được cập nhật theo phản hồi thực tế.
 > **Cập nhật ảnh:** Khi giao diện thay đổi, chạy `docs/hdsd/capture-screenshots` để chụp lại toàn bộ ảnh. Thêm/sửa trang chụp: sửa mảng `PAGES` trong `docs/hdsd/capture.mjs`.
 
@@ -16,7 +16,7 @@
   - [A3. Bốn loại đầu mối](#a3-bốn-loại-đầu-mối)
   - [A4. Công tơ và công tơ tổng](#a4-công-tơ-và-công-tơ-tổng)
   - [A5. Cách hệ thống tính toán](#a5-cách-hệ-thống-tính-toán)
-  - [A6. Bốn vai trò người dùng](#a6-bốn-vai-trò-người-dùng)
+  - [A6. Năm vai trò người dùng](#a6-năm-vai-trò-người-dùng)
 - [B. Bắt đầu sử dụng](#b-bắt-đầu-sử-dụng)
   - [B1. Đăng nhập](#b1-đăng-nhập)
   - [B2. Đổi mật khẩu lần đầu](#b2-đổi-mật-khẩu-lần-đầu)
@@ -152,12 +152,13 @@ Hệ thống tính toán qua 3 bước tuần tự cho mỗi khu vực:
 
 Kết quả hiển thị trên bảng tính tiền gồm 28 cột (xem mục E2).
 
-### A6. Bốn vai trò người dùng
+### A6. Năm vai trò người dùng
 
 | Vai trò | Mô tả | Phạm vi |
 |---|---|---|
 | Kỹ thuật viên | Quản lý kỹ thuật, không xem dữ liệu nghiệp vụ | Tài khoản, nhật ký, sao lưu |
 | Quản trị viên hệ thống | Quản lý toàn bộ hệ thống | Mọi khu vực, mọi đơn vị, mọi cấu hình |
+| Chỉ huy Sư đoàn | Chỉ xem toàn hệ thống, có thể tính toán lại | Xem mọi trang nghiệp vụ và cấu hình, không sửa/tạo/xóa |
 | Quản trị viên đơn vị | Quản lý đơn vị mình | Đầu mối, công tơ, quân số, nhập liệu, cấu hình đơn vị |
 | Chỉ huy đơn vị | Chỉ xem, không thao tác | Xem cùng trang với quản trị viên đơn vị, mọi ô nhập bị vô hiệu hóa |
 
@@ -169,6 +170,8 @@ Kết quả hiển thị trên bảng tính tiền gồm 28 cột (xem mục E2)
 - Cấu hình phân bổ bơm nước cho khu vực.
 
 Tuy nhiên, quản trị viên đơn vị quản lý khu vực không quản lý được các đơn vị khác trong cùng khu vực — chỉ quản lý phần chia sẻ của khu vực và đơn vị mình. Quản trị viên hệ thống vẫn giữ toàn quyền can thiệp khi cần.
+
+**Chỉ huy Sư đoàn** không thuộc đơn vị nào. Chỉ huy Sư đoàn xem được mọi trang nghiệp vụ và cấu hình (tương tự quản trị viên hệ thống), nhưng tất cả ở chế độ chỉ xem — không tạo, sửa, hay xóa được. Ngoại lệ: có thể bấm nút **Tính toán lại** trên trang Bảng tính tiền (giống các loại chỉ huy khác). Chỉ huy Sư đoàn không thấy trang Tài khoản và Sao lưu dữ liệu.
 
 **Chỉ huy đơn vị** thấy cùng các trang với quản trị viên đơn vị (nếu là đơn vị quản lý khu vực thì thấy thêm các trang khu vực), nhưng tất cả ở chế độ chỉ xem: mọi ô nhập bị vô hiệu hóa, các nút tạo/sửa/xóa/lưu bị ẩn.
 
@@ -254,10 +257,11 @@ Giao diện gồm thanh điều hướng bên trái và vùng nội dung chính 
 
 Không phải vai trò nào cũng thấy tất cả các mục:
 
-- **Quản trị viên hệ thống:** thấy tất cả 5 nhóm.
-- **Quản trị viên đơn vị:** thấy nhóm Xem kết quả, Nhập liệu, Khai báo. Nếu là đơn vị quản lý khu vực: thêm 4 mục (Nhập số điện lực, Chỉ số bơm nước, Khu vực, Phân bổ bơm nước).
+- **Quản trị viên hệ thống:** thấy tất cả 5 nhóm (17 mục).
+- **Chỉ huy Sư đoàn:** thấy tất cả trừ Tài khoản và Sao lưu dữ liệu (16 mục), tất cả ở chế độ chỉ xem.
+- **Quản trị viên đơn vị:** thấy nhóm Xem kết quả, Nhập liệu, Khai báo. Nếu là đơn vị quản lý khu vực: thêm 3 mục (Nhập số điện lực, Chỉ số bơm nước, Phân bổ bơm nước).
 - **Chỉ huy đơn vị:** thấy cùng các mục với quản trị viên đơn vị cùng loại (đơn vị thường hoặc đơn vị quản lý khu vực), tất cả ở chế độ chỉ xem.
-- **Kỹ thuật viên:** chỉ thấy nhóm Hệ thống.
+- **Kỹ thuật viên:** chỉ thấy nhóm Hệ thống (3 mục).
 
 Mọi trang danh sách đều có: tìm kiếm, sắp xếp theo cột, phân trang, chọn số dòng mỗi trang, hiển thị tổng số bản ghi, di chuột vào dòng nào thì dòng đó được tô sáng. Mọi số liệu hiển thị theo phân cách số tiếng Việt (dấu chấm hàng nghìn, dấu phẩy thập phân, ví dụ: 96.578,38).
 
@@ -697,12 +701,13 @@ Trang **Tài khoản** quản lý người dùng hệ thống.
 
 - **Tên đăng nhập:** Tên dùng để đăng nhập hệ thống.
 - **Tên hiển thị:** Tên hiện trên giao diện (góc trên bên phải).
-- **Vai trò:** Chọn 1 trong 4 vai trò:
+- **Vai trò:** Chọn 1 trong 5 vai trò:
   - **Kỹ thuật viên** — quản lý kỹ thuật, không xem dữ liệu nghiệp vụ.
   - **Quản trị viên hệ thống** — quản lý toàn bộ hệ thống.
+  - **Chỉ huy Sư đoàn** — xem toàn hệ thống, không sửa. Không cần chọn đơn vị.
   - **Quản trị viên đơn vị** — quản lý đơn vị được gán. Phải chọn đơn vị.
   - **Chỉ huy đơn vị** — chỉ xem đơn vị được gán. Phải chọn đơn vị.
-- **Đơn vị:** Bắt buộc chọn khi vai trò là quản trị viên đơn vị hoặc chỉ huy đơn vị. Tài khoản chỉ thấy dữ liệu của đơn vị này. Nếu đơn vị được chỉ định làm đơn vị quản lý khu vực, tài khoản sẽ tự động có thêm quyền khu vực (xem mục A6).
+- **Đơn vị:** Bắt buộc chọn khi vai trò là quản trị viên đơn vị hoặc chỉ huy đơn vị. Tài khoản chỉ thấy dữ liệu của đơn vị này. Nếu đơn vị được chỉ định làm đơn vị quản lý khu vực, tài khoản sẽ tự động có thêm quyền khu vực (xem mục A6). Chỉ huy Sư đoàn và quản trị viên hệ thống không thuộc đơn vị nào.
 - **Mật khẩu:** Phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số, và ký tự đặc biệt (ví dụ: @, #, $, !). Người dùng bắt buộc đổi mật khẩu lần đầu đăng nhập.
 
 ![Tạo tài khoản](images/78_tai_khoan_tao_moi.png)
@@ -822,6 +827,13 @@ Hệ thống hiện thông tin bản sao lưu (tên, kích thước, ngày tạo
 ---
 
 ## Lịch sử thay đổi
+
+### v1.8.0 (22/06/2026)
+
+- Mục A6: đổi "Bốn vai trò" → "Năm vai trò". Thêm Chỉ huy Sư đoàn vào bảng vai trò và mô tả chi tiết (xem toàn hệ thống chỉ đọc, có tính toán lại, không thấy Tài khoản và Sao lưu, không thuộc đơn vị).
+- Mục B4: thêm Chỉ huy Sư đoàn vào danh sách sidebar per vai trò (16 mục). Sửa đơn vị quản lý khu vực: "thêm 4 mục" → "thêm 3 mục" (Khu vực đã bị loại khỏi sidebar zone-manager từ v2.0.3 V2_KICH_BAN_TEST).
+- Mục G1: đổi "4 vai trò" → "5 vai trò", thêm Chỉ huy Sư đoàn vào danh sách khi tạo tài khoản. Ghi rõ Chỉ huy Sư đoàn và quản trị viên hệ thống không thuộc đơn vị.
+- Header: thêm "Chỉ huy Sư đoàn" vào danh sách đối tượng.
 
 ### v1.7.1 (21/06/2026)
 
