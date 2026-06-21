@@ -1,4 +1,4 @@
-# Hệ thống quản lý điện nội bộ Sư đoàn
+# Hệ thống quản lý điện nước nội bộ
 
 Hệ thống web quản lý sử dụng điện, tính toán tiêu chuẩn, tổn hao, phân bổ bơm nước, và tạo bảng tính tiền cho các đơn vị trong Sư đoàn.
 

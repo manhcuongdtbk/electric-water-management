@@ -1,6 +1,6 @@
-# Thiết kế hệ thống quản lý điện nội bộ Sư đoàn — Hệ thống v2
+# Thiết kế hệ thống quản lý điện nước nội bộ — Hệ thống v2
 
-> **Phiên bản tài liệu:** 2.16.0
+> **Phiên bản tài liệu:** 2.16.1
 > **Ngày:** 18/06/2026
 > **Tính chất:** Tài liệu thiết kế hệ thống v2, nguồn sự thật cho implementation.
 > **Nguồn nghiệp vụ:** V2_XAC_NHAN_NGHIEP_VU (phiên bản mới nhất tại thời điểm thiết kế: v2.11.0)
@@ -1265,6 +1265,10 @@ Mọi thao tác trên hệ thống đều được ghi lại (PaperTrail). Syste
 ---
 
 ## Lịch sử thay đổi
+
+### v2.16.1 (21/06/2026)
+
+- Đổi tên hệ thống trong tiêu đề: "Hệ thống quản lý điện nước nội bộ" (Issue #420).
 
 ### v2.16.0 (18/06/2026)
 

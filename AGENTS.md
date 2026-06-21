@@ -1,4 +1,4 @@
-# AGENTS.md — Hệ thống quản lý điện nội bộ Sư đoàn (Hệ thống v2)
+# AGENTS.md — Hệ thống quản lý điện nước nội bộ (Hệ thống v2)
 
 > **Nguồn canonical** (định nghĩa "canonical": `docs/THUAT_NGU.md`) cho mọi quy ước của dự án (code + quy trình), dùng chung cho cả người và mọi công cụ AI (Claude Code, Cursor, Copilot, Codex, Gemini, VS Code…).
 >
