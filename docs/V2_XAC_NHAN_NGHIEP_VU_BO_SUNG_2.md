@@ -1,7 +1,7 @@
 # Xác nhận nghiệp vụ bổ sung (đợt 2) — Hệ thống quản lý điện nước nội bộ (Hệ thống v2)
 
-> **Phiên bản:** 2.2.1
-> **Ngày:** 11/06/2026
+> **Phiên bản:** 2.3.0
+> **Ngày:** 21/06/2026
 > **Bối cảnh:** Quản trị viên hệ thống kiểm thử trên môi trường Acceptance và đưa ra 2 mong muốn mới.
 
 ---
@@ -15,6 +15,8 @@
 ---
 
 ## 1. Tên phần mềm trên trang đăng nhập
+
+> **Trạng thái: Đã triển khai** (PR #417, issue #418 đã đóng).
 
 ### Vấn đề thực tế
 
@@ -79,7 +81,7 @@ Chỉ huy Sư đoàn thấy cùng các trang với quản trị viên hệ thố
 - Chỉ huy Sư đoàn không thuộc đơn vị nào — trang tạo tài khoản không yêu cầu chọn đơn vị cho vai trò này.
 - Kỹ thuật viên hoặc quản trị viên hệ thống tạo tài khoản chỉ huy Sư đoàn.
 - Giao diện giống quản trị viên hệ thống nhưng tất cả ô nhập vô hiệu hóa, các nút tạo/sửa/xóa/lưu/tính toán lại/mở kỳ/đóng kỳ ẩn đi.
-- Sidebar hiển thị cùng các mục với quản trị viên hệ thống, trừ Tài khoản và Sao lưu dữ liệu.
+- Sidebar hiển thị cùng các mục với quản trị viên hệ thống, trừ Tài khoản. (Sao lưu dữ liệu vốn chỉ hiện cho kỹ thuật viên — quản trị viên hệ thống cũng không thấy mục này trên sidebar.)
 - Xuất Excel: cho phép (chỉ đọc, không ảnh hưởng dữ liệu).
 
 ---
@@ -92,7 +94,7 @@ Chỉ huy Sư đoàn thấy cùng các trang với quản trị viên hệ thố
 
 Hiển thị "Hệ thống quản lý điện nước nội bộ" nổi bật trên trang đăng nhập. Chi tiết ở mục 1.
 
-→ **Đề xuất: thêm theo yêu cầu.**
+→ **Đã triển khai** (PR #417, issue #418 đã đóng).
 
 ---
 
@@ -100,7 +102,7 @@ Hiển thị "Hệ thống quản lý điện nước nội bộ" nổi bật tr
 
 Thêm vai trò mới "Chỉ huy Sư đoàn" — xem tất cả như quản trị viên hệ thống, không sửa được gì. Chi tiết ở mục 2.
 
-→ **Đề xuất: thêm theo yêu cầu.** Chỉ huy Sư đoàn có cần xem Tài khoản và Sao lưu dữ liệu không?
+→ **Đề xuất: thêm theo yêu cầu.** Chưa triển khai (issue #419 đang mở).
 
 ---
 
@@ -110,6 +112,12 @@ Thêm vai trò mới "Chỉ huy Sư đoàn" — xem tất cả như quản trị
 - Issue vai trò Chỉ huy Sư đoàn: [#419](https://github.com/manhcuongdtbk/electric-water-management/issues/419)
 
 ## Lịch sử thay đổi
+
+### v2.3.0 (21/06/2026)
+
+- Mục 1: đánh dấu "Đã triển khai" (PR #417, issue #418 đã đóng).
+- Mục 2 sidebar: làm rõ Sao lưu dữ liệu vốn chỉ hiện cho kỹ thuật viên — quản trị viên hệ thống cũng không có mục này trên sidebar (trước đó viết "trừ Tài khoản và Sao lưu" gây hiểu nhầm SA đang có backups).
+- Mục 3 tổng hợp: cập nhật trạng thái câu 1 (đã triển khai) và câu 2 (chưa triển khai, issue #419 đang mở).
 
 ### v2.2.1 (21/06/2026)
 
