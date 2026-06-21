@@ -1,6 +1,6 @@
-# Kiến thức Docker — Hệ thống quản lý điện nội bộ Sư đoàn
+# Kiến thức Docker — Hệ thống quản lý điện nước nội bộ
 
-> **Phiên bản:** 1.9.1
+> **Phiên bản:** 1.9.2
 > **Ngày:** 14/06/2026
 > **Đối tượng:** Developer hoặc người muốn hiểu hệ thống chạy thế nào ở mọi môi trường.
 > **Tiền đề:** Bạn biết code Rails nhưng chưa biết Docker và chưa từng deploy.
@@ -844,6 +844,10 @@ docker compose up -d      # Tạo lại (database trống, 2 tài khoản mặc 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.9.2 (21/06/2026)
+
+- Đổi tên hệ thống trong tiêu đề: "Hệ thống quản lý điện nước nội bộ" (Issue #420).
 
 ### v1.9.1 (14/06/2026)
 
