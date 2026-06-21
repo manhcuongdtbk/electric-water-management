@@ -8,7 +8,7 @@
 
 **Tech Stack:** Rails 8, PostgreSQL enum, CanCan, RSpec, Hotwire/Stimulus
 
-**Issue:** #315 item 2  
+**Issue:** #419  
 **Branch base:** develop (squash merge per Git Flow)  
 **Test command:** `bin/docker rspec`
 
@@ -18,7 +18,6 @@
 
 ### New files
 - `db/migrate/YYYYMMDDHHMMSS_add_division_commander_to_user_role.rb` — PostgreSQL ALTER TYPE
-- `docs/V2_XAC_NHAN_NGHIEP_VU_BO_SUNG_2.md` — Business confirmation doc (batch 2)
 
 ### Modified files (grouped by layer)
 
@@ -28,7 +27,7 @@
 
 **Controller layer:**
 - `app/controllers/concerns/business_role_required.rb` — add DC to ALLOWED_ROLES
-- `app/controllers/concerns/settings_access_guard.rb` — update guards for DC
+- `app/controllers/concerns/settings_access_guard.rb` — update `require_system_admin!` and `require_system_admin_or_zone_manager!` for DC (NOT `require_account_manager!` — DC cannot access users page per business doc)
 - `app/controllers/concerns/zone_unit_filterable.rb` — `system_admin?` → `system_wide_scope?` (4 methods)
 - `app/controllers/concerns/meter_reading_entry.rb` — `system_wide_scope?`
 - `app/controllers/concerns/freshness_indicatable.rb` — `system_wide_scope?`
@@ -66,8 +65,9 @@
 - `spec/support/role_behavior_scenarios.rb` — `make_user` + scenario updates
 - `spec/requests/role_access_matrix_spec.rb` — `build_user` for DC
 - `spec/requests/freshness_roles_spec.rb` — DC test case
-- `spec/requests/business_role_required_integration_spec.rb` — DC test case (if exists)
 - `spec/abilities/ability_spec.rb` — DC ability assertions
+- `spec/support/shared_examples/system/zone_unit_column_visibility.rb` — DC context
+- `spec/support/shared_examples/system/role_based_filter_visibility.rb` — DC context
 
 **Documentation:**
 - `docs/V2_HANH_VI_HE_THONG.md` — section 1 (6→7 roles) + changelog
@@ -213,12 +213,11 @@ def division_commander_abilities(_user)
   ].each { |m| can :read, m }
   can :read, Zone, discarded_at: nil
 
-  can :read, User
   can :read, PaperTrail::Version
 end
 ```
 
-Key differences from SA: only `:read` (no `:manage`, no `:recalculate`). Key differences from commander: system-wide scope (no `unit_id` conditions).
+Key differences from SA: only `:read` (no `:manage`, no `:recalculate`). No `can :read, User` — DC cannot access users page (business doc). Key differences from commander: system-wide scope (no `unit_id` conditions).
 
 - [ ] **Step 2: Update BusinessRoleRequired**
 
@@ -247,13 +246,7 @@ def require_system_admin_or_zone_manager!
 end
 ```
 
-Update `require_account_manager!` (line 25-28) — DC can view users list (read-only):
-```ruby
-def require_account_manager!
-  return if current_user&.system_admin? || current_user&.technician? || current_user&.division_commander?
-  deny_settings_access
-end
-```
+`require_account_manager!` (line 25-28) — NO CHANGE. DC cannot access users page per business doc ("Tài khoản: Không thấy"). The existing guard (SA + TECH only) correctly blocks DC.
 
 - [ ] **Step 4: Update UsersController ROLES constant**
 
@@ -366,13 +359,13 @@ return if accessible_main_meters.exists? || current_user.system_wide_scope?
 
 - [ ] **Step 8: Update SidebarHelper**
 
-In `app/helpers/sidebar_helper.rb`, add DC case in `allowed_sidebar_items` (line 36). DC sees everything SA sees:
+In `app/helpers/sidebar_helper.rb`, add DC case in `allowed_sidebar_items` (line 36). DC sees SA items minus `users` (per business doc "Sidebar hiển thị cùng các mục với quản trị viên hệ thống, trừ Tài khoản"):
 ```ruby
 when :division_commander
   %i[dashboard billing history electricity_supply meter_entries pump_entries
      contact_points blocks groups unit_config
      zones units pump_allocations pricing ranks
-     users audit_logs]
+     audit_logs]
 ```
 
 Insert this between the `:system_admin` case and the `:unit_admin` case.
@@ -473,7 +466,7 @@ Lines 35-81 — add `dc:` to every PAGES entry. DC has the same access as SA (`:
 "pump_allocations"   => { ..., expect: { sa: :ok, dc: :ok, ua_zm: :ok, ua: :redirect, cmd_zm: :ok, cmd: :redirect, tech: :redirect } },
 "pricing"            => { ..., expect: { sa: :ok, dc: :ok, ua_zm: :redirect, ua: :redirect, cmd_zm: :redirect, cmd: :redirect, tech: :redirect } },
 "ranks"              => { ..., expect: { sa: :ok, dc: :ok, ua_zm: :redirect, ua: :redirect, cmd_zm: :redirect, cmd: :redirect, tech: :redirect } },
-"users"              => { ..., expect: { sa: :ok, dc: :ok, ua_zm: :redirect, ua: :redirect, cmd_zm: :redirect, cmd: :redirect, tech: :ok } },
+"users"              => { ..., expect: { sa: :ok, dc: :redirect, ua_zm: :redirect, ua: :redirect, cmd_zm: :redirect, cmd: :redirect, tech: :ok } },
 "audit_logs"         => { ..., expect: { sa: :ok, dc: :ok, ua_zm: :redirect, ua: :redirect, cmd_zm: :redirect, cmd: :redirect, tech: :ok } },
 "backups"            => { ..., expect: { sa: :redirect, dc: :redirect, ua_zm: :redirect, ua: :redirect, cmd_zm: :redirect, cmd: :redirect, tech: :ok } },
 ```
@@ -529,22 +522,57 @@ def make_user(role, world)
 end
 ```
 
-Update `accessible_non_sa_roles` — currently filters out `:sa` and `:tech`. DC is accessible and non-SA, so it will appear. But DC has system-wide scope (sees everything like SA), so it should NOT be in `unit_scoped_checks`. Update `unit_scoped_checks` and the data_scoping scenarios to exclude `:dc` from the scoping checks (DC sees everything).
+Update `accessible_non_sa_roles` to exclude `:dc` (brainstorm decision — DC has system-wide scope like SA, should NOT appear in unit_scoped_checks):
+```ruby
+def accessible_non_sa_roles(slug)
+  RoleAccessMatrix::PAGES.fetch(slug)[:expect]
+    .select { |_role, outcome| outcome == :ok }.keys - %i[sa dc tech]
+end
+```
 
-For data_scoping scenarios that call `unit_scoped_checks`, DC should be treated like SA (sees all). The simplest approach: in each scenario method, after building unit_scoped_checks, do NOT add DC to checks (DC is like SA — sees everything, no scoping).
-
-For commander_readonly scenarios, add DC user to `commander_users`:
+For commander_readonly scenarios, add DC user to `commander_users` (brainstorm decision — DC is read-only like commander, CSS selectors work for both SA-view and unit-view):
 ```ruby
 # In scenarios that build commander config:
 dc_user = FactoryBot.create(:user, :division_commander)
 commander_users: [cmd_user, cmd_zm_user, dc_user]
 ```
 
-But DC sees the SA-style view (system-wide), while CMD sees unit-scoped view. The same input CSS selectors should work for both if the inputs use the same structure. Verify per page.
+For zone_unit_columns scenarios, DC should NOT be in `column_users` (DC sees columns like SA). Since `column_users` is built manually from `users.values_at(...)`, just don't add DC there — DC is already excluded from `accessible_non_sa_roles`.
 
-For zone_unit_columns scenarios, DC should show zone/unit columns (like SA). The shared example checks that SA shows columns and non-SA hides them. DC is non-SA but shows columns → the shared example needs DC excluded from the "hides columns" check, or DC needs to be in the "shows columns" users list.
+- [ ] **Step 5: Update system spec shared examples**
 
-Read `spec/support/shared_examples/requests/role_zone_unit_columns.rb` to understand the exact pattern and update scenarios accordingly.
+Add DC context to `spec/support/shared_examples/system/zone_unit_column_visibility.rb` (brainstorm decision — verify DC sees columns like SA):
+```ruby
+context "as division_commander" do
+  before do
+    user = create(:user, :division_commander)
+    sign_in user
+  end
+
+  it "hiển thị cột Khu vực và Đơn vị" do
+    visit path
+    expect(page).to have_css("thead", text: /khu vực/i)
+    expect(page).to have_css("thead", text: /đơn vị/i)
+  end
+end
+```
+
+Add DC context to `spec/support/shared_examples/system/role_based_filter_visibility.rb`:
+```ruby
+context "as division_commander" do
+  before do
+    user = create(:user, :division_commander)
+    sign_in user
+  end
+
+  it "hiển thị dropdown filters" do
+    visit path
+    filter_select_ids.each do |select_id|
+      expect(page).to have_select(select_id)
+    end
+  end
+end
+```
 
 - [ ] **Step 5: Run guardrail specs**
 
@@ -602,15 +630,13 @@ describe "division_commander" do
     expect(ability).not_to be_able_to(:recalculate, Calculation.new)
   end
 
-  it "read users and audit logs" do
-    expect(ability).to be_able_to(:read, User.new)
+  it "read audit logs" do
     expect(ability).to be_able_to(:read, PaperTrail::Version.new)
   end
 
-  it "cannot manage users" do
-    expect(ability).not_to be_able_to(:create, User.new)
-    expect(ability).not_to be_able_to(:update, User.new)
-    expect(ability).not_to be_able_to(:destroy, User.new)
+  it "cannot access users (business doc: Tài khoản Không thấy)" do
+    expect(ability).not_to be_able_to(:read, User.new)
+    expect(ability).not_to be_able_to(:manage, User.new)
   end
 
   it "cannot manage backups" do
@@ -648,44 +674,7 @@ git commit -m "test(role): add division_commander ability and freshness tests"
 
 ---
 
-## Task 6: Business Confirmation Document
-
-Create `docs/V2_XAC_NHAN_NGHIEP_VU_BO_SUNG_2.md` following the pattern of `docs/V2_XAC_NHAN_NGHIEP_VU_BO_SUNG.md`.
-
-**Files:**
-- Create: `docs/V2_XAC_NHAN_NGHIEP_VU_BO_SUNG_2.md`
-
-- [ ] **Step 1: Create the document**
-
-Read `docs/V2_XAC_NHAN_NGHIEP_VU_BO_SUNG.md` for the full format, then create `docs/V2_XAC_NHAN_NGHIEP_VU_BO_SUNG_2.md` with:
-
-**Required content:**
-- Version: 2.1.0
-- Date: current date
-- Context: client requested a "Chỉ huy Sư đoàn" role for v1.2.0
-- Section 1: confirm current role system works correctly (6 roles)
-- Section 2: new role definition — "Chỉ huy Sư đoàn" (Division Commander)
-  - Database enum: `division_commander`
-  - Scope: system-wide (no unit assignment)
-  - Permissions: read-only access to everything SA can see
-  - Cannot: create/update/delete any data, recalculate, manage users, manage backups
-- Section 3: per-page access and behavior table (all 18 pages × DC behavior)
-  - Table columns: Trang | Truy cập | Dữ liệu thấy | Có thể sửa | Ghi chú
-  - DC has `:ok` on all pages except backups
-  - DC sees SA-style data (system-wide) on every page
-  - DC cannot edit anything (inputs disabled, CRUD buttons hidden)
-- Section 4: summary of confirmations needed
-
-- [ ] **Step 2: Commit**
-
-```bash
-git add docs/V2_XAC_NHAN_NGHIEP_VU_BO_SUNG_2.md
-git commit -m "docs: add V2_XAC_NHAN_NGHIEP_VU_BO_SUNG_2 for division_commander role"
-```
-
----
-
-## Task 7: Documentation Update
+## Task 6: Documentation Update
 
 **Files:**
 - Modify: `docs/V2_HANH_VI_HE_THONG.md`
@@ -744,7 +733,7 @@ git commit -m "docs: update V2_HANH_VI_HE_THONG for 7th role division_commander"
 
 ---
 
-## Task 8: Final Verification
+## Task 7: Final Verification
 
 - [ ] **Step 1: Run full test suite**
 
@@ -764,13 +753,13 @@ Run: `bin/docker bash -c "bin/check-test-dimensions.sh"` (if it exists)
 - [ ] **Step 4: Verify in browser (preview)**
 
 Start dev server with `preview_start docker-dev`. Sign in as DC user. Verify:
-1. Sidebar shows all items (same as SA)
+1. Sidebar shows SA items minus Tài khoản (no users link)
 2. Dashboard shows system-wide view (units table + zones table)
-3. Billing shows all data with zone/unit filters + columns
+3. Billing shows all data with zone/unit filters + columns, no Tính toán lại button
 4. Meter entries shows all data, inputs disabled
 5. Contact points shows all data, no Thêm/Sửa/Xóa buttons
 6. Zones page shows all zones, no CRUD buttons
-7. Users page shows all users, no Thêm/Sửa/Xóa buttons
+7. Users page: DC gets redirected (cannot access)
 
 - [ ] **Step 5: Final commit (if any fixes)**
 
