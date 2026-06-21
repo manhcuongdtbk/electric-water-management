@@ -19,6 +19,15 @@
             "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/check-branch-behind-base.sh\" 2>/dev/null"
           }
         ]
+      },
+      {
+        "matcher": "SendUserFile",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/block-senduserfile-video.sh\""
+          }
+        ]
       }
     ],
     "PostToolUse": [
