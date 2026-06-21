@@ -41,6 +41,11 @@ module SidebarHelper
          contact_points blocks groups unit_config
          zones units pump_allocations pricing ranks
          users audit_logs]
+    when :division_commander
+      %i[dashboard billing history electricity_supply meter_entries pump_entries
+         contact_points blocks groups unit_config
+         zones units pump_allocations pricing ranks
+         audit_logs]
     when :unit_admin
       base = %i[dashboard billing history meter_entries contact_points blocks groups unit_config]
       base += %i[electricity_supply pump_entries pump_allocations] if zone_manager

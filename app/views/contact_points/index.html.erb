@@ -9,7 +9,7 @@
 
   type_options = @visible_types.map { |t| [I18n.t("activerecord.attributes.contact_point.types.#{t}"), t] }
 
-  show_zone_unit = current_user.system_admin?
+  show_zone_unit = current_user.system_wide_scope?
 
   toolbar_filters = [
     { label: "Loại:", param: :type, options: type_options, selected: @filter_type }

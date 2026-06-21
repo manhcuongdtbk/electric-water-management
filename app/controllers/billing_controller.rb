@@ -13,7 +13,7 @@ class BillingController < ApplicationController
     @base_scope = Billing::Query.base_scope(@period, current_ability)
     @zone = @unit = nil
 
-    if current_user.system_admin?
+    if current_user.system_wide_scope?
       scope = apply_sa_zone_unit_filter_with_direct_zone(@base_scope,
                 zone_scope: Zone.with_discarded, unit_scope: Unit.with_discarded)
     else
@@ -100,7 +100,7 @@ class BillingController < ApplicationController
   end
 
   def resolve_filter
-    if current_user.system_admin?
+    if current_user.system_wide_scope?
       resolve_zone_unit_filter(zone_scope: Zone.with_discarded, unit_scope: Unit.with_discarded)
     else
       resolve_current_user_zone_unit

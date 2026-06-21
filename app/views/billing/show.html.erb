@@ -11,7 +11,7 @@
         options: @available_periods.map { |p| ["Tháng #{p.month}/#{p.year}", p.id] },
         selected: @period.id }
     ]
-    if current_user.system_admin?
+    if current_user.system_wide_scope?
       billing_filters += [
         { label: "Khu vực:", param: :zone_id,
           options: @available_zones.map { |z| [z.name, z.id] }, selected: @zone&.id,

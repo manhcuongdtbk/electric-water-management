@@ -10,7 +10,7 @@
 
 <%
   toolbar_filters = []
-  if current_user.system_admin?
+  if current_user.system_wide_scope?
     toolbar_filters = [
       { label: t("pump_allocations.index.zone_filter_label"), param: :zone_id,
         options: @available_zones.pluck(:name, :id), selected: @zone&.id }
@@ -48,7 +48,7 @@
       station_id = station&.id
       # SA xem nhieu khu vuc (chua loc khu vuc): kem ten khu vuc vao tieu de the de
       # phan biet khi hai khu vuc co tram trung ten. Loc mot khu vuc thi khoi can.
-      show_zone_in_card = station && current_user.system_admin? && @zone.nil?
+      show_zone_in_card = station && current_user.system_wide_scope? && @zone.nil?
       base_title =
         if station && show_zone_in_card
           t("pump_allocations.index.station_card_with_zone", station: station.name, zone: station.zone&.name)

@@ -6,7 +6,7 @@
     link_to(t("common.actions.add") + " " + t("resources.block"), new_block_path,
       class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700") : nil
 
-  show_zone_unit = current_user.system_admin?
+  show_zone_unit = current_user.system_wide_scope?
 
   toolbar_filters = []
   if show_zone_unit
