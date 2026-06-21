@@ -44,6 +44,7 @@ Mỗi git worktree dùng bộ cổng host riêng do `bin/docker` tự gán (post
 
 - Chạy test: `bin/docker rspec` (hoặc `bin/docker rspec spec/models`)
 - Chạy demo specs: `bin/docker demo` (hoặc `bin/docker demo spec/demo/<file>`) — tự set `DEMO=1` (demo spec bị loại khỏi `bin/docker rspec` thường)
+- Chạy test với coverage: `bin/docker coverage` — tự set `COVERAGE=1`, in line + branch coverage cuối output. Kết quả chính xác khi chạy toàn bộ (không truyền path cụ thể)
 - Rails console: `bin/docker console`
 - Xem logs: `bin/docker logs`
 - Mở shell: `bin/docker bash` (hoặc `bin/docker bash postgres`)
