@@ -148,6 +148,48 @@ RSpec.describe "Users", type: :request do
       end
     end
 
+    describe "CRUD tài khoản Chỉ huy Sư đoàn" do
+      it "tạo được tài khoản division_commander (không cần unit_id)" do
+        post users_path, params: {
+          user: {
+            username: "chiHuySuDoan",
+            display_name: "Chỉ huy Sư đoàn mới",
+            role: "division_commander",
+            password: "Secure@123",
+            password_confirmation: "Secure@123"
+          }
+        }
+        expect(response).to redirect_to(users_path)
+        created = User.find_by(username: "chiHuySuDoan")
+        expect(created).to be_present
+        expect(created.role).to eq("division_commander")
+        expect(created.unit_id).to be_nil
+      end
+
+      it "sửa được tài khoản division_commander" do
+        dc = create(:user, :division_commander, username: "dcSua")
+        patch user_path(dc), params: { user: { display_name: "Tên mới" } }
+        expect(response).to redirect_to(users_path)
+        expect(dc.reload.display_name).to eq("Tên mới")
+      end
+
+      it "đổi role sang division_commander → unit_id tự xóa" do
+        target = create(:user, :unit_admin, unit: unit)
+        patch user_path(target), params: { user: { role: "division_commander" } }
+        expect(response).to redirect_to(users_path)
+        target.reload
+        expect(target.role).to eq("division_commander")
+        expect(target.unit_id).to be_nil
+      end
+
+      it "xóa được tài khoản division_commander" do
+        dc = create(:user, :division_commander, username: "dcXoa")
+        delete user_path(dc)
+        expect(response).to redirect_to(users_path)
+        expect(User.find_by(username: "dcXoa")).to be_nil
+      end
+    end
+
     describe "T46: không tự xóa chính mình" do
       it "redirect alert khi xóa current_user" do
         delete user_path(system_admin)
