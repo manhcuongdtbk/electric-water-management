@@ -1,4 +1,4 @@
-# Hướng dẫn deploy — Hệ thống quản lý điện nội bộ Sư đoàn
+# Hướng dẫn deploy — Hệ thống quản lý điện nước nội bộ
 
 > **Phiên bản:** 1.3.0
 > **Ngày:** 10/06/2026
@@ -187,7 +187,7 @@ Từ trình duyệt trên máy tính khác trong LAN, truy cập:
 http://<IP-server>
 ```
 
-Phải thấy trang đăng nhập tiếng Việt "Hệ thống quản lý điện nội bộ Sư đoàn".
+Phải thấy trang đăng nhập tiếng Việt "Hệ thống quản lý điện nước nội bộ".
 
 ### B6. Đăng nhập lần đầu
 

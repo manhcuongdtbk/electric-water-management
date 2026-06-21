@@ -1,4 +1,4 @@
-# Kiến thức Docker — Hệ thống quản lý điện nội bộ Sư đoàn
+# Kiến thức Docker — Hệ thống quản lý điện nước nội bộ
 
 > **Phiên bản:** 1.9.1
 > **Ngày:** 14/06/2026
@@ -844,6 +844,10 @@ docker compose up -d      # Tạo lại (database trống, 2 tài khoản mặc 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.9.2 (21/06/2026)
+
+- Đổi tên hệ thống trong tiêu đề: "Hệ thống quản lý điện nước nội bộ" (Issue #420).
 
 ### v1.9.1 (14/06/2026)
 

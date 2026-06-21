@@ -1,4 +1,4 @@
-# Hướng dẫn sử dụng — Hệ thống quản lý điện nội bộ Sư đoàn
+# Hướng dẫn sử dụng — Hệ thống quản lý điện nước nội bộ
 
 > **Phiên bản:** 1.7.0
 > **Ngày:** 26/05/2026
@@ -59,7 +59,7 @@
 
 ### A1. Hệ thống làm gì
 
-Hệ thống quản lý điện nội bộ Sư đoàn thay thế các file Excel tính tiền điện hiện tại. Hệ thống phục vụ:
+Hệ thống quản lý điện nước nội bộ thay thế các file Excel tính tiền điện hiện tại. Hệ thống phục vụ:
 
 - Theo dõi sử dụng điện của các đầu mối thông qua công tơ.
 - Tính toán tiêu chuẩn điện được hưởng theo cấp bậc và quân số.

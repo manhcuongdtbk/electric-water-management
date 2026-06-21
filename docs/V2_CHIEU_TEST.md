@@ -1,4 +1,4 @@
-# Các chiều kiểm thử — Hệ thống quản lý điện nội bộ Sư đoàn (Hệ thống v2)
+# Các chiều kiểm thử — Hệ thống quản lý điện nước nội bộ (Hệ thống v2)
 
 > **Phiên bản:** 1.4.1
 > **Ngày:** 14/06/2026
@@ -500,6 +500,10 @@ Test: chưa tính → 2 cột + A/B/C trống; sau tính → khớp `LossCalcula
 ---
 
 ## Lịch sử thay đổi
+
+### v1.4.2 (21/06/2026)
+
+- Đổi tên hệ thống trong tiêu đề: "Hệ thống quản lý điện nước nội bộ" (Issue #420).
 
 ### v1.4.1 (14/06/2026)
 

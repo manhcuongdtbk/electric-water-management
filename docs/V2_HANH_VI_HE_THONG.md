@@ -1,4 +1,4 @@
-# Hành vi hệ thống — Hệ thống quản lý điện nội bộ Sư đoàn (Hệ thống v2)
+# Hành vi hệ thống — Hệ thống quản lý điện nước nội bộ (Hệ thống v2)
 
 > **Phiên bản:** 1.4.0
 > **Ngày:** 18/06/2026
@@ -378,6 +378,10 @@ Code từ session AI trước có thể thiếu suy nghĩ sâu về edge cases. 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.4.1 (21/06/2026)
+
+- Đổi tên hệ thống trong tiêu đề: "Hệ thống quản lý điện nước nội bộ" (Issue #420).
 
 ### v1.4.0 (18/06/2026)
 
