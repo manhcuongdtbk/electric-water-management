@@ -1,6 +1,6 @@
 # Hành vi hệ thống — Hệ thống quản lý điện nước nội bộ (Hệ thống v2)
 
-> **Phiên bản:** 1.5.2
+> **Phiên bản:** 1.5.3
 > **Ngày:** 22/06/2026
 > **Tính chất:** Tài liệu mô tả hành vi thực tế của hệ thống đã được verify qua code và test. Bổ sung cho V2_XAC_NHAN_NGHIEP_VU (cái gì) và V2_THIET_KE_HE_THONG (làm thế nào) bằng cách trả lời "hệ thống hành xử ra sao" trong các kịch bản thực tế.
 > **Nguồn:** Kết quả audit toàn diện codebase, 14 đợt page-by-page, 781+ test cases.
@@ -360,7 +360,7 @@ Code từ session AI trước có thể thiếu suy nghĩ sâu về edge cases. 
 
 ## 9. Hành vi bổ sung — milestone 1.2.0 (3 tính năng)
 
-> Hành vi runtime đích cho 3 tính năng 1.2.0 (chưa triển khai phiên này). Chi tiết + lý do ở spec; data model ở `V2_THIET_KE_HE_THONG` mục "Thiết kế bổ sung — milestone 1.2.0".
+> Hành vi runtime cho 3 tính năng 1.2.0 (**đã triển khai**, merge vào `develop`). Chi tiết + lý do ở spec; data model ở `V2_THIET_KE_HE_THONG` mục "Thiết kế bổ sung — milestone 1.2.0".
 
 ### Cột "Khác" dạng hệ số (đơn vị)
 
@@ -387,6 +387,10 @@ Code từ session AI trước có thể thiếu suy nghĩ sâu về edge cases. 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.5.3 (22/06/2026)
+
+- Mục 9: sửa ghi chú "chưa triển khai phiên này" → "đã triển khai" — cả 3 tính năng 1.2.0 đã merge vào develop.
 
 ### v1.5.2 (22/06/2026)
 
