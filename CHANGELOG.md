@@ -1,5 +1,92 @@
 # Changelog
 
+## [1.2.0](https://github.com/manhcuongdtbk/electric-water-management/compare/v1.1.1...v1.2.0) (2026-06-22)
+
+
+### Features
+
+* add ADR status lifecycle + guardrail (ADR-033) ([#340](https://github.com/manhcuongdtbk/electric-water-management/issues/340)) ([83912b2](https://github.com/manhcuongdtbk/electric-water-management/commit/83912b2897e55b99cb7c75ae6559d392d760de11))
+* AGENTS-compliance review dimension (ADR-031) ([#336](https://github.com/manhcuongdtbk/electric-water-management/issues/336)) ([d3c5116](https://github.com/manhcuongdtbk/electric-water-management/commit/d3c5116d4c8f77bd7606cc73ea81eef8b2d13978))
+* **billing:** hiển thị chi tiết tổn hao (TN3, milestone 1.2.0) ([#331](https://github.com/manhcuongdtbk/electric-water-management/issues/331)) ([f46b342](https://github.com/manhcuongdtbk/electric-water-management/commit/f46b34278e921e93825c9940297074fc0440469f))
+* **billing:** per-type loss/usage reconciliation table ([#332](https://github.com/manhcuongdtbk/electric-water-management/issues/332)) ([#364](https://github.com/manhcuongdtbk/electric-water-management/issues/364)) ([d3c44dc](https://github.com/manhcuongdtbk/electric-water-management/commit/d3c44dcd3da5133fa2907b13584204e2079bed9b))
+* **ci:** test-dimension traceability guardrail (ADR-030) ([#335](https://github.com/manhcuongdtbk/electric-water-management/issues/335)) ([e1bd555](https://github.com/manhcuongdtbk/electric-water-management/commit/e1bd555e07dbcc49053f33ec1ae76e3fa59b46eb)), closes [#329](https://github.com/manhcuongdtbk/electric-water-management/issues/329)
+* cột "Khác" dạng hệ số (đơn vị) ([#327](https://github.com/manhcuongdtbk/electric-water-management/issues/327)) ([5a76941](https://github.com/manhcuongdtbk/electric-water-management/commit/5a76941ba8bb817619f1ad1ea5477cfbaad4d2bb))
+* i18n view guardrail (ADR-032) ([#337](https://github.com/manhcuongdtbk/electric-water-management/issues/337)) ([e4e8f13](https://github.com/manhcuongdtbk/electric-water-management/commit/e4e8f1319b8a540156fe09fbbbe84a3c70ff13ae))
+* implement 7 UI/UX improvements for billing, unit config, and meter entries ([#406](https://github.com/manhcuongdtbk/electric-water-management/issues/406)) ([401086b](https://github.com/manhcuongdtbk/electric-water-management/commit/401086b54592262f96bc37f169c626cdca8e8e8b))
+* per-zone derived-data freshness indicator and Excel export guard ([#334](https://github.com/manhcuongdtbk/electric-water-management/issues/334)) ([9c8d785](https://github.com/manhcuongdtbk/electric-water-management/commit/9c8d78591e6032194cbd1aed460698d9773e47f2))
+* **pump:** allocate pump-water electricity per pump station (TN2) ([#396](https://github.com/manhcuongdtbk/electric-water-management/issues/396)) ([1f52212](https://github.com/manhcuongdtbk/electric-water-management/commit/1f522125c3074ba7cb12b394d8a2ac6bec01d0e6))
+* **role:** add division commander role (read-only system-wide) ([#419](https://github.com/manhcuongdtbk/electric-water-management/issues/419)) ([79a420a](https://github.com/manhcuongdtbk/electric-water-management/commit/79a420afbb17f9bd708d463eb50cbbece7003e10))
+
+
+### Bug Fixes
+
+* **hooks:** skip branch-behind guard on branch deletions ([#325](https://github.com/manhcuongdtbk/electric-water-management/issues/325)) ([557f2b0](https://github.com/manhcuongdtbk/electric-water-management/commit/557f2b01f17fe6bb5a836d9d272ca7e3146a658f))
+* **i18n:** unify app name to "Hệ thống quản lý điện nước nội bộ" ([#417](https://github.com/manhcuongdtbk/electric-water-management/issues/417)) ([5f728b4](https://github.com/manhcuongdtbk/electric-water-management/commit/5f728b4d84a867b58dbb91a302e94fe4166238dd))
+* make zone-direct other-deductions editable independent of manager unit ([#328](https://github.com/manhcuongdtbk/electric-water-management/issues/328)) ([#341](https://github.com/manhcuongdtbk/electric-water-management/issues/341)) ([073886c](https://github.com/manhcuongdtbk/electric-water-management/commit/073886ce51bdc9aa3feb6876805864449e142048))
+* **pump:** post-TN2 UX improvements for pump allocation and billing tables ([#415](https://github.com/manhcuongdtbk/electric-water-management/issues/415)) ([7609011](https://github.com/manhcuongdtbk/electric-water-management/commit/76090112e77a4eef66ec55defa260eee55114eb1))
+* **traceability:** require whitespace boundary before closing keywords ([#390](https://github.com/manhcuongdtbk/electric-water-management/issues/390)) ([f456435](https://github.com/manhcuongdtbk/electric-water-management/commit/f4564355b264618a20c9e5f611c4b8089e9a447e)), closes [#389](https://github.com/manhcuongdtbk/electric-water-management/issues/389)
+* **traceability:** skip pull-request numbers before commenting ([#391](https://github.com/manhcuongdtbk/electric-water-management/issues/391)) ([a01a108](https://github.com/manhcuongdtbk/electric-water-management/commit/a01a108332cb8525f522945fb4204d787f88573d)), closes [#389](https://github.com/manhcuongdtbk/electric-water-management/issues/389)
+* **unit_config:** set SA filter dropdowns on validation-error re-render ([#330](https://github.com/manhcuongdtbk/electric-water-management/issues/330)) ([9b8f3aa](https://github.com/manhcuongdtbk/electric-water-management/commit/9b8f3aa613771f2181b63e51436219088f0b3798))
+
+
+### Documentation
+
+* add "fan-out" to glossary ([#326](https://github.com/manhcuongdtbk/electric-water-management/issues/326)) ([c16815d](https://github.com/manhcuongdtbk/electric-water-management/commit/c16815d07907fc7999b87e244a7a4d5e43477594))
+* add ADR-028 pre-build client confirmation gate ([#323](https://github.com/manhcuongdtbk/electric-water-management/issues/323)) ([3cad880](https://github.com/manhcuongdtbk/electric-water-management/commit/3cad880b0066cdff60d459feb70d479942e7c612)), closes [#320](https://github.com/manhcuongdtbk/electric-water-management/issues/320)
+* add ADR-029 AI-assisted lifecycle operating model ([#324](https://github.com/manhcuongdtbk/electric-water-management/issues/324)) ([a046ea2](https://github.com/manhcuongdtbk/electric-water-management/commit/a046ea21ebed96cbffce74342421a208caf68b78)), closes [#322](https://github.com/manhcuongdtbk/electric-water-management/issues/322)
+* add non-overlap and no-split constraints for per-station pump allocation ([#407](https://github.com/manhcuongdtbk/electric-water-management/issues/407)) ([267196e](https://github.com/manhcuongdtbk/electric-water-management/commit/267196eb00faa0bcb2a02f654d637835f525ce91))
+* add supplementary business requirements for client review ([#264](https://github.com/manhcuongdtbk/electric-water-management/issues/264)) ([04177f9](https://github.com/manhcuongdtbk/electric-water-management/commit/04177f97b703378cb534062449a62c4a1dc591b8)), closes [#319](https://github.com/manhcuongdtbk/electric-water-management/issues/319)
+* correct [#357](https://github.com/manhcuongdtbk/electric-water-management/issues/357) milestone in demo-dod traceability (1.3.0 -&gt; 1.2.0) ([#387](https://github.com/manhcuongdtbk/electric-water-management/issues/387)) ([7c4df65](https://github.com/manhcuongdtbk/electric-water-management/commit/7c4df65ed60a93d4862c3504188b93b4061ae763))
+* design groundwork for milestone 1.2.0 (3 features) ([#321](https://github.com/manhcuongdtbk/electric-water-management/issues/321)) ([3541920](https://github.com/manhcuongdtbk/electric-water-management/commit/354192045d2e9d848e80234137861cd5c4d55010))
+* point the code-review hook i18n note at the shipped guardrail ([#338](https://github.com/manhcuongdtbk/electric-water-management/issues/338)) ([f08b002](https://github.com/manhcuongdtbk/electric-water-management/commit/f08b00244a78b4cf0a75bffdc849b1a274c49dc9))
+* **sdlc:** sync release-flow descriptions with ADR-005/008/028 ([#350](https://github.com/manhcuongdtbk/electric-water-management/issues/350)) ([07c0c42](https://github.com/manhcuongdtbk/electric-water-management/commit/07c0c427ccfda19ddf669fc493a5ad968a1761a3))
+* **spec:** sync [#334](https://github.com/manhcuongdtbk/electric-water-management/issues/334) traceability milestone to 1.2.0 ([a8c74b4](https://github.com/manhcuongdtbk/electric-water-management/commit/a8c74b49e50fac7fff379434259ce9ab89ac6527))
+* unify app name across docs and compose.yml ([#421](https://github.com/manhcuongdtbk/electric-water-management/issues/421)) ([187271a](https://github.com/manhcuongdtbk/electric-water-management/commit/187271a8aebedd60f4f68672f15e63280293015c))
+* update all docs and screenshots for 1.2.0 release ([#429](https://github.com/manhcuongdtbk/electric-water-management/issues/429)) ([3547c83](https://github.com/manhcuongdtbk/electric-water-management/commit/3547c8392188051b61cac6261705ecd530ec83d1))
+
+
+### Tests
+
+* add SimpleCov code coverage (line + branch), opt-in via COVERAGE=1 (Refs [#360](https://github.com/manhcuongdtbk/electric-water-management/issues/360)) ([ac6dff4](https://github.com/manhcuongdtbk/electric-water-management/commit/ac6dff441454525d22ce432c473ccf5845a54908))
+* audit v1.0.0→v1.1.1 + develop, fix doc bug, harden coverage ([#404](https://github.com/manhcuongdtbk/electric-water-management/issues/404)) ([4b0fe3c](https://github.com/manhcuongdtbk/electric-water-management/commit/4b0fe3c59a2b1f816552a78e89f03426d3705b19))
+* **coverage:** add anti-regression ratchet floor (line 96 / branch 80) ([#381](https://github.com/manhcuongdtbk/electric-water-management/issues/381)) ([#385](https://github.com/manhcuongdtbk/electric-water-management/issues/385)) ([2929fab](https://github.com/manhcuongdtbk/electric-water-management/commit/2929fab9a8f7bb17d28e349227af23ff85105e72))
+* **coverage:** patch real branch gaps + ratchet branch floor to 81 ([#381](https://github.com/manhcuongdtbk/electric-water-management/issues/381)) ([#388](https://github.com/manhcuongdtbk/electric-water-management/issues/388)) ([667d859](https://github.com/manhcuongdtbk/electric-water-management/commit/667d859bf171a2bdf51a1ee122a8837740b7a231))
+* **demo:** bring freshness + loss breakdown demos to ADR-059 standard ([#397](https://github.com/manhcuongdtbk/electric-water-management/issues/397)) ([73e0fd4](https://github.com/manhcuongdtbk/electric-water-management/commit/73e0fd45939e55c28957944c7c1c5f835e841da6))
+* enforce 6-role access coverage on every page (role-coverage guardrail) ([#374](https://github.com/manhcuongdtbk/electric-water-management/issues/374)) ([9e4a163](https://github.com/manhcuongdtbk/electric-water-management/commit/9e4a1631cf6f56cde582d929bca1aafd0a7160cf))
+* **loss:** cover empty-zone billing display and refresh V2_CHIEU_TEST status ([#333](https://github.com/manhcuongdtbk/electric-water-management/issues/333)) ([d909587](https://github.com/manhcuongdtbk/electric-water-management/commit/d9095875c2a855339613e1e30a0593e73ae9fd9f))
+* **mutation:** kill remaining billing-core survivors ([#376](https://github.com/manhcuongdtbk/electric-water-management/issues/376)) ([#378](https://github.com/manhcuongdtbk/electric-water-management/issues/378)) ([58eb307](https://github.com/manhcuongdtbk/electric-water-management/commit/58eb3072b74e382c42cd5927d2f5587da013e846))
+* **mutation:** Ripper-based mutation harness for the billing core ([#377](https://github.com/manhcuongdtbk/electric-water-management/issues/377)) ([52678d3](https://github.com/manhcuongdtbk/electric-water-management/commit/52678d3a26dd1cc9e2d62550b24c5bf46cb1e877))
+* purge committed leftovers before suite and force RAILS_ENV=test (Refs [#362](https://github.com/manhcuongdtbk/electric-water-management/issues/362)) ([01fd4fc](https://github.com/manhcuongdtbk/electric-water-management/commit/01fd4fc40055937f6bda02fa8821bb72c2c843f1))
+* **role-behavior:** machine-enforce per-role behavior coverage ([#373](https://github.com/manhcuongdtbk/electric-water-management/issues/373)) ([#380](https://github.com/manhcuongdtbk/electric-water-management/issues/380)) ([cc8d330](https://github.com/manhcuongdtbk/electric-water-management/commit/cc8d3300291889b1ebff667865238073116139f6))
+
+
+### Continuous Integration
+
+* automate close-traceability on pull request merge (ADR-035) ([#346](https://github.com/manhcuongdtbk/electric-water-management/issues/346)) ([fc1da4d](https://github.com/manhcuongdtbk/electric-water-management/commit/fc1da4d215a1cecd43c7d606d001fefd0220c078))
+* **demo:** add a "demo tốt" quality standard to the DoD (ADR-059) ([#384](https://github.com/manhcuongdtbk/electric-water-management/issues/384)) ([a073d51](https://github.com/manhcuongdtbk/electric-water-management/commit/a073d516fbd929e34c54882b671dc4a6c65de114))
+* **demo:** AI-assisted demo drafting habit + g demo:spec scaffold ([#353](https://github.com/manhcuongdtbk/electric-water-management/issues/353)) ([ecb5266](https://github.com/manhcuongdtbk/electric-water-management/commit/ecb5266324afc1a915892768a53dd6a77b6dfc27))
+* **demo:** automated demo recording (Playwright) for PR and release review ([#347](https://github.com/manhcuongdtbk/electric-water-management/issues/347)) ([ecd1284](https://github.com/manhcuongdtbk/electric-water-management/commit/ecd128450ed43735e390135d35eb6a18ba8e7e08))
+* **demo:** backfill TN1 demo spec; fix recorder NV anchor + caption overlay (Refs [#355](https://github.com/manhcuongdtbk/electric-water-management/issues/355)) ([d21e94e](https://github.com/manhcuongdtbk/electric-water-management/commit/d21e94ea133e9e137694699c74286c52e32588d0))
+* **demo:** bundle customer-facing demo delta for release review (Refs [#351](https://github.com/manhcuongdtbk/electric-water-management/issues/351)) ([9474e83](https://github.com/manhcuongdtbk/electric-water-management/commit/9474e836f46806d1506f97ae39080f2ee56351d5))
+* **demo:** clarify the demo-recordings PR comment is a re-recording, not new content (Refs [#367](https://github.com/manhcuongdtbk/electric-water-management/issues/367)) ([94e8cc1](https://github.com/manhcuongdtbk/electric-water-management/commit/94e8cc1ee252e8e099d15531cad20485fc8f8d11))
+* **demo:** gate demo artifact + comment on demo-relevant paths only (Refs [#367](https://github.com/manhcuongdtbk/electric-water-management/issues/367)) ([#370](https://github.com/manhcuongdtbk/electric-water-management/issues/370)) ([9a51ff0](https://github.com/manhcuongdtbk/electric-water-management/commit/9a51ff017856c09f95552e0586a00256fdb24bff))
+* **demo:** lock demo spec into design-time DoD for customer-facing work ([#371](https://github.com/manhcuongdtbk/electric-water-management/issues/371)) ([44fd9cf](https://github.com/manhcuongdtbk/electric-water-management/commit/44fd9cf73225c845ef4b80fa8c6d18619591d6c4))
+* **demo:** show the recalculated "Khác" result in the TN1 walkthrough (Refs [#363](https://github.com/manhcuongdtbk/electric-water-management/issues/363)) ([#375](https://github.com/manhcuongdtbk/electric-water-management/issues/375)) ([b4f5a01](https://github.com/manhcuongdtbk/electric-water-management/commit/b4f5a0102438d3fbf63911ce036ebbb6ead5ef38))
+* **demo:** tighten TN1 — show cause→effect, trim narration, focus the role beat (Refs [#363](https://github.com/manhcuongdtbk/electric-water-management/issues/363)) ([#382](https://github.com/manhcuongdtbk/electric-water-management/issues/382)) ([54d9749](https://github.com/manhcuongdtbk/electric-water-management/commit/54d974926a7df1a66007a0f31f2930feceda36bf))
+* guardrail against duplicate ADR numbers + clean up existing dups ([#348](https://github.com/manhcuongdtbk/electric-water-management/issues/348)) ([236c27b](https://github.com/manhcuongdtbk/electric-water-management/commit/236c27bbcf9ca73c3d7a46af1b0924ea1d83a7a8))
+
+
+### Miscellaneous Chores
+
+* add hook to block SendUserFile for video files ([#423](https://github.com/manhcuongdtbk/electric-water-management/issues/423)) ([01c1279](https://github.com/manhcuongdtbk/electric-water-management/commit/01c12793ea5781b2cd3ce86bc04b25c138d31ae4))
+* **demo:** remove redundant smoke demo spec ([#372](https://github.com/manhcuongdtbk/electric-water-management/issues/372)) ([c94acbb](https://github.com/manhcuongdtbk/electric-water-management/commit/c94acbbab17c41dfc307046c4ae2e80521630298))
+* **deps:** Bump concurrent-ruby from 1.3.6 to 1.3.7 ([#414](https://github.com/manhcuongdtbk/electric-water-management/issues/414)) ([0f27fe1](https://github.com/manhcuongdtbk/electric-water-management/commit/0f27fe15b6d9df96a5d58280226756a815fa40dc))
+* **deps:** Bump net-imap from 0.6.4 to 0.6.4.1 ([#309](https://github.com/manhcuongdtbk/electric-water-management/issues/309)) ([fc86052](https://github.com/manhcuongdtbk/electric-water-management/commit/fc860521144c199dee2b7f99adde5bb7210231a3))
+* **deps:** Bump nokogiri from 1.19.3 to 1.19.4 ([#413](https://github.com/manhcuongdtbk/electric-water-management/issues/413)) ([30f1f57](https://github.com/manhcuongdtbk/electric-water-management/commit/30f1f576b650b58851331be1c580ef46ee8d08da))
+* **deps:** Bump the ruby-minor-patch group with 3 updates ([#398](https://github.com/manhcuongdtbk/electric-water-management/issues/398)) ([75bd186](https://github.com/manhcuongdtbk/electric-water-management/commit/75bd1869565a72fb17b23c4c27747d4601027104))
+* **docker:** add demo subcommand to run demo specs locally ([#394](https://github.com/manhcuongdtbk/electric-water-management/issues/394)) ([c1182db](https://github.com/manhcuongdtbk/electric-water-management/commit/c1182db14c81f9b12cf16ad6a7181d80b44cbb20))
+* update role count 6→7 and improve seed output ([#424](https://github.com/manhcuongdtbk/electric-water-management/issues/424)) ([#425](https://github.com/manhcuongdtbk/electric-water-management/issues/425)) ([cf5c060](https://github.com/manhcuongdtbk/electric-water-management/commit/cf5c060fa7fb61bedd4d1a4a00f36d36127b1b3d))
+
 ## [1.1.1](https://github.com/manhcuongdtbk/electric-water-management/compare/v1.1.0...v1.1.1) (2026-06-11)
 
 
