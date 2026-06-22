@@ -1,7 +1,7 @@
 # V2 — Kịch bản kiểm thử (số liệu cụ thể)
 
-> **Phiên bản:** 2.1.0
-> **Ngày:** 22/06/2026
+> **Phiên bản:** 2.2.0
+> **Ngày:** 23/06/2026
 > **Nguồn nghiệp vụ:** `docs/V2_XAC_NHAN_NGHIEP_VU.md` v2.13.0
 > **Nguồn thiết kế:** `docs/V2_THIET_KE_HE_THONG.md` v2.13.0
 > **Nguồn hành vi runtime:** `docs/V2_HANH_VI_HE_THONG.md` v1.2.1
@@ -761,22 +761,23 @@ Sau bước này, "Lái xe" ở trạng thái discarded (`discarded_at` có giá
   - Đối chiếu: trang quản lý/khai báo (`/contact_points`, `/units`) dùng `.kept` nên KHÔNG hiện entity đã xóa trong dropdown tạo mới — chỉ trang xem dữ liệu lịch sử (billing, history) dùng `.with_discarded`.
 - **Chiều liên quan:** chiều 7 (dropdown zone/unit SA only, `with_discarded`), chiều 4; Nhóm 1.
 
-#### GD1-04 — Năm vai trò nghiệp vụ thấy gì trên billing kỳ N-1 vs kỳ N `[CẢ HAI]`
+#### GD1-04 — Sáu vai trò nghiệp vụ thấy gì trên billing kỳ N-1 vs kỳ N `[CẢ HAI]`
 
-- **Điều kiện tiên quyết:** bối cảnh chung GD1; lần lượt đăng nhập 5 vai trò có quyền xem nghiệp vụ.
+- **Điều kiện tiên quyết:** bối cảnh chung GD1; lần lượt đăng nhập 6 vai trò có quyền xem nghiệp vụ.
 - **Các bước:** mỗi vai trò vào `/billing`, xem kỳ N-1 rồi xem kỳ N.
 - **Kết quả mong đợi (đầu mối "Lái xe" thuộc Đơn vị A):**
 
   | Vai trò | Kỳ N-1 | Kỳ N |
   |---|---|---|
   | SA (quanTri) | Thấy "Lái xe" (chọn Khu vực 1 + Đơn vị A) | Không thấy "Lái xe" |
+  | DC (chiHuySuDoan) | Thấy "Lái xe" (chọn Khu vực 1 + Đơn vị A, chỉ xem) | Không thấy "Lái xe" |
   | UA-ZM (adminA) | Thấy "Lái xe" (đầu mối Đơn vị A nằm trong phạm vi) | Không thấy "Lái xe" |
   | UA (adminB) | Không thấy "Lái xe" (thuộc Đơn vị A, ngoài phạm vi Đơn vị B) | Không thấy |
   | CMD-ZM (chiHuyA) | Thấy "Lái xe" như adminA, nhưng nút Tính toán lại bị ẩn | Không thấy "Lái xe" |
   | CMD (chiHuyB) | Không thấy "Lái xe" như adminB | Không thấy |
 
   - TECH (kyThuat) bị chặn khỏi `/billing` (redirect `/users`) ở mọi kỳ — không nằm trong bảng vì không thấy dữ liệu nghiệp vụ.
-  - Năm đầu mối gốc: với adminA/chiHuyA hiện đủ đầu mối Đơn vị A + đầu mối sinh hoạt thuộc khu vực (Chỉ huy khu vực thiếu 33,32); adminB/chiHuyB chỉ thấy Đại đội 1 thiếu 106,86.
+  - Sáu đầu mối gốc: với SA/DC hiện toàn bộ (chọn filter); adminA/chiHuyA hiện đủ đầu mối Đơn vị A + đầu mối sinh hoạt thuộc khu vực (Chỉ huy khu vực thiếu 33,32); adminB/chiHuyB chỉ thấy Đại đội 1 thiếu 106,86.
 - **Chiều liên quan:** chiều 1 × 2 × 4 đầy đủ; Nhóm 1.
 
 #### GD1-05 — Nút Tính toán lại theo kỳ đang mở và vai trò `[CẢ HAI]`
@@ -784,7 +785,7 @@ Sau bước này, "Lái xe" ở trạng thái discarded (`discarded_at` có giá
 - **Điều kiện tiên quyết:** bối cảnh chung GD1, kỳ N-1 đang mở lại (trạng thái C).
 - **Các bước:** mỗi vai trò vào `/billing` xem kỳ N-1, kiểm nút Tính toán lại; sau đó SA xem kỳ N (đã đóng).
 - **Kết quả mong đợi:**
-  - Kỳ N-1 đang mở lại + kỳ đang xem = kỳ N-1: nút Tính toán lại **bật** cho SA, UA-ZM (adminA), UA (adminB). Ẩn cho CMD-ZM (chiHuyA), CMD (chiHuyB).
+  - Kỳ N-1 đang mở lại + kỳ đang xem = kỳ N-1: nút Tính toán lại **bật** cho SA, DC (chiHuySuDoan), UA-ZM (adminA), UA (adminB). Ẩn cho CMD-ZM (chiHuyA), CMD (chiHuyB).
   - SA xem kỳ N (đã đóng) trong khi kỳ N-1 đang mở: nút Tính toán lại **tắt** vì kỳ đang xem đã đóng (theo chiều 7 — recalculate gắn với kỳ đang xem, không phải kỳ đang mở).
 - **Chiều liên quan:** chiều 1 (trạng thái C), chiều 2, chiều 7 (kỳ đang xem ≠ kỳ đang mở), chiều 8; Nhóm 1.
 
@@ -1108,10 +1109,11 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 
 ### TR-dashboard — Tổng quan (/dashboard)
 
-**Route:** `/dashboard` (dashboard#show). **Lớp bảo vệ:** BusinessRoleRequired (xem `V2_CHIEU_TEST.md` chiều 3, hàng Tổng quan). 5 vai trò nghiệp vụ đều xem được; TECH bị chặn. Trang mang số liệu — trích từ Phần 2.
+**Route:** `/dashboard` (dashboard#show). **Lớp bảo vệ:** BusinessRoleRequired (xem `V2_CHIEU_TEST.md` chiều 3, hàng Tổng quan). 6 vai trò nghiệp vụ đều xem được; TECH bị chặn. Trang mang số liệu — trích từ Phần 2.
 
 - **TR-dashboard-SA `[CẢ HAI]`:** quanTri thấy tổng quan toàn hệ thống — bảng đơn vị (thâm điện, thành tiền, trạng thái nhập liệu của Đơn vị A, B, C, D) cộng bảng khu vực (tổng điện công cộng và bơm nước per Khu vực 1, Khu vực 2) cộng vùng cảnh báo. Số liệu khớp Phần 2: tổng thiếu Khu vực 1 = 177,42 kW, tổng thừa 33,34 kW, tổng thành tiền thiếu 414.517 đồng, tổng thành tiền thừa 77.891 đồng (EN-KV1-TOTALS); Khu vực 2 tổng thiếu 22,87 kW, tổng thừa 20,53 kW, tổng thành tiền thiếu 53.430 đồng, tổng thành tiền thừa 47.956 đồng (EN-KV2-TOTALS). Cảnh báo phạm vi toàn hệ thống; kỳ tháng 5 năm 2026 đã tính đủ → không cảnh báo thiếu dữ liệu. Sidebar 17 mục.
-- **TR-dashboard-UAZM `[CẢ HAI]`:** adminA thấy tổng quan Đơn vị A cộng Khu vực 1 (phạm vi quản lý khu vực). Cảnh báo chỉ giới hạn Khu vực 1. adminC: Đơn vị C cộng Khu vực 2 (tổng Khu vực 2 theo EN-KV2-TOTALS). Sidebar 12 mục.
+- **TR-dashboard-DC `[CẢ HAI]`:** chiHuySuDoan thấy tổng quan toàn hệ thống (giống SA), chỉ xem. Sidebar 16 mục.
+- **TR-dashboard-UAZM `[CẢ HAI]`:** adminA thấy tổng quan Đơn vị A cộng Khu vực 1 (phạm vi quản lý khu vực). Cảnh báo chỉ giới hạn Khu vực 1. adminC: Đơn vị C cộng Khu vực 2 (tổng Khu vực 2 theo EN-KV2-TOTALS). Sidebar 11 mục.
 - **TR-dashboard-UA `[CẢ HAI]`:** adminB thấy tổng quan **chỉ Đơn vị B** (đầu mối Đại đội 1: thiếu 106,86 kW, thành tiền 249.659 đồng — EN-KV1-SUMMARY-04). Không thấy số liệu khu vực, không thấy đơn vị khác. adminD: chỉ Đơn vị D (Trinh sát thiếu 22,87 kW, thành tiền 53.430 đồng — EN-KV2-SUMMARY-02). Sidebar 8 mục.
 - **TR-dashboard-CMDZM `[CẢ HAI]`:** chiHuyA hiển thị giống adminA (Đơn vị A + Khu vực 1), chiHuyC giống adminC, chỉ xem. Dashboard không có ô nhập hay nút thao tác nên khác biệt CMD/UA ở đây không đáng kể; sidebar 11 mục.
 - **TR-dashboard-CMD `[CẢ HAI]`:** chiHuyB giống adminB (chỉ Đơn vị B), chiHuyD giống adminD, chỉ xem. Sidebar 8 mục.
@@ -1126,9 +1128,9 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 **Route:** `/billing` (billing#show). **Lớp bảo vệ:** BusinessRoleRequired + authorize! (chiều 3, hàng Bảng tính tiền). Thao tác: Xem, Tính toán lại (SA/UA/UA-ZM), Xuất Excel (mọi vai trò nghiệp vụ). Đây là trang mang số liệu trọng tâm — mọi số trích từ Phần 2. Bảng chỉ hiển thị đầu mối **sinh hoạt**.
 
 - **TR-billing-SA `[CẢ HAI]`:** quanTri xem gộp toàn bộ 8 đầu mối sinh hoạt khi không lọc — Khu vực 1: Ban Tác huấn thiếu 37,24; Văn thư thừa 5,72; Kho vật tư thừa 27,62; Đại đội 1 thiếu 106,86; Chỉ huy khu vực thiếu 33,32 (EN-KV1-SUMMARY-01..05). Khu vực 2: Quân y thừa 9,32; Trinh sát thiếu 22,87; Chỉ huy khu vực 2 thừa 11,20 (EN-KV2-SUMMARY-01..03). **30 cột** (có cả Khu vực + Đơn vị). Có dropdown kỳ + dropdown khu vực + dropdown đơn vị (cascade). Nút Tính toán lại + Xuất Excel hiện. Hàng tổng: EN-KV1-TOTALS khi lọc Khu vực 1 (tổng thiếu 177,42; tổng thành tiền thiếu 414.517). SA chọn Khu vực 1 → cột Khu vực ẩn → còn 29 cột; chọn thêm Đơn vị A → cột Đơn vị ẩn → còn 28 cột, hiện 3 hàng (Ban Tác huấn, Văn thư, Kho vật tư). Sidebar 17 mục.
-- **TR-billing-UAZM `[CẢ HAI]`:** adminA thấy **4 hàng**: Ban Tác huấn thiếu 37,24; Văn thư thừa 5,72; Kho vật tư thừa 27,62; Chỉ huy khu vực thiếu 33,32 (đầu mối Đơn vị A cộng đầu mối thuộc khu vực trực tiếp). KHÔNG thấy Đại đội 1. **29 cột** (có Đơn vị, ẩn Khu vực). Cột Đơn vị của hàng "Chỉ huy khu vực" **trống** (đầu mối thuộc khu vực trực tiếp — chiều 6). Không có dropdown khu vực/đơn vị (chỉ SA có); có dropdown kỳ. Nút Tính toán lại + Xuất Excel hiện. adminC (Khu vực 2): **2 hàng** — Quân y thừa 9,32; Chỉ huy khu vực 2 thừa 11,20; KHÔNG thấy Trinh sát; 29 cột; cột Đơn vị hàng Chỉ huy khu vực 2 trống. Sidebar 12 mục.
+- **TR-billing-UAZM `[CẢ HAI]`:** adminA thấy **4 hàng**: Ban Tác huấn thiếu 37,24; Văn thư thừa 5,72; Kho vật tư thừa 27,62; Chỉ huy khu vực thiếu 33,32 (đầu mối Đơn vị A cộng đầu mối thuộc khu vực trực tiếp). KHÔNG thấy Đại đội 1. **29 cột** (có Đơn vị, ẩn Khu vực). Cột Đơn vị của hàng "Chỉ huy khu vực" **trống** (đầu mối thuộc khu vực trực tiếp — chiều 6). Không có dropdown khu vực/đơn vị (chỉ SA có); có dropdown kỳ. Nút Tính toán lại + Xuất Excel hiện. adminC (Khu vực 2): **2 hàng** — Quân y thừa 9,32; Chỉ huy khu vực 2 thừa 11,20; KHÔNG thấy Trinh sát; 29 cột; cột Đơn vị hàng Chỉ huy khu vực 2 trống. Sidebar 11 mục.
 - **TR-billing-UA `[CẢ HAI]`:** adminB thấy **1 hàng** — Đại đội 1 thiếu 106,86, thành tiền 249.659 (EN-KV1-SUMMARY-04). **28 cột** (ẩn cả Khu vực + Đơn vị). Không thấy đầu mối Đơn vị A, không thấy Chỉ huy khu vực. Nút Tính toán lại + Xuất Excel hiện (UA được tính toán lại). adminD: 1 hàng — Trinh sát thiếu 22,87, thành tiền 53.430 (EN-KV2-SUMMARY-02). Sidebar 8 mục.
-- **TR-billing-CMDZM `[CẢ HAI]`:** chiHuyA phạm vi giống adminA (4 hàng, 29 cột, cột Đơn vị Chỉ huy khu vực trống) nhưng **nút Tính toán lại bị ẩn**; nút Xuất Excel vẫn hiện (CMD được xuất Excel theo chiều 3). chiHuyC giống adminC (2 hàng). Sidebar 12 mục.
+- **TR-billing-CMDZM `[CẢ HAI]`:** chiHuyA phạm vi giống adminA (4 hàng, 29 cột, cột Đơn vị Chỉ huy khu vực trống) nhưng **nút Tính toán lại bị ẩn**; nút Xuất Excel vẫn hiện (CMD được xuất Excel theo chiều 3). chiHuyC giống adminC (2 hàng). Sidebar 11 mục.
 - **TR-billing-CMD `[CẢ HAI]`:** chiHuyB phạm vi giống adminB (1 hàng Đại đội 1, 28 cột), nút Tính toán lại ẩn, Xuất Excel hiện. chiHuyD giống adminD. Sidebar 8 mục.
 - **TR-billing-TECH `[TỰ ĐỘNG]`:** kyThuat vào `/billing` bị redirect về `/users`. Không có mục Bảng tính tiền trên sidebar TECH.
 
@@ -1138,7 +1140,7 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 
 ### TR-history — Tra cứu lịch sử (/history)
 
-**Route:** `/history` (history#show). **Lớp bảo vệ:** BusinessRoleRequired (chiều 3, hàng Tra cứu lịch sử). Thao tác: Xem kỳ cũ, so sánh 2 kỳ, xem theo khoảng. 5 vai trò nghiệp vụ xem được; TECH chặn. Phạm vi dữ liệu per vai trò **giống billing** (SA toàn bộ, UA-ZM đơn vị + khu vực trực tiếp, UA đơn vị mình). Khác biệt với billing: trang so sánh **luôn hiện cả hai cột Khu vực và Đơn vị** (so sánh kỳ cần đủ ngữ cảnh — theo CLAUDE.md); dropdown khu vực/đơn vị khi xem kỳ cũ dùng `with_discarded` để hiện entity đã xóa.
+**Route:** `/history` (history#show). **Lớp bảo vệ:** BusinessRoleRequired (chiều 3, hàng Tra cứu lịch sử). Thao tác: Xem kỳ cũ, so sánh 2 kỳ, xem theo khoảng. 6 vai trò nghiệp vụ xem được; TECH chặn. Phạm vi dữ liệu per vai trò **giống billing** (SA toàn bộ, UA-ZM đơn vị + khu vực trực tiếp, UA đơn vị mình). Khác biệt với billing: trang so sánh **luôn hiện cả hai cột Khu vực và Đơn vị** (so sánh kỳ cần đủ ngữ cảnh — theo CLAUDE.md); dropdown khu vực/đơn vị khi xem kỳ cũ dùng `with_discarded` để hiện entity đã xóa.
 
 | Vai trò | Truy cập | Dữ liệu so sánh | Sửa được | Ghi chú |
 |---|---|---|---|---|
@@ -1302,7 +1304,7 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 | Vai trò | Truy cập | Dữ liệu | Tạo/Sửa/Xóa | Ghi chú |
 |---|---|---|---|---|
 | TR-units-SA `[CẢ HAI]` | CRUD | Đơn vị A, B (Khu vực 1), C, D (Khu vực 2); cột Khu vực | Có | Sidebar 17. |
-| TR-units-UAZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | Mục không trên sidebar (12 mục không gồm Đơn vị); truy cập trực tiếp `/units` bị `require_system_admin!` chặn. |
+| TR-units-UAZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | Mục không trên sidebar (11 mục không gồm Đơn vị); truy cập trực tiếp `/units` bị `require_system_admin!` chặn. |
 | TR-units-UA `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | Như trên (8 mục). |
 | TR-units-CMDZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (11 mục). |
 | TR-units-CMD `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (8 mục). |
@@ -1332,7 +1334,7 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 | Vai trò | Truy cập | Dữ liệu | Thao tác | Ghi chú |
 |---|---|---|---|---|
 | TR-pricing-SA `[CẢ HAI]` | Toàn quyền | Đơn giá kỳ tháng 5 năm 2026 = 2.336,4 đồng/kW; danh sách kỳ | Mở kỳ mới, đóng kỳ, mở lại kỳ cũ | Sidebar 17. Tham chiếu Phần 5 (vòng đời kỳ). |
-| TR-pricing-UAZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | Không có mục (12 mục không gồm Đơn giá); truy cập trực tiếp bị `require_system_admin!` chặn. |
+| TR-pricing-UAZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | Không có mục (11 mục không gồm Đơn giá); truy cập trực tiếp bị `require_system_admin!` chặn. |
 | TR-pricing-UA `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (8 mục). |
 | TR-pricing-CMDZM `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (11 mục). |
 | TR-pricing-CMD `[TỰ ĐỘNG]` | Chặn (redirect, errors.access_denied) | — | Không | (8 mục). |
@@ -1797,6 +1799,15 @@ Phần này lập bản đồ từ mỗi **nhóm kịch bản** (không phải t
 ---
 
 ## Lịch sử thay đổi
+
+### v2.2.0 (23/06/2026)
+
+- GD1-04: "5 vai trò nghiệp vụ" → "6 vai trò", thêm hàng DC vào bảng (chiHuySuDoan xem toàn hệ thống, chỉ đọc).
+- GD1-05: thêm DC vào danh sách nút Tính toán lại "bật" (DC có quyền recalculate).
+- TR-dashboard: "5 vai trò" → "6 vai trò", thêm TR-dashboard-DC (chiHuySuDoan thấy toàn hệ thống, sidebar 16 mục).
+- TR-dashboard-UAZM: sidebar 12 → 11 mục. TR-billing-UAZM, TR-billing-CMDZM: tương tự.
+- TR-units-UAZM, TR-pricing-UAZM: sidebar "12 mục không gồm" → "11 mục không gồm".
+- TR-history: "5 vai trò nghiệp vụ" → "6 vai trò".
 
 ### v2.1.0 (22/06/2026)
 

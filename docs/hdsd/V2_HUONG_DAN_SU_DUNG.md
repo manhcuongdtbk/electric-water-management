@@ -1,6 +1,6 @@
 # Hướng dẫn sử dụng — Hệ thống quản lý điện nước nội bộ
 
-> **Phiên bản:** 1.9.2
+> **Phiên bản:** 1.9.3
 > **Ngày:** 22/06/2026
 > **Đối tượng:** Tất cả người dùng hệ thống (kỹ thuật viên, quản trị viên hệ thống, Chỉ huy Sư đoàn, quản trị viên đơn vị, chỉ huy đơn vị)
 > **Ghi chú:** Tài liệu sẽ được cập nhật theo phản hồi thực tế.
@@ -130,7 +130,7 @@ Hệ thống tính toán qua 3 bước tuần tự cho mỗi khu vực:
 
 **Bước 1 — Tổn hao:** Tổn hao là phần điện "mất" trên đường truyền. Hệ thống lấy số trên công tơ tổng, trừ đi tổng sử dụng các công tơ con — phần chênh lệch chính là tổn hao. Tổn hao được phân bổ cho từng công tơ theo tỷ lệ sử dụng: công tơ nào dùng nhiều thì chịu tổn hao nhiều.
 
-**Bước 2 — Phân bổ bơm nước:** Tổng điện bơm nước toàn khu vực (sử dụng thô — tức số đo từ công tơ, chưa cộng tổn hao — cộng với tổn hao) được phân bổ cho các đối tượng (đơn vị, khối, nhóm, đầu mối sinh hoạt, đầu mối ngoài biên chế) theo cấu hình do quản trị viên hệ thống hoặc đơn vị quản lý khu vực thiết lập. Phân bổ có thể theo từng trạm bơm riêng hoặc gộp toàn khu vực (xem mục F6). Có 2 cách phân bổ cho mỗi đối tượng: phần trăm cố định hoặc hệ số nhân quân số.
+**Bước 2 — Phân bổ bơm nước:** Tổng điện bơm nước toàn khu vực (sử dụng thô — tức số đo từ công tơ, chưa cộng tổn hao — cộng với tổn hao) được phân bổ cho các đối tượng (đơn vị, khối, nhóm, hoặc đầu mối — sinh hoạt, công cộng, ngoài biên chế) theo cấu hình do quản trị viên hệ thống hoặc đơn vị quản lý khu vực thiết lập. Phân bổ có thể theo từng trạm bơm riêng hoặc gộp toàn khu vực (xem mục F6). Có 2 cách phân bổ cho mỗi đối tượng: phần trăm cố định hoặc hệ số nhân quân số.
 
 **Bước 3 — Tổng hợp từng đầu mối sinh hoạt:**
 
@@ -881,6 +881,10 @@ Hệ thống hiện thông tin bản sao lưu (tên, kích thước, ngày tạo
 ---
 
 ## Lịch sử thay đổi
+
+### v1.9.3 (23/06/2026)
+
+- Mục A5: sửa danh sách đối tượng nhận phân bổ bơm — thêm "công cộng" cho khớp mục F6 và code (form dropdown chứa residential + public + non_establishment).
 
 ### v1.9.2 (22/06/2026)
 
