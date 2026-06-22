@@ -1,6 +1,6 @@
 # Hướng dẫn sử dụng — Hệ thống quản lý điện nước nội bộ
 
-> **Phiên bản:** 1.9.4
+> **Phiên bản:** 1.9.5
 > **Ngày:** 23/06/2026
 > **Đối tượng:** Tất cả người dùng hệ thống (kỹ thuật viên, quản trị viên hệ thống, Chỉ huy Sư đoàn, quản trị viên đơn vị, chỉ huy đơn vị)
 > **Ghi chú:** Tài liệu sẽ được cập nhật theo phản hồi thực tế.
@@ -487,7 +487,7 @@ Trang **Bảng tính tiền** hiển thị bảng chi tiết từng đầu mối
 
 ![Bảng tính tiền — Quản trị viên hệ thống](images/03_bang_tinh_tien_sa.png)
 
-Chỉ huy Sư đoàn thấy bảng tính tiền toàn hệ thống ở chế độ chỉ xem, nhưng vẫn có nút **Tính toán lại** (giống các loại chỉ huy khác). Chỉ huy đơn vị thấy bảng tính tiền ở chế độ chỉ xem (không có nút Tính toán lại):
+Chỉ huy Sư đoàn thấy bảng tính tiền toàn hệ thống ở chế độ chỉ xem, nhưng vẫn có nút **Tính toán lại** (giống quản trị viên hệ thống và quản trị viên đơn vị). Chỉ huy đơn vị thấy bảng tính tiền ở chế độ chỉ xem (không có nút Tính toán lại):
 
 ![Bảng tính tiền — Chỉ huy đơn vị (chỉ xem)](images/45_bang_tinh_tien_cmd.png)
 
@@ -881,6 +881,10 @@ Hệ thống hiện thông tin bản sao lưu (tên, kích thước, ngày tạo
 ---
 
 ## Lịch sử thay đổi
+
+### v1.9.5 (23/06/2026)
+
+- Mục E2: sửa "giống các loại chỉ huy khác" → "giống quản trị viên hệ thống và quản trị viên đơn vị" — cùng lỗi đã sửa ở A6 (v1.9.4) nhưng ở vị trí khác.
 
 ### v1.9.4 (23/06/2026)
 
