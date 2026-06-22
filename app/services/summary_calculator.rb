@@ -15,6 +15,7 @@ class SummaryCalculator
     @unit_configs_by_unit_id = preload_unit_configs(residentials)
     @other_deductions_by_cp_id = preload_other_deductions(residentials)
     @personnel_by_cp_id = preload_personnel_entries(residentials)
+    @unit_total_personnel_by_unit_id = preload_unit_total_personnel(residentials)
 
     calculations = residentials.map { |cp| compute_and_persist(cp) }
     Result.new(calculations: calculations, warnings: [])
@@ -25,6 +26,16 @@ class SummaryCalculator
   def preload_unit_configs(residentials)
     unit_ids = residentials.map(&:unit_id).compact.uniq
     UnitConfig.where(unit_id: unit_ids, period_id: @period.id).index_by(&:unit_id)
+  end
+
+  def preload_unit_total_personnel(residentials)
+    totals = Hash.new(0)
+    residentials.each do |cp|
+      next if cp.unit_id.nil?
+      entries = @personnel_by_cp_id[cp.id] || []
+      totals[cp.unit_id] += entries.sum(&:count)
+    end
+    totals
   end
 
   def preload_other_deductions(residentials)
@@ -118,8 +129,22 @@ class SummaryCalculator
       BigDecimal(deduction.other_value.to_s)
     when "coefficient"
       BigDecimal(deduction.other_value.to_s) * BigDecimal(total_personnel.to_s)
+    when "unit_coefficient"
+      # :nocov:
+      # Unreachable: OtherDeduction#unit_coefficient_requires_unit forbids a
+      # unit_coefficient deduction on a unit-less contact point, so unit_id is
+      # never nil here. Kept as a defensive guard (Issue #381, ADR-060).
+      return BigDecimal("0") if contact_point.unit_id.nil?
+      # :nocov:
+      unit_total = @unit_total_personnel_by_unit_id[contact_point.unit_id] || 0
+      BigDecimal(deduction.other_value.to_s) * BigDecimal((unit_total - total_personnel).to_s)
     else
+      # :nocov:
+      # Unreachable: other_type is an enum constrained to fixed/coefficient/
+      # unit_coefficient (and validated present), so this default never runs.
+      # Kept as a defensive fallback (Issue #381, ADR-060).
       BigDecimal("0")
+      # :nocov:
     end
   end
 end

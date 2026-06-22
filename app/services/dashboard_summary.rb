@@ -9,7 +9,7 @@ class DashboardSummary
 
   def call
     case @user.role.to_sym
-    when :system_admin then build_system_admin_summary
+    when :system_admin, :division_commander then build_system_admin_summary
     when :unit_admin, :commander then build_unit_summary
     else
       OpenStruct.new(role: @user.role.to_sym, warnings: [])

@@ -15,7 +15,8 @@ class Ability
     when :technician   then technician_abilities(user)
     when :system_admin then system_admin_abilities(user)
     when :unit_admin   then unit_admin_abilities(user)
-    when :commander    then commander_abilities(user)
+    when :commander          then commander_abilities(user)
+    when :division_commander then division_commander_abilities(user)
     end
   end
 
@@ -66,6 +67,8 @@ class Ability
     can :read, Zone, id: managed_zone_ids
     can :read, MainMeter, zone_id: managed_zone_ids
     can [:create, :read, :update, :destroy], MainMeterReading, main_meter: { zone_id: managed_zone_ids }
+    can :read, Block, unit: { zone_id: managed_zone_ids }
+    can :read, Group, unit: { zone_id: managed_zone_ids }
     can [:create, :read, :update, :destroy], ContactPoint, zone_id: managed_zone_ids
     can [:create, :read, :update, :destroy], Meter, contact_point: { zone_id: managed_zone_ids }
     can [:create, :read, :update, :destroy], PumpAllocation, zone_id: managed_zone_ids
@@ -79,6 +82,18 @@ class Ability
       contact_point: { zone_id: managed_zone_ids, contact_point_type: "residential" }
     can :read, Calculation, contact_point: { zone_id: managed_zone_ids }
     can :recalculate, Calculation, contact_point: { zone_id: managed_zone_ids }
+  end
+
+  def division_commander_abilities(_user)
+    [Unit, ContactPoint, Meter, MainMeter, Block, Group,
+     Period, Rank, PumpAllocation,
+     MeterReading, MainMeterReading, PersonnelEntry,
+     NonEstablishmentSnapshot, UnitConfig, OtherDeduction, Calculation
+    ].each { |m| can :read, m }
+    can :read, Zone, discarded_at: nil
+    can :recalculate, Calculation
+
+    can :read, PaperTrail::Version
   end
 
   def commander_abilities(user)
@@ -103,6 +118,8 @@ class Ability
     can :read, Zone, id: managed_zone_ids
     can :read, MainMeter, zone_id: managed_zone_ids
     can :read, MainMeterReading, main_meter: { zone_id: managed_zone_ids }
+    can :read, Block, unit: { zone_id: managed_zone_ids }
+    can :read, Group, unit: { zone_id: managed_zone_ids }
     can :read, ContactPoint, zone_id: managed_zone_ids
     can :read, Meter, contact_point: { zone_id: managed_zone_ids }
     can :read, PumpAllocation, zone_id: managed_zone_ids

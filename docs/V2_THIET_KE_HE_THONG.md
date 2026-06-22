@@ -1,7 +1,7 @@
-# Thiết kế hệ thống quản lý điện nội bộ Sư đoàn — Hệ thống v2
+# Thiết kế hệ thống quản lý điện nước nội bộ — Hệ thống v2
 
-> **Phiên bản tài liệu:** 2.13.1
-> **Ngày:** 24/05/2026
+> **Phiên bản tài liệu:** 2.17.1
+> **Ngày:** 22/06/2026
 > **Tính chất:** Tài liệu thiết kế hệ thống v2, nguồn sự thật cho implementation.
 > **Nguồn nghiệp vụ:** V2_XAC_NHAN_NGHIEP_VU (phiên bản mới nhất tại thời điểm thiết kế: v2.11.0)
 
@@ -386,6 +386,7 @@ Bảng riêng phòng tương lai nhiều công tơ tổng per khu vực. Hiện 
 | savings_rate | decimal | Tiết kiệm của Bộ. ≥ 0, ≤ 100. Mặc định: 5 |
 | division_public_rate | decimal | Công cộng dùng chung Sư đoàn. ≥ 0, ≤ 100. Mặc định: 10 |
 | water_pump_standard | decimal | Tiêu chuẩn điện bơm nước kW/người/tháng. > 0. Mặc định: 9,45 |
+| pump_allocation_per_station | boolean | Phân bổ bơm theo từng trạm. Mặc định: true (kỳ mới). false cho kỳ cũ (gộp toàn khu vực) |
 
 Ai đóng/mở kỳ, lúc nào: PaperTrail ghi nhật ký, không cần cột riêng.
 
@@ -422,6 +423,7 @@ Thêm nhóm cấp bậc mới khi kỳ đang mở: hệ thống tạo rank mới
 | manual_usage | decimal | Nullable. Nhập thủ công khi cuối kỳ < đầu kỳ (thay công tơ) |
 | manual_usage_note | text | Nullable. Ghi chú kèm manual_usage |
 | no_loss | boolean | Snapshot từ meters.no_loss khi mở kỳ |
+| loss | decimal | Nullable. Tổn hao phân bổ cho công tơ ở kỳ đó — snapshot ghi bởi engine khi tính. Null = chưa tính |
 | lock_version | integer | Mặc định: 0. Optimistic locking |
 
 Sử dụng = manual_usage nếu có, ngược lại = reading_end − reading_start. Tính ở tầng model method, không lưu cột thừa.
@@ -436,6 +438,18 @@ Sử dụng = manual_usage nếu có, ngược lại = reading_end − reading_s
 | lock_version | integer | Mặc định: 0. Optimistic locking |
 
 Công tơ tổng chỉ nhập 1 con số (số sử dụng), không có đầu kỳ/cuối kỳ.
+
+#### loss_summaries (tóm tắt tổn hao A/B/C per khu vực per kỳ)
+
+| Cột | Kiểu | Ràng buộc |
+|---|---|---|
+| zone_id | foreign key → zones | Bắt buộc, unique cùng period_id |
+| period_id | foreign key → periods | Bắt buộc |
+| a | decimal | Công tơ tổng − Σ công tơ không tổn hao |
+| b | decimal | Σ sử dụng công tơ có tổn hao |
+| c | decimal | A − B (tổng tổn hao khu vực, đã kẹp ≥ 0) |
+
+Snapshot kết quả tính (mục 8.5 nghiệp vụ). Chỉ engine ghi (`LossSnapshotWriter`), không kế thừa kỳ — kỳ mới chưa tính thì không có dòng.
 
 #### personnel_entries (quân số per đầu mối sinh hoạt per nhóm cấp bậc per kỳ)
 
@@ -478,7 +492,7 @@ Tổng quân số đầu mối sinh hoạt ≥ 1: validate ở tầng controller
 |---|---|---|
 | contact_point_id | foreign key → contact_points | Bắt buộc |
 | period_id | foreign key → periods | Bắt buộc, unique cùng contact_point_id |
-| other_type | enum | fixed (số cụ thể) hoặc coefficient (hệ số). Mặc định: fixed |
+| other_type | enum | fixed (số cụ thể), coefficient (hệ số), hoặc unit_coefficient (hệ số đơn vị). Mặc định: fixed. PostgreSQL native enum `other_deduction_type` |
 | other_value | decimal | Giá trị. Mặc định: 0. Cho phép âm |
 | lock_version | integer | Mặc định: 0. Optimistic locking |
 
@@ -488,15 +502,18 @@ Tổng quân số đầu mối sinh hoạt ≥ 1: validate ở tầng controller
 |---|---|---|
 | zone_id | foreign key → zones | Bắt buộc |
 | period_id | foreign key → periods | Bắt buộc |
+| pump_contact_point_id | foreign key → contact_points | Nullable. Trạm bơm (water_pump CP). Bắt buộc khi `period.pump_allocation_per_station = true` |
 | unit_id | foreign key → units | Nullable |
+| block_id | foreign key → blocks | Nullable |
+| group_id | foreign key → groups | Nullable |
 | contact_point_id | foreign key → contact_points | Nullable |
 | fixed_percentage | decimal | Nullable. Có = phần trăm cố định. Null = theo hệ số |
 | coefficient | decimal | ≥ 0. Mặc định: 1. Hệ số nhân quân số |
 | lock_version | integer | Mặc định: 0. Optimistic locking |
 
-Validation: đúng 1 trong unit_id hoặc contact_point_id có giá trị.
+Validation: đúng 1 trong unit_id, block_id, group_id, hoặc contact_point_id có giá trị. Khi `period.pump_allocation_per_station = true`: pump_contact_point_id bắt buộc, ràng buộc không chồng chéo (tập đầu mối sinh hoạt phân giải từ mỗi recipient không giao nhau), ràng buộc không chia cấp (toàn bộ đơn vị thuộc một trạm duy nhất).
 
-> **Quyết định 2 foreign key nullable thay vì polymorphic (assignable_type + assignable_id):** Polymorphic không có foreign key constraint ở database → dữ liệu có thể trỏ tới bản ghi không tồn tại. 2 foreign key nullable có foreign key constraint, database bảo vệ tham chiếu.
+> **Quyết định 4 foreign key nullable thay vì polymorphic (assignable_type + assignable_id):** Polymorphic không có foreign key constraint ở database → dữ liệu có thể trỏ tới bản ghi không tồn tại. Foreign key nullable có constraint, database bảo vệ tham chiếu.
 > **Tradeoff:** Phải validation "đúng 1 cột có giá trị" ở model. Viết 1 lần, đơn giản hơn rủi ro dữ liệu bẩn từ polymorphic.
 
 #### calculations (kết quả tính toán per đầu mối sinh hoạt per kỳ)
@@ -532,8 +549,8 @@ Validation: đúng 1 trong unit_id hoặc contact_point_id có giá trị.
 | username | string | Bắt buộc, unique. Đăng nhập bằng username |
 | encrypted_password | string | Devise quản lý |
 | display_name | string | Bắt buộc. Tên hiển thị |
-| role | enum | technician, system_admin, unit_admin, commander |
-| unit_id | foreign key → units | Nullable. Bắt buộc nếu role = unit_admin hoặc commander |
+| role | enum | technician, system_admin, division_commander, unit_admin, commander. PostgreSQL native enum `user_role` |
+| unit_id | foreign key → units | Nullable. Bắt buộc nếu role = unit_admin hoặc commander. Null cho system_admin, division_commander, technician |
 | force_password_change | boolean | Mặc định: true. Đổi mật khẩu lần đầu đăng nhập |
 | default_account | boolean | Mặc định: false. True cho 2 tài khoản mặc định (không cho xóa) |
 
@@ -661,6 +678,7 @@ Tổng tiêu chuẩn = tiêu chuẩn điện sinh hoạt + tiêu chuẩn điện
   Khác:
     Nếu other_type = fixed → other_value
     Nếu other_type = coefficient → other_value × quân số đầu mối
+    Nếu other_type = unit_coefficient → other_value × (tổng quân số residential đơn vị − quân số đầu mối)
 Tổng trừ = cộng 5 khoản
 
 Tiêu chuẩn còn lại = tổng tiêu chuẩn − tổng trừ (có thể ra âm — nghiệp vụ cho phép)
@@ -685,25 +703,26 @@ Output: lưu vào bảng `calculations`. Ghi `calculated_at`.
 Input: zone, period.
 
 Flow:
-1. LossCalculator.new(zone:, period:).call → loss_results
-2. PumpAllocationCalculator.new(zone:, period:, loss_results:).call → pump_results
-3. SummaryCalculator.new(zone:, period:, loss_results:, pump_results:).call → persist calculations
+1. LossCalculator.new(zone:, period:).call → loss_results (gồm A/B/C + tổn hao per công tơ)
+2. LossSnapshotWriter.new(zone:, period:, loss_results:).call → ghi meter_readings.loss + upsert loss_summaries
+3. PumpAllocationCalculator.new(zone:, period:, loss_results:).call → pump_results
+4. SummaryCalculator.new(zone:, period:, loss_results:, pump_results:).call → persist calculations
 
-Collect warnings từ cả 3 bước, trả về cho UI hiển thị.
+Collect warnings từ các bước tính toán (LossCalculator + PumpAllocationCalculator + SummaryCalculator; LossSnapshotWriter chỉ ghi snapshot, không sinh cảnh báo), trả về cho UI hiển thị.
 
 Tính toán lần đầu khi mở bảng tính tiền hoặc trang tổng quan, cache trong bảng calculations. Bấm "Tính toán lại" → gọi orchestrator lại, ghi đè calculations.
 
 Orchestrator luôn tính toàn zone (vì tổn hao và bơm nước tính trên toàn zone). Nếu 1 đơn vị trong zone chưa nhập liệu → engine vẫn chạy với data hiện có, nhưng trả cảnh báo "đơn vị X chưa nhập liệu" hiển thị trên bảng tính tiền và trang tổng quan. Kết quả tổn hao và bơm nước sẽ không chính xác cho đến khi tất cả đơn vị nhập xong — cảnh báo giúp system_admin biết vấn đề ở đâu.
 
-Toàn bộ thao tác tính toán (3 bước + persist calculations) thực hiện trong 1 ActiveRecord transaction. Nếu bất kỳ bước nào lỗi → rollback, giữ calculations cũ (hoặc trống nếu chưa tính lần nào).
+Toàn bộ thao tác tính toán (4 bước: tổn hao → ghi snapshot tổn hao → bơm nước → persist calculations) thực hiện trong 1 ActiveRecord transaction. Nếu bất kỳ bước nào lỗi → rollback, giữ calculations cũ (hoặc trống nếu chưa tính lần nào).
 
-Kỳ đã đóng: nút "Tính toán lại" vẫn hiển thị và hoạt động (idempotent computation, không phải data entry). Recalculate dùng snapshot data của kỳ đó, không dùng data hiện tại.
+Kỳ đã đóng: nút "Tính toán lại" **không hiển thị** — dữ liệu kỳ đã đóng là đông cứng. View guard (`@period.open?`) ẩn nút; controller redirect nếu truy cập trực tiếp.
 
 ---
 
 ## Phân quyền
 
-Dùng gem CanCanCan. 4 vai trò: 3 vai trò nghiệp vụ (system_admin, unit_admin, commander) + 1 vai trò kỹ thuật (technician). Đơn vị quản lý khu vực không phải vai trò riêng — là unit_admin được ủy quyền thêm qua zones.manager_unit_id.
+Dùng gem CanCanCan. 5 vai trò: 4 vai trò nghiệp vụ (system_admin, division_commander, unit_admin, commander) + 1 vai trò kỹ thuật (technician). division_commander là read-only toàn hệ thống (tương tự system_admin nhưng không có quyền tạo/sửa/xóa, có quyền tính toán lại). Đơn vị quản lý khu vực không phải vai trò riêng — là unit_admin được ủy quyền thêm qua zones.manager_unit_id.
 
 ### system_admin (quản trị viên hệ thống)
 
@@ -730,7 +749,7 @@ Quản lý tất cả. Mọi thứ unit_admin làm được, system_admin đều
 | Bảng tính tiền | Xem tất cả đơn vị + bảng gộp |
 | Tổng quan | Xem tổng quan hệ thống |
 | Tra cứu lịch sử | Xem tất cả |
-| Tài khoản | Quản lý system_admin, unit_admin, commander (không quản lý technician) |
+| Tài khoản | Quản lý system_admin, division_commander, unit_admin, commander (không quản lý technician) |
 | Nhật ký | Xem |
 | Sao lưu | Không |
 
@@ -957,31 +976,31 @@ Quân số không có trang nhập liệu riêng. Cập nhật quân số theo n
 
 Sidebar chỉ hiển thị các mục mà vai trò được phép thấy (theo bảng dưới); mục ngoài quyền của vai trò bị ẩn hẳn. Trong các mục đã hiển thị, không ẩn tiếp theo trạng thái kỳ: khi không có kỳ đang mở, các trang nhập liệu vẫn truy cập được nhưng hiển thị thông báo "Không có kỳ đang mở" và disable mọi ô nhập (PeriodGuard). Các trang xem kết quả và khai báo hoạt động bình thường.
 
-| Mục | system_admin | unit_admin | commander | technician |
-|---|---|---|---|---|
-| **XEM KẾT QUẢ** | | | | |
-| Tổng quan | ✓ | ✓ | ✓ | ✗ |
-| Bảng tính tiền | ✓ | ✓ | ✓ | ✗ |
-| Tra cứu lịch sử | ✓ | ✓ | ✓ | ✗ |
-| **NHẬP LIỆU** | | | | |
-| Nhập số điện lực | ✓ | ✓ (zone-manager) | ✓ (zone-manager, xem) | ✗ |
-| Chỉ số đầu mối | ✓ | ✓ | ✓ (xem) | ✗ |
-| Chỉ số bơm nước | ✓ | ✓ (zone-manager) | ✓ (zone-manager, xem) | ✗ |
-| **KHAI BÁO** | | | | |
-| Đầu mối | ✓ | ✓ | ✓ (xem) | ✗ |
-| Khối | ✓ | ✓ | ✓ (xem) | ✗ |
-| Nhóm | ✓ | ✓ | ✓ (xem) | ✗ |
-| Cấu hình đơn vị | ✓ | ✓ | ✓ (xem) | ✗ |
-| **THIẾT LẬP** | | | | |
-| Khu vực | ✓ | ✗ | ✗ | ✗ |
-| Đơn vị | ✓ | ✗ | ✗ | ✗ |
-| Phân bổ bơm nước | ✓ | ✓ (zone-manager) | ✓ (zone-manager, xem) | ✗ |
-| Đơn giá điện | ✓ | ✗ | ✗ | ✗ |
-| Nhóm cấp bậc | ✓ | ✗ | ✗ | ✗ |
-| **HỆ THỐNG** | | | | |
-| Tài khoản | ✓ | ✗ | ✗ | ✓ |
-| Nhật ký hoạt động | ✓ | ✗ | ✗ | ✓ |
-| Sao lưu dữ liệu | ✗ | ✗ | ✗ | ✓ |
+| Mục | system_admin | division_commander | unit_admin | commander | technician |
+|---|---|---|---|---|---|
+| **XEM KẾT QUẢ** | | | | | |
+| Tổng quan | ✓ | ✓ (xem) | ✓ | ✓ | ✗ |
+| Bảng tính tiền | ✓ | ✓ (xem + tính toán lại) | ✓ | ✓ | ✗ |
+| Tra cứu lịch sử | ✓ | ✓ (xem) | ✓ | ✓ | ✗ |
+| **NHẬP LIỆU** | | | | | |
+| Nhập số điện lực | ✓ | ✓ (xem) | ✓ (zone-manager) | ✓ (zone-manager, xem) | ✗ |
+| Chỉ số đầu mối | ✓ | ✓ (xem) | ✓ | ✓ (xem) | ✗ |
+| Chỉ số bơm nước | ✓ | ✓ (xem) | ✓ (zone-manager) | ✓ (zone-manager, xem) | ✗ |
+| **KHAI BÁO** | | | | | |
+| Đầu mối | ✓ | ✓ (xem) | ✓ | ✓ (xem) | ✗ |
+| Khối | ✓ | ✓ (xem) | ✓ | ✓ (xem) | ✗ |
+| Nhóm | ✓ | ✓ (xem) | ✓ | ✓ (xem) | ✗ |
+| Cấu hình đơn vị | ✓ | ✓ (xem) | ✓ | ✓ (xem) | ✗ |
+| **THIẾT LẬP** | | | | | |
+| Khu vực | ✓ | ✓ (xem) | ✗ | ✗ | ✗ |
+| Đơn vị | ✓ | ✓ (xem) | ✗ | ✗ | ✗ |
+| Phân bổ bơm nước | ✓ | ✓ (xem) | ✓ (zone-manager) | ✓ (zone-manager, xem) | ✗ |
+| Đơn giá điện | ✓ | ✓ (xem) | ✗ | ✗ | ✗ |
+| Nhóm cấp bậc | ✓ | ✓ (xem) | ✗ | ✗ | ✗ |
+| **HỆ THỐNG** | | | | | |
+| Tài khoản | ✓ | ✗ | ✗ | ✗ | ✓ |
+| Nhật ký hoạt động | ✓ | ✓ (xem) | ✗ | ✗ | ✓ |
+| Sao lưu dữ liệu | ✗ | ✗ | ✗ | ✗ | ✓ |
 
 ---
 
@@ -1225,7 +1244,68 @@ Mọi thao tác trên hệ thống đều được ghi lại (PaperTrail). Syste
 
 ---
 
+## Thiết kế bổ sung — milestone 1.2.0 (3 tính năng)
+
+> Đích data model cho 3 tính năng 1.2.0 (chưa triển khai phiên này). Chi tiết + lý do ở các spec tương ứng; nghiệp vụ ở `V2_XAC_NHAN_NGHIEP_VU` (anchor `NV-cot-khac-he-so-don-vi`, `NV-phan-bo-bom-theo-tram`, `NV-hien-thi-chi-tiet-ton-hao`).
+
+### Cột "Khác" dạng hệ số (đơn vị) — ADR-025
+
+- `OtherDeduction#other_type`: thêm enum value `unit_coefficient` (cùng `fixed`, `coefficient`). Không thêm cột, nhưng `other_type` là PostgreSQL native enum nên cần migration `ALTER TYPE other_deduction_type ADD VALUE 'unit_coefficient'` (`disable_ddl_transaction!`).
+- `SummaryCalculator`: gom tổng quân số residential theo đơn vị cho kỳ; nhánh tính mới = `other_value × (tổng quân số đơn vị − quân số đầu mối)`. Validate `unit_coefficient` chỉ cho đầu mối thuộc đơn vị.
+- Spec: [`superpowers/specs/2026-06-11-cot-khac-he-so-don-vi-design.md`](superpowers/specs/2026-06-11-cot-khac-he-so-don-vi-design.md).
+
+### Phân bổ bơm nước theo từng trạm — ADR-026
+
+- Trạm bơm = đầu mối `water_pump`. `pump_allocations`: thêm `pump_contact_point_id` (khóa ngoại trạm, nullable), `block_id`, `group_id`; đối tượng nhận = đúng một trong `{unit_id, block_id, group_id, contact_point_id}`; cho phép `contact_point` cấp đơn vị.
+- `periods`: thêm cờ `pump_allocation_per_station` (boolean). `PumpAllocationCalculator` rẽ nhánh theo cờ (cũ = gộp khu vực; mới = lặp per trạm, D mỗi trạm = Σ usage + loss công tơ của trạm).
+- Ràng buộc phân cấp (toàn zone, xuyên trạm): (1) **không chồng chéo** — tập đầu mối sinh hoạt phân giải từ mỗi recipient phải không giao nhau; (2) **không chia cấp** — toàn bộ đơn vị thuộc một trạm duy nhất. Recipient kiểu `unit`/`block`/`group` phải có ít nhất 1 đầu mối sinh hoạt. `PumpAllocationCalculator` khi gặp recipient có 0 đầu mối sinh hoạt → bỏ qua phân phối + cảnh báo.
+- Spec: [`superpowers/specs/2026-06-11-phan-bo-bom-theo-tram-design.md`](superpowers/specs/2026-06-11-phan-bo-bom-theo-tram-design.md).
+
+### Hiển thị chi tiết tổn hao — ADR-027
+
+- `meter_readings`: thêm cột `loss` (decimal, nullable) — snapshot tổn hao per công tơ, ghi trong transaction `CalculationOrchestrator`. "Sử dụng thực tế" = sử dụng + loss (tính khi render).
+- Bảng mới `loss_summaries` (`zone_id`, `period_id`, `a`, `b`, `c`, unique `(zone_id, period_id)`) — tóm tắt A/B/C per khu vực per kỳ.
+- Spec: [`superpowers/specs/2026-06-11-hien-thi-chi-tiet-ton-hao-design.md`](superpowers/specs/2026-06-11-hien-thi-chi-tiet-ton-hao-design.md).
+
+---
+
 ## Lịch sử thay đổi
+
+### v2.17.1 (23/06/2026)
+
+- Phân quyền SA: thêm `division_commander` vào danh sách vai trò SA quản lý tài khoản.
+
+### v2.17.0 (22/06/2026)
+
+- Fold mục "Thiết kế bổ sung — milestone 1.2.0" vào phần chính (3 tính năng đã triển khai, schema chính phải phản ánh trạng thái hiện tại):
+  - Schema `other_deductions.other_type`: thêm `unit_coefficient` vào enum (đã có trong DB từ migration).
+  - Schema `pump_allocations`: thêm `pump_contact_point_id`, `block_id`, `group_id`; cập nhật validation (4 foreign key nullable); thêm ràng buộc per-station.
+  - Schema `periods`: thêm `pump_allocation_per_station` (boolean).
+  - Engine SummaryCalculator: thêm nhánh `unit_coefficient` vào công thức cột Khác.
+- Schema `users.role`: thêm `division_commander` vào enum. Ghi rõ `unit_id` null cho DC/SA/TECH.
+- Phân quyền: "4 vai trò" → "5 vai trò", thêm mô tả `division_commander` (read-only toàn hệ thống + tính toán lại).
+- Sidebar per role: thêm cột `division_commander` (16 mục, tất cả xem, trừ Tài khoản và Sao lưu).
+- CalculationOrchestrator: sửa "kỳ đã đóng nút Tính toán lại vẫn hoạt động" → nút không hiển thị trên kỳ đã đóng (view guard `@period.open?` + controller redirect). Khớp code thực tế.
+
+### v2.16.1 (21/06/2026)
+
+- Đổi tên hệ thống trong tiêu đề: "Hệ thống quản lý điện nước nội bộ" (Issue #420).
+
+### v2.16.0 (18/06/2026)
+
+- ADR-026 phân bổ bơm theo trạm: thêm ràng buộc phân cấp (không chồng chéo + không chia cấp, toàn zone xuyên trạm). Recipient kiểu đơn vị/khối/nhóm phải có ít nhất 1 đầu mối sinh hoạt. PumpAllocationCalculator: bỏ qua phân phối + cảnh báo khi recipient rỗng. Khớp nghiệp vụ v2.17.0 và spec v0.3.0.
+
+### v2.15.0 (12/06/2026)
+
+- TN3 hiển thị chi tiết tổn hao: thêm cột `meter_readings.loss`, bảng `loss_summaries` (A/B/C per khu vực-kỳ), service `LossSnapshotWriter` ghi snapshot trong transaction orchestrator, trường `LossCalculator#total_a`. Snapshot là kết quả tính, không kế thừa kỳ.
+
+### v2.14.1 (11/06/2026)
+
+- Sửa lỗi-fact (phát hiện khi triển khai TN1): `OtherDeduction#other_type` là PostgreSQL native enum → cần migration `ALTER TYPE ... ADD VALUE` (không chỉ "không thêm cột"). Khớp spec ADR-025 v0.1.1.
+
+### v2.14.0 (11/06/2026)
+
+- Thêm mục "Thiết kế bổ sung — milestone 1.2.0": đích data model cho 3 tính năng (cột Khác hệ số đơn vị — ADR-025; phân bổ bơm theo trạm — ADR-026; hiển thị chi tiết tổn hao — ADR-027). Trỏ tới spec; chưa triển khai. Khớp nghiệp vụ v2.15.0 (Issue #319).
 
 ### v2.13.1 (31/05/2026)
 

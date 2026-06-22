@@ -4,6 +4,10 @@
 # Cách dùng:
 #   bin/docker rspec              → chạy toàn bộ test
 #   bin/docker rspec spec/models  → chạy test 1 thư mục
+#   bin/docker demo               → chạy demo specs (tự set DEMO=1)
+#   bin/docker demo spec/demo/x   → chạy 1 demo spec
+#   bin/docker coverage           → chạy toàn bộ test với coverage report (COVERAGE=1)
+#   bin/docker coverage spec/models → chạy 1 thư mục với coverage (kết quả chỉ chính xác khi chạy toàn bộ)
 #   bin/docker prspec             → chạy test song song (auto-detect số processes)
 #   bin/docker prspec -n 5        → chạy test song song với 5 processes
 #   bin/docker prspec:setup       → tạo databases cho test song song (chạy 1 lần)
@@ -119,6 +123,14 @@ case "${1}" in
   rspec)
     shift
     $COMPOSE exec -e RAILS_ENV=test app bundle exec rspec "$@"
+    ;;
+  demo)
+    shift
+    $COMPOSE exec -e RAILS_ENV=test -e DEMO=1 app bundle exec rspec "${@:-spec/demo}"
+    ;;
+  coverage)
+    shift
+    $COMPOSE exec -e RAILS_ENV=test -e COVERAGE=1 app bundle exec rspec "$@"
     ;;
   prspec)
     shift

@@ -2,8 +2,11 @@ class GroupsController < ApplicationController
   include PeriodGuard
   include StructureChangeGuard
   include AuthorizeResource
+  include ActionAuthKeyable
   include BusinessRoleRequired
   include ZoneUnitFilterable
+
+  ACTION_AUTH_KEYS = { "show" => :read, "edit" => :update, "update" => :update, "destroy" => :destroy }.freeze
 
   before_action :set_group, only: [:show, :edit, :update, :destroy]
   before_action :require_open_period, only: [:create, :update, :destroy]
@@ -79,13 +82,6 @@ class GroupsController < ApplicationController
     @group = load_member(Group, action: action_auth_key)
   end
 
-  def action_auth_key
-    case action_name
-    when "show" then :read
-    when "edit", "update" then :update
-    when "destroy" then :destroy
-    end
-  end
 
   def create_params
     params.require(:group).permit(:name, :unit_id, :block_id)

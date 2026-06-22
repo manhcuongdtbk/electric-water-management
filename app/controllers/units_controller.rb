@@ -1,10 +1,13 @@
 class UnitsController < ApplicationController
   include PeriodGuard
   include AuthorizeResource
+  include ActionAuthKeyable
   include StructureChangeGuard
   include BusinessRoleRequired
   include ZoneUnitFilterable
   include SettingsAccessGuard
+
+  ACTION_AUTH_KEYS = { "show" => :read, "edit" => :update, "update" => :update, "destroy" => :destroy }.freeze
 
   before_action :require_system_admin!
   before_action :set_unit, only: [:show, :edit, :update, :destroy]
@@ -83,13 +86,6 @@ class UnitsController < ApplicationController
     @unit = load_member(Unit, action: action_auth_key)
   end
 
-  def action_auth_key
-    case action_name
-    when "show" then :read
-    when "edit", "update" then :update
-    when "destroy" then :destroy
-    end
-  end
 
   def unit_params
     params.require(:unit).permit(:name, :zone_id)

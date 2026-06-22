@@ -119,12 +119,20 @@ RSpec.describe PeriodService do
       expect(deduction.other_value).to eq(BigDecimal("-2.5"))
     end
 
-    it "pump_allocations kế thừa cấu hình" do
+    it "pump_allocations kế thừa cấu hình (per-trạm → per-trạm)" do
+      # Kế thừa phân bổ bơm chỉ xảy ra khi cả nguồn lẫn đích cùng cơ chế per-trạm (ADR-026).
+      # Sample mẫu pin legacy (zone-wide); chuyển kỳ nguồn sang per-trạm và gắn trạm bơm
+      # cho từng allocation để giữ nguyên ý định "kế thừa copy cấu hình bơm".
+      station = sample.contact_points[:tram_bom_1]
+      sample.period.update!(pump_allocation_per_station: true)
+      sample.period.pump_allocations.find_each { |a| a.update!(pump_contact_point: station) }
+
       sample.period.update!(closed: true)
       result = service.open_new_period
       expect(result.period.pump_allocations.count).to eq(sample.period.pump_allocations.count)
       chi_huy = result.period.pump_allocations.find_by(contact_point: sample.contact_points[:chi_huy_khu_vuc])
       expect(chi_huy.fixed_percentage).to eq(BigDecimal("20"))
+      expect(chi_huy.pump_contact_point_id).to eq(station.id)
     end
 
     it "KHÔNG kế thừa main_meter_readings (nhập mới)" do
@@ -138,6 +146,37 @@ RSpec.describe PeriodService do
       sample.period.update!(closed: true)
       result = service.open_new_period
       expect(Calculation.where(period: result.period)).to be_empty
+    end
+
+    it "CHIEU-khac-don-vi-ke-thua: unit_coefficient kế thừa sang kỳ mới và tính lại đúng khoản trừ" do
+      # Gán unit_coefficient -2 cho Văn thư ở kỳ 5 (Đơn vị A tổng 10, Văn thư 2)
+      van_thu = sample.contact_points[:van_thu]
+      van_thu.other_deductions.find_by!(period: sample.period)
+             .update!(other_type: "unit_coefficient", other_value: BigDecimal("-2"))
+
+      sample.period.update!(closed: true)
+      result = service.open_new_period
+      new_period = result.period
+
+      # (a) kế thừa: other_type và other_value giống kỳ trước
+      new_deduction = van_thu.other_deductions.find_by!(period: new_period)
+      expect(new_deduction.other_type).to eq("unit_coefficient")
+      expect(new_deduction.other_value).to eq(BigDecimal("-2"))
+
+      # (b) tính lại SummaryCalculator cho kỳ mới → khoản trừ vẫn = -2 × (10 − 2) = -16,00
+      # Kỳ mới kế thừa meter_readings nhưng reading_end chưa nhập → meter usages = 0.
+      # LossCalculator vẫn chạy được (main_meter_reading cần tạo để có total_usage).
+      sample.main_meter.main_meter_readings.create!(period: new_period, usage: BigDecimal("2100"))
+
+      loss = LossCalculator.new(zone: sample.zone, period: new_period).call
+      pump = PumpAllocationCalculator.new(zone: sample.zone, period: new_period,
+                                         loss_results: loss).call
+      SummaryCalculator.new(zone: sample.zone, period: new_period,
+                            loss_results: loss, pump_results: pump).call
+
+      calc = Calculation.find_by!(contact_point: van_thu, period: new_period)
+      # Quân số kế thừa nguyên: Đơn vị A vẫn 10, Văn thư vẫn 2 → -2 × (10 − 2) = -16
+      expect(calc.other_deduction).to eq_display("-16.00")
     end
   end
 
@@ -221,10 +260,120 @@ RSpec.describe PeriodService do
     end
 
     it "vẫn copy allocations cho thực thể kept" do
+      # Kế thừa per-trạm → per-trạm (ADR-026): chuyển kỳ nguồn sang per-trạm và gắn trạm bơm.
+      station = sample.contact_points[:tram_bom_1]
+      sample.period.update!(pump_allocation_per_station: true)
+      sample.period.pump_allocations.find_each { |a| a.update!(pump_contact_point: station) }
+
       sample.period.update!(closed: true)
       result = service.open_new_period
       kept_allocation_count = result.period.pump_allocations.count
       expect(kept_allocation_count).to eq(sample.period.pump_allocations.count)
+    end
+  end
+
+  describe "#open_new_period — cờ pump_allocation_per_station (TN2)" do
+    it "kỳ mới mở có pump_allocation_per_station = true" do
+      result = described_class.new.open_new_period(year: 2030, month: 1, unit_price: BigDecimal("3500"))
+      expect(result.period.pump_allocation_per_station).to be(true)
+    end
+  end
+
+  # CHIEU-phan-bo-tram-chuyen-tiep: kỳ per-trạm đầu tiên bắt đầu trống; kỳ per-trạm
+  # sau kế thừa đúng (chỉ kế thừa khi cả nguồn lẫn đích đều per-trạm — ADR-026).
+  describe "#open_new_period — kế thừa phân bổ bơm per-trạm (TN2)" do
+    it "KHÔNG kế thừa qua ranh giới cũ→per-trạm: kỳ per-trạm đầu tiên bắt đầu trống" do
+      zone = create(:zone)
+      old = create(:period, closed: false, pump_allocation_per_station: false)
+      unit = create(:unit, zone: zone)
+      create(:pump_allocation, zone: zone, period: old, unit: unit, contact_point: nil,
+             block: nil, group: nil, pump_contact_point: nil, coefficient: 1)
+      old.update!(closed: true)
+
+      result = PeriodService.new.open_new_period(year: 2032, month: 1, unit_price: BigDecimal("3500"))
+      expect(result.period.pump_allocation_per_station).to be(true)
+      expect(result.period.pump_allocations).to be_empty
+    end
+
+    it "kế thừa khi cả nguồn lẫn đích đều per-trạm (gồm pump_contact_point_id, block_id, group_id)" do
+      zone = create(:zone)
+      src = create(:period, closed: false, pump_allocation_per_station: true)
+      station = create(:contact_point, :water_pump, zone: zone)
+      unit = create(:unit, zone: zone)
+      create(:pump_allocation, zone: zone, period: src, unit: unit, contact_point: nil,
+             block: nil, group: nil, pump_contact_point: station, coefficient: 2, fixed_percentage: nil)
+      src.update!(closed: true)
+
+      result = PeriodService.new.open_new_period(year: 2033, month: 1, unit_price: BigDecimal("3500"))
+      copied = result.period.pump_allocations
+      expect(copied.size).to eq(1)
+      expect(copied.first.pump_contact_point_id).to eq(station.id)
+      expect(copied.first.unit_id).to eq(unit.id)
+      expect(copied.first.coefficient).to eq(BigDecimal("2"))
+    end
+  end
+
+  describe "#open_new_period — previous_rank not found during personnel snapshot (line 157)" do
+    it "defaults personnel count to 0 when previous period has no matching rank position" do
+      zone = create(:zone)
+      unit = create(:unit, zone: zone)
+      period_1 = service.open_new_period(year: 2026, month: 1, unit_price: BigDecimal("2000")).period
+      cp = create(:contact_point, :residential, name: "Test CP", unit: unit,
+                  initial_personnel_counts: { period_1.ranks.find_by!(position: 7).id => 5 })
+
+      period_1.update!(closed: true)
+
+      # Stub copy_ranks_from to add an extra rank at position 99 that has no match
+      # in the previous period, then call original
+      original_method = service.method(:send).call(:method, :copy_ranks_from)
+      allow(service).to receive(:copy_ranks_from).and_wrap_original do |m, prev, new_period|
+        m.call(prev, new_period)
+        new_period.ranks.create!(name: "Extra rank", quota: BigDecimal("50"), position: 99)
+      end
+
+      result = service.open_new_period
+      new_period = result.period
+
+      # Position 99 has no match in period_1 => previous_rank is nil => count defaults to 0
+      rank_99 = new_period.ranks.find_by!(position: 99)
+      entry = PersonnelEntry.find_by(contact_point: cp, period: new_period, rank: rank_99)
+      expect(entry).to be_present
+      expect(entry.count).to eq(0)
+    end
+  end
+
+  describe "#close_period — mismatch check skips nil reading_end and nil next_reading (lines 207, 209)" do
+    let(:sample) { setup_zone_one_full_sample }
+
+    it "skips mismatch check when current period reading_end is nil (line 207)" do
+      sample.period.update!(closed: true)
+      next_period = service.open_new_period.period
+      service.close_period(next_period)
+
+      # Reopen period 1 and set a reading to nil
+      service.reopen_period(sample.period)
+      reading = sample.meters[:ct_a1].meter_readings.find_by(period: sample.period)
+      reading.update!(reading_end: nil)
+
+      result = service.close_period(sample.period)
+      # Should not warn about CT-A1 since reading_end is nil
+      ct_a1_warnings = result.warnings.select { |w| w.include?("CT-A1") }
+      expect(ct_a1_warnings).to be_empty
+    end
+
+    it "skips mismatch check when next period reading does not exist (line 209)" do
+      sample.period.update!(closed: true)
+      next_period = service.open_new_period.period
+      service.close_period(next_period)
+
+      # Delete the next period reading for CT-A1
+      MeterReading.where(meter_id: sample.meters[:ct_a1].id, period_id: next_period.id).delete_all
+
+      service.reopen_period(sample.period)
+      result = service.close_period(sample.period)
+      # Should not warn about CT-A1 since next_reading is nil
+      ct_a1_warnings = result.warnings.select { |w| w.include?("CT-A1") }
+      expect(ct_a1_warnings).to be_empty
     end
   end
 

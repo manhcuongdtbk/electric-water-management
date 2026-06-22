@@ -82,6 +82,23 @@ RSpec.describe Meter do
       period.update!(closed: true)
       expect { meter.update!(no_loss: true) }.not_to raise_error
     end
+
+    it "does not error when no reading exists for current period" do
+      meter.meter_readings.where(period: period).delete_all
+      expect { meter.update!(no_loss: true) }.not_to raise_error
+    end
+
+    it "does not touch calculation state when contact_point zone is nil" do
+      # Create a non_establishment CP directly on zone so we can clear it
+      zone = create(:zone)
+      ne_cp = create(:contact_point, :non_establishment, zone: zone)
+      ne_meter = create(:meter, contact_point: ne_cp)
+      # Clear zone association so effective_zone returns nil
+      ne_cp.update_column(:zone_id, nil)
+      ne_meter.reload
+      expect(CalculationState).not_to receive(:touch_inputs!)
+      ne_meter.update!(no_loss: true)
+    end
   end
 
   describe "before_discard :ensure_not_last_meter (T38)" do
@@ -100,6 +117,13 @@ RSpec.describe Meter do
       _meter2 = create(:meter, contact_point: cp, name: "M2")
       expect(meter1.discard).to be true
       expect(meter1.reload).to be_discarded
+    end
+
+    it "allows discarding last meter on non_establishment contact point" do
+      ne_cp = create(:contact_point, :non_establishment)
+      meter = create(:meter, contact_point: ne_cp)
+      expect(meter.discard).to be true
+      expect(meter.reload).to be_discarded
     end
   end
 

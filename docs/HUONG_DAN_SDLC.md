@@ -1,6 +1,6 @@
 # Hướng dẫn nhanh quy trình làm việc (SDLC)
 
-> **Phiên bản:** 1.2.0
+> **Phiên bản:** 1.4.0
 > **Ngày:** 11/06/2026
 > **Đối tượng:** Thành viên mới — kể cả người chưa quen Git, CI, hay Docker.
 > **Cách dùng:** Đọc một lượt (~15 phút) để hiểu *một thay đổi đi từ lúc nhận việc đến khi giao cho khách như thế nào*. Đây là **bản đồ tổng quan** — thao tác từng bước nằm ở [CONTRIBUTING.md](../CONTRIBUTING.md), quyết định kèm lý do nằm trong [docs/superpowers/specs/](superpowers/specs/). Mỗi mục bên dưới đều có link tới nơi chi tiết.
@@ -47,6 +47,8 @@ flowchart LR
 
 ## 4. Vòng đời một thay đổi (6 bước)
 
+> 🤝 **Cách đội vận hành 6 bước này:** mỗi bước chạy theo nguyên tắc **"trợ lý AI lo phần cơ học — người giữ gate quyết định"** ([ADR-029](superpowers/specs/2026-06-07-sdlc-overview-design.md)). Trợ lý AI (hiện là Claude Code) soạn Issue, draft spec/ADR, tạo nhánh + viết code/test, mở pull request, theo dõi CI, soạn release notes — phần *cơ học*, lặp lại được. **Người (chủ dự án) giữ các "gate" — điểm quyết định:** chốt yêu cầu, **phân loại (milestone + `priority-high`)**, **duyệt thiết kế**, **duyệt + merge**, **quyết cắt release** và duyệt nội dung gửi khách. Trợ lý *đề xuất*, người *chốt* — luôn có người trong vòng lặp ở mỗi gate. Bên dưới, mỗi bước ghi rõ phần nào là cơ học (AI), phần nào là gate (người).
+
 *Ví dụ xuyên suốt: bạn được giao việc "thêm cột so sánh kỳ vào bảng tính tiền".*
 
 1. **Mở Issue.** Mọi việc bắt đầu bằng một Issue trên GitHub (chọn mẫu *Yêu cầu thay đổi* hoặc *Báo lỗi*). Khách báo qua điện thoại/chat thì đội tự mở Issue thay. Số `#N` là mã của việc này, dùng để truy vết về sau. → [CONTRIBUTING.md mục 9](../CONTRIBUTING.md) (và mục 4).
@@ -65,6 +67,7 @@ Mỗi dòng là một chủ đề → quy tắc cốt lõi → nơi đọc chi t
 | Nhánh & merge | Git Flow (mục 2); `feature/*` merge vào `develop` bằng **squash**; `release/*`·`hotfix/*` vào `main` bằng **merge-commit**; sau đó **merge-back** về `develop` | [CONTRIBUTING §2](../CONTRIBUTING.md) · [ADR-003](superpowers/specs/2026-06-07-quy-trinh-release-design.md) |
 | Commit & version | Commit tiếng Anh dạng `type(scope): mô tả`; `feat`→MINOR, `fix`→PATCH, `BREAKING`→MAJOR (theo **SemVer**); release-please tự tăng version + changelog + tag | [CONTRIBUTING §3, §6](../CONTRIBUTING.md) · [ADR-004, ADR-008](superpowers/specs/2026-06-07-quy-trinh-release-design.md) |
 | Issue & truy vết | Mọi việc bắt đầu từ Issue `#N`; pull request ghi `Refs #N`/`Closes #N`; yêu cầu nghiệp vụ gắn mốc `NV-...` | [CONTRIBUTING §9](../CONTRIBUTING.md) · [ADR-013, ADR-014](superpowers/specs/2026-06-08-truy-vet-quan-ly-thay-doi-design.md) |
+| Xác nhận khách trước build | Cần khách duyệt phương án trước khi code → tài liệu xác nhận versioned ở `docs/xac-nhan-khach/`, Issue-first, fold vào nghiệp vụ khi khách chốt | [CONTRIBUTING §9](../CONTRIBUTING.md) · [ADR-028](superpowers/specs/2026-06-08-truy-vet-quan-ly-thay-doi-design.md) |
 | Ưu tiên & "đủ để phát hành" | Thứ tự làm: `severity-critical` → `priority-high` (theo milestone) → còn lại; cắt `release/*` khi mọi `priority-high` của milestone đã xong | [CONTRIBUTING §11](../CONTRIBUTING.md) · [ADR-019, ADR-020](superpowers/specs/2026-06-09-tiep-nhan-uu-tien-cong-viec-design.md) |
 | Lỗi & sự cố | Lỗi thường → `feature/*`; lỗi nghiêm trọng → `hotfix/*` (phân biệt rõ ở mục 7) | [CONTRIBUTING §10](../CONTRIBUTING.md) · [ADR-018](superpowers/specs/2026-06-09-van-hanh-bao-tri-design.md) |
 | Sao lưu & khôi phục | Sao lưu tự động sang ổ cứng phụ là nguồn chính; **tạo bản sao lưu trước khi restore** | [CONTRIBUTING §10](../CONTRIBUTING.md) · [ADR-016, ADR-017](superpowers/specs/2026-06-09-van-hanh-bao-tri-design.md) |
@@ -122,6 +125,8 @@ Tài liệu này cố ý ngắn để nắm nhanh. Khi cần làm thật, mở:
 
 ## Lịch sử thay đổi
 
+- **1.4.0 (11/06/2026):** §4 thêm khung vận hành "trợ lý AI lo cơ học — người giữ gate quyết định" (ADR-029): trợ lý AI lo phần cơ học mỗi bước, người giữ các gate (chốt yêu cầu, phân loại, duyệt thiết kế, merge, cắt release). Issue #322.
+- **1.3.0 (11/06/2026):** §5 thêm dòng "Xác nhận khách trước build" (ADR-028) — tài liệu xác nhận versioned ở `docs/xac-nhan-khach/`, Issue-first, fold vào nghiệp vụ khi khách chốt. Issue #320.
 - **1.2.0 (11/06/2026):** §5 thêm guardrail tự động (ADR-024) vào dòng "Quản trị tài liệu" — CI kiểm link chết / bản đồ tài liệu / giữ định nghĩa thuật ngữ. Issue #313.
 - **1.1.0 (10/06/2026):** §1 "Từ vựng" gom về [`THUAT_NGU.md`](THUAT_NGU.md) (nguồn duy nhất), thay bảng bằng pointer; §8 trỏ từ viết tắt sang `THUAT_NGU.md` (bỏ liệt kê inline cho khỏi lỗi thời); §5 thêm dòng "Quản trị tài liệu"; bỏ dải ADR cứng ("ADR-001..NNN") ở "Cần chi tiết hơn?" cho khỏi phải sửa khi có ADR mới. ADR-023, Issue #310.
 - **1.0.0 (09/06/2026):** Bản đầu — lối vào tổng quan, dễ hiểu cho người mới về quy trình SDLC (ADR-022; spec [2026-06-09-huong-dan-sdlc-onboarding-design.md](superpowers/specs/2026-06-09-huong-dan-sdlc-onboarding-design.md); Issue #307).

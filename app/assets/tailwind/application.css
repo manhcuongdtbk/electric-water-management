@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/* Reconciliation tables: hover highlight on <td> instead of <tr>.
+   Chromium bug: oklch() backgrounds don't render on <tr> in collapsed tables.
+   Tailwind v4 uses oklch for all colors, so hover:bg-gray-50 on <tr> is invisible. */
+.reconciliation-table .reconciliation-row td {
+  @apply transition-colors;
+}
+.reconciliation-table .reconciliation-row:hover td {
+  background-color: #e5e7eb;
+}
+
 /* Pagy pagination — based on pagy.tailwind.css from gem */
 .pagy {
   @apply flex justify-center space-x-1 font-semibold text-sm text-gray-500;

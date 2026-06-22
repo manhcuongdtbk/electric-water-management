@@ -1,4 +1,4 @@
-# Hệ thống quản lý điện nội bộ Sư đoàn
+# Hệ thống quản lý điện nước nội bộ
 
 Hệ thống web quản lý sử dụng điện, tính toán tiêu chuẩn, tổn hao, phân bổ bơm nước, và tạo bảng tính tiền cho các đơn vị trong Sư đoàn.
 
@@ -16,7 +16,7 @@ Rails 8, PostgreSQL 16, Tailwind CSS, Hotwire (Turbo + Stimulus).
 | Railway `mirror` | Railway (`Dockerfile`, `railway.json`, sleep) | nhánh `production` (ghim tag đang giao) | `Mirror` | https://electric-water-management-mirror.up.railway.app |
 | **Production (thật)** | Ubuntu Mini PC LAN offline (`Dockerfile`, `compose.yml` + `.env`) | tag `main` đã giao | `Production` (đặt tại Mini PC) | http://\<IP server\> |
 
-> Ba env Railway và Mini PC đều chạy `RAILS_ENV=production`; chỉ `APPLICATION_ENVIRONMENT_LABEL` khác nhau để phân biệt (xem "environment terminology" trong `AGENTS.md`). **Production thật là Mini PC offline tại chỗ khách**, không phải Railway. `mirror` là bản sinh đôi *online* của Production để khách đối chiếu với `acceptance` (bản ứng viên). Hiện `mirror` chạy `v1.0.0` — bản này **ra đời trước** tính năng tự báo cáo phiên bản nên chưa có nhãn/endpoint `/version`; `acceptance`/`development` (1.1.0+) thì có. Khi Production lên 1.1.0+, `mirror` sẽ hiện nhãn.
+> Ba env Railway và Mini PC đều chạy `RAILS_ENV=production`; chỉ `APPLICATION_ENVIRONMENT_LABEL` khác nhau để phân biệt (xem "environment terminology" trong `AGENTS.md`). **Production thật là Mini PC offline tại chỗ khách**, không phải Railway. `mirror` là bản sinh đôi *online* của Production để khách đối chiếu với `acceptance` (bản `main` mới nhất khách nghiệm thu). Hiện `mirror` chạy `v1.0.0` — bản này **ra đời trước** tính năng tự báo cáo phiên bản nên chưa có nhãn/endpoint `/version`; `acceptance`/`development` (1.1.0+) thì có. Khi Production lên 1.1.0+, `mirror` sẽ hiện nhãn.
 
 ## Development
 
@@ -60,6 +60,8 @@ bin/docker up                                # tự in cổng đã gán cho work
 ```bash
 bin/docker rspec              # Chạy test
 bin/docker rspec spec/models  # Chạy test 1 thư mục
+bin/docker demo               # Chạy demo specs (tự set DEMO=1)
+bin/docker demo spec/demo/x   # Chạy 1 demo spec
 bin/docker console            # Rails console
 bin/docker bash               # Shell trong container app
 bin/docker bash postgres      # Shell trong container postgres
@@ -115,7 +117,7 @@ bin/docker prspec:setup                 # Tạo databases cho test song song (ch
 | `docs/hdsd/V2_HUONG_DAN_SU_DUNG.md` | Hướng dẫn sử dụng (cho tất cả người dùng, có ảnh chụp màn hình) |
 | `docs/V2_XAC_NHAN_NGHIEP_VU.md` | Nghiệp vụ (nguồn sự thật duy nhất) |
 | `docs/V2_THIET_KE_HE_THONG.md` | Thiết kế hệ thống |
-| `docs/V2_HANH_VI_HE_THONG.md` | Hành vi runtime, 6 vai trò, 3 trạng thái kỳ |
+| `docs/V2_HANH_VI_HE_THONG.md` | Hành vi runtime, 7 vai trò, 3 trạng thái kỳ |
 | `docs/V2_CHIEU_TEST.md` | 12 chiều kiểm thử |
 | `docs/KIEN_THUC_DOCKER.md` | Kiến thức Docker, các môi trường, deploy |
 | `docs/HUONG_DAN_DEPLOY.md` | Hướng dẫn deploy production (cho kỹ thuật viên) |

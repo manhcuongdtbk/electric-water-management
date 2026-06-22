@@ -2,12 +2,13 @@
 # Dùng Capybara API — chỉ dùng trong type: :system.
 #
 # Verify:
-#   - system_admin thấy dropdown filters
+#   - system_admin và division_commander thấy dropdown filters
 #   - Các role khác (UA-ZM, UA, CMD-ZM, CMD) không thấy dropdown filters
 #
 # Yêu cầu trong caller:
-#   path:              → URL trang index
-#   filter_select_ids: → Array HTML ids của selects cần check (vd: ["zone_id"] hoặc ["zone_id", "unit_id"])
+#   path:                → URL trang index
+#   filter_select_ids:   → Array HTML ids của selects cần check (vd: ["zone_id"] hoặc ["zone_id", "unit_id"])
+#   dc_can_access (opt)  → false nếu DC không vào được trang (mặc định true)
 RSpec.shared_examples "role-based filter visibility" do
   context "as system_admin" do
     before do
@@ -16,6 +17,21 @@ RSpec.shared_examples "role-based filter visibility" do
     end
 
     it "hiển thị dropdown filters" do
+      visit path
+      filter_select_ids.each do |select_id|
+        expect(page).to have_select(select_id)
+      end
+    end
+  end
+
+  context "as division_commander" do
+    before do
+      user = create(:user, :division_commander)
+      sign_in user
+    end
+
+    it "hiển thị dropdown filters" do
+      skip "DC cannot access this page" if respond_to?(:dc_can_access) && !dc_can_access
       visit path
       filter_select_ids.each do |select_id|
         expect(page).to have_select(select_id)

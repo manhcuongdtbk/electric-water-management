@@ -1,0 +1,11 @@
+# Mutation-testing subjects for the billing/electricity core (ADR-056, Issue #358).
+# Each subject maps a calculation source file to the spec(s) run to kill its mutants.
+subjects:
+  - path: app/services/calculation_orchestrator.rb
+    specs: [spec/services/calculation_orchestrator_spec.rb]
+  - path: app/services/loss_calculator.rb
+    specs: [spec/services/loss_calculator_spec.rb]
+  - path: app/services/pump_allocation_calculator.rb
+    specs: [spec/services/pump_allocation_calculator_spec.rb]
+  - path: app/services/summary_calculator.rb
+    specs: [spec/services/summary_calculator_spec.rb]

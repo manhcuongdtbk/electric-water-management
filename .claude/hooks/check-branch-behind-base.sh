@@ -11,6 +11,13 @@ cmd=$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)
 # Only act on `git push` (matches compound commands like `cd x && git push`).
 printf '%s' "$cmd" | grep -Eq 'git[[:space:]]+push' || exit 0
 
+# Skip branch deletions: they push no content from the current branch, so the
+# behind-base check is irrelevant. Matches `--delete`/`-d` flags and the
+# colon-refspec form (`git push origin :branch` or `... :refs/heads/branch`).
+if printf '%s' "$cmd" | grep -Eq '(^|[[:space:]])(--delete|-d)([[:space:]]|$)|[[:space:]]:[^[:space:]]'; then
+  exit 0
+fi
+
 br=$(git rev-parse --abbrev-ref HEAD 2>/dev/null) || exit 0
 # Never guard a push of the integration branches themselves, or detached HEAD.
 case "$br" in develop|main|HEAD|"") exit 0 ;; esac

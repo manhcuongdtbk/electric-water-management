@@ -1,7 +1,6 @@
 ---
 title: Tự báo cáo phiên bản (application self-version reporting)
-version: 0.8.0
-status: draft (chờ duyệt)
+version: 0.8.2
 date: 2026-06-07
 ---
 
@@ -39,12 +38,12 @@ end
 
 - **`SystemInfo` sở hữu việc đọc `version.txt`** một lần khi nạp module (eager-load lúc khởi động ở production). `SystemInfo::VERSION` là hằng số đã đóng băng; không định nghĩa `AppModule::VERSION` để **không phụ thuộc tên app** (an toàn khi đổi tên — không hard-code `ElectricWaterManagement` ở đâu cả).
 - Dùng **`def self.`** (không `module_function`): hàm gọi như `SystemInfo.version`, minh bạch, không tạo bản instance-method thừa.
-- **Nhãn môi trường là tiếng Anh** (xem ADR-003). Ops đặt `APPLICATION_ENVIRONMENT_LABEL` cho từng môi trường (ví dụ `Acceptance` / `Mirror` / `Production`); trống → `Rails.env.capitalize`.
+- **Nhãn môi trường là tiếng Anh** (xem ADR-044). Ops đặt `APPLICATION_ENVIRONMENT_LABEL` cho từng môi trường (ví dụ `Acceptance` / `Mirror` / `Production`); trống → `Rails.env.capitalize`.
 - `SystemInfo` là module thuần (không ActiveRecord) → dễ test, không chạm database.
 
 ### 2. Dòng log khởi động — `config/initializers/version.rb`
 
-Chỉ ghi **một dòng log khởi động** (xem ADR-004), không định nghĩa hằng số. Dùng `after_initialize` để `SystemInfo` đã sẵn sàng, và `Rails.application.class.module_parent_name` để lấy tên app **động** (không hard-code).
+Chỉ ghi **một dòng log khởi động** (xem ADR-045), không định nghĩa hằng số. Dùng `after_initialize` để `SystemInfo` đã sẵn sàng, và `Rails.application.class.module_parent_name` để lấy tên app **động** (không hard-code).
 
 ```ruby
 Rails.application.config.after_initialize do
@@ -73,9 +72,9 @@ end
 
 ## Quyết định (ADR)
 
-### ADR-001: Vị trí hiển thị phiên bản trên giao diện
+### ADR-042: Vị trí hiển thị phiên bản trên giao diện
 
-- **Trạng thái:** Proposed · 2026-06-07
+- **Trạng thái:** Accepted · 2026-06-07
 - **Bối cảnh:** Mục tiêu cao nhất là để người nghiệm thu phân biệt được hai môi trường Railway gần giống hệt. Mọi trang sau đăng nhập đều có sidebar; chưa có footer.
 - **Quyết định:** Hiển thị ở **(a) đáy sidebar** (mọi trang, mọi vai trò) và **(b) màn hình đăng nhập** (trước khi đăng nhập). **Không** làm trang admin "Thông tin hệ thống" riêng.
 - **Lý do:** Sidebar có mặt ở mọi trang nên không cần footer mới; màn hình đăng nhập cho người nghiệm thu thấy ngay khi mở app. Một trang admin riêng là **thừa** khi phiên bản đã hiện khắp nơi và đã có endpoint `/version` cho thông tin máy đọc — thêm route/controller/view/mục sidebar/guard + test 6 vai trò mà giá trị tăng thêm rất ít (YAGNI).
@@ -84,26 +83,26 @@ end
   - *Footer toàn cục* — loại: thêm thành phần layout mới trong khi sidebar đã có mặt khắp nơi.
   - *Trang admin "Thông tin hệ thống" riêng* — loại: thừa so với sidebar + login + `/version`.
 
-### ADR-002: Dạng endpoint trả phiên bản
+### ADR-043: Dạng endpoint trả phiên bản
 
-- **Trạng thái:** Proposed · 2026-06-07
+- **Trạng thái:** Accepted · 2026-06-07
 - **Bối cảnh:** Script deploy và hỗ trợ cần xác minh bản đang chạy bằng cách gọi HTTP (kể cả Mini PC offline trong mạng nội bộ). Đã có sẵn health check `/up` của Rails (đã bị tắt log).
 - **Quyết định:** Thêm endpoint riêng `GET /version` trả **JSON** `{version, application_environment, rails_environment}`, **công khai (không cần đăng nhập)**.
 - **Lý do:** JSON cho máy đọc dễ; tách khỏi `/up` để không trộn ngữ nghĩa health-check với version; công khai để script/hỗ trợ gọi không cần phiên đăng nhập.
 - **Tradeoff:** (+) Máy đọc dễ, ổn định. (−) Lộ số phiên bản + tên môi trường công khai — chấp nhận được với hệ nội bộ; không phải bí mật.
 - **Phương án đã loại:** *plain text* (kém cấu trúc khi cần thêm trường); *gộp vào `/up`* (trộn ngữ nghĩa, `/up` đã bị tắt log).
 
-### ADR-003: Nhãn môi trường — tiếng Anh, từ biến môi trường
+### ADR-044: Nhãn môi trường — tiếng Anh, từ biến môi trường
 
-- **Trạng thái:** Proposed · 2026-06-07
+- **Trạng thái:** Accepted · 2026-06-07
 - **Bối cảnh:** Hai môi trường Railway (Nghiệm thu, Mốc) có thể **tạm thời chạy cùng một phiên bản**; khi đó chỉ số phiên bản không đủ để phân biệt. Quy ước dự án: UI tiếng Việt 100%, nhưng tên môi trường là **định danh triển khai/kỹ thuật**.
 - **Quyết định:** Hiển thị/trả thêm **nhãn môi trường bằng tiếng Anh**, lấy từ biến `APPLICATION_ENVIRONMENT_LABEL`; dự phòng `Rails.env.capitalize` khi biến trống.
 - **Lý do:** Giải quyết trực tiếp mục tiêu phân biệt hai môi trường; tên môi trường là định danh triển khai (đồng bộ với `Rails.env`, tài liệu deploy, biến môi trường) nên để tiếng Anh — chủ dự án xác nhận ngoại lệ với quy ước UI-tiếng-Việt. Cấu hình đơn giản (một biến mỗi nơi triển khai), không cần i18n cho tên môi trường.
 - **Tradeoff:** (+) Phân biệt chắc chắn ngay cả khi trùng phiên bản; nhất quán với định danh triển khai. (−) Phụ thuộc ops đặt đúng biến; nếu quên → rơi về `Rails.env.capitalize` (vẫn an toàn, không lỗi).
 
-### ADR-004: Cách gắn phiên bản (và môi trường) vào log
+### ADR-045: Cách gắn phiên bản (và môi trường) vào log
 
-- **Trạng thái:** Proposed · 2026-06-07
+- **Trạng thái:** Accepted · 2026-06-07
 - **Bối cảnh:** Cần truy vết lỗi báo về từ Mini PC offline / Railway tới đúng bản phát hành **và** đúng môi trường (khi log của nhiều môi trường bị gộp lại). Production dùng `TaggedLogging` ra STDOUT, `config.log_tags = [:request_id]`.
 - **Quyết định:** (a) Một **dòng log khởi động** trong initializer ghi cả phiên bản và môi trường; (b) thêm **lambda** `->(_request) { SystemInfo.log_tag }` vào đầu `config.log_tags` (production) → mọi dòng log request + báo cáo lỗi mang **một tag gộp** `[v1.0.1 Production]`. Gộp version + môi trường vào **một** tag để gọn (một cặp ngoặc thay vì hai). Chỉ đặt ở `production.rb` (dev/test không tag request log; dòng khởi động đã in version ở mọi môi trường).
 - **Lý do:** Cả tính năng tồn tại để phân biệt môi trường gần giống nhau; tag chỉ có phiên bản sẽ không cho biết log đến từ môi trường nào khi log bị gộp. `SystemInfo` (lib/) được nạp khi initializer chạy hay muộn hơn; nhưng lambda của `log_tags` được tính **theo từng request lúc runtime** nên `SystemInfo` đã sẵn sàng — không vướng thứ tự nạp.
@@ -146,6 +145,8 @@ end
 
 ## Lịch sử thay đổi
 
+- **0.8.2 (2026-06-13):** Theo ADR-046 (#348): renumber khối ADR của spec này `ADR-001..004 → 042..045` để gỡ trùng số toàn cục (bốn số này trùng với ADR-001/002 của `sdlc-overview` và ADR-003/004 của `quy-trinh-release`). Chỉ đổi số (heading + 2 tham chiếu nội bộ); nội dung/ngày/trạng thái giữ nguyên. Blast radius ngoài file = 0 (các ADR này chỉ tham chiếu nội bộ).
+- **0.8.1 (2026-06-13):** Theo ADR-033 (#339): bỏ field frontmatter `status:` (nguồn duy nhất = inline `**Trạng thái:**`); lật trạng thái các ADR đã merge sang `Accepted`.
 - 0.8.0 (2026-06-07): Nhãn Excel rõ nghĩa — "Môi trường" → "Môi trường ứng dụng" (không nhầm với Rails environment). Đồng bộ plan doc (`docs/superpowers/plans/2026-06-07-app-version-reporting.md`) với code cuối cùng để session khác không hiểu sai.
 - 0.7.0 (2026-06-07): Viết đầy đủ tên theo quy tắc không viết tắt — `app_environment` → `application_environment`, key JSON `rails_env` → `rails_environment`, biến `APP_ENVIRONMENT_LABEL` → `APPLICATION_ENVIRONMENT_LABEL` (đồng bộ ở code, i18n, log, glossary `AGENTS.md`).
 - 0.6.0 (2026-06-07): Khử nhầm lẫn "environment" — đổi `SystemInfo.environment_label` → `SystemInfo.app_environment`, key JSON `environment` → `app_environment`, log khởi động `app_environment=`, biến i18n `%{app_environment}`. Thêm glossary "app environment vs Rails environment" vào `AGENTS.md`.

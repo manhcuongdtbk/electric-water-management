@@ -1,7 +1,8 @@
 import { Controller } from "@hotwired/stimulus"
 
 // Quản lý 2 cặp XOR field trên form Phân bổ bơm nước:
-//   1. Đối tượng nhận: Đơn vị (unit_id) HOẶC Đầu mối (contact_point_id)
+//   1. Đối tượng nhận: chọn đúng MỘT trong Đơn vị (unit_id) / Khối (block_id) /
+//      Nhóm (group_id) / Đầu mối (contact_point_id)
 //   2. Chế độ phân bổ: % cố định (fixed_percentage) HOẶC Hệ số (coefficient)
 //
 // Khi user chọn mode → ẩn nhóm field còn lại + clear/reset value
@@ -10,6 +11,8 @@ export default class extends Controller {
   static targets = [
     "targetMode",
     "targetUnit",
+    "targetBlock",
+    "targetGroup",
     "targetContact",
     "targetFieldset",
     "allocMode",
@@ -18,7 +21,11 @@ export default class extends Controller {
     "allocFieldset",
     "zoneSelect",
     "unitSelect",
-    "contactSelect"
+    "blockSelect",
+    "groupSelect",
+    "contactSelect",
+    "stationWrap",
+    "stationSelect"
   ]
 
   connect() {
@@ -29,15 +36,21 @@ export default class extends Controller {
 
   refreshTarget() {
     const mode = this.selectedTargetMode()
-    if (mode === "unit") {
-      this.show(this.targetUnitTarget)
-      this.hide(this.targetContactTarget)
-      this.clearSelect(this.targetContactTarget)
-    } else {
-      this.hide(this.targetUnitTarget)
-      this.show(this.targetContactTarget)
-      this.clearSelect(this.targetUnitTarget)
+    const map = {
+      unit: this.hasTargetUnitTarget && this.targetUnitTarget,
+      block: this.hasTargetBlockTarget && this.targetBlockTarget,
+      group: this.hasTargetGroupTarget && this.targetGroupTarget,
+      contact_point: this.hasTargetContactTarget && this.targetContactTarget
     }
+    Object.entries(map).forEach(([key, el]) => {
+      if (!el) return
+      if (key === mode) {
+        this.show(el)
+      } else {
+        this.hide(el)
+        this.clearSelect(el)
+      }
+    })
   }
 
   refreshZoneScope() {
@@ -49,7 +62,10 @@ export default class extends Controller {
     if (this.hasAllocFieldsetTarget) this.allocFieldsetTarget.disabled = !hasZone
 
     if (this.hasUnitSelectTarget) this.filterOptionsByZone(this.unitSelectTarget, zoneId)
+    if (this.hasBlockSelectTarget) this.filterOptionsByZone(this.blockSelectTarget, zoneId)
+    if (this.hasGroupSelectTarget) this.filterOptionsByZone(this.groupSelectTarget, zoneId)
     if (this.hasContactSelectTarget) this.filterOptionsByZone(this.contactSelectTarget, zoneId)
+    if (this.hasStationSelectTarget) this.filterOptionsByZone(this.stationSelectTarget, zoneId)
   }
 
   filterOptionsByZone(select, zoneId) {

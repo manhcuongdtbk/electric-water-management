@@ -16,4 +16,10 @@ User.find_or_create_by!(username: "quanTri") do |user|
   user.default_account = true
 end
 
-puts "Đã tạo #{User.count} tài khoản mặc định"
+puts "Default accounts created: #{User.count}"
+puts "  kyThuat  (technician)    — password: Abc@1234 (force change on first login)"
+puts "  quanTri  (system_admin)  — password: Abc@1234 (force change on first login)"
+puts ""
+puts "System has 5 database roles (7 runtime roles):"
+puts "  technician, system_admin, division_commander, unit_admin, commander"
+puts "  (unit_admin and commander each split into zone-manager variants at runtime)"

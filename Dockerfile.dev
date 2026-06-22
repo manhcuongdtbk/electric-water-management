@@ -29,11 +29,36 @@ RUN apt-get update -qq && \
 # của Debian có cả hai. Hai gói chromium và chromium-driver do Debian phát hành cùng
 # một phiên bản nên chromedriver luôn khớp Chromium, không cần Selenium Manager tải
 # driver lúc chạy (chạy được cả khi offline). fonts-liberation để Chromium render
-# chữ đầy đủ.
+# chữ đầy đủ. ffmpeg để chuyển video demo webm→mp4 (rake demo:transcode, ADR-041).
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y \
-      chromium chromium-driver fonts-liberation && \
+      chromium chromium-driver fonts-liberation ffmpeg && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+
+# Node.js + npm-managed Playwright for demo recording (spec/demo, ADR-038).
+# Node major version is the single source `.node-version` (shared with CI's
+# actions/setup-node via node-version-file). NodeSource gives a current release
+# instead of the outdated Debian package. package.json + package-lock.json are
+# copied so npm ci runs at build time (good layer caching); at runtime the
+# bind-mount overlays /rails but node_modules is already present.
+COPY .node-version ./
+RUN curl -fsSL "https://deb.nodesource.com/setup_$(cat .node-version).x" | bash - && \
+    apt-get install --no-install-recommends -y nodejs && \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+
+# npm ci (not npm install) installs the EXACT lockfile versions and fails if
+# package.json and package-lock.json have drifted. Playwright is pinned (no caret)
+# to 1.60.0 — the version capybara-playwright-driver / playwright-ruby-client
+# (COMPATIBLE_PLAYWRIGHT_VERSION) is built against. Because the SAME pinned
+# playwright-core both provides the demo driver (npm ci) and selects the browser
+# build (npx playwright install below), the driver and the baked Chromium always
+# agree — no caret-driven version skew across rebuilds.
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Install Playwright's Chromium browser + OS-level deps inside the image so the
+# demo driver works from a freshly built image without any manual in-container steps.
+RUN npx playwright install --with-deps chromium
 
 # Foreman để chạy Procfile.dev (Rails server + Tailwind watcher)
 RUN gem install foreman

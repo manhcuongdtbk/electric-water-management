@@ -1,7 +1,6 @@
 ---
 title: Nội dung CI — phần chạy test (rspec + system, schema-drift, zeitwerk) — Mảnh "CI spec chi tiết"
-version: 0.2.0
-status: draft (chờ duyệt)
+version: 0.2.1
 date: 2026-06-07
 governed_by: 2026-06-07-sdlc-overview-design.md
 ---
@@ -107,7 +106,7 @@ Bật cache: **`bundler-cache: true`** ở job `tests`, và **đổi luôn job `
 ## Quyết định (ADR)
 
 ### ADR-012: Nội dung CI — phần chạy test
-- **Trạng thái:** Proposed · 2026-06-07
+- **Trạng thái:** Accepted · 2026-06-07
 - **Bối cảnh:** ADR-011 chốt CI phải chạy test trên pull request; P2 hoãn vì cần Postgres + trình duyệt headless + quyết định runner/cache/headless. Bộ test nhỏ (85 spec, 12 system). `config/database.yml` đã ENV-driven; `system_test_config.rb` đã có nhánh Selenium Manager.
 - **Quyết định:**
   1. **Runner native** `ubuntu-latest` + `ruby/setup-ruby@v1` + service container `postgres:16-alpine` + Google Chrome cài sẵn của runner. KHÔNG dùng image Docker của dự án.
@@ -127,7 +126,7 @@ Bật cache: **`bundler-cache: true`** ở job `tests`, và **đổi luôn job `
 - **Điều kiện xem lại:** thời gian job `tests` quá lâu → tách system spec / chạy song song; system spec chập chờn lặp lại → thêm `rspec-retry` hoặc tinh chỉnh thời gian chờ Capybara; cần khớp trình duyệt prod tuyệt đối → cân nhắc chạy trong image Docker.
 
 ### ADR-021: Cắt chi phí & độ trễ CI — path filter cho pull request không đụng code + bỏ trigger `edited`
-- **Trạng thái:** Proposed · 2026-06-09
+- **Trạng thái:** Accepted · 2026-06-09
 - **Bối cảnh:** Repo private dùng **GitHub Free** (2000 phút Actions/tháng). `ci.yml` chạy trên mỗi pull request; job `tests` ~8 phút (Postgres + headless Chrome), `ruby-checks` ~1.5 phút. Hai nguồn lãng phí: (1) pull request **chỉ sửa tài liệu** vẫn chạy full `tests` + `ruby-checks`; (2) trigger có `edited` → mỗi lần sửa **tiêu đề/mô tả** pull request là **chạy lại toàn bộ CI** (~10 phút). `concurrency: cancel-in-progress` đã bật. Đội than: docs vẫn chạy full test; phút eo hẹp; việc nối tiếp phụ thuộc kẹt chờ ~10 phút CI mới merge được. Đây chính là **Điều kiện xem lại của ADR-012** ("CI quá lâu") cộng góc **chi phí phút**.
 - **Quyết định:**
   1. **Path filter fail-safe (native bash).** Thêm job `changes` chạy `.github/scripts/detect-code-changes.sh`: so file thay đổi `base...head`, xuất `code_touched`. Hai job nặng `tests` + `ruby-checks` thêm `needs: changes` + `if: needs.changes.outputs.code_touched == 'true'`. `commitlint` + `branch-source-guard` **luôn chạy** (vài giây). **Fail-safe:** chỉ trả `false` khi MỌI file thay đổi thuộc allowlist docs/meta (`*.md`, `docs/**`, `LICENSE`, `.gitignore`, `.gitattributes`, `.editorconfig`); thiếu SHA / lỗi git / path lạ → `true` ⇒ **không bao giờ bỏ sót test cho thay đổi code**. `.github/workflows/**` và `.github/scripts/**` (không phải `*.md`) tính là code → đổi chính workflow vẫn chạy full để tự kiểm.
@@ -175,7 +174,8 @@ Bật cache: **`bundler-cache: true`** ở job `tests`, và **đổi luôn job `
 - Mảnh cha: [Quy trình phát hành](2026-06-07-quy-trinh-release-design.md) — **ADR-011** (nội dung CI) + Backlog #1 (mảnh này). ADR-012 ở đây hiện thực phần test mà ADR-011 hoãn.
 - Code liên quan: `.github/workflows/ci.yml` (workflow), `config/database.yml` (ENV-driven DB), `spec/support/system_test_config.rb` (driver `:headless_chromium`).
 
-## Changelog
+## Lịch sử thay đổi
 
+- **0.2.1 (2026-06-13):** Theo ADR-033 (#339): bỏ field frontmatter `status:` (nguồn duy nhất = inline `**Trạng thái:**`); lật trạng thái các ADR đã merge sang `Accepted`.
 - **0.2.0 (2026-06-09):** Thêm **ADR-021** (cắt chi phí & độ trễ CI) — path filter fail-safe native bash (`.github/scripts/detect-code-changes.sh` + job `changes`) bỏ qua `tests`/`ruby-checks` cho pull request chỉ sửa docs/meta; bỏ trigger `edited`; giữ `concurrency` + KHÔNG split job `tests` (tối ưu phút, không wall-clock). Hiện thực ở `.github/workflows/ci.yml` + script; ghi chú CONTRIBUTING §8 + mục "nhánh xếp chồng". Kích hoạt từ Điều kiện xem lại của ADR-012.
 - **0.1.0 (2026-06-07):** Bản thảo đầu — ADR-012 (runner native + Postgres service container + Chrome qua Selenium Manager; một job `tests` gộp schema-drift + zeitwerk + rspec gồm system; bật cache gem; không gem retry; chỉ sửa workflow). Hiện thực phần chạy test mà ADR-011 hoãn (Backlog #1).

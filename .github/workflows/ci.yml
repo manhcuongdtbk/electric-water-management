@@ -30,6 +30,10 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       code_touched: ${{ steps.detect.outputs.code_touched }}
+      # Whether the changed paths can alter the recorded demo output (#367,
+      # Option C): the demo job still records to verify anti-drift on every code
+      # PR, but only uploads the artifact + posts the comment when this is true.
+      demo_relevant: ${{ steps.detect-demo.outputs.demo_relevant }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -39,6 +43,11 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: bash .github/scripts/detect-code-changes.sh
+      - id: detect-demo
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bash .github/scripts/detect-demo-relevant.sh
 
   ruby-checks:
     name: Ruby static checks (rubocop, brakeman, bundler-audit)
@@ -71,7 +80,7 @@ jobs:
           fetch-depth: 0 # need full history to lint the pull request's commit range
       - uses: actions/setup-node@v6
         with:
-          node-version: "lts/*" # always the latest Node LTS
+          node-version-file: .node-version # single source shared with Dockerfile.dev
       - name: commitlint
         run: >
           npx --yes
@@ -93,7 +102,7 @@ jobs:
         run: bash .github/scripts/check-branch-source.sh
 
   doc-governance:
-    name: Doc governance (links, map, glossary definitions)
+    name: Doc governance (links, map, glossary, test dimensions, ADR status, changelog header, ADR numbering, demo deliverable)
     runs-on: ubuntu-latest
     # Chạy LUÔN trên mọi pull request (KHÔNG gate qua `changes`): guardrail tài
     # liệu cần nhất đúng lúc pull request chỉ sửa tài liệu (ADR-024).
@@ -106,7 +115,38 @@ jobs:
           bash .github/scripts/check-doc-links.sh || rc=1
           bash .github/scripts/check-doc-map.sh || rc=1
           bash .github/scripts/check-glossary-definitions.sh || rc=1
+          bash .github/scripts/check-test-dimensions.sh || rc=1
+          bash .github/scripts/check-adr-status.sh || rc=1
+          bash .github/scripts/check-changelog-header.sh || rc=1
+          bash .github/scripts/check-adr-numbering.sh || rc=1
+          bash .github/scripts/check-demo-deliverable.sh || rc=1
           exit $rc
+
+  i18n-view-guardrail:
+    name: i18n view guardrail (no new hard-coded Vietnamese)
+    runs-on: ubuntu-latest
+    # Chạy LUÔN trên mọi pull request (KHÔNG gate qua `changes`): guardrail grep
+    # rẻ, cần bắt đúng lúc pull request đụng .erb (ADR-032, triết lý ADR-024).
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check views for new hard-coded Vietnamese literals (ADR-032)
+        run: bash .github/scripts/check-view-i18n.sh
+
+  demo-guardrail:
+    name: Demo guardrail (customer-facing PR needs a demo spec)
+    runs-on: ubuntu-latest
+    # Chạy LUÔN trên mọi pull request (KHÔNG gate qua `changes`): guardrail nhẹ,
+    # cần bắt đúng lúc pull request được gán nhãn customer-facing (ADR-040).
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Require a demo spec for customer-facing pull requests (ADR-040)
+        env:
+          LABELS_JSON: ${{ toJSON(github.event.pull_request.labels) }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bash .github/scripts/check-demo-spec.sh
 
   tests:
     name: Tests (rspec incl. system specs, zeitwerk, schema drift)
@@ -138,6 +178,7 @@ jobs:
       # version-matched chromedriver. No app/test code change needed.
       CHROMIUM_BINARY: /nonexistent/chromium
       CHROMEDRIVER_BINARY: /nonexistent/chromedriver
+      COVERAGE: "1" # SimpleCov line+branch report + ratchet floor (Issue #381, ADR-060)
     steps:
       - uses: actions/checkout@v6
       - uses: ruby/setup-ruby@v1
@@ -156,3 +197,170 @@ jobs:
       - name: rspec (model, request, and system specs with headless Chrome)
         if: ${{ !cancelled() }}
         run: bundle exec rspec
+
+  demo:
+    name: Demo recordings (Playwright)
+    runs-on: ubuntu-latest
+    needs: changes
+    # Record on EVERY code PR to verify the demo still runs green (anti-drift,
+    # ADR-021/ADR-036). The Upload + Comment steps below are additionally gated
+    # on `demo_relevant` so we only surface an artifact/comment when the changed
+    # paths can actually alter the demo output — no more "looks like a new demo"
+    # noise on infra-only PRs (#367, Option C).
+    if: ${{ needs.changes.outputs.code_touched == 'true' }} # ADR-021: skip on docs-only
+    # The final step posts the demo-artifact link as a PR comment, which needs
+    # write access to the pull request (default GITHUB_TOKEN is read-only here).
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      RAILS_ENV: test
+      DATABASE_HOST: localhost
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: postgres
+      ELECTRIC_WATER_MANAGEMENT_DATABASE_PASSWORD: postgres
+      DEMO: "1"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+      - name: Install JS deps + Playwright Chromium + ffmpeg
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
+          sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Prepare database
+        run: bin/rails db:create db:schema:load
+      - name: Build Tailwind CSS so recordings are styled
+        # app/assets/builds/ is gitignored, so a fresh CI checkout has no built
+        # CSS — without this the recorded pages render unstyled. (Local dev gets
+        # this from the tailwindcss:watch process in Procfile.dev.)
+        run: bin/rails tailwindcss:build
+      - name: Record demo specs
+        run: bundle exec rspec spec/demo
+      - name: Transcode to mp4
+        if: ${{ !cancelled() }}
+        run: bin/rails demo:transcode
+      - name: Upload demo videos
+        id: upload
+        # Only when the changed paths can alter the demo output (#367, Option C).
+        if: ${{ !cancelled() && needs.changes.outputs.demo_relevant == 'true' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: demo-videos
+          path: tmp/demo_videos/*.mp4
+          if-no-files-found: warn
+      - name: Comment on the PR with the demo artifact link
+        # Pair with the upload above: skip the comment on infra-only PRs so we
+        # don't imply a fresh demo where the output cannot have changed (#367).
+        if: ${{ !cancelled() && needs.changes.outputs.demo_relevant == 'true' }}
+        continue-on-error: true # auxiliary: a comment hiccup must not fail the recording job
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          # Direct link to the uploaded artifact (upload-artifact output); RUN_URL is a fallback.
+          ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: bash .github/scripts/post-demo-comment.sh
+
+  demo-bundle:
+    name: Demo bundle (release PR — delta clips for owner review)
+    runs-on: ubuntu-latest
+    # Only on release pull requests (base = main): gom the customer-facing demo
+    # delta of the release so the owner can review one set before forwarding to
+    # the customer (ADR-047/048). NOT gated by `changes` — a release PR can be
+    # docs/meta-only yet still carry feature demos merged earlier in the range.
+    if: ${{ github.base_ref == 'main' }}
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      RAILS_ENV: test
+      DATABASE_HOST: localhost
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: postgres
+      ELECTRIC_WATER_MANAGEMENT_DATABASE_PASSWORD: postgres
+      DEMO: "1"
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # need full history + tags to diff the release range
+          fetch-tags: true
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+      - name: Install JS deps + Playwright Chromium + ffmpeg
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
+          sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Prepare database
+        run: bin/rails db:create db:schema:load
+      - name: Build Tailwind CSS so recordings are styled
+        run: bin/rails tailwindcss:build
+      - name: Bundle the customer-facing demo delta for this release
+        id: bundle
+        # `since` = latest v* tag (previous release); fall back to the root commit
+        # for the very first release so the whole demo set is bundled.
+        run: |
+          since="$(git tag -l 'v*' --sort=-v:refname | head -1)"
+          [ -z "$since" ] && since="$(git rev-list --max-parents=0 HEAD | tail -1)"
+          echo "Bundling demo delta since ${since}"
+          bin/rails "demo:bundle[${since},HEAD]"
+          manifest="$(find tmp/demo_bundle -name manifest.md | head -1)"
+          echo "manifest_file=${manifest}" >> "$GITHUB_OUTPUT"
+      - name: Upload the demo bundle
+        id: upload-bundle
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: demo-bundle
+          path: tmp/demo_bundle/**
+          if-no-files-found: warn
+      - name: Comment on the release PR with the bundle for owner review
+        if: ${{ !cancelled() }}
+        continue-on-error: true # auxiliary: a comment hiccup must not fail the bundle job
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          MANIFEST_FILE: ${{ steps.bundle.outputs.manifest_file }}
+          ARTIFACT_URL: ${{ steps.upload-bundle.outputs.artifact-url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: bash .github/scripts/post-bundle-comment.sh

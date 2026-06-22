@@ -1,4 +1,4 @@
-# AGENTS.md — Hệ thống quản lý điện nội bộ Sư đoàn (Hệ thống v2)
+# AGENTS.md — Hệ thống quản lý điện nước nội bộ (Hệ thống v2)
 
 > **Nguồn canonical** (định nghĩa "canonical": `docs/THUAT_NGU.md`) cho mọi quy ước của dự án (code + quy trình), dùng chung cho cả người và mọi công cụ AI (Claude Code, Cursor, Copilot, Codex, Gemini, VS Code…).
 >
@@ -25,7 +25,7 @@ Thứ tự ưu tiên:
 
 1. `docs/V2_XAC_NHAN_NGHIEP_VU.md` — nghiệp vụ, nguồn sự thật duy nhất
 2. `docs/V2_THIET_KE_HE_THONG.md` — thiết kế hệ thống, nguồn sự thật cho implementation
-3. `docs/V2_HANH_VI_HE_THONG.md` — hành vi runtime: 6 vai trò, 3 trạng thái kỳ, dữ liệu xuyên kỳ, nguyên tắc `.kept`/`.with_discarded`. **Đọc mục 7 trước khi dùng `.kept` trong query.**
+3. `docs/V2_HANH_VI_HE_THONG.md` — hành vi runtime: 7 vai trò, 3 trạng thái kỳ, dữ liệu xuyên kỳ, nguyên tắc `.kept`/`.with_discarded`. **Đọc mục 7 trước khi dùng `.kept` trong query.**
 4. `docs/V2_CHIEU_TEST.md` — 12 chiều kiểm thử, input/output specifications, giao điểm nguy hiểm. Đọc trước khi viết test.
 
 Khi code mâu thuẫn với thiết kế → sửa code. Khi thiết kế mâu thuẫn với nghiệp vụ → báo lỗi, không tự sửa.
@@ -43,6 +43,8 @@ Mỗi git worktree dùng bộ cổng host riêng do `bin/docker` tự gán (post
 `bin/docker` là shortcut cho các lệnh Docker development:
 
 - Chạy test: `bin/docker rspec` (hoặc `bin/docker rspec spec/models`)
+- Chạy demo specs: `bin/docker demo` (hoặc `bin/docker demo spec/demo/<file>`) — tự set `DEMO=1` (demo spec bị loại khỏi `bin/docker rspec` thường)
+- Chạy test với coverage: `bin/docker coverage` — tự set `COVERAGE=1`, in line + branch coverage cuối output. Kết quả chính xác khi chạy toàn bộ (không truyền path cụ thể)
 - Rails console: `bin/docker console`
 - Xem logs: `bin/docker logs`
 - Mở shell: `bin/docker bash` (hoặc `bin/docker bash postgres`)
@@ -90,8 +92,8 @@ Hai cái CÓ THỂ khác nhau (ví dụ Acceptance và Mirror đều `rails_envi
 - Làm tròn: ROUND_HALF_UP (5 → làm tròn lên). Ruby: `BigDecimal#round(2, :half_up)`. Không dùng ROUND_HALF_EVEN. Chỉ làm tròn khi hiển thị và xuất Excel, không làm tròn giữa tính toán.
 - Soft delete: dùng gem discard. **Không mặc định dùng `.kept` ở mọi nơi.** Xem `docs/V2_HANH_VI_HE_THONG.md` mục 7 để biết khi nào dùng `.kept`, khi nào không. Tóm tắt: query hiển thị data per kỳ (billing, meter_entries, dashboard,...) KHÔNG dùng `.kept` — data per kỳ tự lọc. Form dropdown, CRUD index, model callbacks, PeriodService snapshot dùng `.kept`.
 - Optimistic locking: bảng nhập liệu có cột `lock_version`.
-- Phân quyền: dùng `accessible_by(current_ability)` trong mọi controller. Không dùng `Model.find(params[:id])` trực tiếp. Mọi trang cấu hình/hệ thống phải có page-level authorize (không chỉ dựa vào `can :read` của Ability). **Design issue đã fix:** concern `SettingsAccessGuard` thêm page-level guard chặn truy cập trực tiếp qua URL các trang /zones, /units, /pricing, /pump_allocations, /ranks, /users theo vai trò (chỉ SA; SA hoặc zone-manager cho /zones và /pump_allocations; SA hoặc TECH cho /users). Đồng thời `ability.rb` đã thu hẹp `can :read, Zone` chỉ còn khu vực do đơn vị quản lý (trước đây mở rộng cho mọi zone `discarded_at: nil`). `can :read, Unit/Period/Rank` giữ nguyên để phục vụ form và billing.
-- Vai trò: hệ thống có 6 vai trò thực tế (không phải 4 enum). Xem `docs/V2_HANH_VI_HE_THONG.md` mục 1. Mọi trang phải test cả 6 vai trò.
+- Phân quyền: dùng `accessible_by(current_ability)` trong mọi controller. Không dùng `Model.find(params[:id])` trực tiếp. Mọi trang cấu hình/hệ thống phải có page-level authorize (không chỉ dựa vào `can :read` của Ability). **Design issue đã fix:** concern `SettingsAccessGuard` thêm page-level guard chặn truy cập trực tiếp qua URL các trang /zones, /units, /pricing, /pump_allocations, /ranks, /users theo vai trò (chỉ SA; SA hoặc zone-manager cho /pump_allocations; SA hoặc TECH cho /users). Đồng thời `ability.rb` đã thu hẹp `can :read, Zone` chỉ còn khu vực do đơn vị quản lý (trước đây mở rộng cho mọi zone `discarded_at: nil`). `can :read, Unit/Period/Rank` giữ nguyên để phục vụ form và billing.
+- Vai trò: hệ thống có 7 vai trò thực tế (5 enum: `system_admin`, `division_commander`, `unit_admin`, `commander`, `technician`; trong đó `unit_admin` và `commander` mỗi cái chia 2 variant zone-manager). Xem `docs/V2_HANH_VI_HE_THONG.md` mục 1. Mọi trang phải test cả 7 vai trò — **độ phủ access (200/redirect) được máy ép** qua guardrail role-coverage (ADR-056): khai trang ở `spec/support/role_access_matrix.rb` (`RoleAccessMatrix::PAGES`), thêm controller-trang mà quên khai hoặc thiếu vai trò → `role_access_matrix_spec.rb` đỏ. Controller không phân-vai-trò → `EXCLUDED_CONTROLLERS` kèm lý do. Hành vi chi tiết per-role (data scoping, ẩn/hiện cột Khu vực/Đơn vị, commander read-only, biến thể zone-manager) **cũng được máy ép** qua guardrail behavior-coverage (ADR-058): khai ở `spec/support/role_behavior_matrix.rb` (`RoleBehaviorMatrix::BEHAVIORS`, mỗi trang × 4 dimension = `applies` kèm scenario hoặc `na` kèm lý do), assertion thật nằm trong `spec/support/shared_examples/requests/` với precondition chống-vacuous; quên khai/khai sai → `role_behavior_matrix_spec.rb` đỏ.
 - Xóa entity: cleanup data kỳ đang mở (hard delete), giữ nguyên data kỳ cũ. Xem `docs/V2_HANH_VI_HE_THONG.md` mục 5.
 - Kỳ tính toán: mọi thao tác mở kỳ mới và tính toán phải nằm trong ActiveRecord transaction. Mọi thay đổi dữ liệu nghiệp vụ cần kỳ mở (PeriodGuard). Thay đổi cấu trúc chỉ khi kỳ mới nhất mở (StructureChangeGuard). Xem `docs/V2_HANH_VI_HE_THONG.md` mục 3.
 - Role check: dùng `current_user.system_admin?` thay vì `current_user.role == "system_admin"`.
@@ -123,6 +125,7 @@ Hai cái CÓ THỂ khác nhau (ví dụ Acceptance và Mirror đều `rails_envi
 ## Quy trình phát triển và phát hành (trỏ tới spec)
 
 - **Mô hình phát triển + chiến lược tài liệu/tri thức:** `docs/superpowers/specs/2026-06-07-sdlc-overview-design.md` (ADR-001, ADR-002).
+- **Vận hành vòng đời với trợ lý AI** (ADR-029, mở rộng ADR-001): mỗi bước (intake → triage → design → implement → release → close) chạy theo **"trợ lý AI lo phần cơ học — người giữ gate quyết định"**. Trợ lý AI soạn Issue/spec/ADR, fold canonical, tạo nhánh/PR, theo dõi CI, soạn release notes; **người chốt ba gate cứng: triage (milestone/priority), merge, cắt release** — luôn human-in-the-loop, AI không tự quyết. Viết **trung lập công cụ** ở đây (chỉ nói "trợ lý AI", không hard-wire một tool); ánh xạ Claude Code cụ thể (hook, lệnh `/code-review`) ở `CONTRIBUTING.md` mục 8. Spec: `docs/superpowers/specs/2026-06-07-sdlc-overview-design.md` (ADR-029).
 - **Quy trình phát hành** (Git Flow, SemVer + release candidate, release-please, môi trường, nội dung CI): `docs/superpowers/specs/2026-06-07-quy-trinh-release-design.md` (ADR-003..011).
 - **Truy vết & quản lý thay đổi** (yêu cầu → thiết kế → test → release; GitHub Issue cho luồng, repo cho dấu vết; anchor `NV-...`; template Issue/pull request/ADR): `docs/superpowers/specs/2026-06-08-truy-vet-quan-ly-thay-doi-design.md` (ADR-013..015) + `CONTRIBUTING.md` mục 9.
 - **Vận hành & bảo trì** (giám sát Mini PC offline, chính sách sao lưu/khôi phục, tiếp nhận lỗi/sự cố khách): `docs/superpowers/specs/2026-06-09-van-hanh-bao-tri-design.md` (ADR-016..018) + `CONTRIBUTING.md` mục 10.

@@ -32,11 +32,11 @@
           <% if (rs = rowspans[i][:group]) %>
             <td rowspan="<%= rs %>" class="<%= text_cell %>"><%= cp.group&.name %></td>
           <% end %>
-          <td class="<%= text_cell %>"><%= cp.name %></td>
+          <td class="<%= text_cell %>" data-contact-point-name-id="<%= cp.id %>"><%= cp.name %></td>
           <% @ranks.each do |rank| %>
             <td class="<%= num_cell %>"><%= (@personnel_by_cp_id[cp.id] || {})[rank.id] || 0 %></td>
           <% end %>
-          <td class="<%= num_cell %>"><%= calc.total_personnel %></td>
+          <td class="<%= num_cell %>" data-total-personnel-cp-id="<%= cp.id %>"><%= calc.total_personnel %></td>
           <td class="<%= num_cell %>"><%= number_to_vi(calc.residential_standard) %></td>
           <td class="<%= num_cell %>"><%= number_to_vi(calc.water_pump_standard) %></td>
           <td class="<%= num_cell %>"><%= number_to_vi(calc.total_standard) %></td>
@@ -44,11 +44,11 @@
           <td class="<%= num_cell %>"><%= number_to_vi(calc.loss_deduction) %></td>
           <td class="<%= num_cell %>"><%= number_to_vi(calc.division_public_deduction) %></td>
           <td class="<%= num_cell %>"><%= number_to_vi(calc.unit_public_deduction) %></td>
-          <td class="<%= num_cell %>"><%= number_to_vi(calc.other_deduction) %></td>
+          <td class="<%= num_cell %>" data-other-deduction-cp-id="<%= cp.id %>"><%= number_to_vi(calc.other_deduction) %></td>
           <td class="<%= num_cell %>"><%= number_to_vi(calc.total_deduction) %></td>
           <td class="<%= num_cell %>"><%= number_to_vi(calc.remaining_standard) %></td>
           <td class="<%= num_cell %>"><%= number_to_vi(calc.residential_usage) %></td>
-          <td class="<%= num_cell %>"><%= number_to_vi(calc.water_pump_usage) %></td>
+          <td class="<%= num_cell %>" data-water-pump-usage-cp-id="<%= cp.id %>"><%= number_to_vi(calc.water_pump_usage) %></td>
           <td class="<%= num_cell %>"><%= number_to_vi(calc.total_usage) %></td>
           <td class="<%= num_cell %> text-green-700"><%= calc.surplus > 0 ? number_to_vi(calc.surplus) : "" %></td>
           <td class="<%= num_cell %> text-red-700"><%= calc.deficit > 0 ? number_to_vi(calc.deficit) : "" %></td>

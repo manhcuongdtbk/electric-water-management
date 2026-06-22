@@ -106,6 +106,15 @@ release-please đã được cấu hình (P3): khi `release/*`/`hotfix/*` vào `
 
 ## 8. Trạng thái tự động hoá
 
+**Đây là lớp ánh xạ cụ thể của [ADR-029](docs/superpowers/specs/2026-06-07-sdlc-overview-design.md) (vận hành "trợ lý AI lo cơ học — người giữ gate").** Canonical (`AGENTS.md`, ADR-029) viết **trung lập công cụ** — chỉ nói "trợ lý AI"; mục này gắn nguyên tắc đó vào **công cụ hiện đội dùng: Claude Code**. Nếu sau này đổi/thêm tool (Codex, Antigravity…), chỉ cần cập nhật mục này, không đụng canonical. Ánh xạ phần **cơ học** của ADR-029 sang cơ chế Claude Code có sẵn:
+
+- **Theo dõi CI** sau khi mở/cập nhật PR → `PostToolUse` hook tự chạy `gh pr checks` rồi báo pass/fail (xem dưới).
+- **Soát lỗi trước khi push** → lệnh `/code-review` (review diff hiện tại theo mức effort; có thể `--comment`/`--fix`).
+- **Giữ kỷ luật version tài liệu** (ADR-002) → hook nhắc bump version + changelog khi sửa `docs/`.
+- **Chặn push nhánh cũ hơn base** (Git Flow) → `PreToolUse` hook (fail-open).
+- **Soạn nháp demo spec cho tính năng hướng-khách** → trợ lý AI soạn hành trình + caption tiếng Việt từ acceptance criteria `NV-...` + UI thật, cùng nhịp với code/test; dùng `rails g demo:spec <feature>` lấy khung rỗng. Người **duyệt video** trước khi tới khách; demo vẫn xanh-mới-merge (ADR-050/051; quy trình tool-neutral ở mục 9 dưới).
+- Còn **các gate quyết định** (triage, merge, cắt release, duyệt nội dung gửi khách) **vẫn do người làm tay** — không hook nào tự quyết thay; CI chỉ *hiện trạng thái* (ADR-007), người merge.
+
 **CI tĩnh đã chạy trên mọi pull request (P2):** `rubocop`, `brakeman`, `bundler-audit`, `commitlint`, và **branch-source guard** (chặn pull request đích `main` đến từ nhánh không phải `release/*`/`hotfix/*`). Theo ADR-007, CI chỉ **hiện trạng thái** đỏ/xanh — chưa khoá cứng ở server (repo private không có branch protection miễn phí); kỷ luật một người merge giữ luật.
 
 **CI chạy test đã chạy trên mọi pull request (mảnh "CI spec chi tiết"):** một job `tests` chạy `rspec` (gồm 12 system spec điều khiển headless Chrome), kiểm `db/schema.rb` không lệch, và `rails zeitwerk:check` — trên runner native `ubuntu-latest` + service container Postgres, Chrome qua Selenium Manager. Vẫn theo ADR-007 (chỉ hiện trạng thái). Chi tiết: ADR-012 trong `docs/superpowers/specs/2026-06-07-ci-spec-design.md`.
@@ -116,13 +125,36 @@ release-please đã được cấu hình (P3): khi `release/*`/`hotfix/*` vào `
 
 **Claude Code tự giám sát CI (`.claude/settings.json`):** một `PostToolUse` hook nhắc Claude Code — sau khi tạo/cập nhật pull request (`gh pr create`/`edit`/`ready`/`reopen`) — tự theo dõi CI (`gh pr checks`) rồi báo kết quả pass/fail, không phải tự kiểm tay. Cần `jq` + `gh` (release workflow đã dùng `gh`); thiếu `jq` thì hook im lặng (không lỗi, không nhắc). Xem/sửa/tắt qua menu `/hooks`.
 
-**Claude Code chặn push nhánh cũ (`.claude/hooks/check-branch-behind-base.sh`):** một `PreToolUse` hook — trước `git push`, kiểm tra nhánh hiện tại có cũ hơn base không (base theo Git Flow: `release/*`·`hotfix/*` → `main`; còn lại → base của pull request, mặc định `develop`). Nếu cũ hơn → **chặn push** và nhắc tích hợp base trước (merge/rebase, hỏi khi xung đột, re-check hot file như release spec). Fail-open: không xác định được base/mạng thì cho push. Cần `jq` + `gh`.
+**Claude Code chặn push nhánh cũ (`.claude/hooks/check-branch-behind-base.sh`):** một `PreToolUse` hook — trước `git push`, kiểm tra nhánh hiện tại có cũ hơn base không (base theo Git Flow: `release/*`·`hotfix/*` → `main`; còn lại → base của pull request, mặc định `develop`). Nếu cũ hơn → **chặn push** và nhắc tích hợp base trước (merge/rebase, hỏi khi xung đột, re-check hot file như release spec). **Bỏ qua lệnh xóa nhánh** (`--delete`/`-d` hoặc refspec dạng `:branch`) vì xóa nhánh không đẩy nội dung từ nhánh hiện tại. Fail-open: không xác định được base/mạng thì cho push. Cần `jq` + `gh`.
 
 **Claude Code nhắc bump version tài liệu (`.claude/hooks/remind-doc-version-bump.sh`):** một `PostToolUse` hook — khi sửa một file `docs/` có version header, nhắc bump version + thêm entry changelog trong cùng commit (ADR-002). Chỉ nhắc, không chặn; fail-open. Cần `jq`.
 
 **Đã làm thêm (P4):** ba môi trường Railway `development`/`acceptance`/`mirror` (Acceptance chạy thẳng `main`, không dùng `-rc.N` — xem `README.md` + ADR-005); bốn mảnh SDLC trong Backlog của release spec đã xong. Các quy ước ở mục 2–3 ngoài phần CI ép được vẫn giữ bằng kỷ luật + review thủ công.
 
 **CI guardrail quản trị tài liệu (ADR-024):** một job `doc-governance` chạy trên **mọi** pull request, kiểm: link nội bộ chết, bản đồ tài liệu (`docs/BAN_DO_TAI_LIEU.md`) phủ đủ và không có đường dẫn ma, và 6 viết tắt + 11 jargon còn định nghĩa trong `docs/THUAT_NGU.md`. Đỏ nếu vi phạm (fail-loud). Không quét prose tìm viết tắt mới (bất khả thi cho tiếng Việt) — việc đó vẫn thuộc review người. Chi tiết: ADR-024 trong `docs/superpowers/specs/2026-06-11-guardrail-quan-tri-tai-lieu-design.md`.
+
+**CI guardrail truy vết chiều test (ADR-030):** script thứ tư của job `doc-governance` (`check-test-dimensions.sh`) đối chiếu bảng `## Truy vết chiều test` của mỗi spec với anchor `CHIEU-<slug>` nhúng trong mô tả `it` của test (`spec/`). Đỏ nếu: một chiều **required** thiếu test; một chiều **DEFERRED** không kèm `#<số>`; anchor `CHIEU-` dùng trong test mà không có trong bảng nào (orphan); hoặc một anchor khai trùng ở hai spec. Biến luật AGENTS "test mọi output + cả 7 vai trò" thành máy-ép cho phần khai-tường-minh. Việc "spec có đủ chiều chưa" vẫn là review người (checklist plan/PR). Chi tiết: ADR-030 trong `docs/superpowers/specs/2026-06-13-truy-vet-chieu-test-design.md`.
+
+**Chiều review "tuân AGENTS" (ADR-031):** review code — người và Claude khi chạy `/code-review` — không chỉ soi đúng/sai chức năng của diff mà còn kiểm tuân thủ quy ước AGENTS. Bốn chiều và cách phủ:
+
+| Chiều | Kiểm gì | Cơ chế phủ |
+|---|---|---|
+| **i18n** | Chữ người dùng qua `t(...)` + `config/locales/vi.yml`; không hard-code tiếng Việt | Máy-ép: guardrail i18n cho view (ADR-032) bắt literal tiếng Việt **mới** ngoài `t(...)` trong `app/views/**/*.erb`; phần cũ grandfather qua baseline. Chữ không-dấu/ngoài view còn người/AI |
+| **Không viết tắt** | Mọi viết tắt mới (code/i18n/giao diện/commit) có trong `docs/THUAT_NGU.md` | Người/AI — ngữ nghĩa, máy không grep được |
+| **BigDecimal tiền/điện** | Tiền/điện giữ BigDecimal xuyên suốt; `.to_f`/`Float()` chỉ ở ranh giới hiển thị/Excel; làm tròn `ROUND_HALF_UP` chỉ khi hiển thị | Custom RuboCop cop `Decimal/*` (job `ruby-checks`) bắt ca rõ ràng ở `app/models`,`app/services`; người/AI soi ca lẩn đường vòng |
+| **Phủ đủ 7 vai trò** | Test phủ SA, DC, UA-ZM, UA, CMD-ZM, CMD, TECH hoặc hoãn tường minh | ADR-030 ép liên kết chiều test ↔ test; người/AI soi đủ-7-vai |
+
+Bề mặt ép: (1) cop `Decimal/*` máy-ép phần BigDecimal; (2) hook `UserPromptSubmit` (`.claude/settings.json`) bơm chiều này vào Claude khi gõ `/code-review`; (3) checkbox trong `.github/pull_request_template.md`. Không sửa prompt `/code-review`/review subagent vì chúng là plugin toàn cục, không version-controlled trong repo. Chi tiết + lý do: ADR-031 (`docs/superpowers/specs/2026-06-13-dimension-review-tuan-agents-design.md`).
+
+**CI guardrail i18n cho view (ADR-032):** một job `i18n-view-guardrail` chạy trên **mọi** pull request (`.github/scripts/check-view-i18n.sh`, native bash fail-loud) quét `app/views/**/*.erb` và **đỏ** khi có literal tiếng Việt **mới** — ký tự có dấu, ngoài comment, ngoài `t(...)` — **không** có trong baseline `.github/i18n-view-baseline.txt`. Phần hard-code **đã có** được grandfather qua baseline (không ép migration vì app single-locale). Ngoại lệ hợp lệ / ghi nhận một đợt migrate: regenerate baseline bằng `UPDATE_BASELINE=1 bash .github/scripts/check-view-i18n.sh` (diff baseline hiện trong pull request, người gác merge duyệt). Không bắt chữ người-dùng **không dấu** hoặc **ngoài view** — phần đó còn người/AI (chiều i18n ở bảng trên). Chi tiết + lý do: ADR-032 trong `docs/superpowers/specs/2026-06-13-guardrail-i18n-view-design.md`.
+
+**CI guardrail trạng thái ADR (ADR-033):** script thứ 5 của job `doc-governance` (`check-adr-status.sh`, native bash fail-loud) ép quy ước trạng thái ADR trên `docs/superpowers/specs/*.md`: **R1** — frontmatter **không** mang field `status:` (nguồn duy nhất là dòng inline `**Trạng thái:**` per-ADR); **R2** — dòng `**Trạng thái:** Proposed` phải kèm deferred-marker `chờ quyết #<issue>` (một trích provenance `(Issue #N)` **không** tính là hoãn), nếu không → đỏ. Quy ước: **merge = Accepted** (tác giả ghi `Accepted · <ngày>` ngay trong pull request — merge là hành động duyệt, ADR-007); `Proposed (chờ quyết #<issue>)` chỉ khi cố ý hoãn. Script bỏ code fence + inline-code trước khi soi nên ví dụ prose (bọc backtick) không báo nhầm; không đụng `**Trạng thái khách:**`. Chi tiết + lý do: ADR-033 trong `docs/superpowers/specs/2026-06-13-trang-thai-adr-lifecycle-design.md`.
+
+**Tự động khép dấu vết khi đóng issue (ADR-035):** một workflow `close-traceability.yml` chạy **hậu-merge** trên `pull_request: closed` (gate `merged == true`). Với mỗi closing-keyword `Closes/Fixes/Resolves #N` trong body pull request, script `.github/scripts/post-close-traceability.sh` (a) post một **comment kết cơ học** vào issue — PR#/tiêu đề, merge SHA, nhánh đích, thời điểm merge, dòng milestone — idempotent qua marker ẩn `<!-- auto-close-traceability:pr-N -->`; và (b) **copy milestone PR→issue** khi PR có milestone còn issue chưa (copy-only: KHÔNG chặn, KHÔNG ghi đè, KHÔNG cảnh báo — giữ gate triage ADR-019/020). Phần **phán đoán** (sai khác plan, caveat, chiều test đã phủ) máy KHÔNG sinh — người/AI bổ sung khi có nuance. Điểm ép ở pull request (không ở issue) vì `Closes #N` đóng issue như hệ quả merge. Chi tiết + lý do: ADR-035 trong `docs/superpowers/specs/2026-06-13-close-traceability-automation-design.md`.
+
+**CI guardrail header changelog (#339):** script thứ 6 của job `doc-governance` (`check-changelog-header.sh`, native bash fail-loud) ép tài liệu spec dùng **một** header lịch sử duy nhất `## Lịch sử thay đổi` (khớp `AGENTS.md` mục version/changelog), **không** dùng biến thể `## Changelog` → đỏ nếu gặp heading `## Changelog`. Bỏ qua khối code fence (ví dụ minh hoạ không tính) và prose nhắc tới (bọc backtick không phải heading). Phạm vi: `docs/superpowers/specs/*.md` (plans là bản ghi lịch sử, ngoài phạm vi).
+
+**CI guardrail chống trùng số ADR (ADR-046):** script thứ 7 của job `doc-governance` (`check-adr-numbering.sh`, native bash fail-loud) đối chiếu mọi dòng định nghĩa ADR trong `docs/superpowers/specs/*.md` — heading `## ADR-NNN` **hoặc** `### ADR-NNN` (bắt cả hai cấp; chỉ `###` sẽ bỏ sót) — và **đỏ** nếu một số `ADR-NNN` xuất hiện ở >1 heading (cùng file hoặc khác file). Bỏ code fence nên ví dụ minh hoạ không tính. Bắt cả trùng đang tồn tại lẫn va chạm giữa hai nhánh song song khi nhánh sau đồng bộ `develop` (single-merger renumber nhánh gộp sau — ADR-007). Việc "đặt đúng số kế tiếp" vẫn cần kiểm nhánh/PR đang mở thủ công (số chưa merge vô hình với `develop`). Chi tiết + lý do: ADR-046 trong `docs/superpowers/specs/2026-06-13-adr-numbering-collision-design.md`.
 
 ## 9. Quản lý thay đổi & truy vết
 
@@ -131,15 +163,79 @@ Theo ADR-013..015 (chi tiết + lý do: `docs/superpowers/specs/2026-06-08-truy-
 ### Luồng một thay đổi (6 bước)
 
 1. **Tiếp nhận** — mở **GitHub Issue** bằng template *Yêu cầu thay đổi* (`.github/ISSUE_TEMPLATE/change-request.md`). Yêu cầu đến từ kênh ngoài (lời nói, chat) cũng phải có Issue trước khi vào `feature/*` — đội mở thay khách nếu cần. Số `#N` là mã định danh thay đổi.
-2. **Phân loại** — gắn 1 nhãn loại (`change-request` / `enhancement` / `bug`); chốt mức SemVer (`feat`/`fix`/breaking); xác định có đụng nghiệp vụ không. Cần thiết kế → gắn `needs-design`. Gán **milestone = version đích** khi đã biết.
-3. **Thiết kế** (nếu cần) — brainstorm → spec trong `docs/superpowers/specs/`; nếu đụng nghiệp vụ, cập nhật `docs/V2_XAC_NHAN_NGHIEP_VU.md` + gắn anchor (xem dưới). Gỡ `needs-design`.
-4. **Hiện thực + test** — `feature/*`, pull request `Refs #N`, test cover yêu cầu (mục 4).
-5. **Release** — gom vào `release/*` → bản ứng viên (release candidate) → khách nghiệm thu → release-please tag `X.Y.Z` (mục 6).
+2. **Phân loại** — gắn 1 nhãn loại (`change-request` / `enhancement` / `bug`); chốt mức SemVer (`feat`/`fix`/breaking); xác định có đụng nghiệp vụ không. Cần thiết kế → gắn `needs-design`. **Khách có thấy thay đổi này không?** Nếu có → gắn `customer-facing` **ngay tại đây** (đừng đợi PR): nhãn này kéo theo demo spec là **Definition of Done** của cả thiết kế lẫn hiện thực (ADR-052). Gán **milestone = version đích** khi đã biết.
+3. **Thiết kế** (nếu cần) — brainstorm → spec trong `docs/superpowers/specs/`; nếu đụng nghiệp vụ, cập nhật `docs/V2_XAC_NHAN_NGHIEP_VU.md` + gắn anchor (xem dưới). Cần khách xác nhận trước khi build → xem **Cổng xác nhận khách trước build** dưới. Gỡ `needs-design`.
+4. **Hiện thực + test** — `feature/*`, pull request `Refs #N`, test cover yêu cầu (mục 4). Tính năng **hướng-khách** soạn thêm **demo spec** cùng nhịp (xem *Demo spec cho tính năng hướng-khách* dưới).
+5. **Release** — gom vào `release/*` → merge `main` → release-please tag `X.Y.Z`; khách nghiệm thu trên môi trường **Acceptance** (chạy `main`, không dùng `-rc.N` — ADR-005/008) (mục 6).
 6. **Đóng** — `Closes #N` khi merge; CHANGELOG tự liệt kê `(#N)`.
 
 **Trạng thái không gắn nhãn tay** — suy ra từ artifact: Issue mở = đang mở; có pull request liên kết = đang làm; merged = xong; có trong CHANGELOG/tag = đã release.
 
 **Khách thấy trạng thái ở mức release** (môi trường Acceptance + release notes tiếng Việt). Khách không truy cập GitHub → đội trả lời "đang ở đâu" từ Issue/milestone list rồi chuyển tiếp.
+
+### Demo spec cho tính năng hướng-khách (ADR-050/051)
+
+Khi làm một tính năng **hướng-khách** (PR gắn nhãn `customer-facing`), soạn **demo spec** trong `spec/demo/` **cùng nhịp với code/test** — coi như một phần của việc làm feature, giống viết test.
+
+**Chốt từ khâu thiết kế (Definition of Done — ADR-052).** Demo spec là **deliverable của thiết kế**, không phải việc-làm-sau. Spec thiết kế của tính năng hướng-khách:
+
+- đặt frontmatter `customer_facing: true`, và
+- kết bằng mục **`## Truy vết demo`** trỏ tới một `spec/demo/<x>_demo_spec.rb` (hoặc `DEFERRED #<issue>` nếu hoãn có gate).
+
+Guardrail `check-demo-deliverable.sh` (job `doc-governance`) ép luật này ở **mức spec** — sớm hơn guardrail bắt-buộc-tồn-tại ở PR-time (ADR-040). Ngoài ra, PR đụng path khách-thấy-được (`app/views/**`, `app/javascript/controllers/**`) mà quên nhãn + thiếu demo sẽ nhận **cảnh báo advisory** (không chặn) từ `check-demo-spec.sh` (ADR-052 Lớp C). Ba lớp này cùng khép đường "tính năng khách-thấy-được tới PR mà thiếu demo".
+
+Cách soạn (vận hành AI-assisted, ADR-029 — viết trung lập công cụ; ánh xạ Claude Code ở mục 8):
+
+1. **Lấy khung:** chạy `rails g demo:spec <feature>` → đẻ `spec/demo/<feature>_demo_spec.rb` rỗng nhưng chạy được (boilerplate DSL `DemoRecorder`, `include_context "demo seeded world"`, caption TODO, placeholder `demo_nv: %w[NV-TODO]`). Generator **không** đọc acceptance criteria — không sinh mù (ADR-051).
+2. **Soạn nháp:** trợ lý AI điền hành trình + **caption tiếng Việt** suy từ acceptance criteria (`NV-...` trong `docs/V2_XAC_NHAN_NGHIEP_VU.md`) + UI thật; thay `NV-TODO` bằng anchor thật để giữ truy vết xuôi.
+3. **Người giữ gate:** demo là spec **xanh-mới-merge** (máy bắt selector/bước sai → anti-drift); **người duyệt video** (chất lượng caption/nghiệp vụ) trước khi tới khách. **Không** có đường CI tự-soạn-rồi-gửi (ADR-050).
+4. **Guardrail (ADR-040):** PR `customer-facing` mà thiếu file `spec/demo/**` → CI đỏ. Guardrail ép *sự tồn tại*; các bước trên lo *nội dung*.
+
+> Chạy/xem demo cục bộ: `bin/docker demo spec/demo/<x>_demo_spec.rb` (bỏ tham số để chạy cả `spec/demo`). Lệnh tự set `DEMO=1` — demo spec bị loại khỏi `bin/docker rspec` thường, và `bin/docker bash -c "..."` KHÔNG nhận command nên đừng dùng để chạy demo.
+
+> Hạ tầng + lý do đầy đủ: ADR-036..041 (`docs/superpowers/specs/2026-06-13-tu-dong-hoa-demo-design.md`); thói quen soạn + scaffold: ADR-050/051 (`docs/superpowers/specs/2026-06-14-ai-soan-demo-scaffold-design.md`).
+
+### Chuẩn "demo tốt" — chất lượng, không chỉ tồn tại (ADR-059)
+
+Guardrail + CI ép demo **tồn tại** và **chạy**; chúng **không** ép demo **hay** — "hay" là phán đoán con người, không lint được. Demo mẫu của dự án: **`spec/demo/cot_khac_he_so_don_vi_demo_spec.rb`** (TN1). Soi nó khi viết demo mới. Chuẩn ở repo (không ở đầu người), ba tầng chắc dần:
+
+**Tầng 1 — Bộ công cụ (neo kỹ thuật vào `DemoRecorder`, đừng tự chế tại chỗ).** Primitive tái dùng (`spec/support/demo_recorder.rb`):
+
+- `sign_in_as(user, role_label:, caption:)` — đăng nhập **lập trình** qua Warden (server-side), **không dựng trang đăng nhập**. Demo **không được** diễn trang `/users/sign_in` (chậm, không kể gì cho khách); chỉ một caption nêu vai trò. Dùng cho cả lúc đổi vai (vd quản trị viên → chỉ huy) thay vì đăng xuất + đăng nhập lại.
+- `visit(path, caption:)` — mở thẳng path (kèm query) vào đúng màn, không lái qua filter.
+- `click(locator, caption:, confirm:)` — `confirm: true` chấp nhận hộp xác nhận Turbo (`data-turbo-confirm`); thiếu cờ này form không submit (driver Playwright mặc định dismiss dialog — bài học #363).
+- `fill(field, with:, caption:)` · `select(option, from:, caption:)` — nhập/chọn có trỏ + nhịp đọc được.
+- `highlight(selector, caption:)` — cuộn một ô/kết quả vào khung + vẽ viền, để thứ caption khẳng định **thấy được trên màn**.
+- `narrate(caption)` — caption không thao tác, kể bối cảnh/nhân-quả.
+- **Quy ước DOM hook `data-*-cp-id`** trên view (vd `data-other-deduction-cp-id`, `data-total-personnel-cp-id`) — để `highlight` nhắm đúng ô của đúng đầu mối thay vì dò text mong manh.
+
+> Cần kỹ thuật demo mới → **thêm vào `DemoRecorder`/hook DOM**, đừng tự chế trong một spec. Demo sau thừa kế miễn phí.
+
+**Tầng 2 — Khởi đầu đúng-hình.** `rails g demo:spec` sinh khung kèm sẵn pattern tốt (chỗ trống `highlight` để cho-thấy-kết-quả, narration bám-chuyện, ghi chú "đừng diễn thứ browser không dựng — vd Excel") + pointer TN1. Đừng xoá các nhắc đó; thay bằng hành trình thật.
+
+**Tầng 3 — Checklist 6 tiêu chí + tự-soi-như-khách (gate người).** Trước khi xin merge, **xem lại bản quay như một khách chưa biết gì**, đối chiếu 6 tiêu chí, và **báo đã soi gì** ở PR:
+
+1. **Cho thấy, đừng nói** — mọi điều caption khẳng định phải *thấy được* trên màn (dùng `highlight`).
+2. **Kể đúng chuyện khách** — khớp ví dụ/thế giới thật của khách, không chỉ số đúng.
+3. **Diễn kết quả + cái đau được xoá**, không diễn thao tác.
+4. **Trung thực với medium** — không diễn thứ browser không dựng (vd `.xlsx`); cái đó để test/file thật lo.
+5. **Đủ cung đường khách quan tâm**, không nhồi mọi ngóc ngách/chiều test.
+6. **Ổn định** — không "xanh nhờ may" (dùng `confirm:`/`unpoint`-rescue; không đua điều hướng).
+
+> Chuẩn + lý do đầy đủ: ADR-059 (`docs/superpowers/specs/2026-06-14-demo-dod-design.md`, mục "Chuẩn demo tốt").
+
+### Cổng xác nhận khách trước build (ADR-028)
+
+Khi cần khách **xác nhận yêu cầu/phương án trước khi build** (thường qua nhiều lượt), làm trong bước 3:
+
+1. Đã có Issue `#N` (bước 1). Tài liệu xác nhận mở đầu bằng `#N`.
+2. Soạn **tài liệu xác nhận** ở `docs/xac-nhan-khach/` (tạo thư mục khi lần đầu cần) — KHÔNG để ở `docs/` gốc (tránh trông như nguồn nghiệp vụ).
+3. Mỗi vòng khách phản hồi: cập nhật tài liệu, **bump version + 1 dòng changelog** (ADR-002), ghi vết comment vào Issue (khách duyệt/điều chỉnh gì, ngày).
+4. Khai trong `docs/BAN_DO_TAI_LIEU.md` **per-file**: **current-state** khi đang chốt → **lịch sử** khi đã chốt + đã fold.
+5. **Chỉ khi khách chốt** mới fold yêu cầu vào `docs/V2_XAC_NHAN_NGHIEP_VU.md` (canonical) + anchor `NV-...`; từ đó mới code theo. Trước đó tài liệu xác nhận chỉ là "đang đề xuất".
+6. Trợ lý AI soạn / đánh version / ghi vết / fold; bạn duyệt nội dung gửi khách + duyệt fold (vận hành AI-assisted, ADR-029).
+
+> Ca mẫu: `docs/V2_XAC_NHAN_NGHIEP_VU_BO_SUNG.md` (#264/#319).
 
 ### Mã định danh yêu cầu (anchor `NV-...`)
 
@@ -150,6 +246,7 @@ Theo ADR-013..015 (chi tiết + lý do: `docs/superpowers/specs/2026-06-08-truy-
 
 - Mỗi spec thiết kế kết bằng mục `## Truy vết` trỏ **lên** (yêu cầu `NV-...` + Issue `#N`) và **liệt kê test** cover yêu cầu.
 - **Test ↔ yêu cầu:** link ở phía spec/pull request, **không** gắn mã vào code test. Yêu cầu cũ (chưa có design spec) trỏ `docs/V2_KICH_BAN_TEST.md` / `docs/V2_CHIEU_TEST.md`.
+- **Chiều test ↔ test (`CHIEU-<slug>`):** khác với `NV-` ở trên — chiều test **có** gắn mã vào test. Spec tính năng kết phần chiều test bằng bảng `## Truy vết chiều test` (`| Mã `CHIEU-<slug>` | mô tả | có test \| DEFERRED #issue |`); test mang anchor ở mô tả `it "CHIEU-<slug>: ..."`. CI (`check-test-dimensions.sh`, ADR-030) đối chiếu hai bên. Hoãn một chiều → ghi `DEFERRED #<issue-gate>`, không bỏ im. Map mỗi chiều test của spec + 2 luật AGENTS (mọi-output, 6-vai-trò) → một hàng khi viết plan.
 - **Truy vết hai chiều bằng grep:** xuôi `grep -rn "NV-<slug>" docs/`; ngược từ `(#N)` trong CHANGELOG/commit → Issue → mô tả gốc.
 
 > Tiếp nhận/ưu tiên backlog xem **mục 11** (Backlog #4). Lỗi/sự cố production xem mục 10.

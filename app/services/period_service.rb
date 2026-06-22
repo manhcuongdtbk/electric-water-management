@@ -70,7 +70,8 @@ class PeriodService
         unit_price: previous.unit_price,
         savings_rate: previous.savings_rate,
         division_public_rate: previous.division_public_rate,
-        water_pump_standard: previous.water_pump_standard
+        water_pump_standard: previous.water_pump_standard,
+        pump_allocation_per_station: true
       }
     else
       if year.blank? || month.blank? || unit_price.blank?
@@ -83,7 +84,8 @@ class PeriodService
         unit_price: BigDecimal(unit_price.to_s),
         savings_rate: DEFAULT_SAVINGS_RATE,
         division_public_rate: DEFAULT_DIVISION_PUBLIC_RATE,
-        water_pump_standard: DEFAULT_WATER_PUMP_STANDARD
+        water_pump_standard: DEFAULT_WATER_PUMP_STANDARD,
+        pump_allocation_per_station: true
       }
     end
   end
@@ -104,16 +106,26 @@ class PeriodService
   end
 
   def copy_pump_allocations_from(previous, new_period)
+    # Chỉ kế thừa khi cả hai kỳ cùng cơ chế per-trạm. Qua ranh giới cũ→per-trạm:
+    # bắt đầu trống (cấu hình gộp cũ không gắn được vào trạm cụ thể) — ADR-026.
+    return unless previous.pump_allocation_per_station && new_period.pump_allocation_per_station
+
     previous.pump_allocations
-            .includes(:zone, :unit, :contact_point)
+            .includes(:zone, :unit, :block, :group, :contact_point, :pump_contact_point)
             .find_each do |allocation|
       next if allocation.zone&.discarded?
       next if allocation.unit_id.present? && allocation.unit&.discarded?
+      next if allocation.block_id.present? && allocation.block&.discarded?
+      next if allocation.group_id.present? && allocation.group&.discarded?
       next if allocation.contact_point_id.present? && allocation.contact_point&.discarded?
+      next if allocation.pump_contact_point_id.present? && allocation.pump_contact_point&.discarded?
 
       new_period.pump_allocations.create!(
         zone_id: allocation.zone_id,
+        pump_contact_point_id: allocation.pump_contact_point_id,
         unit_id: allocation.unit_id,
+        block_id: allocation.block_id,
+        group_id: allocation.group_id,
         contact_point_id: allocation.contact_point_id,
         coefficient: allocation.coefficient,
         fixed_percentage: allocation.fixed_percentage

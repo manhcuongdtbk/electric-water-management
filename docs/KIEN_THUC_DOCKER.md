@@ -1,7 +1,7 @@
-# Kiến thức Docker — Hệ thống quản lý điện nội bộ Sư đoàn
+# Kiến thức Docker — Hệ thống quản lý điện nước nội bộ
 
-> **Phiên bản:** 1.9.0
-> **Ngày:** 10/06/2026
+> **Phiên bản:** 1.9.2
+> **Ngày:** 14/06/2026
 > **Đối tượng:** Developer hoặc người muốn hiểu hệ thống chạy thế nào ở mọi môi trường.
 > **Tiền đề:** Bạn biết code Rails nhưng chưa biết Docker và chưa từng deploy.
 
@@ -540,6 +540,8 @@ Dùng `up` thay `start` khi: lần đầu, hoặc sau khi sửa `compose.dev.yml
 ```bash
 bin/docker rspec              # Chạy test
 bin/docker rspec spec/models  # Chạy test 1 thư mục
+bin/docker demo               # Chạy demo specs (tự set DEMO=1)
+bin/docker demo spec/demo/x   # Chạy 1 demo spec
 bin/docker prspec             # Chạy test song song (auto-detect số processes)
 bin/docker prspec:setup       # Tạo databases cho test song song (1 lần)
 bin/docker console            # Rails console
@@ -842,6 +844,14 @@ docker compose up -d      # Tạo lại (database trống, 2 tài khoản mặc 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.9.2 (21/06/2026)
+
+- Đổi tên hệ thống trong tiêu đề: "Hệ thống quản lý điện nước nội bộ" (Issue #420).
+
+### v1.9.1 (14/06/2026)
+
+- Mục "Lệnh thường dùng": thêm `bin/docker demo` (chạy demo specs, tự set `DEMO=1`) — demo spec bị loại khỏi `bin/docker rspec` thường nên cần lệnh riêng.
 
 ### v1.9.0 (10/06/2026)
 

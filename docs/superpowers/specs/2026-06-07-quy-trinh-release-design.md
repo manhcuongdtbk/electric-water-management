@@ -1,7 +1,6 @@
 ---
 title: Quy trình phát hành (release process) — Mảnh 1 của SDLC
-version: 0.14.0
-status: draft (chờ duyệt)
+version: 0.14.1
 date: 2026-06-07
 governed_by: 2026-06-07-sdlc-overview-design.md
 ---
@@ -64,7 +63,7 @@ flowchart LR
 ## Quyết định (ADR)
 
 ### ADR-003: Mô hình nhánh — Git Flow áp cứng
-- **Trạng thái:** Proposed · 2026-06-07
+- **Trạng thái:** Accepted · 2026-06-07
 - **Bối cảnh:** Phát hành theo phiên bản rời rạc; có cổng khách nghiệm thu; giao bản offline; phải giữ một version ngoài thực địa; team nhỏ, bạn merge.
 - **Quyết định:** Git Flow đầy đủ — `main`, `develop`, `feature/*`, `release/*`, `hotfix/*`; thao tác bằng git thường + automation.
 - **Lý do:** Khớp đúng ngoại lệ chính tác giả Git Flow nêu: hợp khi "phần mềm được đánh version rõ ràng / cần hỗ trợ nhiều version ngoài thực địa" (xem nguồn nvie ở [Truy vết](#truy-vết)).
@@ -73,7 +72,7 @@ flowchart LR
 - **Điều kiện xem lại:** chuyển sang continuous delivery, **hoặc** merge-back thủ công gây lỗi lặp lại → cân nhắc trunk-based + release branch.
 
 ### ADR-004: Đánh số version — SemVer + pre-release
-- **Trạng thái:** Proposed · 2026-06-07
+- **Trạng thái:** Accepted · 2026-06-07
 - **Bối cảnh:** Cần số version truyền đạt đúng mức độ thay đổi; có giai đoạn chờ nghiệm thu.
 - **Quyết định:** SemVer `MAJOR.MINOR.PATCH`; bản chờ nghiệm thu dùng `X.Y.Z-rc.N`; chốt mới gắn `X.Y.Z`.
 - **Lý do:** Chuẩn phổ biến; pre-release tag là cách chuẩn đánh dấu "đang chờ duyệt, có thể còn sửa".
@@ -83,7 +82,7 @@ flowchart LR
 - **Ghi chú (P4, chốt 2026-06-08):** (1) **Không dùng `-rc.N` trong luồng deploy** — Acceptance deploy thẳng `main` (bản đã release); khách không ưng thì ra bản vá kế tiếp (xem ADR-005/008). (2) **Repo này là "hệ thống v2"** nhưng version phần mềm theo **SemVer từ `1.0.0`** — số MAJOR mang nghĩa tương thích/breaking, *không* phải "đời sản phẩm"; hệ thống v1 nằm ở project Railway riêng `electric-water-management-v1`. Sẽ ghi rõ một dòng trong `README.md`/`CHANGELOG.md` để khỏi nhầm.
 
 ### ADR-005: Môi trường & promotion
-- **Trạng thái:** Proposed · 2026-06-07
+- **Trạng thái:** Accepted · 2026-06-07
 - **Bối cảnh:** Railway **tính tiền theo tổng tài nguyên, không theo số environment**. Team có Docker local. Khách ở xa, dùng Railway online.
 - **Quyết định:**
   - **Phát triển:** Docker local + preview tạm (VS Code Dev Tunnel / PR env) khi cần — `develop`/`feature/*`.
@@ -107,7 +106,7 @@ flowchart LR
     - **Vì sao chỉ 3 env** (so với chuỗi tầng chuẩn ngành Development → Testing/QA → Staging → UAT → Production): đây là **tập con có cơ sở** + 1 bổ sung đặc thù — Testing/QA đã nằm trong **CI** (rspec/system spec mỗi PR) nên không cần env riêng; **Staging ∪ UAT gộp làm `acceptance`** (đội diễn tập kỹ thuật bằng local Docker + CI; khách nghiệm thu trên `acceptance`); **`mirror` không thuộc chuỗi chuẩn** — nó tồn tại chỉ vì production của ta *offline*, cần một bản sinh đôi *online* để khách đối chiếu.
 
 ### ADR-006: Dữ liệu cho môi trường
-- **Trạng thái:** Proposed · 2026-06-07
+- **Trạng thái:** Accepted · 2026-06-07
 - **Bối cảnh:** Production offline, khách ở xa → không thể & không cần bơm dữ liệu thật lên Railway.
 - **Quyết định:** **Mỗi version dùng seed riêng** (`db/seeds` tại version đó); không ép đồng bộ seed chéo. Đối chiếu là **định tính**.
 - **Lý do:** Đơn giản; an toàn (dữ liệu thật không rời mạng offline).
@@ -116,7 +115,7 @@ flowchart LR
 - **Điều kiện xem lại:** nếu cần so sánh định lượng chính xác → dựng seed chung có kiểm soát.
 
 ### ADR-007: Enforce — miễn phí trước, có đường nâng cấp
-- **Trạng thái:** Proposed · 2026-06-07
+- **Trạng thái:** Accepted · 2026-06-07
 - **Bối cảnh:** GitHub branch protection/rulesets **không free cho repo private** (đòi Team ~$4/người/tháng). Repo phải private. Hiện một mình bạn merge.
 - **Quyết định:** **Đường miễn phí trước** — CI Actions (test/lint/audit/schema/commitlint + branch-guard native) hiện trạng thái trên PR; release-please cổng-người-duyệt; `/code-review` local. **Đường nâng cấp:** GitHub Team khi cần khoá cứng.
 - **Lý do:** Một mình bạn merge → rủi ro bypass gần như không; "quên" thì automation lo. Tiết kiệm tối đa.
@@ -125,7 +124,7 @@ flowchart LR
 - **Điều kiện xem lại:** có >1 người được merge, hoặc cần khoá cứng → nâng GitHub Team.
 
 ### ADR-008: Release automation — release-please
-- **Trạng thái:** Proposed · 2026-06-07
+- **Trạng thái:** Accepted · 2026-06-07
 - **Bối cảnh:** Thao tác lặp (bump version, changelog, tag, GitHub Release, merge-back) dễ quên; `gitflow-avh` đã chết.
 - **Quyết định:** Dùng **release-please** (Google) — giữ "Release PR", chỉ phát hành khi **bạn merge** (cổng người duyệt); tự bump version + changelog + tag + Release. Cấu hình target `main` (+ release branch khi cần).
 - **Lý do:** Maintained (v5.0.0/2026), hỗ trợ release branch, có cổng người duyệt đúng mô hình nghiệm thu.
@@ -139,7 +138,7 @@ flowchart LR
 - **Điều kiện xem lại:** nếu cấu hình release-please + Git Flow quá vướng → cân nhắc semantic-release hoặc script tối giản.
 
 ### ADR-009: Review code — AI local + người duyệt
-- **Trạng thái:** Proposed · 2026-06-07
+- **Trạng thái:** Accepted · 2026-06-07
 - **Bối cảnh:** Muốn AI hỗ trợ review; chỉ soi tay khi AI báo bất thường; tiết kiệm.
 - **Quyết định:** Chạy **`/code-review` local trước khi push** (dùng Claude sẵn có, không tốn thêm); bạn duyệt cuối (mô hình B).
 - **Lý do:** Đáp đúng nhu cầu, $0 thêm, không phụ thuộc bot trả phí.
@@ -148,7 +147,7 @@ flowchart LR
 - **Điều kiện xem lại:** dev quên chạy review → cân nhắc bot PR tự động.
 
 ### ADR-010: Pair local — VS Code Dev Tunnels
-- **Trạng thái:** Proposed · 2026-06-07
+- **Trạng thái:** Accepted · 2026-06-07
 - **Bối cảnh:** Cả team dùng VS Code/Cursor; muốn cùng test app đang chạy trên máy nhau **không qua push/deploy**; pair ngắn, không lo lộ lọt; sắp có Windows.
 - **Quyết định:** **VS Code Dev Tunnels** (port forwarding tích hợp) — Private mặc định + đăng nhập GitHub. **Cloudflare Tunnel** làm dự phòng (URL ngoài editor / không cần đăng nhập). PR env tạm giữ cho người không phải dev.
 - **Lý do:** Sẵn trong editor (0 cài đặt), free, kiểm soát truy cập có sẵn qua GitHub — hợp dự án nội bộ + đa nền tảng.
@@ -157,7 +156,7 @@ flowchart LR
 - **Điều kiện xem lại:** cần URL ổn định / chia sẻ ngoài team → Cloudflare Tunnel có tên.
 
 ### ADR-011: Nội dung CI
-- **Trạng thái:** Proposed · 2026-06-07
+- **Trạng thái:** Accepted · 2026-06-07
 - **Quyết định:** Workflow CI (free Actions) chạy trên PR: `rspec` (gồm system spec), `rubocop`, `brakeman`, `bundler-audit`, `rails zeitwerk:check`, kiểm schema không lệch, `commitlint`, **branch-source guard** (PR đích `main` mà nguồn ≠ `release/*`/`hotfix/*` → fail).
 - **Lý do:** CLAUDE.md yêu cầu rubocop do CI cover; các bước còn lại bắt lỗi sớm; branch-guard ép luật Git Flow (native, không dependency).
 - **Tradeoff:** (+) bắt lỗi trước khi tới khách. (−) system spec cần trình duyệt headless trên runner (cấu hình nhỉnh hơn — chi tiết để spec CI riêng).
@@ -242,8 +241,9 @@ flowchart LR
 
 *(Template ADR/pull request/issue đã chuyển vào Backlog #2 — ADR-015.)*
 
-## Changelog
+## Lịch sử thay đổi
 
+- **0.14.1 (2026-06-13):** Theo ADR-033 (#339): bỏ field frontmatter `status:` (nguồn duy nhất = inline `**Trạng thái:**`); lật trạng thái các ADR đã merge sang `Accepted`.
 - **0.14.0 (2026-06-10):** Checklist phát hành thêm bước "Rà tài liệu current-state khớp ADR mới nhất" (ADR-023 — quản trị tài liệu; Issue #310).
 - **0.13.0 (2026-06-09):** Hai mục "Cải tiến optional" *cheat-sheet `AGENTS.md`* + *checklist onboarding* → **✅ Đã làm** (Issue #307): tạo lối vào distill `docs/HUONG_DAN_SDLC.md` (ADR-022, spec [`2026-06-09-huong-dan-sdlc-onboarding-design.md`](2026-06-09-huong-dan-sdlc-onboarding-design.md)) + pointer `AGENTS.md`/`CONTRIBUTING.md`; **không** nhồi cheat-sheet vào `AGENTS.md` (giữ ADR-002). Kèm rà soát mạch lạc tài liệu canonical (bỏ drift `-rc.N`/env/nhánh).
 - **0.12.0 (2026-06-09):** "Cải tiến optional" chuyển từ danh sách trần sang **bảng có *verdict* + *trigger* hồi sinh** cho từng mục (cheat-sheet `AGENTS.md`; checklist onboarding; lint định dạng ADR trong CI; DORA metrics; tách ADR ra `docs/adr/`) — để không mục nào bị bỏ lửng, nhất quán với discipline "Điều kiện xem lại" của ADR. Không đổi quyết định nào (vẫn YAGNI tới khi chạm trigger).

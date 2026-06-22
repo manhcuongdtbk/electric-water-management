@@ -11,7 +11,7 @@
         options: @available_periods.map { |p| ["Tháng #{p.month}/#{p.year}", p.id] },
         selected: @period.id }
     ]
-    if current_user.system_admin?
+    if current_user.system_wide_scope?
       billing_filters += [
         { label: "Khu vực:", param: :zone_id,
           options: @available_zones.map { |z| [z.name, z.id] }, selected: @zone&.id,
@@ -25,12 +25,23 @@
       if @period.open? && can?(:recalculate, Calculation)
         concat(button_to("Tính toán lại", recalculate_billing_path(billing_filter_params),
           method: :post,
-          form: { data: { turbo_confirm: "Xác nhận tính toán lại bảng tính tiền?" } },
+          form: { data: {
+            turbo_confirm: "Xác nhận tính toán lại bảng tính tiền?",
+            controller: "submit-loading",
+            submit_loading_loading_text_value: t("billing.buttons.recalculating")
+          } },
           class: "bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700"))
       end
       if can?(:read, Calculation)
-        concat(link_to("Xuất Excel",
-          billing_path(billing_filter_params.merge(format: :xlsx)),
+        export_url = billing_path(billing_filter_params.merge(format: :xlsx))
+        concat(link_to("Xuất Excel", export_url,
+          data: {
+            controller: "stale-export",
+            action: "stale-export#confirm",
+            "stale-export-stale-value": @freshness_states.any? { |entry| entry.status == :stale },
+            "stale-export-message-value": t("billing.export.stale_confirm"),
+            "stale-export-url-value": export_url
+          },
           class: "bg-green-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-700"))
       end
     end
@@ -46,6 +57,8 @@
         action_links: billing_action_links %>
 
   <%= render "warnings" %>
+
+  <%= render "shared/freshness_indicator", states: @freshness_states %>
 
   <p class="text-sm text-gray-700 mb-2">
     Đơn giá điện: <strong><%= unit_price_to_vi(@period.unit_price) %> đ/kW</strong>
@@ -65,4 +78,6 @@
   <% if @pagy && @pagy.pages > 1 %>
     <div class="mt-4"><%== pagy_nav(@pagy) %></div>
   <% end %>
+
+  <%= render "reconciliation_sections" %>
 <% end %>

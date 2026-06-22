@@ -1,0 +1,428 @@
+# Per-page setup for the behavior guardrail (#373, ADR-058). The matrix
+# (RoleBehaviorMatrix) is pure data; the divergent setup each page needs lives
+# here as named methods, so `applies: { scenario: :blocks }` -> .blocks builds
+# the world and returns a uniform Scenario struct the shared examples consume.
+module RoleBehaviorScenarios
+  Scenario = Struct.new(:path, :sa_user, :all_texts, :checks,
+                        :columns, :column_users, :commander, :zm, keyword_init: true)
+
+  module_function
+
+  # Non-SA roles that can OPEN the page per the access matrix (so are subject to
+  # scoping / commander / column behavior). DC excluded: system-wide scope like SA,
+  # not unit-scoped — should not appear in unit_scoped_checks.
+  def accessible_non_sa_roles(slug)
+    RoleAccessMatrix::PAGES.fetch(slug)[:expect]
+      .select { |_role, outcome| outcome == :ok }.keys - %i[sa dc tech]
+  end
+
+  # A zone with a manager-unit and an other-unit, plus an open period.
+  # Mirrors role_access_matrix_spec.rb's world.
+  def base_world
+    zone = FactoryBot.create(:zone, name: "KV-#{SecureRandom.hex(3)}")
+    unit_manager = FactoryBot.create(:unit, zone: zone, name: "DV-QL-#{SecureRandom.hex(3)}")
+    unit_other   = FactoryBot.create(:unit, zone: zone, name: "DV-Khac-#{SecureRandom.hex(3)}")
+    zone.update!(manager_unit_id: unit_manager.id)
+    FactoryBot.create(:period, closed: false)
+    { zone: zone, unit_manager: unit_manager, unit_other: unit_other }
+  end
+
+  # role -> the unit that role belongs to in base_world.
+  def unit_for(role, world)
+    %i[ua_zm cmd_zm].include?(role) ? world[:unit_manager] : world[:unit_other]
+  end
+
+  def make_user(role, world)
+    case role
+    when :sa     then FactoryBot.create(:user, :system_admin)
+    when :dc     then FactoryBot.create(:user, :division_commander)
+    when :ua_zm, :ua  then FactoryBot.create(:user, :unit_admin, unit: unit_for(role, world))
+    when :cmd_zm, :cmd then FactoryBot.create(:user, :commander, unit: unit_for(role, world))
+    when :tech   then FactoryBot.create(:user, :technician)
+    end
+  end
+
+  # SampleData lives in a module included into example groups; this module uses
+  # module_function, so build a tiny proxy that can call it (+ FactoryBot create).
+  def sample_world
+    proxy = Object.new
+    proxy.extend(FactoryBot::Syntax::Methods)
+    proxy.extend(SampleData)
+    proxy.setup_zone_one_full_sample
+  end
+
+  # Users for the 4 accessible non-SA roles mapped onto the sample's units.
+  def sample_role_users(sample)
+    { ua_zm:  FactoryBot.create(:user, :unit_admin, unit: sample.unit_a),
+      ua:     FactoryBot.create(:user, :unit_admin, unit: sample.unit_b),
+      cmd_zm: FactoryBot.create(:user, :commander,  unit: sample.unit_a),
+      cmd:    FactoryBot.create(:user, :commander,  unit: sample.unit_b) }
+  end
+
+  # Build data_scoping checks: unit_a-roles see own_a not own_b; unit_b-roles vice-versa.
+  def unit_scoped_checks(users, text_a, text_b)
+    [{ user: users[:ua_zm],  sees: text_a, hides: [text_b] },
+     { user: users[:ua],     sees: text_b, hides: [text_a] },
+     { user: users[:cmd_zm], sees: text_a, hides: [text_b] },
+     { user: users[:cmd],    sees: text_b, hides: [text_a] }]
+  end
+
+  # Contact-point names that render on the target page, for unit_a and unit_b.
+  # Picks the first kept CP (by id) that appears in the given scope for each unit.
+  def sample_cp_names_for_meter_entries(sample)
+    types = %w[residential public]
+    a = ContactPoint.kept
+                    .joins(:meters)
+                    .where(unit: sample.unit_a, contact_point_type: types)
+                    .order(:id).first&.name
+    b = ContactPoint.kept
+                    .joins(:meters)
+                    .where(unit: sample.unit_b, contact_point_type: types)
+                    .order(:id).first&.name
+    [a, b]
+  end
+
+  def sample_cp_names_for_billing(sample)
+    a = Calculation.where(period: sample.period)
+                   .joins(:contact_point)
+                   .where(contact_points: { unit: sample.unit_a,
+                                            contact_point_type: "residential" })
+                   .order("contact_points.id").first&.contact_point&.name
+    b = Calculation.where(period: sample.period)
+                   .joins(:contact_point)
+                   .where(contact_points: { unit: sample.unit_b,
+                                            contact_point_type: "residential" })
+                   .order("contact_points.id").first&.contact_point&.name
+    [a, b]
+  end
+
+  # --- blocks (pilot) -------------------------------------------------------
+  # Zone-managers (ua_zm/cmd_zm) read every Block in their managed zone (Task 8b,
+  # Issue #319): they see the other unit's block too, so it is NOT hidden from
+  # them. Only the non-manager roles (ua/cmd, scoped to their own unit) hide the
+  # foreign block.
+  def blocks
+    w = base_world
+    mgr = FactoryBot.create(:block, unit: w[:unit_manager], name: "Khoi-QL-#{SecureRandom.hex(3)}")
+    oth = FactoryBot.create(:block, unit: w[:unit_other],   name: "Khoi-Khac-#{SecureRandom.hex(3)}")
+    checks = accessible_non_sa_roles("blocks").map do |role|
+      user = make_user(role, w)
+      zone_manager = %i[ua_zm cmd_zm].include?(role)
+      owned = zone_manager ? mgr.name : oth.name
+      hides = zone_manager ? [] : [mgr.name]
+      { user: user, sees: owned, hides: hides }
+    end
+    Scenario.new(path: Rails.application.routes.url_helpers.blocks_path,
+                 sa_user: FactoryBot.create(:user, :system_admin),
+                 all_texts: [mgr.name, oth.name], checks: checks,
+                 columns: ["Khu vực", "Đơn vị"],
+                 column_users: accessible_non_sa_roles("blocks").map { |r| make_user(r, w) })
+  end
+
+  # --- groups (unit-scoped index, clone of blocks) --------------------------
+  # Same zone-manager read scope as blocks (Task 8b, Issue #319): ua_zm/cmd_zm
+  # see every Group in their managed zone (foreign group not hidden); ua/cmd
+  # stay scoped to their own unit and hide the manager unit's group.
+  def groups
+    w = base_world
+    mgr = FactoryBot.create(:group, unit: w[:unit_manager], name: "Nhom-QL-#{SecureRandom.hex(3)}")
+    oth = FactoryBot.create(:group, unit: w[:unit_other],   name: "Nhom-Khac-#{SecureRandom.hex(3)}")
+    checks = accessible_non_sa_roles("groups").map do |role|
+      user = make_user(role, w)
+      zone_manager = %i[ua_zm cmd_zm].include?(role)
+      owned = zone_manager ? mgr.name : oth.name
+      hides = zone_manager ? [] : [mgr.name]
+      { user: user, sees: owned, hides: hides }
+    end
+    Scenario.new(path: Rails.application.routes.url_helpers.groups_path,
+                 sa_user: FactoryBot.create(:user, :system_admin),
+                 all_texts: [mgr.name, oth.name], checks: checks,
+                 columns: ["Khu vực", "Đơn vị"],
+                 column_users: accessible_non_sa_roles("groups").map { |r| make_user(r, w) })
+  end
+
+  # The open period's rank for personnel counts (residential CP needs it).
+  def open_period_rank
+    period = Period.order(:year, :month).last
+    period.ranks.first || period.ranks.create!(name: "Hạ sĩ", quota: 1, position: 1)
+  end
+
+  # --- contact_points_index (unit-scoped index) -----------------------------
+  def contact_points_index
+    w = base_world
+    rank = open_period_rank
+    mgr = FactoryBot.create(:contact_point, :residential, unit: w[:unit_manager],
+            name: "DM-QL-#{SecureRandom.hex(3)}", initial_personnel_counts: { rank.id => 1 })
+    oth = FactoryBot.create(:contact_point, :residential, unit: w[:unit_other],
+            name: "DM-Khac-#{SecureRandom.hex(3)}", initial_personnel_counts: { rank.id => 1 })
+    path = Rails.application.routes.url_helpers.contact_points_path(type: "residential")
+    checks = accessible_non_sa_roles("contact_points").map do |role|
+      user = make_user(role, w)
+      owned = unit_for(role, w) == w[:unit_manager] ? mgr.name : oth.name
+      { user: user, sees: owned, hides: [owned == mgr.name ? oth.name : mgr.name] }
+    end
+    Scenario.new(path: path, sa_user: FactoryBot.create(:user, :system_admin),
+                 all_texts: [mgr.name, oth.name], checks: checks,
+                 columns: ["Khu vực", "Đơn vị"],
+                 column_users: accessible_non_sa_roles("contact_points").map { |r| make_user(r, w) })
+  end
+
+  # --- contact_points (index "Loại" filter zone-manager variant) ------------
+  # On the index, the type filter (`select#type`) only offers the zone-level
+  # types (water_pump / non_establishment) to zone managers — see @visible_types
+  # in ContactPointsController. That is the ZM behavior marker tested here.
+  def contact_points
+    w = base_world
+    Scenario.new(
+      path: Rails.application.routes.url_helpers.contact_points_path,
+      sa_user: FactoryBot.create(:user, :system_admin),
+      all_texts: [], checks: [], columns: [], column_users: [],
+      zm: { zm_user: FactoryBot.create(:user, :unit_admin, unit: w[:unit_manager]),
+            non_zm_user: FactoryBot.create(:user, :unit_admin, unit: w[:unit_other]),
+            marker_css: "select#type option",
+            marker_values: %w[water_pump non_establishment] }
+    )
+  end
+
+  # --- meter_entries --------------------------------------------------------
+  def meter_entries
+    # SampleData is included into RSpec example groups (config.include SampleData),
+    # not available at plain module-function level. Bind it via a lightweight helper
+    # object that has both FactoryBot::Syntax::Methods and SampleData.
+    sample = sample_world
+    path = Rails.application.routes.url_helpers.meter_entries_path
+    commander_users = [FactoryBot.create(:user, :commander, unit: sample.unit_a),
+                       FactoryBot.create(:user, :commander, unit: sample.unit_b),
+                       FactoryBot.create(:user, :division_commander)]
+    control_user = FactoryBot.create(:user, :unit_admin, unit: sample.unit_a)
+    Scenario.new(
+      path: path, sa_user: FactoryBot.create(:user, :system_admin),
+      all_texts: [], checks: [], columns: [], column_users: [],
+      commander: { commander_users: commander_users, control_user: control_user,
+                   input_css: "table input[type='number'], table input[type='text']",
+                   submit_css: "form[method='post'] input[name='commit'][value='Lưu toàn bộ']",
+                   submit_optional: false }
+    )
+  end
+
+  # --- meter_entries_data (data scoping + zone/unit columns) ----------------
+  # Separate scenario from `meter_entries` (commander_readonly) because these
+  # dimensions need different Scenario fields (all_texts / checks / columns).
+  def meter_entries_data
+    sample = sample_world
+    users  = sample_role_users(sample)
+    text_a, text_b = sample_cp_names_for_meter_entries(sample)
+    Scenario.new(path: Rails.application.routes.url_helpers.meter_entries_path,
+                 sa_user: FactoryBot.create(:user, :system_admin),
+                 all_texts: [text_a, text_b],
+                 checks: unit_scoped_checks(users, text_a, text_b),
+                 columns: ["Khu vực", "Đơn vị"],
+                 column_users: users.values_at(:ua_zm, :ua, :cmd_zm, :cmd))
+  end
+
+  # --- billing --------------------------------------------------------------
+  def billing
+    sample = sample_world
+    CalculationOrchestrator.new(zone: sample.zone, period: sample.period).call
+    users = sample_role_users(sample)
+    text_a, text_b = sample_cp_names_for_billing(sample)
+    # zone_unit_columns: "Khu vực" is hidden for ALL non-SA (SA-only).
+    # "Đơn vị" IS shown to UA-ZM/CMD-ZM (zone-managers see the unit column because
+    # @unit is nil for them — resolve_current_user_zone_unit returns [zone, nil]).
+    # So column_users covers all 4 non-SA roles for "Khu vực" only; "Đơn vị"
+    # visibility for zone-managers is tracked under zone_manager_variant (na here).
+    Scenario.new(path: Rails.application.routes.url_helpers.billing_path,
+                 sa_user: FactoryBot.create(:user, :system_admin),
+                 all_texts: [text_a, text_b],
+                 checks: unit_scoped_checks(users, text_a, text_b),
+                 columns: ["Khu vực"],
+                 column_users: users.values_at(:ua_zm, :ua, :cmd_zm, :cmd))
+  end
+
+  # --- unit_config (commander readonly) ------------------------------------
+  # sample_world builds unit_a (zone-manager) with residential CPs (Ban Tác huấn,
+  # Văn thư, Kho vật tư) and unit_b with Đại đội 1. Both units have OtherDeduction
+  # rows so unit_config renders number/select inputs for them.
+  # Control user = unit_admin of unit_b (plain UA, not ZM); commanders from both
+  # units are tested. Submit button (input[name='commit']) is ABSENT for commanders
+  # (view hides it entirely), so submit_optional: true.
+  def unit_config_commander
+    sample = sample_world
+    commander_users = [
+      FactoryBot.create(:user, :commander, unit: sample.unit_a),
+      FactoryBot.create(:user, :commander, unit: sample.unit_b),
+      FactoryBot.create(:user, :division_commander)
+    ]
+    control_user = FactoryBot.create(:user, :unit_admin, unit: sample.unit_b)
+    # Use unit_id param so DC (unitless, system_wide_scope) also renders the data form.
+    # CMD users ignore the param — their unit is loaded from current_user.unit.
+    Scenario.new(
+      path: Rails.application.routes.url_helpers.unit_config_path(unit_id: sample.unit_b.id),
+      sa_user: FactoryBot.create(:user, :system_admin),
+      all_texts: [], checks: [], columns: [], column_users: [],
+      commander: {
+        commander_users: commander_users,
+        control_user:    control_user,
+        input_css:       "form[method='post'] input[type='number'], form[method='post'] select",
+        submit_css:      "input[name='commit']",
+        submit_optional: true
+      }
+    )
+  end
+
+  # --- unit_config (zone-manager variant) -----------------------------------
+  # UA-ZM (unit manages a zone) sees "thuộc khu vực" section when there is at
+  # least one zone_residential contact_point in the managed zone — mirrors the
+  # setup in unit_config_spec.rb lines 127-143. Plain UA (unit_other, no zone)
+  # does NOT see that section.
+  def unit_config_zm
+    w = base_world
+    rank = open_period_rank
+    # Create a zone_residential CP in the zone managed by unit_manager so the
+    # "thuộc khu vực" section renders for that unit's admin.
+    FactoryBot.create(:contact_point, :zone_residential, zone: w[:zone],
+                      name: "ZCP-ZM-#{SecureRandom.hex(3)}",
+                      initial_personnel_counts: { rank.id => 1 })
+    zm_user     = FactoryBot.create(:user, :unit_admin, unit: w[:unit_manager])
+    non_zm_user = FactoryBot.create(:user, :unit_admin, unit: w[:unit_other])
+    Scenario.new(
+      path: Rails.application.routes.url_helpers.unit_config_path,
+      sa_user: FactoryBot.create(:user, :system_admin),
+      all_texts: [], checks: [], columns: [], column_users: [],
+      zm: { zm_user: zm_user, non_zm_user: non_zm_user, marker_text: "thuộc khu vực" }
+    )
+  end
+
+  # --- electricity_supply (commander readonly) ------------------------------
+  # Accessible roles: sa/ua_zm/cmd_zm (ua/cmd redirected).
+  # Commander (CMD-ZM) sees all number inputs disabled; submit present but disabled.
+  # control_user = unit_admin of the zone-manager unit (UA-ZM).
+  def electricity_supply
+    sample = sample_world
+    commander_users = [FactoryBot.create(:user, :commander, unit: sample.unit_a),
+                       FactoryBot.create(:user, :division_commander)]
+    control_user    = FactoryBot.create(:user, :unit_admin,  unit: sample.unit_a)
+    Scenario.new(
+      path: Rails.application.routes.url_helpers.electricity_supply_path,
+      sa_user: FactoryBot.create(:user, :system_admin),
+      all_texts: [], checks: [], columns: [], column_users: [],
+      commander: {
+        commander_users: commander_users,
+        control_user:    control_user,
+        input_css:       "input[type='number']",
+        submit_css:      "form[method='post'] input[name='commit']",
+        submit_optional: false
+      }
+    )
+  end
+
+  # --- electricity_supply_data (data scoping) --------------------------------
+  # SA sees main meters from both zones; UA-ZM/CMD-ZM (zone-manager of zone one)
+  # see only zone one's main meter. plain UA/CMD are redirected — not included.
+  def electricity_supply_data
+    sample1 = sample_world
+    setup_zone_two_full_sample_proxy(period: sample1.period)
+    sa_user  = FactoryBot.create(:user, :system_admin)
+    ua_zm    = FactoryBot.create(:user, :unit_admin, unit: sample1.unit_a)
+    cmd_zm   = FactoryBot.create(:user, :commander,  unit: sample1.unit_a)
+    text_a = sample1.main_meter.name   # "CT-Tổng-KV1"
+    text_b = "CT-Tổng-KV2"             # zone two's main meter from setup
+    Scenario.new(
+      path: Rails.application.routes.url_helpers.electricity_supply_path,
+      sa_user: sa_user,
+      all_texts: [text_a, text_b],
+      checks: [
+        { user: ua_zm,  sees: text_a, hides: [text_b] },
+        { user: cmd_zm, sees: text_a, hides: [text_b] }
+      ],
+      columns: [], column_users: []
+    )
+  end
+
+  # --- pump_entries_data (data scoping) -------------------------------------
+  # Water-pump CPs are zone-level. Zone one has "Trạm bơm 1" (sample_world);
+  # zone two has "Trạm bơm 2" (setup_zone_two_full_sample).
+  # SA sees both; UA-ZM/CMD-ZM (zone-manager of zone one) see only zone one's.
+  # Plain UA/CMD have no water_pump CPs (no managed zone) → empty table → excluded.
+  def pump_entries_data
+    sample1 = sample_world
+    setup_zone_two_full_sample_proxy(period: sample1.period)
+    sa_user  = FactoryBot.create(:user, :system_admin)
+    ua_zm    = FactoryBot.create(:user, :unit_admin, unit: sample1.unit_a)
+    cmd_zm   = FactoryBot.create(:user, :commander,  unit: sample1.unit_a)
+    text_a = "Trạm bơm 1"
+    text_b = "Trạm bơm 2"
+    Scenario.new(
+      path: Rails.application.routes.url_helpers.pump_entries_path,
+      sa_user: sa_user,
+      all_texts: [text_a, text_b],
+      checks: [
+        { user: ua_zm,  sees: text_a, hides: [text_b] },
+        { user: cmd_zm, sees: text_a, hides: [text_b] }
+      ],
+      columns: ["Khu vực"],
+      column_users: [ua_zm, cmd_zm]
+    )
+  end
+
+  # --- pump_entries (commander readonly) ------------------------------------
+  # Mirrors meter_entries: data-entry page with number+text inputs in a table.
+  # control_user = UA-ZM (zone manager's unit_admin).
+  # commander_users = [CMD-ZM, CMD] — both accessible, both should have inputs
+  # disabled (CMD-ZM sees zone-one pumps; CMD sees zone-two pumps if built,
+  # but we only need one commander to prove the pattern). Use CMD-ZM only since
+  # CMD would see an empty table (no pumps) → would fail the "inputs not empty" check.
+  def pump_entries_commander
+    sample = sample_world
+    commander_users = [FactoryBot.create(:user, :commander, unit: sample.unit_a),
+                       FactoryBot.create(:user, :division_commander)]
+    control_user    = FactoryBot.create(:user, :unit_admin,  unit: sample.unit_a)
+    Scenario.new(
+      path: Rails.application.routes.url_helpers.pump_entries_path,
+      sa_user: FactoryBot.create(:user, :system_admin),
+      all_texts: [], checks: [], columns: [], column_users: [],
+      commander: {
+        commander_users: commander_users,
+        control_user:    control_user,
+        input_css:       "table input[type='number'], table input[type='text']",
+        submit_css:      "form[method='post'] input[name='commit']",
+        submit_optional: false
+      }
+    )
+  end
+
+  # --- pump_allocations_data (data scoping) ---------------------------------
+  # Zone-based scoping. Zone one's allocations have unit_a/unit_b/chi_huy_khu_vuc
+  # as targets; zone two has unit_c/unit_d/chi_huy_khu_vuc_2.
+  # The view renders `alloc.unit&.name || alloc.contact_point&.name`.
+  # We pick unit_a.name ("Đơn vị A") as zone-one identifier and
+  # unit_c.name ("Đơn vị C") as zone-two identifier.
+  # SA sees both; UA-ZM/CMD-ZM of zone-one see only zone-one allocations.
+  def pump_allocations_data
+    sample1 = sample_world
+    setup_zone_two_full_sample_proxy(period: sample1.period)
+    sa_user  = FactoryBot.create(:user, :system_admin)
+    ua_zm    = FactoryBot.create(:user, :unit_admin, unit: sample1.unit_a)
+    cmd_zm   = FactoryBot.create(:user, :commander,  unit: sample1.unit_a)
+    text_a = sample1.unit_a.name   # "Đơn vị A"
+    text_b = "Đơn vị C"            # zone two's manager unit
+    Scenario.new(
+      path: Rails.application.routes.url_helpers.pump_allocations_path,
+      sa_user: sa_user,
+      all_texts: [text_a, text_b],
+      checks: [
+        { user: ua_zm,  sees: text_a, hides: [text_b] },
+        { user: cmd_zm, sees: text_a, hides: [text_b] }
+      ],
+      columns: [], column_users: []
+    )
+  end
+
+  # Helper: call setup_zone_two_full_sample via the same proxy mechanism as sample_world.
+  def setup_zone_two_full_sample_proxy(period:)
+    proxy = Object.new
+    proxy.extend(FactoryBot::Syntax::Methods)
+    proxy.extend(SampleData)
+    proxy.setup_zone_two_full_sample(period: period)
+  end
+end

@@ -14,14 +14,42 @@ RSpec.describe OtherDeduction do
   end
 
   describe "enum :other_type" do
-    it "có giá trị fixed và coefficient" do
-      expect(OtherDeduction.other_types.keys).to match_array(%w[fixed coefficient])
+    it "có giá trị fixed, coefficient và unit_coefficient" do
+      expect(OtherDeduction.other_types.keys).to match_array(%w[fixed coefficient unit_coefficient])
     end
 
     it "tạo method prefix :other" do
       record = build(:other_deduction, other_type: "fixed")
       expect(record.other_fixed?).to be true
       expect(record.other_coefficient?).to be false
+      expect(record.other_unit_coefficient?).to be false
+    end
+  end
+
+  describe "unit_coefficient chỉ cho đầu mối thuộc đơn vị" do
+    it "valid khi đầu mối thuộc đơn vị" do
+      cp = create(:contact_point, :residential) # factory mặc định có unit
+      record = build(:other_deduction, contact_point: cp, other_type: "unit_coefficient", other_value: -2)
+      expect(record).to be_valid
+    end
+
+    it "CHIEU-khac-don-vi-zone-direct: invalid khi đầu mối thuộc khu vực trực tiếp (unit_id null)" do
+      cp = create(:contact_point, :zone_residential)
+      record = build(:other_deduction, contact_point: cp, other_type: "unit_coefficient", other_value: -2)
+      expect(record).not_to be_valid
+      expect(record.errors[:other_type]).to be_present
+    end
+
+    it "fixed/coefficient vẫn valid cho đầu mối khu vực trực tiếp" do
+      cp = create(:contact_point, :zone_residential)
+      record = build(:other_deduction, contact_point: cp, other_type: "coefficient", other_value: 2)
+      expect(record).to be_valid
+    end
+
+    it "persist được với other_type unit_coefficient (chặn lỗi enum DB)" do
+      cp = create(:contact_point, :residential)
+      record = create(:other_deduction, contact_point: cp, other_type: "unit_coefficient", other_value: -2)
+      expect(record.reload.other_type).to eq("unit_coefficient")
     end
   end
 
@@ -29,6 +57,14 @@ RSpec.describe OtherDeduction do
     it "valid với giá trị âm" do
       record = build(:other_deduction, other_value: -100)
       expect(record).to be_valid
+    end
+  end
+
+  describe "#calculation_state_targets" do
+    it "returns nil zone_id when contact_point is nil" do
+      deduction = OtherDeduction.new(period_id: 1)
+      targets = deduction.send(:calculation_state_targets)
+      expect(targets).to eq([[nil, 1]])
     end
   end
 

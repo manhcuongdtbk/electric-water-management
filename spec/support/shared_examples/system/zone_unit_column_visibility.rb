@@ -2,11 +2,12 @@
 # Dùng Capybara API — chỉ dùng trong type: :system.
 #
 # Verify:
-#   - system_admin thấy cột Khu vực và Đơn vị
+#   - system_admin và division_commander thấy cột Khu vực và Đơn vị
 #   - Non-SA không thấy cột Khu vực và Đơn vị
 #
 # Yêu cầu trong caller:
-#   path:   → URL trang index
+#   path:                → URL trang index
+#   dc_can_access (opt)  → false nếu DC không vào được trang (mặc định true)
 RSpec.shared_examples "zone-unit column visibility" do
   context "as system_admin" do
     before do
@@ -15,6 +16,20 @@ RSpec.shared_examples "zone-unit column visibility" do
     end
 
     it "hiển thị cột Khu vực và Đơn vị" do
+      visit path
+      expect(page).to have_css("thead", text: /khu vực/i)
+      expect(page).to have_css("thead", text: /đơn vị/i)
+    end
+  end
+
+  context "as division_commander" do
+    before do
+      user = create(:user, :division_commander)
+      sign_in user
+    end
+
+    it "hiển thị cột Khu vực và Đơn vị" do
+      skip "DC cannot access this page" if respond_to?(:dc_can_access) && !dc_can_access
       visit path
       expect(page).to have_css("thead", text: /khu vực/i)
       expect(page).to have_css("thead", text: /đơn vị/i)

@@ -14,6 +14,14 @@ RSpec.describe PersonnelEntry do
     it { is_expected.to validate_uniqueness_of(:contact_point_id).scoped_to(:period_id, :rank_id) }
   end
 
+  describe "#calculation_state_targets" do
+    it "returns nil zone_id when contact_point is nil" do
+      entry = PersonnelEntry.new(period_id: 1)
+      targets = entry.send(:calculation_state_targets)
+      expect(targets).to eq([[nil, 1]])
+    end
+  end
+
   describe "optimistic locking" do
     it "có cột lock_version" do
       expect(PersonnelEntry.column_names).to include("lock_version")

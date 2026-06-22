@@ -2,6 +2,7 @@ class ElectricitySupplyController < ApplicationController
   include PeriodGuard
   include AuthorizeResource
   include BusinessRoleRequired
+  include FreshnessIndicatable
 
   before_action :require_open_period, only: [:update]
 
@@ -9,6 +10,7 @@ class ElectricitySupplyController < ApplicationController
     @period = current_period
     @readings = load_readings
     authorize_or_redirect
+    assign_freshness_states(@period)
   end
 
   def update
@@ -55,7 +57,7 @@ class ElectricitySupplyController < ApplicationController
   private
 
   def authorize_or_redirect
-    return if accessible_main_meters.exists? || current_user.system_admin?
+    return if accessible_main_meters.exists? || current_user.system_wide_scope?
     redirect_to root_path, alert: I18n.t("errors.access_denied")
   end
 

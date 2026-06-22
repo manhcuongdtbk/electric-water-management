@@ -187,6 +187,50 @@ RSpec.describe "Pricing", type: :request do
     end
   end
 
+  describe "PATCH /pricing — update" do
+    let!(:period) { create(:period, year: 2026, month: 5, closed: false, unit_price: 2336.4) }
+
+    it "no open period redirects with alert" do
+      period.update!(closed: true)
+      patch pricing_path, params: { period: { unit_price: "2500" } }
+      expect(response).to redirect_to(pricing_path)
+      expect(flash[:alert]).to be_present
+    end
+
+    it "update validation failure renders :show" do
+      patch pricing_path, params: { period: { unit_price: "" } }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+  end
+
+  describe "POST /pricing/open_period — warnings" do
+    it "open_period with warnings (existing period, auto next month)" do
+      create(:period, year: 2026, month: 5, closed: true)
+      post open_period_pricing_path, params: { unit_price: "2500" }
+      expect(response).to redirect_to(pricing_path)
+    end
+  end
+
+  describe "POST /pricing/close_period — with warnings" do
+    let!(:period) { create(:period, year: 2026, month: 5, closed: false) }
+
+    it "close period and redirect with notice" do
+      post close_period_pricing_path, params: { period_id: period.id }
+      expect(response).to redirect_to(pricing_path)
+      expect(period.reload).not_to be_open
+    end
+  end
+
+  describe "compute_next_year_month with month=12" do
+    it "wraps to January of next year" do
+      create(:period, year: 2025, month: 12, closed: true)
+      get pricing_path
+      expect(response).to have_http_status(:ok)
+      # The form should suggest year=2026, month=1
+      expect(response.body).to include("2026")
+    end
+  end
+
   describe "POST /pricing/close_period + reopen_period" do
     let!(:period) { create(:period, year: 2026, month: 5, closed: false) }
 

@@ -1,5 +1,15 @@
 {
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.prompt // empty' | grep -qF '/code-review' && echo '{\"hookSpecificOutput\":{\"hookEventName\":\"UserPromptSubmit\",\"additionalContext\":\"AGENTS-compliance review dimension (this repo, see CONTRIBUTING section 8). Beyond diff correctness, also check: (1) No abbreviations - every new abbreviation in code, i18n, UI or commit must already be listed in docs/THUAT_NGU.md; this is semantic and not greppable. (2) BigDecimal placement - money and electricity values stay BigDecimal through the whole calculation; .to_f and Float() belong only at the display or Excel boundary; rounding uses ROUND_HALF_UP and only when displaying, never mid-calculation. The Decimal RuboCop cops catch the obvious cases in app/models and app/services; you check the indirect ones. (3) Seven-role test coverage - confirm SA, DC, UA-ZM, UA, CMD-ZM, CMD and TECH are each covered or explicitly deferred. (4) i18n - user-facing strings go through t(...) and config/locales/vi.yml. The i18n-view-guardrail CI job (ADR-032) machine-enforces this for app/views/**/*.erb (new Vietnamese-diacritic literals outside t()); your manual check now covers only what it cannot: user-facing strings without Vietnamese diacritics, and strings outside views (helpers, mailers, Excel exports).\"}}' || true"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Bash",
@@ -7,6 +17,15 @@
           {
             "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/check-branch-behind-base.sh\" 2>/dev/null"
+          }
+        ]
+      },
+      {
+        "matcher": "SendUserFile",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/block-senduserfile-video.sh\""
           }
         ]
       }

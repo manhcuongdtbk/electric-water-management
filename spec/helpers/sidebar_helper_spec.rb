@@ -59,5 +59,17 @@ RSpec.describe SidebarHelper, type: :helper do
       expect(items).to include(:electricity_supply, :meter_entries, :pump_entries, :pump_allocations, :unit_config)
       expect(items).not_to include(:zones)
     end
+
+    it "returns empty array when current_user is nil" do
+      allow(helper).to receive(:current_user).and_return(nil)
+      expect(helper.allowed_sidebar_items).to eq([])
+    end
+
+    it "returns empty array for unknown role" do
+      unknown_user = instance_double("User", role: "unknown_role", unit_id: nil)
+      allow(helper).to receive(:current_user).and_return(unknown_user)
+      helper.define_singleton_method(:current_zone_manager?) { false }
+      expect(helper.allowed_sidebar_items).to eq([])
+    end
   end
 end

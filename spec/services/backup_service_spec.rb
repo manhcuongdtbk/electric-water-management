@@ -15,6 +15,42 @@ RSpec.describe BackupService do
     end
   end
 
+  describe "#pg_dump_command — nil guards on db config values (lines 84-86)" do
+    it "omits --host, --port, --username when db config values are nil" do
+      service = described_class.new(user: user)
+      allow(service).to receive(:db_config).and_return({
+        dbname: "test_db",
+        host: nil,
+        port: nil,
+        user: nil,
+        password: nil
+      })
+
+      cmd = service.send(:pg_dump_command, Pathname.new("/tmp/test.dump"))
+      expect(cmd).to include("pg_dump")
+      expect(cmd).to include("--dbname=test_db")
+      expect(cmd.none? { |arg| arg.start_with?("--host=") }).to be true
+      expect(cmd.none? { |arg| arg.start_with?("--port=") }).to be true
+      expect(cmd.none? { |arg| arg.start_with?("--username=") }).to be true
+    end
+
+    it "includes --host, --port, --username when db config values are present" do
+      service = described_class.new(user: user)
+      allow(service).to receive(:db_config).and_return({
+        dbname: "test_db",
+        host: "localhost",
+        port: 5432,
+        user: "postgres",
+        password: "secret"
+      })
+
+      cmd = service.send(:pg_dump_command, Pathname.new("/tmp/test.dump"))
+      expect(cmd).to include("--host=localhost")
+      expect(cmd).to include("--port=5432")
+      expect(cmd).to include("--username=postgres")
+    end
+  end
+
   describe ".create" do
     it "T97: raise CapacityError khi đã có 3 backups completed" do
       3.times { |i| create(:backup, filename: "backup_2026051#{i}_120000.dump", status: "completed") }

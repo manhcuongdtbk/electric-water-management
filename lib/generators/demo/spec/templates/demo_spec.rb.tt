@@ -1,0 +1,69 @@
+require "rails_helper"
+
+# Demo spec for <%= file_name.humanize %> — a narrated, recorded walkthrough for the
+# owner (pre-merge) and the customer (pre-release). Runs in CI like any spec
+# (green-to-merge → anti-drift). See ADR-036..041 (#343) + ADR-050/051 (#352).
+#
+# GOLDEN EXAMPLE: spec/demo/cot_khac_he_so_don_vi_demo_spec.rb (TN1). Copy its
+# shape — it shows the customer's pain removed, cause→effect on screen, and who
+# may change what. Read it before filling this in.
+#
+# TODO(demo-author): replace the placeholder journey below with the real
+# customer-facing flow. Write each caption in Vietnamese from the acceptance
+# criteria (NV-...) and the real UI. A human reviews the produced video before
+# it reaches the customer — do NOT auto-fill captions blindly (ADR-037/050).
+#
+# Aim for a GOOD demo, not just a passing one (the six-point "demo tốt"
+# checklist — CONTRIBUTING §9, ADR-059):
+#   1. Show, don't tell — whatever a caption claims must be VISIBLE; surface it
+#      with demo.highlight(selector) (see the highlight step below).
+#   2. Tell the customer's real story — match their example/world, not just
+#      correct numbers (use demo.narrate for the why/the pain removed).
+#   3. Demo the RESULT and the pain it removes, not the mechanics.
+#   4. Be honest about the medium — do NOT act out what a browser recording
+#      cannot render (e.g. an .xlsx export); leave that to the real tests/files.
+#   5. Enough of the journey the customer cares about — not every corner/test
+#      dimension.
+#   6. Stable — no "green by luck" (use confirm:/unpoint-rescue; don't race
+#      navigation).
+RSpec.describe "Demo: <%= file_name.humanize %>", type: :demo do
+  include_context "demo seeded world"
+
+  # TODO(demo-author): replace NV-TODO with the business requirement anchor(s)
+  # this demo covers. Anchors are defined in docs/V2_XAC_NHAN_NGHIEP_VU.md
+  # (e.g. NV-phan-bo-bom-nuoc). Lets the demo trace forward to its requirement.
+  it "walks through <%= file_name.humanize.downcase %>", demo_nv: %w[NV-TODO] do
+    demo = DemoRecorder.new(self)
+
+    # Sign in as the seeded demo admin (db/seeds/demo.rb) — programmatic, no login
+    # page. Demos must NOT render /users/sign_in (it is slow and tells the customer
+    # nothing); sign_in_as authenticates server-side via Warden and shows a single
+    # caption naming the role. Adjust the user/role for this feature, or reuse
+    # sign_in_as to switch roles later (e.g. admin → commander) instead of a
+    # visible logout+login.
+    demo.sign_in_as(User.find_by!(username: "demo_admin"), role_label: "Quản trị viên")
+    expect(page).to have_current_path("/", wait: 10)
+
+    # TODO(demo-author): set the scene in the customer's own terms before acting
+    # (checklist #2). Replace with the real pain this feature removes.
+    demo.narrate("TODO: kể chuyện khách — cái đau trước đây, vì sao tính năng này gỡ nó")
+
+    # TODO(demo-author): drive the real journey for this feature. Each step needs
+    # a Vietnamese caption derived from NV-... and the real UI. Examples:
+    #   demo.visit("/...", caption: "TODO: caption tiếng Việt")
+    #   demo.fill("Nhãn trường", with: "...", caption: "TODO: caption")
+    #   demo.click("Nút", caption: "TODO: caption", confirm: true) # confirm: for turbo-confirm dialogs
+
+    # TODO(demo-author): SHOW the result, don't just say it (checklist #1+#3).
+    # Add a data-*-cp-id hook on the view and highlight the exact cell so the
+    # outcome the caption claims is visibly on screen:
+    #   demo.highlight("[data-...-cp-id='...']", caption: "TODO: kết quả thấy được")
+
+    # NOTE (checklist #4): do NOT act out what the browser cannot render — e.g.
+    # an Excel/.xlsx export. A recording cannot draw a spreadsheet, so pointing
+    # at "Xuất Excel" is theatre. Cover the export in request specs, not here.
+
+    # End on a real assertion against seeded data so the spec is green-to-merge:
+    #   expect(page).to have_content("TODO: dữ liệu seed thật")
+  end
+end

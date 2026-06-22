@@ -74,11 +74,33 @@ RSpec.describe "Groups", type: :request do
     # Tìm kiếm, non-admin dropdown visibility: cover bởi system spec.
   end
 
+  describe "GET /groups/:id (show)" do
+    let!(:group) { create(:group, unit: unit, name: "Show test") }
+
+    it "renders show page" do
+      get group_path(group)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Show test")
+    end
+  end
+
   describe "POST /groups" do
     it "tạo nhóm" do
       post groups_path, params: { group: { name: "Nhóm A", unit_id: unit.id } }
       expect(response).to redirect_to(groups_path)
       expect(Group.find_by(name: "Nhóm A")).to be_present
+    end
+
+    it "create validation failure renders :new" do
+      create(:group, unit: unit, name: "Duplicate")
+      post groups_path, params: { group: { name: "Duplicate", unit_id: unit.id } }
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "SA (no unit_id) assigns unit_id from params" do
+      post groups_path, params: { group: { name: "SA Group", unit_id: unit.id } }
+      expect(response).to redirect_to(groups_path)
+      expect(Group.find_by(name: "SA Group").unit_id).to eq(unit.id)
     end
   end
 
@@ -95,6 +117,17 @@ RSpec.describe "Groups", type: :request do
       create(:group, unit: unit, name: "Nhóm trùng")
       patch group_path(group), params: { group: { name: "Nhóm trùng" } }
       expect(response).to have_http_status(:unprocessable_content)
+    end
+  end
+
+  describe "DELETE /groups/:id — discard failure" do
+    it "redirects with alert when discard fails" do
+      group = create(:group, unit: unit, name: "Fail group")
+      allow_any_instance_of(Group).to receive(:discard).and_return(false)
+      allow_any_instance_of(Group).to receive_message_chain(:errors, :full_messages).and_return(["Cannot discard"])
+      delete group_path(group)
+      expect(response).to redirect_to(groups_path)
+      expect(flash[:alert]).to include("Cannot discard")
     end
   end
 

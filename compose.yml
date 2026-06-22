@@ -1,4 +1,4 @@
-# Docker Compose cho Hệ thống quản lý điện nội bộ Sư đoàn.
+# Docker Compose cho Hệ thống quản lý điện nước nội bộ.
 # 3 services: postgres + app + nginx. Tất cả trong network nội bộ.
 # Deployment LAN (HTTP only), không cần SSL trong container.
 

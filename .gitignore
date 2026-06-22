@@ -48,3 +48,6 @@
 .DS_Store
 /chromedriver/
 node_modules/
+/tmp/demo_videos/
+# SimpleCov code-coverage reports (Issue #360)
+/coverage/

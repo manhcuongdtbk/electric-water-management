@@ -1,9 +1,15 @@
 # This file is copied to spec/ when you run 'rails generate rspec:install'
 require 'spec_helper'
-ENV['RAILS_ENV'] ||= 'test'
+# Force the test environment. The app container defaults to RAILS_ENV=development
+# (compose.dev.yml), and the generated `||=` would NOT override it — so running
+# `bundle exec rspec` via `bin/docker exec app` / `bin/docker bash` (instead of
+# `bin/docker rspec`, which sets RAILS_ENV=test) would silently run against the
+# DEVELOPMENT database. That masks failures and pollutes results, and was what
+# made #362 look like seed-dependent flakiness. RSpec must always run in test.
+ENV['RAILS_ENV'] = 'test'
 require_relative '../config/environment'
-# Prevent database truncation if the environment is production
-abort("The Rails environment is running in production mode!") if Rails.env.production?
+# Safety net: never let a non-test environment (and its database) be used.
+abort("RSpec must run with RAILS_ENV=test (got #{Rails.env})") unless Rails.env.test?
 # Uncomment the line below in case you have `--require rails_helper` in the `.rspec` file
 # that will avoid rails generators crashing because migrations haven't been run yet
 # return unless Rails.env.test?
@@ -72,6 +78,22 @@ RSpec.configure do |config|
   config.include DecimalHelpers
   config.include SampleData
   config.include ActiveSupport::Testing::TimeHelpers
+
+  # Start every run from a clean database. Transactional fixtures roll back each
+  # example's own data, but cannot undo rows COMMITTED outside that transaction
+  # (e.g. an interrupted demo run, which is non-transactional, leaving an open
+  # Period). A single stray open Period trips the global partial-unique index
+  # idx_periods_only_one_open and makes unrelated specs fail order-dependently.
+  # Purging once up front makes the suite resilient to such leftovers. See #362.
+  config.before(:suite) { DatabaseCleanup.purge! }
+
+  # spec/demo/** are demo recordings, not part of the normal suite. Auto-tag them
+  # type: :demo and exclude them from `bundle exec rspec` unless DEMO=1 (the CI
+  # `demo` job sets DEMO=1 and targets spec/demo explicitly). See ADR-037/038.
+  config.define_derived_metadata(file_path: %r{/spec/demo/}) do |metadata|
+    metadata[:type] = :demo
+  end
+  config.filter_run_excluding(type: :demo) unless ENV["DEMO"] == "1"
 end
 
 Shoulda::Matchers.configure do |config|

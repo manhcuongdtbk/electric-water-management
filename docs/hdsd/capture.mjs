@@ -8,7 +8,7 @@ import puppeteer from 'puppeteer';
 import path from 'path';
 import { mkdir } from 'fs/promises';
 
-const BASE = 'http://localhost';
+const BASE = process.env.BASE || 'http://localhost';
 const OUTPUT = 'docs/hdsd/images';
 const PW = 'Abc@1234';
 
@@ -19,12 +19,13 @@ await mkdir(OUTPUT, { recursive: true });
 // ============================================================
 
 const ROLES = {
-  sa:      { username: 'quanTri',      label: 'Quản trị viên hệ thống' },
-  ua_zm:   { username: 'quanTriTD95',  label: 'Quản trị viên đơn vị quản lý khu vực' },
-  ua:      { username: 'quanTriTD14',  label: 'Quản trị viên đơn vị' },
-  cmd_zm:  { username: 'chiHuyTD95',   label: 'Chỉ huy đơn vị quản lý khu vực' },
-  cmd:     { username: 'chiHuyTD14',   label: 'Chỉ huy đơn vị' },
-  tech:    { username: 'kyThuat',      label: 'Kỹ thuật viên' },
+  sa:      { username: 'quanTri',       label: 'Quản trị viên hệ thống' },
+  dc:      { username: 'chiHuySuDoan',  label: 'Chỉ huy Sư đoàn' },
+  ua_zm:   { username: 'quanTriTD95',   label: 'Quản trị viên đơn vị quản lý khu vực' },
+  ua:      { username: 'quanTriTD14',   label: 'Quản trị viên đơn vị' },
+  cmd_zm:  { username: 'chiHuyTD95',    label: 'Chỉ huy đơn vị quản lý khu vực' },
+  cmd:     { username: 'chiHuyTD14',    label: 'Chỉ huy đơn vị' },
+  tech:    { username: 'kyThuat',       label: 'Kỹ thuật viên' },
 };
 
 // Mỗi entry: { file, role, url, desc, pre?, viewport? }

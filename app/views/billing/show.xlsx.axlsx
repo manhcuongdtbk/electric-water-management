@@ -49,12 +49,29 @@ wb = xlsx_package.workbook
   total_columns          = col_deficit_amount + 1
 
   letter = ->(idx) { Axlsx.col_ref(idx) }
-  unit_price_cell = "$B$1"
+
+  # When stamping a stale-warning banner at the very top (2 rows: warning + blank
+  # spacer), every absolute row reference below must shift down by that offset.
+  # stamp_offset = 0 on the fresh path keeps formulas byte-for-formula identical.
+  stamp_offset = @export_stale ? 2 : 0
+
+  unit_price_cell = "$B$#{1 + stamp_offset}"
+  header_row_top    = 3 + stamp_offset
+  header_row_middle = 4 + stamp_offset
+  header_row_bottom = 5 + stamp_offset
 
   wb.add_worksheet(name: "Bảng tính tiền #{@period.month}-#{@period.year}") do |sheet|
     # Cho phép công thức Excel (caxlsx mặc định escape "=" để chống CSV injection).
     # An toàn vì mọi dữ liệu trong sheet đều từ server, không có input user.
     sheet.escape_formulas = false
+
+    # Layer 3 stamp: when the file is generated from stale derived data (acknowledged
+    # via the server guard), stamp a Vietnamese warning at the very top so the reader
+    # cannot miss that the numbers may be out of date.
+    if @export_stale
+      sheet.add_row [t("billing.export.stale_stamp")], types: [:string]
+      sheet.add_row []
+    end
 
     sheet.add_row ["Đơn giá:", @period.unit_price.to_f] + Array.new(total_columns - 2),
                   style: [text_style, money_style]
@@ -109,12 +126,12 @@ wb = xlsx_package.workbook
     sheet.add_row row5, style: header_style, height: 30
 
     # Merge cells for nhóm lớn (row 3)
-    sheet.merge_cells("#{letter.call(0)}3:#{letter.call(fixed_text_cols + rank_count)}3")
-    sheet.merge_cells("#{letter.call(col_residential_std)}3:#{letter.call(col_total_std)}3")
-    sheet.merge_cells("#{letter.call(col_savings)}3:#{letter.call(col_total_deduction)}3")
-    sheet.merge_cells("#{letter.call(col_remaining_std)}3:#{letter.call(col_remaining_std)}5")
-    sheet.merge_cells("#{letter.call(col_residential_usage)}3:#{letter.call(col_total_usage)}3")
-    sheet.merge_cells("#{letter.call(col_surplus_kw)}3:#{letter.call(col_deficit_amount)}3")
+    sheet.merge_cells("#{letter.call(0)}#{header_row_top}:#{letter.call(fixed_text_cols + rank_count)}#{header_row_top}")
+    sheet.merge_cells("#{letter.call(col_residential_std)}#{header_row_top}:#{letter.call(col_total_std)}#{header_row_top}")
+    sheet.merge_cells("#{letter.call(col_savings)}#{header_row_top}:#{letter.call(col_total_deduction)}#{header_row_top}")
+    sheet.merge_cells("#{letter.call(col_remaining_std)}#{header_row_top}:#{letter.call(col_remaining_std)}#{header_row_bottom}")
+    sheet.merge_cells("#{letter.call(col_residential_usage)}#{header_row_top}:#{letter.call(col_total_usage)}#{header_row_top}")
+    sheet.merge_cells("#{letter.call(col_surplus_kw)}#{header_row_top}:#{letter.call(col_deficit_amount)}#{header_row_top}")
 
     # Merge cells for row 4 rowspan=2 columns into row 5
     rowspan_columns = []
@@ -127,15 +144,15 @@ wb = xlsx_package.workbook
                         col_residential_usage, col_water_pump_usage, col_total_usage,
                         col_surplus_kw, col_deficit_kw, col_surplus_amount, col_deficit_amount]
     rowspan_columns.each do |c|
-      sheet.merge_cells("#{letter.call(c)}4:#{letter.call(c)}5")
+      sheet.merge_cells("#{letter.call(c)}#{header_row_middle}:#{letter.call(c)}#{header_row_bottom}")
     end
 
     # Merge "Quân số theo nhóm cấp bậc" colspan in row 4
     if rank_count > 1
-      sheet.merge_cells("#{letter.call(col_rank_first)}4:#{letter.call(col_rank_last)}4")
+      sheet.merge_cells("#{letter.call(col_rank_first)}#{header_row_middle}:#{letter.call(col_rank_last)}#{header_row_middle}")
     end
 
-    data_start_row = 6
+    data_start_row = 6 + stamp_offset
 
     rowspans = Billing::RowspanComputer.compute(@calculations,
                                                 show_zone: @show_zone_column,
@@ -241,6 +258,40 @@ wb = xlsx_package.workbook
 
       total_styles = Array.new(total_columns, total_style)
       sheet.add_row total_row, style: total_styles
+    end
+
+    # Tóm tắt tổn hao A/B/C per khu vực — đặt CUỐI sheet để không dịch lưới công thức
+    # phía trên (đơn giá tại unit_price_cell, data_start_row). Một dòng / khu vực, không merge/không formula.
+    if @loss_summaries.any?
+      sheet.add_row []
+      @loss_summaries.each do |summary|
+        sheet.add_row ["Tổn hao khu vực #{summary.zone&.name} — Công tơ tổng (A):", summary.a.to_f,
+                       "Tổng sử dụng (B):", summary.b.to_f,
+                       "Tổng tổn hao (C = A − B):", summary.c.to_f],
+                      style: [text_style, num_style, text_style, num_style, text_style, num_style]
+        breakdown = @loss_breakdowns[summary.zone_id]
+        if breakdown
+          sheet.add_row [I18n.t("billing.loss_breakdown.title")], style: [text_style]
+          sheet.add_row [
+            I18n.t("billing.loss_breakdown.columns.type"),
+            I18n.t("billing.loss_breakdown.columns.usage"),
+            I18n.t("billing.loss_breakdown.columns.loss"),
+            I18n.t("billing.loss_breakdown.columns.actual")
+          ], style: [text_style, text_style, text_style, text_style]
+          breakdown.rows.each do |row|
+            sheet.add_row [
+              I18n.t("activerecord.attributes.contact_point.types.#{row.type}", default: row.type),
+              row.usage.to_f, row.loss.to_f, row.actual.to_f
+            ], style: [text_style, num_style, num_style, num_style]
+          end
+          [[I18n.t("billing.loss_breakdown.rows.loss_bearing_total"), breakdown.loss_bearing_total],
+           [I18n.t("billing.loss_breakdown.rows.no_loss"), breakdown.no_loss_total],
+           [I18n.t("billing.loss_breakdown.rows.grand_total"), breakdown.grand_total]].each do |label, r|
+            sheet.add_row [label, r.usage.to_f, r.loss.to_f, r.actual.to_f],
+                          style: [text_style, num_style, num_style, num_style]
+          end
+        end
+      end
     end
 
     # Đóng dấu phiên bản để truy vết file xuất về đúng bản phát hành.

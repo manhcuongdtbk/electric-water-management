@@ -39,7 +39,7 @@ module ZoneUnitFilterable
   # Dùng cho scope có cột unit_id (groups, blocks, users).
   # Contact_points override vì zone filter phức tạp hơn.
   def apply_sa_zone_unit_filter(scope, zone_column: "units.zone_id", unit_id_column: :unit_id)
-    return scope unless current_user.system_admin?
+    return scope unless current_user.system_wide_scope?
 
     @zone, @unit = resolve_zone_unit_filter
     all_unit_ids = scope.unscope(:order).where.not(unit_id_column => nil).distinct.pluck(unit_id_column)
@@ -56,7 +56,7 @@ module ZoneUnitFilterable
   #
   # Dùng cho scope có cột zone_id trực tiếp (units, pump_allocations).
   def apply_sa_zone_filter(scope, zone_id_column: :zone_id)
-    return scope unless current_user.system_admin?
+    return scope unless current_user.system_wide_scope?
 
     zs = zone_filter_scope
     @zone = params[:zone_id].present? ? zs.find_by(id: params[:zone_id]) : nil
@@ -77,7 +77,7 @@ module ZoneUnitFilterable
   #
   # Scope phải có sẵn join tới units và zones (LEFT JOIN) để SQL hoạt động.
   def apply_sa_zone_unit_filter_with_direct_zone(scope, zone_scope: zone_filter_scope, unit_scope: unit_filter_scope)
-    return scope unless current_user.system_admin?
+    return scope unless current_user.system_wide_scope?
 
     @zone, @unit = resolve_zone_unit_filter(zone_scope: zone_scope, unit_scope: unit_scope)
 
@@ -123,7 +123,7 @@ module ZoneUnitFilterable
   # zone_id_sql: SQL expression cho zone_id (mặc định "zone_id")
   # unit_id_sql: SQL expression cho unit_id (mặc định "unit_id")
   def set_sa_available_filters_from(data_scope, zone_id_sql: "zone_id", unit_id_sql: "unit_id")
-    return unless current_user.system_admin?
+    return unless current_user.system_wide_scope?
 
     zone_ids = data_scope.unscope(:order).pluck(Arel.sql(zone_id_sql)).compact.uniq
     @available_zones = available_zones_for_filter(zone_ids: zone_ids)
@@ -133,17 +133,21 @@ module ZoneUnitFilterable
   end
 
   # Danh sách khu vực cho dropdown filter.
+  # zone_ids suy từ dữ liệu (vd dòng billing): kỳ CHƯA tính → rỗng. Khu vực đang
+  # chọn phải LUÔN nằm trong danh sách, nếu không dropdown rớt về "Tất cả" dù URL
+  # có zone_id (bug filter billing kỳ rỗng). Nhét @zone&.id vào trước khi where.
   def available_zones_for_filter(zone_scope: zone_filter_scope, zone_ids: nil)
     scope = zone_scope.order(:name)
-    scope = scope.where(id: zone_ids) if zone_ids
+    scope = scope.where(id: (zone_ids + [@zone&.id]).compact.uniq) if zone_ids
     scope
   end
 
-  # Danh sách đơn vị cho dropdown filter.
+  # Danh sách đơn vị cho dropdown filter. Tương tự khu vực: đơn vị đang chọn phải
+  # luôn có trong danh sách kể cả khi unit_ids (suy từ dữ liệu) rỗng.
   def available_units_for_filter(zone, unit_scope: unit_filter_scope, unit_ids: nil)
     scope = unit_scope.order(:name)
     scope = scope.where(zone_id: zone.id) if zone
-    scope = scope.where(id: unit_ids) if unit_ids
+    scope = scope.where(id: (unit_ids + [@unit&.id]).compact.uniq) if unit_ids
     scope
   end
 end

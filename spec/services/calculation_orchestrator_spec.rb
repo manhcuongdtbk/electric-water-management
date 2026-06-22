@@ -112,4 +112,55 @@ RSpec.describe CalculationOrchestrator do
         .to include(I18n.t("services.pump_allocation_calculator.warnings.no_pump_meter"))
     end
   end
+
+  describe "calculation state — ghi last_calculated_at" do
+    it "records last_calculated_at for the zone-period after running" do
+      described_class.new(zone: sample.zone, period: sample.period).call
+      state = CalculationState.find_by(zone_id: sample.zone.id, period_id: sample.period.id)
+      expect(state.last_calculated_at).to be_present
+      expect(state.never_calculated?).to be(false)
+    end
+  end
+
+  # CHIEU-phan-bo-tram-config-completeness (#401): khi một trạm chưa phân bổ hết điện,
+  # PumpAllocationCalculator raise → transaction rollback → KHÔNG persist gì.
+  describe "#call — cấu hình trạm chưa đủ → chặn, không persist (#401)" do
+    it "raise IncompleteStationConfig và không ghi Calculation/PumpStationCharge nào" do
+      zone = create(:zone, name: "KV chặn #401")
+      period = PeriodService.new.open_new_period(year: 2032, month: 1, unit_price: BigDecimal("2000")).period
+      station = create(:contact_point, :water_pump, name: "Trạm chặn", zone: zone)
+      meter = create(:meter, name: "CT-chặn", contact_point: station, no_loss: true)
+      meter.meter_readings.find_by!(period: period).update!(reading_start: 0, reading_end: 100)
+      unit = create(:unit, name: "ĐV chặn", zone: zone)
+      create(:pump_allocation, zone: zone, period: period, pump_contact_point: station,
+             unit: unit, contact_point: nil, block: nil, group: nil,
+             fixed_percentage: BigDecimal("40"), coefficient: BigDecimal("1"))
+
+      expect {
+        described_class.new(zone: zone, period: period).call
+      }.to raise_error(PumpAllocationCalculator::IncompleteStationConfig)
+
+      expect(Calculation.where(period: period)).to be_empty
+      expect(PumpStationCharge.where(period: period)).to be_empty
+    end
+  end
+
+  describe "loss snapshot persistence" do
+    let(:sample) { setup_zone_one_full_sample }
+
+    it "ghi meter_readings.loss và LossSummary trong cùng transaction" do
+      expect(LossSummary.where(period: sample.period)).to be_empty
+      described_class.new(zone: sample.zone, period: sample.period).call
+
+      reading = MeterReading.find_by(meter: sample.meters[:ct_a1], period: sample.period)
+      expect(reading.reload.loss).to be_present
+      expect(LossSummary.find_by(zone: sample.zone, period: sample.period)).to be_present
+    end
+
+    it "kế thừa kỳ: kỳ mới chưa tính → reading.loss nil, không có LossSummary" do
+      reading = MeterReading.find_by(meter: sample.meters[:ct_a1], period: sample.period)
+      expect(reading.loss).to be_nil
+      expect(LossSummary.where(period: sample.period)).to be_empty
+    end
+  end
 end

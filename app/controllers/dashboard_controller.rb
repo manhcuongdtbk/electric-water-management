@@ -1,5 +1,6 @@
 class DashboardController < ApplicationController
   include BusinessRoleRequired
+  include FreshnessIndicatable
 
   def show
     @period = current_period
@@ -11,5 +12,6 @@ class DashboardController < ApplicationController
     @summary = DashboardSummary.new(user: current_user,
                                     ability: current_ability,
                                     period: @period).call
+    assign_freshness_states(@period)
   end
 end

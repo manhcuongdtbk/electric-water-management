@@ -94,6 +94,30 @@ RSpec.describe DashboardSummary do
     end
   end
 
+  describe "role not system_admin/unit_admin/commander (line 15)" do
+    let(:user) { create(:user, role: :technician) }
+    let(:ability) { Ability.new(user) }
+
+    it "returns minimal summary with role and empty warnings" do
+      summary = described_class.new(user: user, ability: ability, period: sample.period).call
+      expect(summary.role).to eq(:technician)
+      expect(summary.warnings).to be_empty
+    end
+  end
+
+  describe "unit_admin with no unit (line 68)" do
+    it "returns summary with unit nil and empty warnings" do
+      # Bypass validation to create a unit_admin without a unit (defensive guard)
+      user = build(:user, role: :unit_admin, unit: nil)
+      user.save!(validate: false)
+      ability = Ability.new(user)
+      summary = described_class.new(user: user, ability: ability, period: sample.period).call
+      expect(summary.role).to eq(:unit_admin)
+      expect(summary.unit).to be_nil
+      expect(summary.warnings).to be_empty
+    end
+  end
+
   describe "T82 — warning tổn hao âm" do
     let(:user) { create(:user, :system_admin) }
     let(:ability) { Ability.new(user) }

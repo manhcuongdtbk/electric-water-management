@@ -21,6 +21,7 @@ RSpec.describe "Users", type: :system do
   let(:sort_column) { "username" }
   let(:deletable_name) { ua2.username }
   let(:filter_select_ids) { %w[zone_id unit_id] }
+  let(:dc_can_access) { false }
   def path_with_params(**params) = users_path(**params)
   def create_extra_data = 12.times { |i| create(:user, :unit_admin, username: "user_extra_#{i}", unit: unit1) }
 

@@ -32,6 +32,36 @@ RSpec.describe MeterReading do
     end
   end
 
+  describe "#actual_usage" do
+    it "trả nil khi chưa có loss (chưa tính)" do
+      mr = MeterReading.new(reading_start: 100, reading_end: 150, loss: nil)
+      expect(mr.actual_usage).to be_nil
+    end
+
+    it "= usage + loss khi đã có loss" do
+      mr = MeterReading.new(reading_start: 100, reading_end: 150, loss: BigDecimal("7.5"))
+      expect(mr.actual_usage).to eq(BigDecimal("57.5"))
+    end
+
+    it "trả nil khi loss có nhưng usage nil (reading_end trống)" do
+      mr = MeterReading.new(reading_start: 100, reading_end: nil, loss: BigDecimal("7.5"))
+      expect(mr.actual_usage).to be_nil
+    end
+
+    it "loss = 0 → actual_usage = usage (công tơ no_loss)" do
+      mr = MeterReading.new(reading_start: 100, reading_end: 150, loss: BigDecimal("0"))
+      expect(mr.actual_usage).to eq(BigDecimal("50"))
+    end
+  end
+
+  describe "#calculation_state_targets" do
+    it "returns nil zone_id when meter, contact_point, or zone is nil" do
+      reading = MeterReading.new(period_id: 1)
+      targets = reading.send(:calculation_state_targets)
+      expect(targets).to eq([[nil, 1]])
+    end
+  end
+
   describe "optimistic locking" do
     it "có cột lock_version" do
       expect(MeterReading.column_names).to include("lock_version")

@@ -9,6 +9,7 @@ module MeterReadingEntry
     include AuthorizeResource
     include BusinessRoleRequired
     include ZoneUnitFilterable
+    include FreshnessIndicatable
 
     before_action :require_open_period, only: [:update]
   end
@@ -16,7 +17,8 @@ module MeterReadingEntry
   def show
     @period = current_period
     @readings = load_readings
-    @show_zone_unit = current_user.system_admin?
+    @show_zone_unit = current_user.system_wide_scope?
+    assign_freshness_states(@period)
   end
 
   def update
