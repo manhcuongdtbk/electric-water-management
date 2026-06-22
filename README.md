@@ -117,7 +117,7 @@ bin/docker prspec:setup                 # Tạo databases cho test song song (ch
 | `docs/hdsd/V2_HUONG_DAN_SU_DUNG.md` | Hướng dẫn sử dụng (cho tất cả người dùng, có ảnh chụp màn hình) |
 | `docs/V2_XAC_NHAN_NGHIEP_VU.md` | Nghiệp vụ (nguồn sự thật duy nhất) |
 | `docs/V2_THIET_KE_HE_THONG.md` | Thiết kế hệ thống |
-| `docs/V2_HANH_VI_HE_THONG.md` | Hành vi runtime, 6 vai trò, 3 trạng thái kỳ |
+| `docs/V2_HANH_VI_HE_THONG.md` | Hành vi runtime, 7 vai trò, 3 trạng thái kỳ |
 | `docs/V2_CHIEU_TEST.md` | 12 chiều kiểm thử |
 | `docs/KIEN_THUC_DOCKER.md` | Kiến thức Docker, các môi trường, deploy |
 | `docs/HUONG_DAN_DEPLOY.md` | Hướng dẫn deploy production (cho kỹ thuật viên) |

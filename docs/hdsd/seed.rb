@@ -8,6 +8,7 @@ puts "=== Bước 1: Mở kỳ đầu tiên (tháng 4/2026) ==="
 service = PeriodService.new
 result = service.open_new_period(year: 2026, month: 4, unit_price: BigDecimal("2336.4"))
 period_1 = result.period
+period_1.update_column(:pump_allocation_per_station, false)
 ranks_1 = Rank.where(period: period_1).order(:position).to_a
 puts "  Kỳ #{period_1.year}/#{period_1.month} đã mở (#{ranks_1.size} nhóm cấp bậc)"
 
@@ -35,6 +36,8 @@ User.create!(username: "chiHuyTD95", password: pw, password_confirmation: pw,
   display_name: "Phạm Đức Trung", role: :commander, unit: unit_td95, **opt)
 User.create!(username: "chiHuyTD14", password: pw, password_confirmation: pw,
   display_name: "Hoàng Anh Tuấn", role: :commander, unit: unit_td14, **opt)
+User.create!(username: "chiHuySuDoan", password: pw, password_confirmation: pw,
+  display_name: "Trần Quốc Việt", role: :division_commander, **opt)
 
 puts "=== Bước 5: Tạo khối và nhóm (Trung đoàn 95) ==="
 block_ptm = Block.create!(name: "Phòng Tham mưu", unit: unit_td95)
@@ -154,6 +157,9 @@ cp_kho = ContactPoint.find_by(name: "Kho vật tư")
 OtherDeduction.find_by(contact_point: cp_nha_o, period: period_1)&.update!(other_type: :coefficient, other_value: BigDecimal("2.5"))
 OtherDeduction.find_by(contact_point: cp_kho, period: period_1)&.update!(other_type: :fixed, other_value: BigDecimal("-15"))
 
+cp_bep = ContactPoint.find_by(name: "Bếp")
+OtherDeduction.find_by(contact_point: cp_bep, period: period_1)&.update!(other_type: :unit_coefficient, other_value: BigDecimal("-2"))
+
 puts "=== Bước 16: Phân bổ bơm nước ==="
 cp_chkv = ContactPoint.find_by(name: "Chỉ huy khu vực")
 
@@ -207,6 +213,43 @@ result2 = service.open_new_period(unit_price: BigDecimal("2336.4"))
 period_2 = result2.period
 puts "  Kỳ #{period_2.year}/#{period_2.month} đã mở"
 
+puts "=== Bước 21b: Phân bổ bơm theo trạm cho kỳ 2 (TN2, mặc định per-station) ==="
+PumpAllocation.where(period: period_2).destroy_all
+
+pump_station_1 = ContactPoint.find_by(name: "Trạm bơm 1")
+pump_station_2 = ContactPoint.find_by(name: "Trạm bơm 2")
+
+PumpAllocation.create!(zone: zone_1, period: period_2, pump_contact_point: pump_station_1,
+  unit: unit_td95, coefficient: BigDecimal("1"))
+PumpAllocation.create!(zone: zone_1, period: period_2, pump_contact_point: pump_station_1,
+  unit: unit_td14, coefficient: BigDecimal("1"))
+PumpAllocation.create!(zone: zone_1, period: period_2, pump_contact_point: pump_station_1,
+  contact_point: ne1, coefficient: BigDecimal("0.5"))
+
+cp_pchkv = ContactPoint.find_by(name: "Phó chỉ huy khu vực")
+PumpAllocation.create!(zone: zone_1, period: period_2, pump_contact_point: pump_station_2,
+  contact_point: cp_chkv, fixed_percentage: BigDecimal("30"), coefficient: BigDecimal("1"))
+PumpAllocation.create!(zone: zone_1, period: period_2, pump_contact_point: pump_station_2,
+  contact_point: cp_pchkv, coefficient: BigDecimal("1"))
+
+pump_station_3 = ContactPoint.find_by(name: "Trạm bơm chính")
+PumpAllocation.create!(zone: zone_2, period: period_2, pump_contact_point: pump_station_3,
+  unit: unit_td18, coefficient: BigDecimal("1"))
+PumpAllocation.create!(zone: zone_2, period: period_2, pump_contact_point: pump_station_3,
+  unit: unit_d3, coefficient: BigDecimal("1"))
+PumpAllocation.create!(zone: zone_2, period: period_2, pump_contact_point: pump_station_3,
+  contact_point: ne2, coefficient: BigDecimal("0.5"))
+
+puts "  Kỳ 2 per-station: KV1 Trạm 1 (3), Trạm 2 (2); KV2 Trạm chính (3)"
+
+puts "=== Bước 21c: Kế thừa unit_coefficient cho kỳ 2 ==="
+cp_bep_2 = ContactPoint.find_by(name: "Bếp")
+OtherDeduction.find_by(contact_point: cp_bep_2, period: period_2)&.update!(other_type: :unit_coefficient, other_value: BigDecimal("-2"))
+cp_kho_2 = ContactPoint.find_by(name: "Kho vật tư")
+OtherDeduction.find_by(contact_point: cp_kho_2, period: period_2)&.update!(other_type: :fixed, other_value: BigDecimal("-15"))
+cp_nha_o_2 = ContactPoint.find_by(name: "Nhà ở")
+OtherDeduction.find_by(contact_point: cp_nha_o_2, period: period_2)&.update!(other_type: :coefficient, other_value: BigDecimal("2.5"))
+
 puts "=== Bước 22: Nhập chỉ số công tơ (kỳ 2) ==="
 meter_data_2 = {
   "CT-TM01" => 310, "CT-TM02" => 420, "CT-TM03" => 165, "CT-TM04" => 245,
@@ -242,7 +285,7 @@ puts ""
 puts "=== HOÀN TẤT ==="
 puts "  Khu vực: #{Zone.count}"
 puts "  Đơn vị: #{Unit.count}"
-puts "  Đầu mối: #{ContactPoint.count} (sinh hoạt: #{ContactPoint.residential.count}, công cộng: #{ContactPoint.public_type.count}, bơm nước: #{ContactPoint.water_pump.count}, ngoài biên chế: #{ContactPoint.non_establishment.count})"
+puts "  Đầu mối: #{ContactPoint.count} (sinh hoạt: #{ContactPoint.type_residential.count}, công cộng: #{ContactPoint.type_public.count}, bơm nước: #{ContactPoint.type_water_pump.count}, ngoài biên chế: #{ContactPoint.type_non_establishment.count})"
 puts "  Công tơ: #{Meter.count}"
 puts "  Khối: #{Block.count}, Nhóm: #{Group.count}"
 puts "  Tài khoản: #{User.count}"

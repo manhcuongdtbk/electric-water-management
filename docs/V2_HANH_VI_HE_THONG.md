@@ -1,7 +1,7 @@
 # Hành vi hệ thống — Hệ thống quản lý điện nước nội bộ (Hệ thống v2)
 
-> **Phiên bản:** 1.5.1
-> **Ngày:** 21/06/2026
+> **Phiên bản:** 1.5.4
+> **Ngày:** 22/06/2026
 > **Tính chất:** Tài liệu mô tả hành vi thực tế của hệ thống đã được verify qua code và test. Bổ sung cho V2_XAC_NHAN_NGHIEP_VU (cái gì) và V2_THIET_KE_HE_THONG (làm thế nào) bằng cách trả lời "hệ thống hành xử ra sao" trong các kịch bản thực tế.
 > **Nguồn:** Kết quả audit toàn diện codebase, 14 đợt page-by-page, 781+ test cases.
 
@@ -34,7 +34,7 @@ User model có 5 enum values (`system_admin`, `division_commander`, `unit_admin`
 | CMD | Chỉ huy đơn vị không quản lý khu vực | `role == "commander"` + không quản lý khu vực | Chỉ xem, phạm vi như UA |
 | TECH | Kỹ thuật viên | `role == "technician"` | Tài khoản, sao lưu, nhật ký. Không thấy dữ liệu nghiệp vụ |
 
-DC là giá trị enum riêng trong database (khác với UA-ZM/CMD-ZM là variant runtime). DC không thuộc đơn vị, không có biến thể zone-manager. Scope toàn hệ thống, chỉ xem — tương tự SA nhưng không có quyền tạo/sửa/xóa. Có quyền tính toán lại (giống các loại chỉ huy khác).
+DC là giá trị enum riêng trong database (khác với UA-ZM/CMD-ZM là variant runtime). DC không thuộc đơn vị, không có biến thể zone-manager. Scope toàn hệ thống, chỉ xem — tương tự SA nhưng không có quyền tạo/sửa/xóa. Có quyền tính toán lại (giống SA và UA/UA-ZM; CMD/CMD-ZM không có quyền này).
 
 UA-ZM và CMD-ZM không phải role riêng trong database — là unit_admin/commander có đơn vị được chỉ định quản lý khu vực. Code xác định qua `current_zone_manager?` (kiểm tra `Zone.kept.exists?(manager_unit_id: current_user.unit_id)`). Zone đã xóa → user mất vai trò zone-manager (`.kept` loại zone discarded).
 
@@ -344,9 +344,9 @@ Audit file-by-file (schema → model → controller) bỏ sót vấn đề cross
 
 Test tại 1 thời điểm (kỳ đang mở) không đủ. Phải test: tạo → đóng → mở kỳ mới → xóa → mở lại kỳ cũ → verify visibility. 24 test cases cover kịch bản này.
 
-### 6 vai trò, không phải 4
+### 7 vai trò, không phải 5
 
-UA-ZM và CMD-ZM là 2 vai trò thực tế với scope khác UA/CMD. Mọi audit phải test cả 6 vai trò, đặc biệt UA-ZM và CMD-ZM xem data khu vực + zone-level CPs đã xóa.
+DC là enum riêng (`division_commander`), toàn hệ thống chỉ xem + tính toán lại. UA-ZM và CMD-ZM là 2 variant runtime với scope khác UA/CMD. Mọi audit phải test cả 7 vai trò, đặc biệt DC (xem mọi trang nghiệp vụ, không sửa), UA-ZM và CMD-ZM xem data khu vực + zone-level CPs đã xóa.
 
 ### Test phải cover mọi output của trang, không chỉ output chính
 
@@ -360,7 +360,7 @@ Code từ session AI trước có thể thiếu suy nghĩ sâu về edge cases. 
 
 ## 9. Hành vi bổ sung — milestone 1.2.0 (3 tính năng)
 
-> Hành vi runtime đích cho 3 tính năng 1.2.0 (chưa triển khai phiên này). Chi tiết + lý do ở spec; data model ở `V2_THIET_KE_HE_THONG` mục "Thiết kế bổ sung — milestone 1.2.0".
+> Hành vi runtime cho 3 tính năng 1.2.0 (**đã triển khai**, merge vào `develop`). Chi tiết + lý do ở spec; data model ở `V2_THIET_KE_HE_THONG` mục "Thiết kế bổ sung — milestone 1.2.0".
 
 ### Cột "Khác" dạng hệ số (đơn vị)
 
@@ -387,6 +387,19 @@ Code từ session AI trước có thể thiếu suy nghĩ sâu về edge cases. 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.5.4 (23/06/2026)
+
+- Mục 1 DC description: sửa "giống các loại chỉ huy khác" → "giống SA và UA/UA-ZM; CMD/CMD-ZM không có quyền này" — CMD không có recalculate (ability.rb).
+
+### v1.5.3 (22/06/2026)
+
+- Mục 9: sửa ghi chú "chưa triển khai phiên này" → "đã triển khai" — cả 3 tính năng 1.2.0 đã merge vào develop.
+
+### v1.5.2 (22/06/2026)
+
+- Mục 8 "Bài học từ audit": đổi "6 vai trò, không phải 4" → "7 vai trò, không phải 5" — cập nhật cho division_commander (DC, enum thứ 5). Thêm ghi chú DC trong mô tả bài học.
+- Lịch sử thay đổi v1.0.0: ghi rõ "6 vai trò (chưa có DC)" để phân biệt với trạng thái hiện tại 7 vai trò.
 
 ### v1.5.1 (21/06/2026)
 
@@ -434,4 +447,4 @@ Code từ session AI trước có thể thiếu suy nghĩ sâu về edge cases. 
 ### v1.0.0 (21/05/2026)
 
 - Tài liệu ban đầu, tổng hợp từ audit session toàn diện.
-- Cover: 6 vai trò, 4 loại đầu mối, 3 trạng thái kỳ, hành vi 14 trang, dữ liệu xuyên kỳ, nguyên tắc .kept/.with_discarded.
+- Cover: 6 vai trò (chưa có DC), 4 loại đầu mối, 3 trạng thái kỳ, hành vi 14 trang, dữ liệu xuyên kỳ, nguyên tắc .kept/.with_discarded.
