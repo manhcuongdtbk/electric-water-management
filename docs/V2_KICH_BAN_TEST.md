@@ -1,6 +1,6 @@
 # V2 — Kịch bản kiểm thử (số liệu cụ thể)
 
-> **Phiên bản:** 2.2.0
+> **Phiên bản:** 2.2.1
 > **Ngày:** 23/06/2026
 > **Nguồn nghiệp vụ:** `docs/V2_XAC_NHAN_NGHIEP_VU.md` v2.13.0
 > **Nguồn thiết kế:** `docs/V2_THIET_KE_HE_THONG.md` v2.13.0
@@ -1125,7 +1125,7 @@ Trước khi đi vào từng trang, bảng này chốt số mục sidebar và da
 
 ### TR-billing — Bảng tính tiền (/billing)
 
-**Route:** `/billing` (billing#show). **Lớp bảo vệ:** BusinessRoleRequired + authorize! (chiều 3, hàng Bảng tính tiền). Thao tác: Xem, Tính toán lại (SA/UA/UA-ZM), Xuất Excel (mọi vai trò nghiệp vụ). Đây là trang mang số liệu trọng tâm — mọi số trích từ Phần 2. Bảng chỉ hiển thị đầu mối **sinh hoạt**.
+**Route:** `/billing` (billing#show). **Lớp bảo vệ:** BusinessRoleRequired + authorize! (chiều 3, hàng Bảng tính tiền). Thao tác: Xem, Tính toán lại (SA/DC/UA-ZM/UA), Xuất Excel (mọi vai trò nghiệp vụ). Đây là trang mang số liệu trọng tâm — mọi số trích từ Phần 2. Bảng chỉ hiển thị đầu mối **sinh hoạt**.
 
 - **TR-billing-SA `[CẢ HAI]`:** quanTri xem gộp toàn bộ 8 đầu mối sinh hoạt khi không lọc — Khu vực 1: Ban Tác huấn thiếu 37,24; Văn thư thừa 5,72; Kho vật tư thừa 27,62; Đại đội 1 thiếu 106,86; Chỉ huy khu vực thiếu 33,32 (EN-KV1-SUMMARY-01..05). Khu vực 2: Quân y thừa 9,32; Trinh sát thiếu 22,87; Chỉ huy khu vực 2 thừa 11,20 (EN-KV2-SUMMARY-01..03). **30 cột** (có cả Khu vực + Đơn vị). Có dropdown kỳ + dropdown khu vực + dropdown đơn vị (cascade). Nút Tính toán lại + Xuất Excel hiện. Hàng tổng: EN-KV1-TOTALS khi lọc Khu vực 1 (tổng thiếu 177,42; tổng thành tiền thiếu 414.517). SA chọn Khu vực 1 → cột Khu vực ẩn → còn 29 cột; chọn thêm Đơn vị A → cột Đơn vị ẩn → còn 28 cột, hiện 3 hàng (Ban Tác huấn, Văn thư, Kho vật tư). Sidebar 17 mục.
 - **TR-billing-UAZM `[CẢ HAI]`:** adminA thấy **4 hàng**: Ban Tác huấn thiếu 37,24; Văn thư thừa 5,72; Kho vật tư thừa 27,62; Chỉ huy khu vực thiếu 33,32 (đầu mối Đơn vị A cộng đầu mối thuộc khu vực trực tiếp). KHÔNG thấy Đại đội 1. **29 cột** (có Đơn vị, ẩn Khu vực). Cột Đơn vị của hàng "Chỉ huy khu vực" **trống** (đầu mối thuộc khu vực trực tiếp — chiều 6). Không có dropdown khu vực/đơn vị (chỉ SA có); có dropdown kỳ. Nút Tính toán lại + Xuất Excel hiện. adminC (Khu vực 2): **2 hàng** — Quân y thừa 9,32; Chỉ huy khu vực 2 thừa 11,20; KHÔNG thấy Trinh sát; 29 cột; cột Đơn vị hàng Chỉ huy khu vực 2 trống. Sidebar 11 mục.
@@ -1799,6 +1799,10 @@ Phần này lập bản đồ từ mỗi **nhóm kịch bản** (không phải t
 ---
 
 ## Lịch sử thay đổi
+
+### v2.2.1 (23/06/2026)
+
+- TR-billing: thêm DC vào danh sách Tính toán lại "(SA/UA/UA-ZM)" → "(SA/DC/UA-ZM/UA)".
 
 ### v2.2.0 (23/06/2026)
 
