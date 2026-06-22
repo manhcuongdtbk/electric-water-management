@@ -1,7 +1,7 @@
 # Hướng dẫn sử dụng — Hệ thống quản lý điện nước nội bộ
 
-> **Phiên bản:** 1.9.3
-> **Ngày:** 22/06/2026
+> **Phiên bản:** 1.9.4
+> **Ngày:** 23/06/2026
 > **Đối tượng:** Tất cả người dùng hệ thống (kỹ thuật viên, quản trị viên hệ thống, Chỉ huy Sư đoàn, quản trị viên đơn vị, chỉ huy đơn vị)
 > **Ghi chú:** Tài liệu sẽ được cập nhật theo phản hồi thực tế.
 > **Cập nhật ảnh:** Khi giao diện thay đổi, chạy `docs/hdsd/capture-screenshots` để chụp lại toàn bộ ảnh. Thêm/sửa trang chụp: sửa mảng `PAGES` trong `docs/hdsd/capture.mjs`.
@@ -171,7 +171,7 @@ Kết quả hiển thị trên bảng tính tiền gồm 28 cột (xem mục E2)
 
 Tuy nhiên, quản trị viên đơn vị quản lý khu vực không quản lý được các đơn vị khác trong cùng khu vực — chỉ quản lý phần chia sẻ của khu vực và đơn vị mình. Quản trị viên hệ thống vẫn giữ toàn quyền can thiệp khi cần.
 
-**Chỉ huy Sư đoàn** không thuộc đơn vị nào. Chỉ huy Sư đoàn xem được mọi trang nghiệp vụ và cấu hình (tương tự quản trị viên hệ thống), nhưng tất cả ở chế độ chỉ xem — không tạo, sửa, hay xóa được. Ngoại lệ: có thể bấm nút **Tính toán lại** trên trang Bảng tính tiền (giống các loại chỉ huy khác). Chỉ huy Sư đoàn không thấy trang Tài khoản và Sao lưu dữ liệu.
+**Chỉ huy Sư đoàn** không thuộc đơn vị nào. Chỉ huy Sư đoàn xem được mọi trang nghiệp vụ và cấu hình (tương tự quản trị viên hệ thống), nhưng tất cả ở chế độ chỉ xem — không tạo, sửa, hay xóa được. Ngoại lệ: có thể bấm nút **Tính toán lại** trên trang Bảng tính tiền (giống quản trị viên hệ thống và quản trị viên đơn vị). Chỉ huy Sư đoàn không thấy trang Tài khoản và Sao lưu dữ liệu.
 
 **Chỉ huy đơn vị** thấy cùng các trang với quản trị viên đơn vị (nếu là đơn vị quản lý khu vực thì thấy thêm các trang khu vực), nhưng tất cả ở chế độ chỉ xem: mọi ô nhập bị vô hiệu hóa, các nút tạo/sửa/xóa/lưu bị ẩn.
 
@@ -399,7 +399,7 @@ Trang Đơn giá điện có nút **Mở kỳ mới** (xem mục F7).
 - Khai báo thêm đầu mối thuộc khu vực nếu cần (xem mục F1).
 
 **Bước 4 — Hệ thống: Tính toán.**
-Vào trang **Bảng tính tiền** hoặc **Tổng quan**. Lần đầu mở trang, hệ thống tự tính toán. Bấm nút **Tính toán lại** khi có thay đổi dữ liệu (sửa chỉ số, cập nhật quân số, thay đổi cấu hình). Hệ thống hiện **chỉ báo độ tươi** trên mỗi khu vực: khi có ai sửa dữ liệu sau lần tính gần nhất, khung cảnh báo vàng hiện lên trên trang Bảng tính tiền, Tổng quan, và các trang nhập liệu — nhắc bấm "Tính toán lại" để cập nhật. Nếu chưa có đủ dữ liệu, hệ thống vẫn tính với dữ liệu hiện có và hiển thị cảnh báo (đơn vị nào chưa nhập, khu vực nào thiếu công tơ tổng, trạm bơm chưa có số liệu). Kết quả chỉ chính xác khi tất cả đơn vị đã nhập xong (xem mục E2 — bảng tính tiền).
+Vào trang **Bảng tính tiền**, bấm nút **Tính toán lại**. Bấm lại nút này khi có thay đổi dữ liệu (sửa chỉ số, cập nhật quân số, thay đổi cấu hình). Hệ thống hiện **chỉ báo độ tươi** trên mỗi khu vực: khi có ai sửa dữ liệu sau lần tính gần nhất, khung cảnh báo vàng hiện lên trên trang Bảng tính tiền, Tổng quan, và các trang nhập liệu — nhắc bấm "Tính toán lại" để cập nhật. Nếu chưa có đủ dữ liệu, hệ thống vẫn tính với dữ liệu hiện có và hiển thị cảnh báo (đơn vị nào chưa nhập, khu vực nào thiếu công tơ tổng, trạm bơm chưa có số liệu). Kết quả chỉ chính xác khi tất cả đơn vị đã nhập xong (xem mục E2 — bảng tính tiền).
 
 **Bước 5 — Kiểm tra kết quả.**
 
@@ -881,6 +881,12 @@ Hệ thống hiện thông tin bản sao lưu (tên, kích thước, ngày tạo
 ---
 
 ## Lịch sử thay đổi
+
+### v1.9.4 (23/06/2026)
+
+- Mục A6: sửa "giống các loại chỉ huy khác" → "giống quản trị viên hệ thống và quản trị viên đơn vị" — chỉ huy đơn vị (CMD) không có nút Tính toán lại (ability.rb không cấp quyền recalculate cho commander).
+- Mục D bước 4: bỏ "Lần đầu mở trang, hệ thống tự tính toán" — code không auto-calculate khi mở trang (CalculationOrchestrator chỉ gọi từ recalculate action, không từ show).
+- Header: sửa ngày 22/06 → 23/06 cho khớp changelog mới nhất.
 
 ### v1.9.3 (23/06/2026)
 
