@@ -51,8 +51,8 @@
 
 ## Lịch sử thay đổi
 
-- **1.5.1 (21/06/2026):** Đổi tên hệ thống trong tiêu đề: "Hệ thống quản lý điện nước nội bộ" (Issue #420, khớp tên chính thức đã chốt trong #418).
 - **1.5.2 (22/06/2026):** Sửa mô tả V2_HANH_VI_HE_THONG "6 vai trò" → "7 vai trò" (division_commander, Issue #419).
+- **1.5.1 (21/06/2026):** Đổi tên hệ thống trong tiêu đề: "Hệ thống quản lý điện nước nội bộ" (Issue #420, khớp tên chính thức đã chốt trong #418).
 - **1.5.0 (21/06/2026):** Chuyển `docs/V2_XAC_NHAN_NGHIEP_VU_BO_SUNG_2.md` từ canonical → lịch sử: yêu cầu đợt 2 đã fold vào canonical `docs/V2_XAC_NHAN_NGHIEP_VU.md` (v2.18.0, mục 1 + mục 11.5, Issue #418 + #419), file trở thành bản ghi thời điểm không viết lại.
 - **1.4.0 (21/06/2026):** Thêm `docs/V2_XAC_NHAN_NGHIEP_VU_BO_SUNG_2.md` (đợt 2) vào nhóm canonical. PR #315.
 - **1.3.0 (11/06/2026):** Chuyển `docs/V2_XAC_NHAN_NGHIEP_VU_BO_SUNG.md` từ current-state → lịch sử: yêu cầu 3 tính năng milestone 1.2.0 đã fold vào canonical `docs/V2_XAC_NHAN_NGHIEP_VU.md` (v2.15.0, Issue #319), file trở thành bản ghi thời điểm không viết lại. Spec mới (ADR-025..027) được phủ sẵn bởi glob `docs/superpowers/specs/*`.
