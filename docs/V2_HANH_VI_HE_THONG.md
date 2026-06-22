@@ -1,6 +1,6 @@
 # Hành vi hệ thống — Hệ thống quản lý điện nước nội bộ (Hệ thống v2)
 
-> **Phiên bản:** 1.5.3
+> **Phiên bản:** 1.5.4
 > **Ngày:** 22/06/2026
 > **Tính chất:** Tài liệu mô tả hành vi thực tế của hệ thống đã được verify qua code và test. Bổ sung cho V2_XAC_NHAN_NGHIEP_VU (cái gì) và V2_THIET_KE_HE_THONG (làm thế nào) bằng cách trả lời "hệ thống hành xử ra sao" trong các kịch bản thực tế.
 > **Nguồn:** Kết quả audit toàn diện codebase, 14 đợt page-by-page, 781+ test cases.
@@ -34,7 +34,7 @@ User model có 5 enum values (`system_admin`, `division_commander`, `unit_admin`
 | CMD | Chỉ huy đơn vị không quản lý khu vực | `role == "commander"` + không quản lý khu vực | Chỉ xem, phạm vi như UA |
 | TECH | Kỹ thuật viên | `role == "technician"` | Tài khoản, sao lưu, nhật ký. Không thấy dữ liệu nghiệp vụ |
 
-DC là giá trị enum riêng trong database (khác với UA-ZM/CMD-ZM là variant runtime). DC không thuộc đơn vị, không có biến thể zone-manager. Scope toàn hệ thống, chỉ xem — tương tự SA nhưng không có quyền tạo/sửa/xóa. Có quyền tính toán lại (giống các loại chỉ huy khác).
+DC là giá trị enum riêng trong database (khác với UA-ZM/CMD-ZM là variant runtime). DC không thuộc đơn vị, không có biến thể zone-manager. Scope toàn hệ thống, chỉ xem — tương tự SA nhưng không có quyền tạo/sửa/xóa. Có quyền tính toán lại (giống SA và UA/UA-ZM; CMD/CMD-ZM không có quyền này).
 
 UA-ZM và CMD-ZM không phải role riêng trong database — là unit_admin/commander có đơn vị được chỉ định quản lý khu vực. Code xác định qua `current_zone_manager?` (kiểm tra `Zone.kept.exists?(manager_unit_id: current_user.unit_id)`). Zone đã xóa → user mất vai trò zone-manager (`.kept` loại zone discarded).
 
@@ -387,6 +387,10 @@ Code từ session AI trước có thể thiếu suy nghĩ sâu về edge cases. 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.5.4 (23/06/2026)
+
+- Mục 1 DC description: sửa "giống các loại chỉ huy khác" → "giống SA và UA/UA-ZM; CMD/CMD-ZM không có quyền này" — CMD không có recalculate (ability.rb).
 
 ### v1.5.3 (22/06/2026)
 

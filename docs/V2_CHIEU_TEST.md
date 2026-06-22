@@ -1,6 +1,6 @@
 # Các chiều kiểm thử — Hệ thống quản lý điện nước nội bộ (Hệ thống v2)
 
-> **Phiên bản:** 1.5.1
+> **Phiên bản:** 1.5.2
 > **Ngày:** 22/06/2026
 > **Tính chất:** Định nghĩa không gian kiểm thử. Mỗi chiều là một biến độc lập tạo code path khác nhau trong hệ thống. Giao điểm giữa các chiều là nơi bug dễ xảy ra nhất.
 > **Nguồn:** Audit toàn bộ codebase, đối chiếu 4 tài liệu, 1378 test cases.
@@ -35,7 +35,7 @@ Hệ thống có 5 enum values trong database nhưng 7 vai trò thực tế:
 | CMD | Chỉ huy đơn vị | `role == "commander"` + không quản lý khu vực | Chỉ xem, phạm vi như UA |
 | TECH | Kỹ thuật viên | `role == "technician"` | Tài khoản, sao lưu, nhật ký. Không thấy dữ liệu nghiệp vụ |
 
-DC là enum riêng trong database (`division_commander`), không thuộc đơn vị, không có biến thể zone-manager. Scope toàn hệ thống, chỉ xem — tương tự SA nhưng không có quyền tạo/sửa/xóa. Có quyền tính toán lại (giống các loại chỉ huy khác).
+DC là enum riêng trong database (`division_commander`), không thuộc đơn vị, không có biến thể zone-manager. Scope toàn hệ thống, chỉ xem — tương tự SA nhưng không có quyền tạo/sửa/xóa. Có quyền tính toán lại (giống SA và UA/UA-ZM; CMD/CMD-ZM không có quyền này).
 
 UA-ZM và CMD-ZM không phải role riêng trong database. Xác định qua `current_zone_manager?` (dùng `Zone.kept` — khớp Ability). Zone đã xóa → user mất vai trò zone-manager.
 
@@ -503,6 +503,10 @@ Test: chưa tính → 2 cột + A/B/C trống; sau tính → khớp `LossCalcula
 ---
 
 ## Lịch sử thay đổi
+
+### v1.5.2 (23/06/2026)
+
+- Chiều 2 DC description: sửa "giống các loại chỉ huy khác" → "giống SA và UA/UA-ZM; CMD/CMD-ZM không có quyền này" — CMD không có recalculate (ability.rb).
 
 ### v1.5.1 (23/06/2026)
 

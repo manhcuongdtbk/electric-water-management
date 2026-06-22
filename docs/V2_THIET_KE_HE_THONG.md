@@ -1,6 +1,6 @@
 # Thiết kế hệ thống quản lý điện nước nội bộ — Hệ thống v2
 
-> **Phiên bản tài liệu:** 2.17.0
+> **Phiên bản tài liệu:** 2.17.1
 > **Ngày:** 22/06/2026
 > **Tính chất:** Tài liệu thiết kế hệ thống v2, nguồn sự thật cho implementation.
 > **Nguồn nghiệp vụ:** V2_XAC_NHAN_NGHIEP_VU (phiên bản mới nhất tại thời điểm thiết kế: v2.11.0)
@@ -749,7 +749,7 @@ Quản lý tất cả. Mọi thứ unit_admin làm được, system_admin đều
 | Bảng tính tiền | Xem tất cả đơn vị + bảng gộp |
 | Tổng quan | Xem tổng quan hệ thống |
 | Tra cứu lịch sử | Xem tất cả |
-| Tài khoản | Quản lý system_admin, unit_admin, commander (không quản lý technician) |
+| Tài khoản | Quản lý system_admin, division_commander, unit_admin, commander (không quản lý technician) |
 | Nhật ký | Xem |
 | Sao lưu | Không |
 
@@ -1270,6 +1270,10 @@ Mọi thao tác trên hệ thống đều được ghi lại (PaperTrail). Syste
 ---
 
 ## Lịch sử thay đổi
+
+### v2.17.1 (23/06/2026)
+
+- Phân quyền SA: thêm `division_commander` vào danh sách vai trò SA quản lý tài khoản.
 
 ### v2.17.0 (22/06/2026)
 
