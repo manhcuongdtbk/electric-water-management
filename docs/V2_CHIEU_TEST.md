@@ -1,6 +1,6 @@
 # Các chiều kiểm thử — Hệ thống quản lý điện nước nội bộ (Hệ thống v2)
 
-> **Phiên bản:** 1.5.0
+> **Phiên bản:** 1.5.1
 > **Ngày:** 22/06/2026
 > **Tính chất:** Định nghĩa không gian kiểm thử. Mỗi chiều là một biến độc lập tạo code path khác nhau trong hệ thống. Giao điểm giữa các chiều là nơi bug dễ xảy ra nhất.
 > **Nguồn:** Audit toàn bộ codebase, đối chiếu 4 tài liệu, 1378 test cases.
@@ -244,7 +244,7 @@ Mỗi trang khi render phải verify các output hiển thị sau:
 | Input state | CMD: tất cả input disabled + ẩn nút Lưu. Kỳ cũ mở lại: field cấu trúc disabled, field data per kỳ enabled. reading_start editable mọi kỳ (pre-filled từ kỳ trước nhưng sửa được) | CMD thấy input enabled = bug |
 | Dropdown options | Đúng per role. Zone/unit dropdown: SA thấy tất cả, non-SA không thấy. Loại CP: UA 2 loại (sinh hoạt, công cộng), UA-ZM/SA 4 loại. Kỳ cũ: dropdown hiện entity đã xóa (`with_discarded`) | UA thấy dropdown loại "bơm nước" = bug (chỉ UA-ZM/SA mới thấy) |
 | Cảnh báo | Billing: cảnh báo thiếu dữ liệu ("Đơn vị X chưa nhập"), tổn hao bất thường. Dashboard: cảnh báo tương tự. Hiện đúng per role (SA thấy toàn hệ thống, UA thấy khu vực mình) | SA không thấy cảnh báo khi đơn vị chưa nhập = bug |
-| Sidebar | Đúng items per role (chiều 3 bảng quyền). TECH: 3 items. SA: 17 items. UA: 8 items. UA-ZM: 11 items. CMD: 8 items (khớp UA). CMD-ZM: 11 items (khớp UA-ZM). CMD thấy cùng trang với UA nhưng chỉ xem (inputs disabled, nút ẩn) | CMD thấy nút Sửa/Xóa trên trang chỉ xem = bug |
+| Sidebar | Đúng items per role (chiều 3 bảng quyền). TECH: 3 items. SA: 17 items. DC: 16 items (tất cả trừ Tài khoản và Sao lưu, chỉ xem). UA: 8 items. UA-ZM: 11 items. CMD: 8 items (khớp UA). CMD-ZM: 11 items (khớp UA-ZM). CMD/DC thấy cùng trang nhưng chỉ xem (inputs disabled, nút ẩn) | CMD thấy nút Sửa/Xóa trên trang chỉ xem = bug |
 | Trạng thái rỗng | "Không có bản ghi" khi danh sách trống. Billing chưa tính: bảng trống (không phải lỗi 500) | Billing chưa tính lần nào → lỗi 500 = bug |
 | Thông tin kỳ | Hiện kỳ đang mở ("Kỳ tháng 5/2026 đang mở"). Khi không có kỳ mở: "Không có kỳ đang mở" + trang nhập liệu disable mọi ô | Không hiện thông báo kỳ = user không biết trạng thái |
 | Pagination info | "Hiển thị X-Y / Z bản ghi". Z = `@total_count` (sau filter). Per page dropdown giữ giá trị đã chọn | Z hiện tổng toàn DB thay vì tổng sau filter = bug |
@@ -503,6 +503,10 @@ Test: chưa tính → 2 cột + A/B/C trống; sau tính → khớp `LossCalcula
 ---
 
 ## Lịch sử thay đổi
+
+### v1.5.1 (23/06/2026)
+
+- Expected output hiển thị — Sidebar: thêm DC (16 items, chỉ xem) vào danh sách sidebar count per role.
 
 ### v1.5.0 (22/06/2026)
 
