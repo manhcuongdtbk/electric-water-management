@@ -97,7 +97,30 @@ Quy trình đầy đủ và checklist: `docs/superpowers/specs/2026-06-07-quy-tr
 
 Tóm tắt: đủ nội dung → `release/*` ← `develop` → merge vào `main` → release-please tạo Release pull request → bạn merge → tag `X.Y.Z` → môi trường **Acceptance** (chạy `main`) cập nhật cho khách nghiệm thu → giao bản tag xuống production Mini PC + fast-forward nhánh `production` (môi trường **Mirror** cập nhật) → **merge-back về `develop`**. (KHÔNG dùng `-rc.N` / không deploy `release/*` lên Railway — ADR-005/008.)
 
-release-please đã được cấu hình (P3): khi `release/*`/`hotfix/*` vào `main`, nó tự mở Release pull request (bump version + `CHANGELOG.md` + `version.txt`); bạn merge Release pull request → tự tag `vX.Y.Z` + tạo GitHub Release. **Lưu ý:** release-please ghi `CHANGELOG.md`/`version.txt` lên `main`, nên khi merge-back nhớ **đồng bộ `main` → `develop`** để develop có các file đó. Ghi chú phát hành cho khách: biên tập tiếng Việt trên GitHub Release trước khi công bố.
+release-please đã được cấu hình (P3): khi `release/*`/`hotfix/*` vào `main`, nó tự mở Release pull request (bump version + `CHANGELOG.md` + `version.txt`); bạn merge Release pull request → tự tag `vX.Y.Z` + tạo GitHub Release. **Lưu ý:** release-please ghi `CHANGELOG.md`/`version.txt` lên `main`, nên khi merge-back nhớ **đồng bộ `main` → `develop`** để develop có các file đó.
+
+### Ghi chú phát hành tiếng Việt
+
+Sau khi release-please tạo GitHub Release (tiếng Anh, tự động), **thêm ghi chú tiếng Việt** vào đầu phần body để khách và chủ dự án đọc được. Dùng `gh release edit` hoặc sửa trực tiếp trên GitHub:
+
+```bash
+gh release edit vX.Y.Z --notes "$(cat <<'NOTES'
+# Phiên bản X.Y.Z (ngày/tháng/năm)
+
+## Tóm tắt cho người dùng
+(ngôn ngữ đơn giản, không jargon — cho người dùng cuối)
+
+## Chi tiết cho chủ dự án
+(kỹ hơn, có thể nhắc tên trang/tài liệu — cho người quyết định triển khai)
+
+---
+
+(phần CHANGELOG tiếng Anh auto-generated giữ nguyên bên dưới)
+NOTES
+)"
+```
+
+Trợ lý AI soạn nháp hai phần (tóm tắt + chi tiết) từ CHANGELOG tiếng Anh; chủ dự án duyệt trước khi công bố (gate — ADR-029).
 
 ## 7. Giao bản cho khách
 
