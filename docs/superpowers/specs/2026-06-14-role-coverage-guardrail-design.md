@@ -7,6 +7,8 @@ governed_by: 2026-06-07-sdlc-overview-design.md
 
 # Guardrail role-coverage
 
+> **Ghi chú (25/06/2026):** Spec viết khi hệ thống có 6 vai trò thực tế. Nay 7 vai trò (thêm Chỉ huy Sư đoàn `division_commander` — xem [ADR-061](2026-06-25-division-commander-role-design.md), Issue #419).
+
 Ép **máy** luật "**mọi trang phải test cả 6 vai trò**" (AGENTS.md; 6 vai trò định nghĩa ở [`docs/V2_HANH_VI_HE_THONG.md` mục 1](../../V2_HANH_VI_HE_THONG.md)). Hôm nay luật này mới là **quy ước**: ma trận `spec/requests/role_access_matrix_spec.rb` thực tế đã phủ mọi trang × 6 vai trò, nhưng **không có gì đo/ép** — thêm một trang mới mà quên một/vài vai trò (hoặc quên đưa trang vào ma trận hẳn) thì CI vẫn xanh. Đúng tinh thần [ADR-002](2026-06-07-sdlc-overview-design.md) (luật nào máy ép được thì để máy ép, đừng viết prose rồi mong người nhớ) và cùng họ guardrail với [ADR-030](2026-06-13-truy-vet-chieu-test-design.md) (truy vết chiều test).
 
 **Ràng buộc cốt lõi định hình thiết kế:** muốn guardrail *thật sự* đóng được lỗ hổng, **nguồn-sự-thật của "tập trang" không được là một danh sách giữ tay** — vì một registry tay cũng bị quên y hệt như hiện trạng (thêm trang mới → quên thêm vào registry → guardrail im). Nguồn-sự-thật phải **suy ra từ thứ bắt buộc phải đụng khi thêm một trang**: lớp controller. Một trang mới = một controller mới kế thừa `ApplicationController` → tự khắc bị guardrail "nhìn thấy".

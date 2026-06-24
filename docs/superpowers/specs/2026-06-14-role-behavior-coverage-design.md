@@ -7,6 +7,7 @@ governed_by: 2026-06-07-sdlc-overview-design.md
 
 # Guardrail behavior-coverage per-role
 
+> **Ghi chú (25/06/2026):** Spec viết khi hệ thống có 6 vai trò thực tế. Nay 7 vai trò (thêm Chỉ huy Sư đoàn `division_commander` — xem [ADR-061](2026-06-25-division-commander-role-design.md), Issue #419).
 Nối tiếp [guardrail role-coverage (ADR-056, #359)](2026-06-14-role-coverage-guardrail-design.md). #359 ép **máy** rằng mọi trang phủ đủ **6 vai trò** ở mức **access** (200 hay redirect — [chiều 2/3](../../V2_CHIEU_TEST.md)). Nhưng access xanh **không** nói gì về **hành vi chi tiết theo vai trò**: data scoping (non-SA chỉ thấy data đơn vị/khu vực mình), ẩn/hiện cột Khu vực+Đơn vị, commander read-only (input `disabled` + ẩn nút Lưu — luật AGENTS "Commander trên mọi trang"), và biến thể zone-manager. Quét coverage (ghi trong [`#373`](https://github.com/manhcuongdtbk/electric-water-management/issues/373)) cho thấy hành vi này hiện test **lệch, SA-nặng**: request spec của `blocks`/`groups`/`pump_allocations`/`ranks` chỉ chạm `system_admin`; phần lớn system spec cũng chỉ SA.
 
 Guardrail này đóng nốt khe đó — **bằng đúng mô hình đã ship của #359**: một matrix khai báo, sinh test, và một block completeness ép không-được-bỏ-sót. Khác biệt: đối tượng là **hành vi**, không phải access.
