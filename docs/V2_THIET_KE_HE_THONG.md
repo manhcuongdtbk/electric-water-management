@@ -1,7 +1,7 @@
 # Thiết kế hệ thống quản lý điện nước nội bộ — Hệ thống v2
 
-> **Phiên bản tài liệu:** 2.17.1
-> **Ngày:** 22/06/2026
+> **Phiên bản tài liệu:** 2.17.2
+> **Ngày:** 24/06/2026
 > **Tính chất:** Tài liệu thiết kế hệ thống v2, nguồn sự thật cho implementation.
 > **Nguồn nghiệp vụ:** V2_XAC_NHAN_NGHIEP_VU (phiên bản mới nhất tại thời điểm thiết kế: v2.11.0)
 
@@ -274,6 +274,10 @@ Ngoài foreign key index tự động, cần tạo thêm:
 | meters | (discarded_at) | Regular | Filter soft delete |
 | units | (discarded_at) | Regular | Filter soft delete |
 | zones | (discarded_at) | Regular | Filter soft delete |
+| blocks | (discarded_at) | Regular | Filter soft delete |
+| groups | (discarded_at) | Regular | Filter soft delete |
+| main_meters | (discarded_at) | Regular | Filter soft delete |
+| calculation_states | (zone_id, period_id) | Unique | Mỗi khu vực + kỳ chỉ có 1 bản ghi trạng thái |
 
 > **Quyết định partial unique index cho periods.closed:** Model validation "chỉ 1 kỳ open" có race condition — 2 request đồng thời có thể cùng check không có kỳ mở rồi cùng tạo. Partial unique index ở database level chống được race condition.
 > **Tradeoff:** PostgreSQL specific (không portable sang database khác). Chấp nhận được vì hệ thống chỉ dùng PostgreSQL.
@@ -386,7 +390,7 @@ Bảng riêng phòng tương lai nhiều công tơ tổng per khu vực. Hiện 
 | savings_rate | decimal | Tiết kiệm của Bộ. ≥ 0, ≤ 100. Mặc định: 5 |
 | division_public_rate | decimal | Công cộng dùng chung Sư đoàn. ≥ 0, ≤ 100. Mặc định: 10 |
 | water_pump_standard | decimal | Tiêu chuẩn điện bơm nước kW/người/tháng. > 0. Mặc định: 9,45 |
-| pump_allocation_per_station | boolean | Phân bổ bơm theo từng trạm. Mặc định: true (kỳ mới). false cho kỳ cũ (gộp toàn khu vực) |
+| pump_allocation_per_station | boolean | Phân bổ bơm theo từng trạm. Schema default: false (an toàn cho kỳ cũ). `PeriodService` set true khi mở kỳ mới |
 
 Ai đóng/mở kỳ, lúc nào: PaperTrail ghi nhật ký, không cần cột riêng.
 
@@ -555,6 +559,41 @@ Validation: đúng 1 trong unit_id, block_id, group_id, hoặc contact_point_id 
 | default_account | boolean | Mặc định: false. True cho 2 tài khoản mặc định (không cho xóa) |
 
 Đơn vị quản lý khu vực không phải flag trên user — xác định qua zones.manager_unit_id. User có role = unit_admin, thuộc unit là manager_unit của zone → tự động có thêm quyền khu vực. Logic ở tầng ability.
+
+#### backups (bản sao lưu)
+
+| Cột | Kiểu | Ràng buộc |
+|---|---|---|
+| filename | string | Bắt buộc, unique |
+| size_bytes | bigint | Bắt buộc, mặc định: 0 |
+| status | string | Bắt buộc, mặc định: "completed" |
+| error_message | text | Nullable |
+| created_by_id | foreign key → users | Nullable (on_delete: :nullify) |
+
+Tối đa 3 bản backup (validation ở model). Chỉ technician tạo/xóa (ability). Restore qua rake task, không qua giao diện.
+
+#### calculation_states (chỉ báo độ tươi dữ liệu dẫn xuất — ADR-049)
+
+| Cột | Kiểu | Ràng buộc |
+|---|---|---|
+| zone_id | foreign key → zones | Bắt buộc, unique cùng period_id |
+| period_id | foreign key → periods | Bắt buộc |
+| inputs_changed_at | datetime | Nullable. Bump khi input liên quan zone-kỳ thay đổi (qua concern `TouchesCalculationState`) |
+| last_calculated_at | datetime | Nullable. Set khi orchestrator tính xong zone-kỳ |
+
+So sánh `inputs_changed_at` vs `last_calculated_at` để suy trạng thái độ tươi: chưa tính (cả hai nil), stale (`inputs_changed_at > last_calculated_at`), đã tính còn đúng (ngược lại). Không kế thừa kỳ — kỳ mới chưa tính thì chưa có dòng.
+
+#### pump_station_charges (phân bổ bơm nước per trạm per đầu mối — ADR-054)
+
+| Cột | Kiểu | Ràng buộc |
+|---|---|---|
+| zone_id | foreign key → zones | Bắt buộc |
+| period_id | foreign key → periods | Bắt buộc |
+| pump_contact_point_id | foreign key → contact_points | Bắt buộc. Trạm bơm (water_pump CP) |
+| contact_point_id | foreign key → contact_points | Bắt buộc. Đầu mối sinh hoạt nhận phân bổ |
+| amount | decimal | Bắt buộc. Số kW phân bổ |
+
+Snapshot kết quả phân bổ per trạm, ghi bởi `PumpStationChargeWriter` trong transaction orchestrator. Dùng cho bảng đối chiếu điện bơm nước per trạm trên trang Bảng tính tiền. Không kế thừa kỳ.
 
 ---
 
@@ -1064,6 +1103,7 @@ Quy tắc xóa theo nghiệp vụ mục 23. Soft delete dùng gem discard (đán
 | Xóa công tơ cuối cùng của đầu mối (trừ ngoài biên chế) | Không | Validation: đầu mối luôn phải có ít nhất 1 công tơ |
 | Xóa đơn vị đang có đầu mối | Không | Validation: phải xóa (discard) hết đầu mối trước |
 | Xóa đơn vị đang có tài khoản | Không | Validation: phải xóa hết tài khoản (users) thuộc đơn vị trước. Nếu không, users.unit_id trỏ tới discarded unit → user không thể đăng nhập đúng |
+| Xóa đơn vị | Có | Soft delete (discard). Cleanup data kỳ đang mở: hard delete unit_configs + pump_allocations (xem mục Cleanup data khi discard). Clear zones.manager_unit_id nếu đơn vị là đơn vị quản lý khu vực. Cascade discard blocks + groups thuộc đơn vị (groups/contact_points bên trong được nullify block_id/group_id qua callback riêng). Dữ liệu kỳ cũ giữ nguyên |
 | Xóa khu vực đang có đơn vị | Không | Validation: phải xóa (discard) hết đơn vị trước |
 | Xóa khu vực | Có | Soft delete (discard). Discard các main_meters thuộc khu vực (before_discard callback). Cleanup main_meter_readings kỳ đang mở (xem mục Cleanup data khi discard). Dữ liệu kỳ cũ (main_meter_readings) giữ nguyên. Chỉ cho phép khi kỳ đang mở là kỳ mới nhất hoặc không có kỳ nào đang mở (xem mục Hạn chế thay đổi cấu trúc khi mở kỳ cũ) |
 | Xóa đơn vị quản lý khu vực | Có (cảnh báo) | Phải qua validation "đơn vị đang có đầu mối" và "đơn vị đang có tài khoản" trước. Sau khi pass validation, hiển thị cảnh báo. Nếu xóa, zones.manager_unit_id → null. System_admin tự quản lý phần khu vực cho đến khi chỉ định đơn vị khác |
@@ -1081,11 +1121,12 @@ Khi discard thực thể cấu trúc, nếu có kỳ đang mở → hard delete 
 
 > **StructureChangeGuard đảm bảo:** discard thực thể cấu trúc chỉ xảy ra khi kỳ đang mở là kỳ mới nhất hoặc không có kỳ nào mở. Không bao giờ xảy ra khi đang mở kỳ cũ.
 
-| Thực thể | before_discard cleanup (kỳ đang mở) |
+| Thực thể | Cleanup khi discard (before: hard delete data kỳ đang mở; after: cascade) |
 |---|---|
-| ContactPoint | Hard delete: meter_readings (của tất cả meters thuộc contact_point), personnel_entries, calculations, non_establishment_snapshots, other_deductions — WHERE period_id = kỳ đang mở |
+| ContactPoint | Hard delete: meter_readings (của tất cả meters thuộc contact_point), personnel_entries, calculations, non_establishment_snapshots, other_deductions, pump_allocations — WHERE period_id = kỳ đang mở. After discard: discard meters |
 | Meter | Hard delete: meter_readings — WHERE period_id = kỳ đang mở |
 | Zone | Hard delete: main_meter_readings (của tất cả main_meters thuộc zone) — WHERE period_id = kỳ đang mở |
+| Unit | Hard delete: unit_configs, pump_allocations — WHERE period_id = kỳ đang mở. Clear zones.manager_unit_id nếu là đơn vị quản lý khu vực. After discard: cascade discard blocks + groups |
 | MainMeter | Hard delete: main_meter_readings — WHERE period_id = kỳ đang mở |
 
 ### Engine skip thực thể không có data kỳ đang tính (v2.4.0)
@@ -1270,6 +1311,15 @@ Mọi thao tác trên hệ thống đều được ghi lại (PaperTrail). Syste
 ---
 
 ## Lịch sử thay đổi
+
+### v2.17.2 (24/06/2026)
+
+- Đồng bộ thiết kế với code — sửa 4 lệch tìm qua cross-check audit (Issue #456):
+  - **Cleanup table**: mở rộng scope "before_discard" → "before + after discard". Thêm dòng Unit (hard delete unit_configs + pump_allocations kỳ đang mở, clear zone manager, cascade discard blocks/groups). ContactPoint thêm pump_allocations + discard meters. Thêm tiêu đề cột mới.
+  - **Schema section**: thêm 3 bảng thiếu — `backups` (sao lưu), `calculation_states` (chỉ báo độ tươi, ADR-049), `pump_station_charges` (phân bổ bơm per trạm, ADR-054).
+  - **periods.pump_allocation_per_station**: sửa "Mặc định: true (kỳ mới)" → "Schema default: false; PeriodService set true khi mở kỳ mới" — schema default false an toàn cho kỳ cũ, service mới set true.
+  - **Index table**: thêm 3 discarded_at index (blocks, groups, main_meters) + unique index calculation_states (zone_id, period_id).
+- Bảng "Xóa dữ liệu": thêm dòng "Xóa đơn vị" (general success case) mô tả cleanup + cascade khi xoá đơn vị thành công.
 
 ### v2.17.1 (23/06/2026)
 

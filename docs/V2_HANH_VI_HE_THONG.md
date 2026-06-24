@@ -1,7 +1,7 @@
 # Hành vi hệ thống — Hệ thống quản lý điện nước nội bộ (Hệ thống v2)
 
-> **Phiên bản:** 1.5.4
-> **Ngày:** 22/06/2026
+> **Phiên bản:** 1.5.5
+> **Ngày:** 24/06/2026
 > **Tính chất:** Tài liệu mô tả hành vi thực tế của hệ thống đã được verify qua code và test. Bổ sung cho V2_XAC_NHAN_NGHIEP_VU (cái gì) và V2_THIET_KE_HE_THONG (làm thế nào) bằng cách trả lời "hệ thống hành xử ra sao" trong các kịch bản thực tế.
 > **Nguồn:** Kết quả audit toàn diện codebase, 14 đợt page-by-page, 781+ test cases.
 
@@ -188,7 +188,7 @@ Cấu hình tỷ lệ công cộng đơn vị + cột "Khác" (other_deductions)
 
 ### Phân bổ bơm nước (/pump_allocations)
 
-Đối tượng nhận phân bổ: đơn vị, đầu mối sinh hoạt thuộc khu vực, đầu mối ngoài biên chế thuộc khu vực. Đầu mối công cộng và đầu mối thuộc đơn vị không nhận trực tiếp — đầu mối thuộc đơn vị nhận gián tiếp qua đơn vị.
+Đối tượng nhận phân bổ (kỳ gộp toàn khu vực): đơn vị, đầu mối sinh hoạt thuộc khu vực, đầu mối ngoài biên chế thuộc khu vực. Kỳ phân bổ theo trạm (mục 9): mở rộng thêm khối, nhóm, đầu mối sinh hoạt thuộc đơn vị. Chi tiết đối tượng nhận và ràng buộc: xem mục 9 và `V2_XAC_NHAN_NGHIEP_VU.md` mục 9.2 + 9.6.
 
 | Vai trò | Thấy | CUD | Đặc biệt |
 |---|---|---|---|
@@ -271,7 +271,7 @@ Kết quả: `Calculation.where(period: kỳ_N_1)` có record Zone A → hiện.
 | Entity bị xóa | Cleanup kỳ đang mở | Data kỳ cũ |
 |---|---|---|
 | Zone | Hard delete main_meter_readings + discard main_meters | Giữ nguyên |
-| Unit | Hard delete pump_allocations + clear zone manager | Giữ nguyên (phải xóa hết CPs/users trước) |
+| Unit | Hard delete unit_configs + pump_allocations + clear zone manager + cascade discard blocks/groups | Giữ nguyên (phải xóa hết CPs/users trước) |
 | ContactPoint | Hard delete meter_readings, calculations, personnel_entries, other_deductions, non_establishment_snapshots, pump_allocations + discard meters | Giữ nguyên |
 | Meter | Hard delete meter_readings | Giữ nguyên (chặn xóa nếu là công tơ cuối cùng của đầu mối) |
 | Block/Group | Nullify block_id/group_id trên children | — (không có data per kỳ) |
@@ -387,6 +387,12 @@ Code từ session AI trước có thể thiếu suy nghĩ sâu về edge cases. 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.5.5 (24/06/2026)
+
+- Đồng bộ hành vi với code — sửa 2 lệch tìm qua cross-check audit (Issue #456):
+  - Mục 5 cleanup table, dòng Unit: thêm `unit_configs` (hard delete kỳ đang mở) + `cascade discard blocks/groups` (after_discard) — khớp `unit.rb` callbacks `cleanup_current_period_data` + `discard_blocks_and_groups`.
+  - Mục 4 phân bổ bơm nước: cập nhật đối tượng nhận — phân biệt kỳ gộp (3 loại cũ) vs kỳ per-trạm (mở rộng thêm khối, nhóm, đầu mối sinh hoạt thuộc đơn vị). Trỏ về mục 9 + `V2_XAC_NHAN_NGHIEP_VU.md` mục 9.2/9.6 thay vì lặp lại.
 
 ### v1.5.4 (23/06/2026)
 
