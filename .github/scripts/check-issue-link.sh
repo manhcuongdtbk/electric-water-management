@@ -8,14 +8,14 @@ set -uo pipefail
 
 # --- Exemptions ---
 
-# release-please bot
-if [[ "${PR_AUTHOR:-}" == "app/github-actions" ]]; then
+# Bot authors — gh CLI returns "app/<name>" but GitHub event payload returns "<name>[bot]"
+author="${PR_AUTHOR:-}"
+if [[ "$author" == "app/github-actions" ]] || [[ "$author" == "github-actions[bot]" ]]; then
   echo "✓ check-issue-link: release-please PR (bot author) — exempt."
   exit 0
 fi
 
-# dependabot
-if [[ "${PR_AUTHOR:-}" == "app/dependabot" ]]; then
+if [[ "$author" == "app/dependabot" ]] || [[ "$author" == "dependabot[bot]" ]]; then
   echo "✓ check-issue-link: dependabot PR — exempt."
   exit 0
 fi
