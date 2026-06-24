@@ -1,7 +1,7 @@
 # Các chiều kiểm thử — Hệ thống quản lý điện nước nội bộ (Hệ thống v2)
 
-> **Phiên bản:** 1.5.2
-> **Ngày:** 22/06/2026
+> **Phiên bản:** 1.5.3
+> **Ngày:** 24/06/2026
 > **Tính chất:** Định nghĩa không gian kiểm thử. Mỗi chiều là một biến độc lập tạo code path khác nhau trong hệ thống. Giao điểm giữa các chiều là nơi bug dễ xảy ra nhất.
 > **Nguồn:** Audit toàn bộ codebase, đối chiếu 4 tài liệu, 1378 test cases.
 
@@ -50,7 +50,7 @@ UA-ZM và CMD-ZM không phải role riêng trong database. Xác định qua `cur
 | Xem kết quả | Tra cứu lịch sử (/history) | Xem, so sánh | BusinessRoleRequired | Xem | Xem | Xem | Xem | Xem | Xem | Chặn |
 | Nhập liệu | Nhập số điện lực (/electricity_supply) | Xem, sửa | BusinessRoleRequired + PeriodGuard + authorize! | Sửa | Xem (disabled) | Sửa | Chặn | Xem (disabled) | Chặn | Chặn |
 | Nhập liệu | Chỉ số đầu mối (/meter_entries) | Xem, sửa, search, filter | BusinessRoleRequired + PeriodGuard (qua MeterReadingEntry) | Sửa + filter zone/unit + cột zone/unit | Xem (disabled) | Sửa | Sửa | Xem (disabled) | Xem (disabled) | Chặn |
-| Nhập liệu | Chỉ số bơm nước (/pump_entries) | Xem, sửa, search, filter | BusinessRoleRequired + PeriodGuard (qua MeterReadingEntry) | Sửa + filter zone/unit + cột zone/unit | Xem (disabled) | Sửa | Trống | Xem (disabled) | Trống | Chặn |
+| Nhập liệu | Chỉ số bơm nước (/pump_entries) | Xem, sửa, search, filter | BusinessRoleRequired + PeriodGuard (qua MeterReadingEntry) | Sửa + filter zone + cột zone (không có unit — bơm nước luôn thuộc khu vực) | Xem (disabled) | Sửa | Trống | Xem (disabled) | Trống | Chặn |
 | Khai báo | Đầu mối (/contact_points) | CRUD | BusinessRoleRequired + PeriodGuard + StructureChangeGuard | CRUD | Xem | CRUD (đơn vị+khu vực) | CRUD (đơn vị) | Xem (đơn vị+khu vực) | Xem (đơn vị) | Chặn |
 | Khai báo | Khối (/blocks) | CRUD | BusinessRoleRequired + PeriodGuard + StructureChangeGuard | CRUD | Xem | CRUD (đơn vị) | CRUD (đơn vị) | Xem (đơn vị) | Xem (đơn vị) | Chặn |
 | Khai báo | Nhóm (/groups) | CRUD | BusinessRoleRequired + PeriodGuard + StructureChangeGuard | CRUD | Xem | CRUD (đơn vị) | CRUD (đơn vị) | Xem (đơn vị) | Xem (đơn vị) | Chặn |
@@ -503,6 +503,10 @@ Test: chưa tính → 2 cột + A/B/C trống; sau tính → khớp `LossCalcula
 ---
 
 ## Lịch sử thay đổi
+
+### v1.5.3 (24/06/2026)
+
+- Chiều 3 ma trận: pump_entries SA sửa "filter zone/unit + cột zone/unit" → "filter zone + cột zone (không có unit — bơm nước luôn thuộc khu vực)". Bơm nước (`water_pump`) luôn có `unit_id: nil` (`validate_water_pump_constraints`), nên unit filter/cột vô nghĩa. meter_entries giữ nguyên zone/unit (sinh hoạt + công cộng có thể thuộc đơn vị). Issue #456.
 
 ### v1.5.2 (23/06/2026)
 
