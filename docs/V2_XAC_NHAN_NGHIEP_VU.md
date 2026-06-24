@@ -1,7 +1,7 @@
 # Xác nhận nghiệp vụ — Hệ thống quản lý điện nước nội bộ (Hệ thống v2)
 
-> **Phiên bản:** 2.18.1
-> **Ngày:** 20/06/2026
+> **Phiên bản:** 2.19.0
+> **Ngày:** 24/06/2026
 > **Tính chất:** Tài liệu nội bộ giữa chủ dự án và đội phát triển. Là nguồn sự thật duy nhất cho thiết kế và triển khai.
 > **Ngôn ngữ hệ thống:** Toàn bộ hệ thống phải được Việt hóa 100% (giao diện, thông báo, cảnh báo, xuất file) vì hệ thống dùng trong Sư đoàn Quân đội nhân dân Việt Nam.
 
@@ -41,7 +41,8 @@ Tuyệt đối không viết tắt, không rút gọn — áp dụng mọi nơi:
 26. [Quy tắc hiển thị số và làm tròn](#26-quy-tắc-hiển-thị-số-và-làm-tròn)
 27. [Các trường hợp đặc biệt](#27-các-trường-hợp-đặc-biệt)
 28. [Yêu cầu kỹ thuật](#28-yêu-cầu-kỹ-thuật)
-29. [Lịch sử thay đổi](#29-lịch-sử-thay-đổi)
+29. [Truy vết xác nhận nghiệp vụ](#29-truy-vết-xác-nhận-nghiệp-vụ)
+30. [Lịch sử thay đổi](#30-lịch-sử-thay-đổi)
 
 ---
 
@@ -936,7 +937,25 @@ Người dùng chỉ cần sửa chỗ có thay đổi. Mọi thao tác ở kỳ
 
 ---
 
-## 29. Lịch sử thay đổi
+## 29. Truy vết xác nhận nghiệp vụ
+
+Bảng dưới liên kết từng đợt xác nhận nghiệp vụ với khách tới phiên bản phát hành đã triển khai nội dung đó.
+
+| Đợt | Ngày xác nhận | Bối cảnh | Nội dung đã xác nhận | Fold vào | Phiên bản phát hành | Truy vết |
+|---|---|---|---|---|---|---|
+| Đợt 1 | 31/05/2026 | Kiểm thử Acceptance kỳ 4/2026, khách đưa ra 3 mong muốn mới | Cột Khác hệ số đơn vị (mục 10.2.1, `NV-cot-khac-he-so-don-vi`); phân bổ bơm theo trạm (mục 9.6, `NV-phan-bo-bom-theo-tram`); hiển thị chi tiết tổn hao (mục 8.5, `NV-hien-thi-chi-tiet-ton-hao`) | v2.15.0 | 1.2.0 | Issue #319, PR #264 |
+| Đợt 2 | 21/06/2026 | Kiểm thử Acceptance, khách đưa ra 2 mong muốn mới | Tên hệ thống (mục 1); vai trò Chỉ huy Sư đoàn (mục 11.5) | v2.18.0 | 1.2.0 | Issue #418, #419, PR #315 |
+
+Trước v2.19.0, mỗi đợt có file riêng (`V2_XAC_NHAN_NGHIEP_VU_BO_SUNG.md`, `V2_XAC_NHAN_NGHIEP_VU_BO_SUNG_2.md`). Nội dung đã fold vào tài liệu này; bảng trên thay thế hai file đó. Nội dung gốc xem qua git history.
+
+---
+
+## 30. Lịch sử thay đổi
+
+### v2.19.0 (24/06/2026)
+
+- Thêm mục 29 "Truy vết xác nhận nghiệp vụ": bảng liên kết từng đợt xác nhận với khách tới phiên bản phát hành đã triển khai (đợt 1 → 1.2.0, đợt 2 → 1.2.0). Thay thế hai file bổ sung riêng (`V2_XAC_NHAN_NGHIEP_VU_BO_SUNG.md`, `V2_XAC_NHAN_NGHIEP_VU_BO_SUNG_2.md`) — nội dung đã fold vào canonical, nay dấu vết lịch sử cũng nằm tại đây.
+- Lịch sử thay đổi đổi số mục 29 → 30.
 
 ### v2.18.1 (21/06/2026)
 
