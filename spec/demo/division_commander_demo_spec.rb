@@ -45,7 +45,7 @@ RSpec.describe "Demo: vai trò Chỉ huy Sư đoàn", type: :demo do
     # -----------------------------------------------------------------------
     demo.sign_in_as(User.find_by!(username: "demo_dc"), role_label: "Chỉ huy Sư đoàn")
     expect(page).to have_current_path("/", wait: 10)
-    demo.narrate("Vai trò mới: Chỉ huy Sư đoàn — xem tất cả, không sửa gì")
+    demo.narrate("Vai trò mới: Chỉ huy Sư đoàn — xem tất cả, không sửa số liệu đầu vào")
 
     # -----------------------------------------------------------------------
     # Beat 3 — Xem cấu trúc (lớn → nhỏ)
@@ -61,20 +61,20 @@ RSpec.describe "Demo: vai trò Chỉ huy Sư đoàn", type: :demo do
     expect(page).to have_content("Tiểu đoàn 1", wait: 10)
     expect(page).to have_no_link("Thêm đơn vị")
 
-    # 3c. Đầu mối
+    # 3c. Khối
+    demo.visit("/blocks", caption: "Khối — nhóm hiển thị lớn, không có nút thêm/sửa/xóa")
+    expect(page).to have_no_link("Thêm khối")
+
+    # 3d. Nhóm
+    demo.visit("/groups", caption: "Nhóm — nhóm hiển thị nhỏ, không có nút thêm/sửa/xóa")
+    expect(page).to have_no_link("Thêm nhóm")
+
+    # 3e. Đầu mối
     demo.visit("/contact_points", caption: "Đầu mối — tất cả đầu mối, có ô lọc khu vực và đơn vị")
     expect(page).to have_css("select#zone_id", wait: 10)
     expect(page).to have_css("select#unit_id")
-    demo.narrate("Xem cấu trúc toàn bộ — nhưng không thêm, sửa, xóa được")
+    demo.narrate("Xem cấu trúc toàn bộ (lớn → nhỏ) — nhưng không thêm, sửa, xóa được")
     expect(page).to have_no_link("Thêm đầu mối")
-
-    # 3d. Khối
-    demo.visit("/blocks", caption: "Khối — tất cả khối, không có nút thêm/sửa/xóa")
-    expect(page).to have_no_link("Thêm khối")
-
-    # 3e. Nhóm
-    demo.visit("/groups", caption: "Nhóm — tất cả nhóm, không có nút thêm/sửa/xóa")
-    expect(page).to have_no_link("Thêm nhóm")
 
     # -----------------------------------------------------------------------
     # Beat 4 — Xem thiết lập
@@ -166,6 +166,6 @@ RSpec.describe "Demo: vai trò Chỉ huy Sư đoàn", type: :demo do
     # -----------------------------------------------------------------------
     # Beat 9 — Kết
     # -----------------------------------------------------------------------
-    demo.narrate("7 vai trò: thêm Chỉ huy Sư đoàn — xem tất cả 16 trang, không sửa gì. Quyền truy cập từng trang được kiểm thử tự động đủ cả 7 vai trò")
+    demo.narrate("7 vai trò: thêm Chỉ huy Sư đoàn — xem tất cả 16 trang, không sửa số liệu đầu vào, có thể tính toán lại. Quyền truy cập từng trang được kiểm thử tự động đủ cả 7 vai trò")
   end
 end
