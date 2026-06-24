@@ -1,6 +1,6 @@
 # Xác nhận nghiệp vụ — Hệ thống quản lý điện nước nội bộ (Hệ thống v2)
 
-> **Phiên bản:** 2.19.1
+> **Phiên bản:** 2.19.2
 > **Ngày:** 24/06/2026
 > **Tính chất:** Tài liệu nội bộ giữa chủ dự án và đội phát triển. Là nguồn sự thật duy nhất cho thiết kế và triển khai.
 > **Ngôn ngữ hệ thống:** Toàn bộ hệ thống phải được Việt hóa 100% (giao diện, thông báo, cảnh báo, xuất file) vì hệ thống dùng trong Sư đoàn Quân đội nhân dân Việt Nam.
@@ -707,7 +707,7 @@ Trang tổng quan tách riêng với bảng tính tiền, là trang đầu tiên
 
 - Xem dữ liệu của kỳ bất kỳ: bảng tính tiền, tổng quan đều có thể xem lại tháng cũ.
 - So sánh 2 kỳ bất kỳ: chọn kỳ A và kỳ B, hiển thị cạnh nhau cùng đầu mối với 2 cột số liệu và cột chênh lệch. Áp dụng cho cả bảng tính tiền và tổng quan. Nếu đầu mối chỉ có ở 1 kỳ (đã xóa hoặc mới tạo): vẫn hiển thị dòng, cột kỳ thiếu để trống, cột chênh lệch để trống, kèm ghi chú "chỉ có ở kỳ A" hoặc "mới ở kỳ B".
-- Xem tổng quan theo khoảng thời gian: mặc định có thể chọn tháng, quý, năm, hoặc tùy chọn ngày bắt đầu đến ngày kết thúc (dữ liệu hiển thị theo các kỳ tương ứng của 2 ngày đó).
+- Xem tổng quan theo khoảng thời gian: chọn kỳ bắt đầu và kỳ kết thúc, hệ thống liệt kê các kỳ trong khoảng đó kèm tổng thâm điện và thành tiền.
 - Quản trị viên đơn vị xem lịch sử đơn vị mình. Chỉ huy đơn vị xem lịch sử đơn vị mình. Quản trị viên hệ thống xem tất cả.
 
 ---
@@ -881,7 +881,7 @@ Người dùng chỉ cần sửa chỗ có thay đổi. Mọi thao tác ở kỳ
 
 ### 27.2. Công tơ
 
-- **Công tơ cuối kỳ nhỏ hơn đầu kỳ:** công tơ bị thay mới hoặc reset. Hệ thống cho phép nhập thủ công số sử dụng thay vì tính tự động.
+- **Công tơ cuối kỳ nhỏ hơn đầu kỳ:** công tơ bị thay mới hoặc reset. Số đầu kỳ editable mọi kỳ — quản trị viên sửa số đầu kỳ thành số khởi đầu của công tơ mới, nhập số cuối kỳ bình thường, sử dụng = cuối kỳ − đầu kỳ. Có trường ghi chú để ghi lý do (ví dụ: "thay công tơ mới").
 - **Kỳ đầu tiên (chưa có kỳ trước để kế thừa):** phải nhập thủ công cả đầu kỳ lẫn cuối kỳ.
 - **Xóa công tơ cuối cùng của đầu mối (trừ ngoài biên chế):** không cho phép. Đầu mối luôn phải có ít nhất 1 công tơ.
 
@@ -933,7 +933,7 @@ Người dùng chỉ cần sửa chỗ có thay đổi. Mọi thao tác ở kỳ
 - 1 tài khoản cho phép đăng nhập nhiều thiết bị cùng lúc.
 - ~~Xóa tài khoản đang đăng nhập (của người khác): session bị buộc thoát ngay~~ (nhu cầu thực tế không cần).
 - Thông báo khi đăng nhập: hiển thị "Kỳ tháng X đã mở, vui lòng nhập liệu" khi có kỳ mới.
-- Khi nhập thủ công số sử dụng công tơ (trường hợp cuối kỳ < đầu kỳ): có trường ghi chú optional kèm theo (ví dụ: "thay công tơ mới").
+- Khi thay công tơ (cuối kỳ < đầu kỳ): quản trị viên sửa số đầu kỳ thành số mới (reading_start editable mọi kỳ). Có trường ghi chú optional kèm theo (ví dụ: "thay công tơ mới").
 
 ---
 
@@ -951,6 +951,11 @@ Trước v2.19.0, mỗi đợt có file riêng (`V2_XAC_NHAN_NGHIEP_VU_BO_SUNG.m
 ---
 
 ## 30. Lịch sử thay đổi
+
+### v2.19.2 (24/06/2026)
+
+- Mục 27.2: sửa trường hợp công tơ cuối kỳ < đầu kỳ — "nhập thủ công số sử dụng" → "sửa số đầu kỳ thành số mới" (reading_start editable mọi kỳ, không cần trường manual_usage riêng trên giao diện). Mục 28: cập nhật tương ứng.
+- Mục 17: sửa range mode — "chọn tháng, quý, năm, hoặc tùy chọn ngày" → "chọn kỳ bắt đầu và kỳ kết thúc" (khớp code: 2 dropdown kỳ). Issue #457.
 
 ### v2.19.1 (24/06/2026)
 
