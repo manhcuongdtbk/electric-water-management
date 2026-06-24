@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Guardrail (ADR-015 revisit, Issue #442): every pull request must reference at
 # least one GitHub Issue in its body (Refs #N, Closes #N, Fixes #N, Resolves #N).
-# Exempt: release-please PRs (bot author), release/hotfix/merge-back PRs.
+# Exempt: release-please PRs (bot author), dependabot PRs, release/hotfix/merge-back PRs.
 # Inputs via env: PR_BODY, PR_AUTHOR, PR_TITLE.
 # FAIL-LOUD: violation → exit 1.
 set -uo pipefail
@@ -11,6 +11,12 @@ set -uo pipefail
 # release-please bot
 if [[ "${PR_AUTHOR:-}" == "app/github-actions" ]]; then
   echo "✓ check-issue-link: release-please PR (bot author) — exempt."
+  exit 0
+fi
+
+# dependabot
+if [[ "${PR_AUTHOR:-}" == "app/dependabot" ]]; then
+  echo "✓ check-issue-link: dependabot PR — exempt."
   exit 0
 fi
 
