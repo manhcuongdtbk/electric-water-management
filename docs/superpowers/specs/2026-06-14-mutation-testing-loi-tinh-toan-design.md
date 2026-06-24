@@ -6,6 +6,7 @@ date: 2026-06-14
 
 # Mutation testing cho lõi tính tiền/điện (harness tự viết)
 
+> **Ghi chú (25/06/2026):** Spec viết khi hệ thống có 6 vai trò thực tế. Nay 7 vai trò (thêm Chỉ huy Sư đoàn `division_commander` — xem [ADR-061](2026-06-25-division-commander-role-design.md), Issue #419).
 Thiết kế cho [#358](https://github.com/manhcuongdtbk/electric-water-management/issues/358) — bổ khuyết của coverage dòng/nhánh (SimpleCov, [#360](https://github.com/manhcuongdtbk/electric-water-management/issues/360), đã merge). Coverage chỉ chứng minh code **được chạy**, KHÔNG chứng minh assertion **bắt được sai lệch**. Lõi tính tiền/điện (`CalculationOrchestrator` → `LossCalculator`, `PumpAllocationCalculator`, `SummaryCalculator`) là nơi **sai một li đi một dặm** về tài chính: một test chỉ kiểm "tổng đúng" mà không kiểm từng đầu mối sẽ để lọt lỗi đổi `+`↔`-`, `*`↔`/`, sai mẫu số hệ số, hay rớt `:half_up`. **Mutation testing** chèn đúng những đột biến đó rồi chạy lại test: mutant **sống** = lỗ hổng assertion cần bổ test.
 
 Liên quan: SimpleCov (ADR đã merge #360); role-based coverage [#359](https://github.com/manhcuongdtbk/electric-water-management/issues/359) chạy song song; quy ước test bám chiều-test ([#327]/ADR-030) và 6 vai trò (`docs/V2_HANH_VI_HE_THONG.md`).

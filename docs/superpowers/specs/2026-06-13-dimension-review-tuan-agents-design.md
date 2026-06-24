@@ -7,6 +7,7 @@ governed_by: 2026-06-07-sdlc-overview-design.md
 
 # Chiều review "tuân AGENTS"
 
+> **Ghi chú (25/06/2026):** Spec viết khi hệ thống có 6 vai trò thực tế. Nay 7 vai trò (thêm Chỉ huy Sư đoàn `division_commander` — xem [ADR-061](2026-06-25-division-commander-role-design.md), Issue #419).
 Làm cho review code — cả người review lẫn Claude khi chạy `/code-review` — **kiểm tuân thủ quy ước AGENTS**, không chỉ soi diff đúng/sai về chức năng. Bốn chiều AGENTS cần phủ: **i18n** (chữ người-dùng qua `t(...)` + `vi.yml`), **không viết tắt** (chỉ dùng viết tắt có trong `docs/THUAT_NGU.md`), **BigDecimal cho tiền/điện** (không float; làm tròn `ROUND_HALF_UP` chỉ khi hiển thị), **phủ đủ 6 vai trò** trong test. Đúng tinh thần [ADR-002](2026-06-07-sdlc-overview-design.md) ("luật nào máy kiểm được thì để máy ép; đừng viết prose rồi mong người nhớ"): đẩy phần **máy ép được tối đa** thành CI đỏ, chỉ để lại phần **không nhập nhằng-bất-khả-thi** cho người/AI — và phần đó cũng được bơm tự động vào Claude lúc review để "người skim cũng không rớt". Truy vết: GitHub Issue [`#329`](https://github.com/manhcuongdtbk/electric-water-management/issues/329), mục B.
 
 ## Bối cảnh

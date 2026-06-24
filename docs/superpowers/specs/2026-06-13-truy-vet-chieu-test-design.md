@@ -7,6 +7,7 @@ governed_by: 2026-06-07-sdlc-overview-design.md
 
 # CI gate truy vết chiều test ↔ test
 
+> **Ghi chú (25/06/2026):** Spec viết khi hệ thống có 6 vai trò thực tế. Nay 7 vai trò (thêm Chỉ huy Sư đoàn `division_commander` — xem [ADR-061](2026-06-25-division-commander-role-design.md), Issue #419).
 Biến luật **"test mọi output + cả 6 vai trò + theo chiều test của spec"** (AGENTS) từ **kỷ luật/trí nhớ** thành **luật máy ép được**, đúng tinh thần [ADR-002](2026-06-07-sdlc-overview-design.md) ("luật nào máy kiểm được thì để máy ép; đừng viết prose rồi mong người nhớ"). Đây là **kích hoạt đường nâng cấp đã được [ADR-015](2026-06-08-truy-vet-quan-ly-thay-doi-design.md) tiên liệu** ("Điều kiện xem lại: cần CI chặn yêu cầu thiếu test → khi đó mới gắn tag vào test + viết script đối chiếu anchor trong tài liệu với tag"), áp cho **chiều test** thay vì yêu cầu nghiệp vụ. Tái dùng nguyên pattern guardrail bash native fail-loud của [ADR-024](2026-06-11-guardrail-quan-tri-tai-lieu-design.md) (job `doc-governance`). Truy vết: GitHub Issue [`#329`](https://github.com/manhcuongdtbk/electric-water-management/issues/329).
 
 ## Bối cảnh
