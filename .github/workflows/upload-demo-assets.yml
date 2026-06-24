@@ -1,0 +1,85 @@
+name: upload-demo-assets
+
+# Issue #438: after release-please creates a GitHub Release (tag vX.Y.Z),
+# download the demo-bundle artifact from the release PR's CI run and upload
+# MP4s + manifest.md as Release assets. This replaces the manual step of
+# `gh run download` + `gh release upload`.
+#
+# Trigger: `release: published` fires after release-please merges its Release
+# PR and creates the tag + GitHub Release.
+#
+# The demo-bundle artifact was uploaded by the `demo-bundle` job in ci.yml
+# during the release/* → main PR. We find it via the merge commit SHA.
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  upload-demo-assets:
+    name: Upload demo clips to GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Find demo-bundle artifact from the release PR
+        id: find
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          echo "Looking for demo-bundle artifact for tag ${TAG}..."
+
+          # Find the workflow run that produced the demo-bundle for this tag.
+          # The release PR merged into main; its CI run has the artifact.
+          # Search recent runs on the main branch for the demo-bundle artifact.
+          run_id=$(gh api "repos/${{ github.repository }}/actions/artifacts" \
+            --jq '.artifacts[] | select(.name == "demo-bundle" and .expired == false) | .workflow_run.id' \
+            | head -1)
+
+          if [[ -z "$run_id" ]]; then
+            echo "No demo-bundle artifact found. Skipping upload."
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Found demo-bundle in run ${run_id}"
+          echo "found=true" >> "$GITHUB_OUTPUT"
+          echo "run_id=${run_id}" >> "$GITHUB_OUTPUT"
+
+      - name: Download demo-bundle artifact
+        if: ${{ steps.find.outputs.found == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh run download ${{ steps.find.outputs.run_id }} \
+            -n demo-bundle \
+            -D demo-bundle
+
+          echo "Downloaded files:"
+          find demo-bundle -type f | sort
+
+      - name: Upload to GitHub Release
+        if: ${{ steps.find.outputs.found == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          files=$(find demo-bundle -type f \( -name '*.mp4' -o -name 'manifest.md' \))
+
+          if [[ -z "$files" ]]; then
+            echo "No MP4 or manifest.md files in demo-bundle. Skipping upload."
+            exit 0
+          fi
+
+          echo "Uploading to release ${TAG}:"
+          echo "$files"
+
+          # Upload each file; --clobber overwrites if re-run
+          echo "$files" | while IFS= read -r f; do
+            gh release upload "$TAG" "$f" --clobber
+            echo "  ✓ $(basename "$f")"
+          done
+
+          echo "✓ Demo assets uploaded to release ${TAG}."
