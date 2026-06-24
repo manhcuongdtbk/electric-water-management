@@ -101,6 +101,20 @@ jobs:
           HEAD_REF: ${{ github.head_ref }}
         run: bash .github/scripts/check-branch-source.sh
 
+  issue-link-guardrail:
+    name: Issue link guardrail (every PR must reference an issue)
+    runs-on: ubuntu-latest
+    # Chạy LUÔN trên mọi pull request (KHÔNG gate qua `changes`): guardrail nhẹ,
+    # cần bắt mọi PR thiếu liên kết issue (ADR-015 revisit, Issue #442).
+    steps:
+      - uses: actions/checkout@v6
+      - name: Require issue reference in PR body
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: bash .github/scripts/check-issue-link.sh
+
   doc-governance:
     name: Doc governance (links, map, glossary, test dimensions, ADR status, changelog header, ADR numbering, demo deliverable)
     runs-on: ubuntu-latest
