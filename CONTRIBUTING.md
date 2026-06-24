@@ -247,6 +247,19 @@ Guardrail + CI ép demo **tồn tại** và **chạy**; chúng **không** ép de
 
 > Chuẩn + lý do đầy đủ: ADR-059 (`docs/superpowers/specs/2026-06-14-demo-dod-design.md`, mục "Chuẩn demo tốt").
 
+### Thứ tự trang cho demo vai trò
+
+Khi demo video cho một vai trò (đặc biệt vai trò mới), duyệt trang theo thứ tự nghiệp vụ — lớn → nhỏ, thiết lập → nhập liệu → kết quả:
+
+1. **Cấu trúc** (lớn → nhỏ): khu vực → đơn vị → khối → nhóm → đầu mối
+2. **Thiết lập**: đơn giá điện → nhóm cấp bậc → phân bổ bơm nước
+3. **Nhập liệu** (tổng quan → chuyên sâu): nhập số điện lực → chỉ số đầu mối → chỉ số bơm nước → cấu hình đơn vị
+4. **Kết quả** (tổng quan → chi tiết → lịch sử): tổng quan → bảng tính tiền → tra cứu lịch sử
+5. **Hệ thống**: nhật ký hoạt động
+6. **Bị chặn**: tài khoản, sao lưu dữ liệu (nếu vai trò không truy cập)
+
+Lý do thứ tự: không biết cấu trúc → không hiểu thiết lập; không biết thiết lập → không hiểu nhập liệu; không biết nhập liệu → không hiểu kết quả. Arc demo: mở đầu bằng cái đau (vai trò hiện tại thiếu gì) → đăng nhập vai trò mới → duyệt 6 nhóm trên → kết.
+
 ### Cổng xác nhận khách trước build (ADR-028)
 
 Khi cần khách **xác nhận yêu cầu/phương án trước khi build** (thường qua nhiều lượt), làm trong bước 3:
