@@ -52,11 +52,11 @@ RSpec.describe "Demo: phân bổ điện bơm theo từng trạm bơm", type: :d
     )
 
     # Beat-5 add: a recipient NOT yet on any station, added to Trạm bơm Tây
-    # through the real form. "Nhà ăn" (đầu mối public, Tiểu đoàn 1) is unallocated
-    # in the seed; a fixed 10% keeps Trạm bơm Tây valid (Σ% = 30 + 10 = 40 ≤ 100)
-    # and touches NO Beta recipient, so the no-mixing proof below stays clean.
-    nha_an = ContactPoint.find_by!(
-      name: "Nhà ăn", contact_point_type: "public", unit_id: unit_alpha.id
+    # through the real form. "Thợ xây" (đầu mối non_establishment, zone-level)
+    # is unallocated in the seed; a fixed 10% keeps Trạm bơm Tây valid
+    # (Σ% = 30 + 10 = 40 ≤ 100) and is zone-level so no unit constraint issues.
+    tho_xay = ContactPoint.find_by!(
+      name: "Thợ xây", contact_point_type: "non_establishment", zone_id: zone.id
     )
 
     # Beat-6 proof: a residential contact point that sits under ONE station's area
@@ -150,34 +150,34 @@ RSpec.describe "Demo: phân bổ điện bơm theo từng trạm bơm", type: :d
     # Đối tượng nhận = Đầu mối (radio name=target_mode). Stimulus hiện ô chọn đầu mối.
     page.find("input[name='target_mode'][value='contact_point']").click
     demo.select(
-      "Nhà ăn", from: "pump_allocation[contact_point_id]",
-      caption: "Chọn đầu mối Nhà ăn — chưa thuộc trạm bơm nào"
+      "Thợ xây", from: "pump_allocation[contact_point_id]",
+      caption: "Chọn đầu mối Thợ xây — chưa thuộc trạm bơm nào"
     )
     # Chế độ phân bổ = % cố định (radio name=alloc_mode).
     page.find("input[name='alloc_mode'][value='fixed']").click
     demo.fill(
       "pump_allocation[fixed_percentage]", with: "10",
-      caption: "Nhà ăn nhận 10% điện của riêng Trạm bơm Tây"
+      caption: "Thợ xây nhận 10% điện của riêng Trạm bơm Tây"
     )
     demo.click("Lưu", caption: "Lưu — thêm đối tượng cho riêng trạm này")
     expect(page).to have_content("Đã tạo", wait: 10)
 
     # The new recipient persists AND shows inside Trạm bơm Tây's card only.
-    alloc_nha_an = PumpAllocation.find_by!(
+    alloc_tho_xay = PumpAllocation.find_by!(
       period_id: period.id, pump_contact_point_id: station_tay.id,
-      contact_point_id: nha_an.id
+      contact_point_id: tho_xay.id
     )
-    expect(alloc_nha_an.fixed_percentage).to eq(BigDecimal("10"))
+    expect(alloc_tho_xay.fixed_percentage).to eq(BigDecimal("10"))
     demo.visit(
       "/pump_allocations?zone_id=#{zone.id}",
-      caption: "Quay lại danh sách — Nhà ăn giờ nằm trong Trạm bơm Tây"
+      caption: "Quay lại danh sách — Thợ xây giờ nằm trong Trạm bơm Tây"
     )
     within("[data-pump-station-card='#{station_tay.id}']") do
-      expect(page).to have_content("Nhà ăn", wait: 10)
+      expect(page).to have_content("Thợ xây", wait: 10)
     end
     demo.highlight(
-      "[data-pump-allocation-target-id='#{alloc_nha_an.id}']",
-      caption: "Nhà ăn vừa thêm — chỉ thuộc Trạm bơm Tây, đúng danh sách riêng của trạm"
+      "[data-pump-allocation-target-id='#{alloc_tho_xay.id}']",
+      caption: "Thợ xây vừa thêm — chỉ thuộc Trạm bơm Tây, đúng danh sách riêng của trạm"
     )
 
     # 6. Khép vòng trên Bảng tính tiền: tính lại, rồi đọc bảng điện bơm theo trạm.
