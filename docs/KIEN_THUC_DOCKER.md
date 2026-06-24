@@ -1,7 +1,7 @@
 # Kiến thức Docker — Hệ thống quản lý điện nước nội bộ
 
-> **Phiên bản:** 1.9.2
-> **Ngày:** 14/06/2026
+> **Phiên bản:** 1.10.0
+> **Ngày:** 24/06/2026
 > **Đối tượng:** Developer hoặc người muốn hiểu hệ thống chạy thế nào ở mọi môi trường.
 > **Tiền đề:** Bạn biết code Rails nhưng chưa biết Docker và chưa từng deploy.
 
@@ -275,11 +275,7 @@ File `.env` không bao giờ commit vào git (chứa mật khẩu).
 
 ### db/seeds.rb
 
-Tạo 2 tài khoản mặc định khi database mới:
-- `kyThuat` / `Abc@1234` (kỹ thuật viên — quản lý tài khoản, sao lưu)
-- `quanTri` / `Abc@1234` (quản trị viên hệ thống — quản lý nghiệp vụ)
-
-Cả 2 bắt buộc đổi mật khẩu lần đầu đăng nhập. Không thể xóa.
+Tạo 2 tài khoản mặc định khi database mới (`kyThuat` — kỹ thuật viên, `quanTri` — quản trị viên hệ thống). Cả 2 bắt buộc đổi mật khẩu lần đầu đăng nhập. Không thể xóa. Chi tiết tài khoản và vai trò: xem `docs/V2_THIET_KE_HE_THONG.md` mục Schema → users.
 
 ### lib/tasks/backups.rake
 
@@ -542,6 +538,7 @@ bin/docker rspec              # Chạy test
 bin/docker rspec spec/models  # Chạy test 1 thư mục
 bin/docker demo               # Chạy demo specs (tự set DEMO=1)
 bin/docker demo spec/demo/x   # Chạy 1 demo spec
+bin/docker coverage           # Chạy test với coverage (tự set COVERAGE=1)
 bin/docker prspec             # Chạy test song song (auto-detect số processes)
 bin/docker prspec:setup       # Tạo databases cho test song song (1 lần)
 bin/docker console            # Rails console
@@ -844,6 +841,11 @@ docker compose up -d      # Tạo lại (database trống, 2 tài khoản mặc 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.10.0 (24/06/2026)
+
+- Mục 11 "Lệnh thường dùng": thêm `bin/docker coverage` (chạy test với coverage, tự set `COVERAGE=1`).
+- Mục 7 `db/seeds.rb`: bỏ block output (lặp nội dung seeds.rb, dễ stale), giữ mô tả hành vi + trỏ về canonical (`V2_THIET_KE_HE_THONG.md` mục Schema → users).
 
 ### v1.9.2 (21/06/2026)
 
