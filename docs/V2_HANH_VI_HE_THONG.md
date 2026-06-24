@@ -1,6 +1,6 @@
 # Hành vi hệ thống — Hệ thống quản lý điện nước nội bộ (Hệ thống v2)
 
-> **Phiên bản:** 1.5.5
+> **Phiên bản:** 1.5.6
 > **Ngày:** 24/06/2026
 > **Tính chất:** Tài liệu mô tả hành vi thực tế của hệ thống đã được verify qua code và test. Bổ sung cho V2_XAC_NHAN_NGHIEP_VU (cái gì) và V2_THIET_KE_HE_THONG (làm thế nào) bằng cách trả lời "hệ thống hành xử ra sao" trong các kịch bản thực tế.
 > **Nguồn:** Kết quả audit toàn diện codebase, 14 đợt page-by-page, 781+ test cases.
@@ -148,7 +148,7 @@ Bảng tính tiền chỉ hiển thị đầu mối **sinh hoạt** (residential
 | CMD | Cố định zone + unit | Như UA | 28 | Không |
 | TECH | Redirect /users | — | — | — |
 
-Filter display: SA dùng dropdown `@available_zones`/`@available_units`. Non-SA dùng `current_user.unit.zone.name` + `current_user.unit.name` (hiển thị cố định, không dùng `@zone`/`@unit`).
+Filter display: SA và DC dùng dropdown `@available_zones`/`@available_units` (với `with_discarded` để chọn được entity đã xóa khi xem kỳ cũ). Non-SA không có dropdown zone/unit — data scoped qua Ability theo đơn vị của `current_user`.
 
 ### Nhập chỉ số công tơ (/meter_entries, /pump_entries)
 
@@ -387,6 +387,10 @@ Code từ session AI trước có thể thiếu suy nghĩ sâu về edge cases. 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.5.6 (24/06/2026)
+
+- Mục 4 billing filter display: bỏ "Non-SA hiển thị cố định current_user.unit.zone.name + current_user.unit.name" — code không hiện tên cố định, non-SA chỉ có dropdown kỳ, data scoped qua Ability. Thêm DC vào danh sách dùng dropdown (system_wide_scope). Issue #457.
 
 ### v1.5.5 (24/06/2026)
 

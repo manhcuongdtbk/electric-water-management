@@ -1,6 +1,6 @@
 # Các chiều kiểm thử — Hệ thống quản lý điện nước nội bộ (Hệ thống v2)
 
-> **Phiên bản:** 1.5.3
+> **Phiên bản:** 1.5.4
 > **Ngày:** 24/06/2026
 > **Tính chất:** Định nghĩa không gian kiểm thử. Mỗi chiều là một biến độc lập tạo code path khác nhau trong hệ thống. Giao điểm giữa các chiều là nơi bug dễ xảy ra nhất.
 > **Nguồn:** Audit toàn bộ codebase, đối chiếu 4 tài liệu, 1378 test cases.
@@ -344,12 +344,11 @@ Expected output auto-submit:
 
 | Pattern | Cách xử lý | Trang |
 |---|---|---|
-| reading_end < reading_start → hiện manual_usage + note | View template (không dùng Stimulus) | meter_entries, pump_entries |
+| reading_end < reading_start (thay công tơ) → user sửa reading_start về số mới | Không cần conditional field — reading_start editable mọi kỳ | meter_entries, pump_entries |
 | Other deduction type (fixed/coefficient) → ý nghĩa giá trị khác | View template | unit_config |
 
 Expected output conditional:
-- reading_end < reading_start → hiện thêm 2 field (manual_usage bắt buộc, note tùy chọn). Engine dùng manual_usage thay vì end - start
-- reading_end ≥ reading_start → ẩn manual_usage + note. Engine dùng end - start
+- reading_end < reading_start (thay công tơ) → user sửa reading_start thành số mới của công tơ mới, reading_end nhập bình thường. Sử dụng = end - start. Cột ghi chú (manual_usage_note) luôn hiện để ghi "thay công tơ mới". Không có trường nhập manual_usage riêng trên giao diện (cột `manual_usage` trong database giữ cho backward compatibility, engine dùng khi có giá trị)
 - Other deduction fixed → giá trị là kW tuyệt đối. Coefficient → giá trị nhân với quân số đầu mối
 
 ### C (Create) — form tạo mới
@@ -503,6 +502,10 @@ Test: chưa tính → 2 cột + A/B/C trống; sau tính → khớp `LossCalcula
 ---
 
 ## Lịch sử thay đổi
+
+### v1.5.4 (24/06/2026)
+
+- Conditional field: sửa "reading_end < reading_start → hiện manual_usage + note" → "user sửa reading_start thành số mới" (reading_start editable mọi kỳ, không cần trường manual_usage riêng). Bỏ dòng "ẩn manual_usage + note khi end ≥ start". manual_usage_note luôn hiện. Issue #457.
 
 ### v1.5.3 (24/06/2026)
 
