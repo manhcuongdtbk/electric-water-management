@@ -1,7 +1,7 @@
 # Kiến thức Docker — Hệ thống quản lý điện nước nội bộ
 
-> **Phiên bản:** 1.9.2
-> **Ngày:** 14/06/2026
+> **Phiên bản:** 1.10.0
+> **Ngày:** 24/06/2026
 > **Đối tượng:** Developer hoặc người muốn hiểu hệ thống chạy thế nào ở mọi môi trường.
 > **Tiền đề:** Bạn biết code Rails nhưng chưa biết Docker và chưa từng deploy.
 
@@ -275,11 +275,16 @@ File `.env` không bao giờ commit vào git (chứa mật khẩu).
 
 ### db/seeds.rb
 
-Tạo 2 tài khoản mặc định khi database mới:
-- `kyThuat` / `Abc@1234` (kỹ thuật viên — quản lý tài khoản, sao lưu)
-- `quanTri` / `Abc@1234` (quản trị viên hệ thống — quản lý nghiệp vụ)
+Tạo 2 tài khoản mặc định khi database mới. Cả 2 bắt buộc đổi mật khẩu lần đầu đăng nhập. Không thể xóa. Output khi chạy:
 
-Cả 2 bắt buộc đổi mật khẩu lần đầu đăng nhập. Không thể xóa.
+```
+Default accounts created: 2
+  kyThuat  (technician)    — password: Abc@1234 (force change on first login)
+  quanTri  (system_admin)  — password: Abc@1234 (force change on first login)
+
+System has 5 database roles (7 runtime roles):
+  technician, system_admin, division_commander, unit_admin, commander
+```
 
 ### lib/tasks/backups.rake
 
@@ -542,6 +547,7 @@ bin/docker rspec              # Chạy test
 bin/docker rspec spec/models  # Chạy test 1 thư mục
 bin/docker demo               # Chạy demo specs (tự set DEMO=1)
 bin/docker demo spec/demo/x   # Chạy 1 demo spec
+bin/docker coverage           # Chạy test với coverage (tự set COVERAGE=1)
 bin/docker prspec             # Chạy test song song (auto-detect số processes)
 bin/docker prspec:setup       # Tạo databases cho test song song (1 lần)
 bin/docker console            # Rails console
@@ -844,6 +850,11 @@ docker compose up -d      # Tạo lại (database trống, 2 tài khoản mặc 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.10.0 (24/06/2026)
+
+- Mục 11 "Lệnh thường dùng": thêm `bin/docker coverage` (chạy test với coverage, tự set `COVERAGE=1`).
+- Mục 7 `db/seeds.rb`: cập nhật mô tả output cho khớp thực tế sau PR #425 (English output, liệt kê 5 database roles / 7 runtime roles).
 
 ### v1.9.2 (21/06/2026)
 
