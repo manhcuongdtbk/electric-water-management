@@ -34,18 +34,18 @@ jobs:
           echo "Looking for demo-bundle artifact for tag ${TAG}..."
 
           # Match artifact to THIS release: the demo-bundle job runs on PRs
-          # with base=main (release/* or hotfix/* branches). Extract the
-          # major.minor from the tag to match the release branch name.
+          # with base=main. Extract major.minor from the tag to match the
+          # release branch name. Hotfix PRs excluded — hotfixes are bug fixes,
+          # not customer-facing features, so they don't produce demo bundles.
           version="${TAG#v}"          # "1.3.0" from "v1.3.0"
           major_minor="${version%.*}" # "1.3"
 
-          # Find the most recent demo-bundle artifact from a release/* branch
-          # matching this version. Handles both release/X.Y and hotfix/* PRs.
+          # Find the most recent demo-bundle artifact from release/X.Y branch.
           run_id=$(gh api "repos/${REPO}/actions/artifacts?per_page=50" \
             --jq "[.artifacts[] | select(
               .name == \"demo-bundle\" and
               .expired == false and
-              (.workflow_run.head_branch | startswith(\"release/${major_minor}\") or startswith(\"hotfix/\"))
+              (.workflow_run.head_branch | startswith(\"release/${major_minor}\"))
             )] | sort_by(.created_at) | last | .workflow_run.id // empty")
 
           if [[ -z "$run_id" ]]; then
