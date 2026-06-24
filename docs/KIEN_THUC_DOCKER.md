@@ -275,17 +275,7 @@ File `.env` không bao giờ commit vào git (chứa mật khẩu).
 
 ### db/seeds.rb
 
-Tạo 2 tài khoản mặc định khi database mới. Cả 2 bắt buộc đổi mật khẩu lần đầu đăng nhập. Không thể xóa. Output khi chạy:
-
-```
-Default accounts created: 2
-  kyThuat  (technician)    — password: Abc@1234 (force change on first login)
-  quanTri  (system_admin)  — password: Abc@1234 (force change on first login)
-
-System has 5 database roles (7 runtime roles):
-  technician, system_admin, division_commander, unit_admin, commander
-  (unit_admin and commander each split into zone-manager variants at runtime)
-```
+Tạo 2 tài khoản mặc định khi database mới (`kyThuat` — kỹ thuật viên, `quanTri` — quản trị viên hệ thống). Cả 2 bắt buộc đổi mật khẩu lần đầu đăng nhập. Không thể xóa. Chi tiết tài khoản và vai trò: xem `docs/V2_THIET_KE_HE_THONG.md` mục Schema → users.
 
 ### lib/tasks/backups.rake
 
@@ -855,7 +845,7 @@ docker compose up -d      # Tạo lại (database trống, 2 tài khoản mặc 
 ### v1.10.0 (24/06/2026)
 
 - Mục 11 "Lệnh thường dùng": thêm `bin/docker coverage` (chạy test với coverage, tự set `COVERAGE=1`).
-- Mục 7 `db/seeds.rb`: cập nhật mô tả output cho khớp thực tế sau PR #425 (English output, liệt kê 5 database roles / 7 runtime roles).
+- Mục 7 `db/seeds.rb`: bỏ block output (lặp nội dung seeds.rb, dễ stale), giữ mô tả hành vi + trỏ về canonical (`V2_THIET_KE_HE_THONG.md` mục Schema → users).
 
 ### v1.9.2 (21/06/2026)
 
