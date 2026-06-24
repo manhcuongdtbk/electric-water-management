@@ -284,6 +284,7 @@ Default accounts created: 2
 
 System has 5 database roles (7 runtime roles):
   technician, system_admin, division_commander, unit_admin, commander
+  (unit_admin and commander each split into zone-manager variants at runtime)
 ```
 
 ### lib/tasks/backups.rake
