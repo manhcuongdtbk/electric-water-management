@@ -252,6 +252,14 @@ ActiveRecord::Base.transaction do
   ) { |cp| cp.unit = unit_alpha }
   puts "  ContactPoint (public): #{cp_nha_an.name}"
 
+  # Non-establishment: Thợ xây (zone-level) — receives pump water allocation
+  cp_tho_xay = ContactPoint.find_or_create_by!(
+    name: "Thợ xây",
+    contact_point_type: "non_establishment",
+    zone_id: zone.id
+  ) { |cp| cp.zone = zone; cp.personnel_count = 5 }
+  puts "  ContactPoint (non_establishment): #{cp_tho_xay.name}"
+
   # Water pump station 1: belongs to zone (not unit) — serves the western area
   # (Tiểu đoàn 1 + the zone commander residence).
   cp_tram_bom = ContactPoint.find_or_create_by!(
