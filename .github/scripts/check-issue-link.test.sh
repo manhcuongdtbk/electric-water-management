@@ -27,6 +27,10 @@ echo "== check-issue-link tests =="
 run_test "release-please bot exempt" 0 \
   PR_AUTHOR="app/github-actions" PR_TITLE="chore(main): release 1.2.0" PR_BODY=""
 
+# Exempt: dependabot
+run_test "dependabot exempt" 0 \
+  PR_AUTHOR="app/dependabot" PR_TITLE="chore(deps): Bump rails from 8.0.1 to 8.0.2" PR_BODY="Bumps rails..."
+
 # Exempt: release PR
 run_test "release PR exempt" 0 \
   PR_AUTHOR="user" PR_TITLE="release: merge release/1.3 into main" PR_BODY=""
