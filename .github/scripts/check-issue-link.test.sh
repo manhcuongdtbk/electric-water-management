@@ -23,13 +23,17 @@ run_test() {
 
 echo "== check-issue-link tests =="
 
-# Exempt: release-please bot
-run_test "release-please bot exempt" 0 \
+# Exempt: release-please bot (both author formats)
+run_test "release-please bot exempt (app/)" 0 \
   PR_AUTHOR="app/github-actions" PR_TITLE="chore(main): release 1.2.0" PR_BODY=""
+run_test "release-please bot exempt ([bot])" 0 \
+  PR_AUTHOR="github-actions[bot]" PR_TITLE="chore(main): release 1.2.0" PR_BODY=""
 
-# Exempt: dependabot
-run_test "dependabot exempt" 0 \
+# Exempt: dependabot (both author formats)
+run_test "dependabot exempt (app/)" 0 \
   PR_AUTHOR="app/dependabot" PR_TITLE="chore(deps): Bump rails from 8.0.1 to 8.0.2" PR_BODY="Bumps rails..."
+run_test "dependabot exempt ([bot])" 0 \
+  PR_AUTHOR="dependabot[bot]" PR_TITLE="chore(deps): Bump rails from 8.0.1 to 8.0.2" PR_BODY="Bumps rails..."
 
 # Exempt: release PR
 run_test "release PR exempt" 0 \
