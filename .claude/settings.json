@@ -50,6 +50,10 @@
           {
             "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/remind-doc-version-bump.sh\" 2>/dev/null"
+          },
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/check-jargon-in-docs.sh\" 2>/dev/null"
           }
         ]
       }
