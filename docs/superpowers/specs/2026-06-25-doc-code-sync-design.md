@@ -1,6 +1,6 @@
 ---
 title: Doc-code sync — CI guardrails + convention + periodic audit
-version: 0.1.0
+version: 0.2.0
 date: 2026-06-25
 governed_by: 2026-06-07-sdlc-overview-design.md
 ---
@@ -84,4 +84,5 @@ Dự án có CI guardrails cho **cấu trúc** tài liệu (link, glossary, test
 
 | Phiên bản | Ngày | Nội dung |
 |---|---|---|
+| 0.2.0 | 25/06/2026 | ADR-062 implemented: 4 CI scripts (`check-role-count.sh`, `check-schema-coverage.sh`, `check-cleanup-callbacks.sh`, `check-discarded-at-indexes.sh`) wired into job `doc-governance`. ADR-063 implemented: Simplified marker checklist item added to PR template. ADR-064 remains Proposed. Issue #464. |
 | 0.1.0 | 25/06/2026 | Tạo spec: ADR-062 (4 CI scripts), ADR-063 (spec status marker convention), ADR-064 (periodic audit — Proposed). Issue #464. |
