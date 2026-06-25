@@ -1,7 +1,7 @@
 # V2 — Kịch bản kiểm thử (số liệu cụ thể)
 
-> **Phiên bản:** 2.2.1
-> **Ngày:** 23/06/2026
+> **Phiên bản:** 2.2.2
+> **Ngày:** 25/06/2026
 > **Nguồn nghiệp vụ:** `docs/V2_XAC_NHAN_NGHIEP_VU.md` v2.13.0
 > **Nguồn thiết kế:** `docs/V2_THIET_KE_HE_THONG.md` v2.13.0
 > **Nguồn hành vi runtime:** `docs/V2_HANH_VI_HE_THONG.md` v1.2.1
@@ -262,15 +262,9 @@ Phân bổ bơm nước Khu vực 2 là **thuần hệ số**: không có đối
 | chiHuyC | commander | Đơn vị C | CMD-ZM |
 | chiHuyD | commander | Đơn vị D | CMD |
 
-Hệ thống có 7 vai trò thực tế dù model User chỉ có 5 enum (`system_admin`, `division_commander`, `unit_admin`, `commander`, `technician`). Hai role `unit_admin` và `commander` mỗi role tách thành 2 biến thể tùy đơn vị có quản lý khu vực hay không:
+Hệ thống có nhiều vai trò thực tế hơn số enum trong database — định nghĩa đầy đủ và phạm vi từng vai trò: xem `V2_HANH_VI_HE_THONG.md` mục 1. Bảng dưới ánh xạ tài khoản test → vai trò thực tế; ký hiệu viết tắt (SA, DC, UA-ZM...) tra tại `docs/THUAT_NGU.md` mục 1.
 
-- **DC** (Chỉ huy Sư đoàn): là `division_commander`, không thuộc đơn vị nào. Phạm vi: toàn hệ thống, chỉ xem — tương tự SA nhưng không có quyền tạo/sửa/xóa. Có quyền tính toán lại. Sidebar 16 mục (tất cả trừ Tài khoản và Sao lưu). Ví dụ: chiHuySuDoan. Chỉ cần 1 tài khoản (không phân biệt theo khu vực vì scope toàn hệ thống).
-- **UA-ZM** (quản trị viên đơn vị quản lý khu vực): là `unit_admin` mà đơn vị của họ được chỉ định quản lý một khu vực (`Zone.kept.exists?(manager_unit_id: unit_id)`). Phạm vi: đơn vị mình cộng toàn bộ đầu mối và công tơ của khu vực mình quản lý. Ví dụ: adminA (Đơn vị A quản lý Khu vực 1), adminC (Đơn vị C quản lý Khu vực 2).
-- **UA** (quản trị viên đơn vị không quản lý khu vực): là `unit_admin` mà đơn vị không quản lý khu vực nào. Phạm vi: chỉ đơn vị mình. Ví dụ: adminB, adminD.
-- **CMD-ZM** (chỉ huy đơn vị quản lý khu vực): là `commander` mà đơn vị quản lý khu vực. Phạm vi xem giống UA-ZM, chỉ xem (các ô nhập liệu bị vô hiệu hóa, nút lưu bị ẩn). Ví dụ: chiHuyA, chiHuyC.
-- **CMD** (chỉ huy đơn vị không quản lý khu vực): là `commander` mà đơn vị không quản lý khu vực. Phạm vi xem giống UA, chỉ xem. Ví dụ: chiHuyB, chiHuyD.
-
-Khu vực 1 cung cấp đủ cả 7 vai trò (DC chỉ cần 1 tài khoản — scope toàn hệ thống, không phân biệt khu vực); Khu vực 2 lặp lại bốn vai trò UA-ZM, UA, CMD-ZM, CMD để kiểm thử cách ly dữ liệu và lọc theo khu vực giữa hai khu vực.
+Khu vực 1 cung cấp đủ mọi vai trò (DC chỉ cần 1 tài khoản — scope toàn hệ thống, không phân biệt khu vực); Khu vực 2 lặp lại bốn vai trò UA-ZM, UA, CMD-ZM, CMD để kiểm thử cách ly dữ liệu và lọc theo khu vực giữa hai khu vực.
 
 ---
 
@@ -1077,7 +1071,7 @@ Quy ước Phần 4:
 
 - Mọi con số tính toán trích dẫn đều **trỏ về Phần 2** (golden numbers engine-verified), nêu rõ mã EN-* nguồn. Phần 4 không tính lại; với trang không mang số liệu, chỉ mô tả đầu ra hiển thị mong đợi.
 - Cả hai khu vực dùng cùng kỳ tháng 5 năm 2026 đang mở (trạng thái B), đã tính toán (golden numbers Phần 2 hiển thị đúng) trừ khi kịch bản ghi khác.
-- **Số mục sidebar (toàn tài liệu):** SA 17 mục, DC 16 mục (tất cả trừ Tài khoản và Sao lưu), UA 8 mục, UA-ZM 11 mục, CMD 8 mục (khớp UA), CMD-ZM 11 mục (khớp UA-ZM), TECH 3 mục. Nguồn: `V2_THIET_KE_HE_THONG.md` mục "Sidebar per role" + `V2_CHIEU_TEST.md` danh mục Sidebar.
+- **Số mục sidebar theo vai trò:** xem bảng 4.0 bên dưới (nguồn: `V2_THIET_KE_HE_THONG.md` mục "Sidebar per role").
 - **Phạm vi billing của UA-ZM (dùng nhất quán toàn Phần 4):** đầu mối đơn vị mình **cộng** đầu mối sinh hoạt **thuộc khu vực trực tiếp** (`unit_id` null, `zone_id` có giá trị) — **KHÔNG** bao gồm đầu mối của các đơn vị khác trong cùng khu vực. Cụ thể (theo GD3-05 và Phần 2):
   - adminA (UA-ZM Khu vực 1) thấy 4 hàng billing: Ban Tác huấn, Văn thư, Kho vật tư (Đơn vị A) cộng Chỉ huy khu vực (thuộc khu vực trực tiếp). KHÔNG thấy Đại đội 1 (Đơn vị B).
   - adminB (UA Khu vực 1) thấy 1 hàng: Đại đội 1 (Đơn vị B).
@@ -1799,6 +1793,11 @@ Phần này lập bản đồ từ mỗi **nhóm kịch bản** (không phải t
 ---
 
 ## Lịch sử thay đổi
+
+### v2.2.2 (25/06/2026)
+
+- Mục 1C: thay đoạn copy đầy đủ định nghĩa 7 vai trò (chép từ V2_HANH_VI) bằng 1 câu tóm + back-reference tới `V2_HANH_VI_HE_THONG.md` mục 1 và `docs/THUAT_NGU.md` mục 1. Giảm trùng lặp cross-file (Issue #432).
+- Mục 4.0 header: thay liệt kê inline sidebar counts 7 vai trò bằng pointer tới bảng 4.0. Giảm trùng lặp (Issue #432).
 
 ### v2.2.1 (23/06/2026)
 

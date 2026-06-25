@@ -165,7 +165,7 @@ NOTES
 | **i18n** | Chữ người dùng qua `t(...)` + `config/locales/vi.yml`; không hard-code tiếng Việt | Máy-ép: guardrail i18n cho view (ADR-032) bắt literal tiếng Việt **mới** ngoài `t(...)` trong `app/views/**/*.erb`; phần cũ grandfather qua baseline. Chữ không-dấu/ngoài view còn người/AI |
 | **Không viết tắt** | Mọi viết tắt mới (code/i18n/giao diện/commit) có trong `docs/THUAT_NGU.md` | Người/AI — ngữ nghĩa, máy không grep được |
 | **BigDecimal tiền/điện** | Tiền/điện giữ BigDecimal xuyên suốt; `.to_f`/`Float()` chỉ ở ranh giới hiển thị/Excel; làm tròn `ROUND_HALF_UP` chỉ khi hiển thị | Custom RuboCop cop `Decimal/*` (job `ruby-checks`) bắt ca rõ ràng ở `app/models`,`app/services`; người/AI soi ca lẩn đường vòng |
-| **Phủ đủ 7 vai trò** | Test phủ SA, DC, UA-ZM, UA, CMD-ZM, CMD, TECH hoặc hoãn tường minh | ADR-030 ép liên kết chiều test ↔ test; người/AI soi đủ-7-vai |
+| **Phủ đủ mọi vai trò** | Test phủ mọi vai trò thực tế (xem `V2_HANH_VI_HE_THONG.md` mục 1) hoặc hoãn tường minh | ADR-030 ép liên kết chiều test ↔ test; người/AI soi đủ vai trò |
 
 Bề mặt ép: (1) cop `Decimal/*` máy-ép phần BigDecimal; (2) hook `UserPromptSubmit` (`.claude/settings.json`) bơm chiều này vào Claude khi gõ `/code-review`; (3) checkbox trong `.github/pull_request_template.md`. Không sửa prompt `/code-review`/review subagent vì chúng là plugin toàn cục, không version-controlled trong repo. Chi tiết + lý do: ADR-031 (`docs/superpowers/specs/2026-06-13-dimension-review-tuan-agents-design.md`).
 
