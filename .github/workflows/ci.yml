@@ -139,6 +139,7 @@ jobs:
           bash .github/scripts/check-cleanup-callbacks.sh || rc=1
           bash .github/scripts/check-discarded-at-indexes.sh || rc=1
           bash .github/scripts/check-nv-traceability.sh || rc=1
+          bash .github/scripts/check-jargon-per.sh || rc=1
           exit $rc
 
   i18n-view-guardrail:

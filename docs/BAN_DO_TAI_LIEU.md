@@ -1,7 +1,7 @@
 # Bản đồ tài liệu — Hệ thống quản lý điện nước nội bộ
 
-> **Phiên bản:** 1.6.0
-> **Ngày:** 24/06/2026
+> **Phiên bản:** 1.6.1
+> **Ngày:** 25/06/2026
 > **Tính chất:** Canonical — liệt kê mọi tài liệu của dự án kèm **mục đích, đối tượng, loại**, để người và công cụ AI biết **một fact nằm ở đâu** và **sửa ở đâu** thay vì thêm nơi mới. Hỗ trợ trực tiếp quy tắc "sửa đừng thêm" (`AGENTS.md` mục "Quản trị tài liệu"; ADR-023).
 
 ## Ba loại tài liệu
@@ -22,7 +22,7 @@
 | `docs/superpowers/ADR-TEMPLATE.md` | Mẫu ADR chuẩn (7 mục, đánh số toàn cục) để viết quyết định mới trong spec | Người + AI |
 | `docs/V2_XAC_NHAN_NGHIEP_VU.md` | Nghiệp vụ — nguồn sự thật duy nhất cho thiết kế & triển khai | Chủ dự án + đội phát triển |
 | `docs/V2_THIET_KE_HE_THONG.md` | Thiết kế hệ thống — nguồn sự thật cho implementation | Đội phát triển |
-| `docs/V2_HANH_VI_HE_THONG.md` | Hành vi runtime (7 vai trò, trạng thái kỳ, `.kept`/`.with_discarded`) | Đội phát triển |
+| `docs/V2_HANH_VI_HE_THONG.md` | Hành vi runtime (vai trò, trạng thái kỳ, `.kept`/`.with_discarded`) | Đội phát triển |
 | `docs/V2_CHIEU_TEST.md` | 12 chiều kiểm thử, input/output, giao điểm nguy hiểm | Đội phát triển |
 
 ### current-state
@@ -51,6 +51,7 @@
 
 ## Lịch sử thay đổi
 
+- **1.6.1 (25/06/2026):** Bỏ hard-code "7 vai trò" khỏi mô tả V2_HANH_VI_HE_THONG → dùng phrasing generic "vai trò". Giảm trùng lặp cross-file (Issue #432).
 - **1.6.0 (24/06/2026):** Xóa V2\_XAC\_NHAN\_NGHIEP\_VU\_BO\_SUNG và V2\_XAC\_NHAN\_NGHIEP\_VU\_BO\_SUNG\_2 — nội dung đã fold vào canonical, dấu vết lịch sử chuyển vào `docs/V2_XAC_NHAN_NGHIEP_VU.md` mục 29 "Truy vết xác nhận nghiệp vụ" (v2.19.0). Đánh dấu hai entry cũ là đã xóa trong bảng lịch sử. Bỏ backtick khỏi tên file đã xóa trong changelog cũ để guardrail doc-map không báo ghost path.
 - **1.5.2 (22/06/2026):** Sửa mô tả V2_HANH_VI_HE_THONG "6 vai trò" → "7 vai trò" (division_commander, Issue #419).
 - **1.5.1 (21/06/2026):** Đổi tên hệ thống trong tiêu đề: "Hệ thống quản lý điện nước nội bộ" (Issue #420, khớp tên chính thức đã chốt trong #418).
