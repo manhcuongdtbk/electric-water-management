@@ -1,7 +1,7 @@
 # Xác nhận nghiệp vụ — Hệ thống quản lý điện nước nội bộ (Hệ thống v2)
 
-> **Phiên bản:** 2.19.2
-> **Ngày:** 24/06/2026
+> **Phiên bản:** 2.19.3
+> **Ngày:** 25/06/2026
 > **Tính chất:** Tài liệu nội bộ giữa chủ dự án và đội phát triển. Là nguồn sự thật duy nhất cho thiết kế và triển khai.
 > **Ngôn ngữ hệ thống:** Toàn bộ hệ thống phải được Việt hóa 100% (giao diện, thông báo, cảnh báo, xuất file) vì hệ thống dùng trong Sư đoàn Quân đội nhân dân Việt Nam.
 
@@ -568,6 +568,7 @@ graph TD
 - Chỉ xem, không thao tác.
 - Xem được tất cả những gì quản trị viên đơn vị quản lý: bảng tính tiền, tổng quan, lịch sử.
 
+<a id="NV-vai-tro-chi-huy-su-doan"></a>
 ### 11.5. Chỉ huy Sư đoàn
 
 Xem tất cả như quản trị viên hệ thống, không sửa được gì — giống chỉ huy đơn vị nhưng phạm vi toàn hệ thống thay vì 1 đơn vị. Không thuộc đơn vị nào.
@@ -951,6 +952,10 @@ Trước v2.19.0, mỗi đợt có file riêng (`V2_XAC_NHAN_NGHIEP_VU_BO_SUNG.m
 ---
 
 ## 30. Lịch sử thay đổi
+
+### v2.19.3 (25/06/2026)
+
+- Mục 11.5: thêm anchor truy vết `NV-vai-tro-chi-huy-su-doan` trước heading Chỉ huy Sư đoàn — để CI guardrail NV traceability (ADR-065) đối chiếu yêu cầu → test. Không đổi nội dung nghiệp vụ. Issue #441.
 
 ### v2.19.2 (24/06/2026)
 
