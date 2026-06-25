@@ -18,5 +18,6 @@ Refs #
 - [ ] Demo quality (ADR-059): I watched the recording **as a clueless customer** and checked it against the six-point "demo tốt" checklist (show-don't-tell · right customer story · result-not-mechanics · honest about the medium · enough journey-not-everything · stable), comparing against the golden example `spec/demo/cot_khac_he_so_don_vi_demo_spec.rb` (TN1). Below, I note what I reviewed. *(customer-facing work)*
 - [ ] AGENTS conventions reviewed (CONTRIBUTING §8): i18n via `t(...)`, no abbreviations outside `docs/THUAT_NGU.md`, BigDecimal for money/electricity, seven-role test coverage.
 - [ ] No fact duplication: content added to docs describes behavior and points to the canonical source, not reproducing facts from another file or code (ADR-023).
+- [ ] If code simplifies or skips a spec requirement: a `> **Simplified (PR #NNN, date):** ...` blockquote was added to the spec in this same PR (ADR-063).
 - [ ] If any `docs/` document changed: its version and changelog were bumped in this pull request (ADR-002). Root meta files (`README.md`, `AGENTS.md`, `CONTRIBUTING.md`, `CLAUDE.md`) are NOT versioned.
 - [ ] Conventional Commits used; merge method matches CONTRIBUTING §2 (squash for `feature`/`fix`; non-changelog title prefix for `release`/`hotfix`/merge-back).
