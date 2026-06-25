@@ -101,7 +101,9 @@ release-please đã được cấu hình (P3): khi `release/*`/`hotfix/*` vào `
 
 ### Ghi chú phát hành tiếng Việt
 
-Sau khi release-please tạo GitHub Release (tiếng Anh, tự động), **thêm ghi chú tiếng Việt** vào đầu phần body để khách và chủ dự án đọc được. Dùng `gh release edit` hoặc sửa trực tiếp trên GitHub:
+Sau khi release-please tạo GitHub Release (tiếng Anh, tự động), workflow `release-notes-vi.yml` **tự prepend template tiếng Việt** (heading + 2 phần "(chưa soạn)") vào đầu release body (ADR-066). Không cần API key, không chi phí. Idempotent: skip nếu body đã chứa "Phiên bản".
+
+**Chủ dự án duyệt** nội dung AI đã soạn trước khi công bố (gate — ADR-029). Sửa trực tiếp trên GitHub hoặc `gh release edit`. Nếu cần soạn lại thủ công, format:
 
 ```bash
 gh release edit vX.Y.Z --notes "$(cat <<'NOTES'
@@ -119,8 +121,6 @@ gh release edit vX.Y.Z --notes "$(cat <<'NOTES'
 NOTES
 )"
 ```
-
-Trợ lý AI soạn nháp hai phần (tóm tắt + chi tiết) từ CHANGELOG tiếng Anh; chủ dự án duyệt trước khi công bố (gate — ADR-029).
 
 ## 7. Giao bản cho khách
 

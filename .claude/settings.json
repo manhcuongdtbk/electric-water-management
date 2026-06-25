@@ -37,6 +37,10 @@
           {
             "type": "command",
             "command": "jq -r '.tool_input.command // empty' | grep -Eq 'gh[[:space:]]+pr[[:space:]]+(create|edit|ready|reopen)' && echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"Team convention (this repo): a pull request was just created or updated — monitor its CI and report the result so nobody has to check manually. Use gh pr checks <number> --watch (or poll gh pr view <number> --json statusCheckRollup), then summarize which checks passed or failed.\"}}' || true"
+          },
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.command // empty' | grep -Eq 'gh[[:space:]]+pr[[:space:]]+merge' && echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"Standing user instruction: a pull request was just merged. If this is a Release PR (release/* or hotfix/* into main), release-please will create a GitHub Release shortly. The workflow release-notes-vi.yml will auto-prepend a Vietnamese template with placeholder (chưa soạn). After ~1 minute, run: (1) gh release list --limit 1 to find the new release tag; (2) gh release view <tag> to read the CHANGELOG; (3) draft Vietnamese release notes (Tóm tắt cho người dùng + Chi tiết cho chủ dự án) from the CHANGELOG; (4) gh release edit <tag> --notes-file to replace the template with real content. The human reviews before publishing.\"}}' || true"
           }
         ]
       },
