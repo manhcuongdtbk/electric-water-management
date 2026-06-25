@@ -1,6 +1,6 @@
 ---
 title: CI guardrail NV-... requirement-to-test traceability
-version: 0.1.0
+version: 0.2.0
 date: 2026-06-25
 governed_by: 2026-06-08-truy-vet-quan-ly-thay-doi-design.md
 ---
@@ -83,4 +83,5 @@ Pattern `CHIEU-...` (ADR-030) đã chứng minh cách nhúng anchor vào `it` de
 
 | Phiên bản | Ngày | Nội dung |
 |---|---|---|
+| 0.2.0 | 25/06/2026 | ADR-065 implemented: script `check-nv-traceability.sh` wired into job `doc-governance`. 6 NV anchors covered (2 via test `it` tags, 4 via `demo_nv`). Added anchor `NV-vai-tro-chi-huy-su-doan` to canonical (was orphan). Issue #441. |
 | 0.1.0 | 25/06/2026 | Tạo spec: ADR-065 (CI guardrail NV traceability — 4 luật, song song CHIEU). Issue #441. |
