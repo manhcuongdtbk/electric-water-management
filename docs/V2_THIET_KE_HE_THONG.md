@@ -1,7 +1,7 @@
 # Thiết kế hệ thống quản lý điện nước nội bộ — Hệ thống v2
 
-> **Phiên bản tài liệu:** 2.17.4
-> **Ngày:** 25/06/2026
+> **Phiên bản tài liệu:** 2.18.0
+> **Ngày:** 26/06/2026
 > **Tính chất:** Tài liệu thiết kế hệ thống v2, nguồn sự thật cho implementation.
 > **Nguồn nghiệp vụ:** V2_XAC_NHAN_NGHIEP_VU (phiên bản mới nhất tại thời điểm thiết kế: v2.11.0)
 
@@ -515,7 +515,9 @@ Tổng quân số đầu mối sinh hoạt ≥ 1: validate ở tầng controller
 | coefficient | decimal | ≥ 0. Mặc định: 1. Hệ số nhân quân số |
 | lock_version | integer | Mặc định: 0. Optimistic locking |
 
-Validation: đúng 1 trong unit_id, block_id, group_id, hoặc contact_point_id có giá trị. Khi `period.pump_allocation_per_station = true`: pump_contact_point_id bắt buộc, ràng buộc không chồng chéo (tập đầu mối sinh hoạt phân giải từ mỗi recipient không giao nhau), ràng buộc không chia cấp (toàn bộ đơn vị thuộc một trạm duy nhất).
+Validation: đúng 1 trong unit_id, block_id, group_id, hoặc contact_point_id có giá trị. Khi `period.pump_allocation_per_station = true`: pump_contact_point_id bắt buộc, ràng buộc không chồng chéo (tập đầu mối sinh hoạt phân giải từ mỗi recipient không giao nhau — xuyên tất cả trạm). Khối/nhóm/đầu mối trong cùng đơn vị có thể nằm ở các trạm khác nhau (ADR-067).
+
+> **Ghi chú thiết kế — trạm bơm là thực thể riêng về khái niệm:** Trạm bơm (đầu mối `water_pump`) không phải "đầu mối" theo định nghĩa nghiệp vụ ("đại diện cho 1 người hoặc 1 nhóm người") — nó là hạ tầng vật lý. Hiện nằm trong `contact_points` vì chia sẻ thuộc tính (tên, công tơ, thuộc khu vực). Cần tách thành bảng riêng khi: trạm bơm cần thuộc tính riêng (công suất, vị trí, bảo trì), cần quan hệ không phù hợp đầu mối (xuyên khu vực), hoặc sự khác biệt hành vi gây nhầm lẫn trong code. Hiện chưa cần — schema hoạt động đúng.
 
 > **Quyết định 4 foreign key nullable thay vì polymorphic (assignable_type + assignable_id):** Polymorphic không có foreign key constraint ở database → dữ liệu có thể trỏ tới bản ghi không tồn tại. Foreign key nullable có constraint, database bảo vệ tham chiếu.
 > **Tradeoff:** Phải validation "đúng 1 cột có giá trị" ở model. Viết 1 lần, đơn giản hơn rủi ro dữ liệu bẩn từ polymorphic.
@@ -1299,7 +1301,7 @@ Mọi thao tác trên hệ thống đều được ghi lại (PaperTrail). Syste
 
 - Trạm bơm = đầu mối `water_pump`. `pump_allocations`: thêm `pump_contact_point_id` (khóa ngoại trạm, nullable), `block_id`, `group_id`; đối tượng nhận = đúng một trong `{unit_id, block_id, group_id, contact_point_id}`; cho phép `contact_point` cấp đơn vị.
 - `periods`: thêm cờ `pump_allocation_per_station` (boolean). `PumpAllocationCalculator` rẽ nhánh theo cờ (cũ = gộp khu vực; mới = lặp mỗi trạm, D mỗi trạm = Σ usage + loss công tơ của trạm).
-- Ràng buộc phân cấp (toàn zone, xuyên trạm): (1) **không chồng chéo** — tập đầu mối sinh hoạt phân giải từ mỗi recipient phải không giao nhau; (2) **không chia cấp** — toàn bộ đơn vị thuộc một trạm duy nhất. Recipient kiểu `unit`/`block`/`group` phải có ít nhất 1 đầu mối sinh hoạt. `PumpAllocationCalculator` khi gặp recipient có 0 đầu mối sinh hoạt → bỏ qua phân phối + cảnh báo.
+- Ràng buộc xuyên trạm: **không chồng chéo** — tập đầu mối sinh hoạt phân giải từ mỗi recipient phải không giao nhau (ADR-067 bỏ ràng buộc "không chia cấp" — khối/nhóm/đầu mối cùng đơn vị có thể nằm ở trạm khác nhau). Recipient kiểu `unit`/`block`/`group` phải có ít nhất 1 đầu mối sinh hoạt. `PumpAllocationCalculator` khi gặp recipient có 0 đầu mối sinh hoạt → bỏ qua phân phối + cảnh báo.
 - Spec: [`superpowers/specs/2026-06-11-phan-bo-bom-theo-tram-design.md`](superpowers/specs/2026-06-11-phan-bo-bom-theo-tram-design.md).
 
 ### Hiển thị chi tiết tổn hao — ADR-027
@@ -1311,6 +1313,12 @@ Mọi thao tác trên hệ thống đều được ghi lại (PaperTrail). Syste
 ---
 
 ## Lịch sử thay đổi
+
+### v2.18.0 (26/06/2026)
+
+- Schema pump_allocations validation: bỏ ràng buộc "không chia cấp" (ADR-067, Issue #481) — khối/nhóm/đầu mối cùng đơn vị có thể nằm ở trạm khác nhau. Giữ nguyên "không chồng chéo".
+- Schema pump_allocations: thêm ghi chú thiết kế — trạm bơm là thực thể riêng về khái niệm (hạ tầng vật lý, không phải đầu mối), hiện nằm trong `contact_points` vì chia sẻ thuộc tính; khi nào cần tách.
+- Mục "Thiết kế bổ sung — milestone 1.2.0" ADR-026: cập nhật ràng buộc xuyên trạm cho khớp.
 
 ### v2.17.4 (25/06/2026)
 
