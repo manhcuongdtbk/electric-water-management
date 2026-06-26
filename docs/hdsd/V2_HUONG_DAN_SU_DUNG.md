@@ -1,7 +1,7 @@
 # Hướng dẫn sử dụng — Hệ thống quản lý điện nước nội bộ
 
-> **Phiên bản:** 1.9.6
-> **Ngày:** 25/06/2026
+> **Phiên bản:** 1.10.0
+> **Ngày:** 26/06/2026
 > **Đối tượng:** Tất cả người dùng hệ thống (kỹ thuật viên, quản trị viên hệ thống, Chỉ huy Sư đoàn, quản trị viên đơn vị, chỉ huy đơn vị)
 > **Ghi chú:** Tài liệu sẽ được cập nhật theo phản hồi thực tế.
 > **Cập nhật ảnh:** Khi giao diện thay đổi, chạy `docs/hdsd/capture-screenshots` để chụp lại toàn bộ ảnh. Thêm/sửa trang chụp: sửa mảng `PAGES` trong `docs/hdsd/capture.mjs`.
@@ -681,8 +681,7 @@ Nếu tổng phần trăm cố định chưa đạt 100%, phải có ít nhất 
 
 **Ràng buộc:**
 
-- Đối tượng thuộc cùng đơn vị phải nằm trong cùng một trạm (không chia cấp).
-- Một đầu mối chỉ thuộc một đối tượng nhận duy nhất xuyên các trạm (không chồng chéo).
+- Một đầu mối chỉ thuộc một đối tượng nhận duy nhất xuyên các trạm (không chồng chéo). Các khối, nhóm, đầu mối trong cùng đơn vị có thể nằm ở các trạm bơm khác nhau — trạm bơm phục vụ vùng vật lý, không phụ thuộc cấp tổ chức.
 - Đối tượng nhận (đơn vị/khối/nhóm) phải có ít nhất 1 đầu mối sinh hoạt bên trong.
 - Trạm chưa phân bổ hết điện (thiếu đối tượng theo hệ số) sẽ bị chặn khi tính toán — hệ thống hiện cảnh báo trên thẻ trạm đó.
 
@@ -881,6 +880,10 @@ Hệ thống hiện thông tin bản sao lưu (tên, kích thước, ngày tạo
 ---
 
 ## Lịch sử thay đổi
+
+### v1.10.0 (26/06/2026)
+
+- Mục F6 ràng buộc: bỏ "không chia cấp" (ADR-067, Issue #481). Các khối/nhóm/đầu mối trong cùng đơn vị có thể nằm ở các trạm bơm khác nhau — trạm bơm phục vụ vùng vật lý. Giữ nguyên "không chồng chéo".
 
 ### v1.9.6 (25/06/2026)
 
