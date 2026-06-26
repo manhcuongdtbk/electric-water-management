@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.4](https://github.com/manhcuongdtbk/electric-water-management/compare/v1.2.3...v1.2.4) (2026-06-26)
+
+
+### Tests
+
+* **pump:** add engine tests for no-split removal scenarios (ADR-067) ([9da7e22](https://github.com/manhcuongdtbk/electric-water-management/commit/9da7e22455010d38444f314b609f94495dc2896f))
+* **pump:** add engine tests for no-split removal scenarios (ADR-067) ([9da7e22](https://github.com/manhcuongdtbk/electric-water-management/commit/9da7e22455010d38444f314b609f94495dc2896f))
+* **pump:** add engine tests for no-split removal scenarios (ADR-067) ([ff8a891](https://github.com/manhcuongdtbk/electric-water-management/commit/ff8a8910482886e1530c5afcdcdfbd88e867140c)), closes [#481](https://github.com/manhcuongdtbk/electric-water-management/issues/481)
+
 ## [1.2.3](https://github.com/manhcuongdtbk/electric-water-management/compare/v1.2.2...v1.2.3) (2026-06-26)
 
 
