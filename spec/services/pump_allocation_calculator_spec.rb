@@ -601,5 +601,159 @@ RSpec.describe PumpAllocationCalculator do
         expect { call_pump(zone, period) }.not_to raise_error
       end
     end
+
+    # ADR-067: bỏ ràng buộc "không chia cấp" — engine tính đúng khi cùng đơn vị chia ra nhiều trạm.
+    describe "ADR-067 — cùng đơn vị chia ra nhiều trạm" do
+      it "khối cùng đơn vị ở 2 trạm → engine phân bổ đúng cho từng khối" do
+        zone = create(:zone, name: "KV chia khối")
+        period = open_per_station_period
+        rank = rank_for(period)
+
+        station_1 = create(:contact_point, :water_pump, name: "Trạm 1", zone: zone)
+        station_2 = create(:contact_point, :water_pump, name: "Trạm 2", zone: zone)
+        create(:meter, name: "CT-1", contact_point: station_1, no_loss: true)
+          .meter_readings.find_by!(period: period).update!(reading_start: 0, reading_end: 600)
+        create(:meter, name: "CT-2", contact_point: station_2, no_loss: true)
+          .meter_readings.find_by!(period: period).update!(reading_start: 0, reading_end: 400)
+
+        unit = create(:unit, name: "ĐV", zone: zone)
+        block_a = create(:block, name: "Khối A", unit: unit)
+        block_b = create(:block, name: "Khối B", unit: unit)
+        cp_a1 = create(:contact_point, :residential, name: "ĐM A1", unit: unit, block: block_a,
+                       initial_personnel_counts: { rank.id => 10 })
+        cp_a2 = create(:contact_point, :residential, name: "ĐM A2", unit: unit, block: block_a,
+                       initial_personnel_counts: { rank.id => 10 })
+        cp_b = create(:contact_point, :residential, name: "ĐM B", unit: unit, block: block_b,
+                      initial_personnel_counts: { rank.id => 20 })
+
+        create(:pump_allocation, zone: zone, period: period, pump_contact_point: station_1,
+               unit: nil, block: block_a, group: nil, contact_point: nil, coefficient: 1)
+        create(:pump_allocation, zone: zone, period: period, pump_contact_point: station_2,
+               unit: nil, block: block_b, group: nil, contact_point: nil, coefficient: 1)
+
+        result = call_pump(zone, period)
+        expect(result.contact_point_allocations[cp_a1.id]).to eq(BigDecimal("300"))
+        expect(result.contact_point_allocations[cp_a2.id]).to eq(BigDecimal("300"))
+        expect(result.contact_point_allocations[cp_b.id]).to eq(BigDecimal("400"))
+        expect(result.contact_point_allocations.values.sum(BigDecimal("0"))).to eq(BigDecimal("1000"))
+      end
+
+      it "nhóm cùng đơn vị ở 2 trạm → engine phân bổ đúng cho từng nhóm" do
+        zone = create(:zone, name: "KV chia nhóm")
+        period = open_per_station_period
+        rank = rank_for(period)
+
+        station_1 = create(:contact_point, :water_pump, name: "Trạm 1", zone: zone)
+        station_2 = create(:contact_point, :water_pump, name: "Trạm 2", zone: zone)
+        create(:meter, name: "CT-1", contact_point: station_1, no_loss: true)
+          .meter_readings.find_by!(period: period).update!(reading_start: 0, reading_end: 300)
+        create(:meter, name: "CT-2", contact_point: station_2, no_loss: true)
+          .meter_readings.find_by!(period: period).update!(reading_start: 0, reading_end: 200)
+
+        unit = create(:unit, name: "ĐV", zone: zone)
+        group_x = create(:group, name: "Nhóm X", unit: unit)
+        group_y = create(:group, name: "Nhóm Y", unit: unit)
+        cp_x = create(:contact_point, :residential, name: "ĐM X", unit: unit, group: group_x,
+                      initial_personnel_counts: { rank.id => 5 })
+        cp_y = create(:contact_point, :residential, name: "ĐM Y", unit: unit, group: group_y,
+                      initial_personnel_counts: { rank.id => 5 })
+
+        create(:pump_allocation, zone: zone, period: period, pump_contact_point: station_1,
+               unit: nil, block: nil, group: group_x, contact_point: nil, coefficient: 1)
+        create(:pump_allocation, zone: zone, period: period, pump_contact_point: station_2,
+               unit: nil, block: nil, group: group_y, contact_point: nil, coefficient: 1)
+
+        result = call_pump(zone, period)
+        expect(result.contact_point_allocations[cp_x.id]).to eq(BigDecimal("300"))
+        expect(result.contact_point_allocations[cp_y.id]).to eq(BigDecimal("200"))
+      end
+
+      it "đầu mối cùng khối ở 2 trạm → engine phân bổ đúng cho từng đầu mối" do
+        zone = create(:zone, name: "KV chia ĐM trong khối")
+        period = open_per_station_period
+        rank = rank_for(period)
+
+        station_1 = create(:contact_point, :water_pump, name: "Trạm 1", zone: zone)
+        station_2 = create(:contact_point, :water_pump, name: "Trạm 2", zone: zone)
+        create(:meter, name: "CT-1", contact_point: station_1, no_loss: true)
+          .meter_readings.find_by!(period: period).update!(reading_start: 0, reading_end: 150)
+        create(:meter, name: "CT-2", contact_point: station_2, no_loss: true)
+          .meter_readings.find_by!(period: period).update!(reading_start: 0, reading_end: 250)
+
+        unit = create(:unit, name: "ĐV", zone: zone)
+        block = create(:block, name: "Khối", unit: unit)
+        cp_1 = create(:contact_point, :residential, name: "ĐM 1", unit: unit, block: block,
+                      initial_personnel_counts: { rank.id => 3 })
+        cp_2 = create(:contact_point, :residential, name: "ĐM 2", unit: unit, block: block,
+                      initial_personnel_counts: { rank.id => 7 })
+
+        create(:pump_allocation, zone: zone, period: period, pump_contact_point: station_1,
+               unit: nil, block: nil, group: nil, contact_point: cp_1, coefficient: 1)
+        create(:pump_allocation, zone: zone, period: period, pump_contact_point: station_2,
+               unit: nil, block: nil, group: nil, contact_point: cp_2, coefficient: 1)
+
+        result = call_pump(zone, period)
+        expect(result.contact_point_allocations[cp_1.id]).to eq(BigDecimal("150"))
+        expect(result.contact_point_allocations[cp_2.id]).to eq(BigDecimal("250"))
+      end
+
+      it "đầu mối cùng nhóm ở 2 trạm → engine phân bổ đúng" do
+        zone = create(:zone, name: "KV chia ĐM trong nhóm")
+        period = open_per_station_period
+        rank = rank_for(period)
+
+        station_1 = create(:contact_point, :water_pump, name: "Trạm 1", zone: zone)
+        station_2 = create(:contact_point, :water_pump, name: "Trạm 2", zone: zone)
+        create(:meter, name: "CT-1", contact_point: station_1, no_loss: true)
+          .meter_readings.find_by!(period: period).update!(reading_start: 0, reading_end: 80)
+        create(:meter, name: "CT-2", contact_point: station_2, no_loss: true)
+          .meter_readings.find_by!(period: period).update!(reading_start: 0, reading_end: 120)
+
+        unit = create(:unit, name: "ĐV", zone: zone)
+        group = create(:group, name: "Nhóm", unit: unit)
+        cp_1 = create(:contact_point, :residential, name: "ĐM 1", unit: unit, group: group,
+                      initial_personnel_counts: { rank.id => 2 })
+        cp_2 = create(:contact_point, :residential, name: "ĐM 2", unit: unit, group: group,
+                      initial_personnel_counts: { rank.id => 8 })
+
+        create(:pump_allocation, zone: zone, period: period, pump_contact_point: station_1,
+               unit: nil, block: nil, group: nil, contact_point: cp_1, coefficient: 1)
+        create(:pump_allocation, zone: zone, period: period, pump_contact_point: station_2,
+               unit: nil, block: nil, group: nil, contact_point: cp_2, coefficient: 1)
+
+        result = call_pump(zone, period)
+        expect(result.contact_point_allocations[cp_1.id]).to eq(BigDecimal("80"))
+        expect(result.contact_point_allocations[cp_2.id]).to eq(BigDecimal("120"))
+      end
+
+      it "khối từ 2 đơn vị ở cùng trạm → engine phân bổ đúng xuyên đơn vị" do
+        zone = create(:zone, name: "KV trạm xuyên ĐV")
+        period = open_per_station_period
+        rank = rank_for(period)
+
+        station = create(:contact_point, :water_pump, name: "Trạm chung", zone: zone)
+        create(:meter, name: "CT", contact_point: station, no_loss: true)
+          .meter_readings.find_by!(period: period).update!(reading_start: 0, reading_end: 500)
+
+        unit_1 = create(:unit, name: "ĐV 1", zone: zone)
+        unit_2 = create(:unit, name: "ĐV 2", zone: zone)
+        block_1 = create(:block, name: "Khối ĐV1", unit: unit_1)
+        block_2 = create(:block, name: "Khối ĐV2", unit: unit_2)
+        cp_1 = create(:contact_point, :residential, name: "ĐM ĐV1", unit: unit_1, block: block_1,
+                      initial_personnel_counts: { rank.id => 10 })
+        cp_2 = create(:contact_point, :residential, name: "ĐM ĐV2", unit: unit_2, block: block_2,
+                      initial_personnel_counts: { rank.id => 10 })
+
+        create(:pump_allocation, zone: zone, period: period, pump_contact_point: station,
+               unit: nil, block: block_1, group: nil, contact_point: nil, coefficient: 1)
+        create(:pump_allocation, zone: zone, period: period, pump_contact_point: station,
+               unit: nil, block: block_2, group: nil, contact_point: nil, coefficient: 1)
+
+        result = call_pump(zone, period)
+        expect(result.contact_point_allocations[cp_1.id]).to eq(BigDecimal("250"))
+        expect(result.contact_point_allocations[cp_2.id]).to eq(BigDecimal("250"))
+        expect(result.contact_point_allocations.values.sum(BigDecimal("0"))).to eq(BigDecimal("500"))
+      end
+    end
   end
 end
