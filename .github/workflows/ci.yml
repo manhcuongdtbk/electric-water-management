@@ -101,8 +101,22 @@ jobs:
           HEAD_REF: ${{ github.head_ref }}
         run: bash .github/scripts/check-branch-source.sh
 
+  issue-link-guardrail:
+    name: Issue link guardrail (every PR must reference an issue)
+    runs-on: ubuntu-latest
+    # Chạy LUÔN trên mọi pull request (KHÔNG gate qua `changes`): guardrail nhẹ,
+    # cần bắt mọi PR thiếu liên kết issue (ADR-015 revisit, Issue #442).
+    steps:
+      - uses: actions/checkout@v6
+      - name: Require issue reference in PR body
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: bash .github/scripts/check-issue-link.sh
+
   doc-governance:
-    name: Doc governance (links, map, glossary, test dimensions, ADR status, changelog header, ADR numbering, demo deliverable)
+    name: Doc governance (links, map, glossary, test dimensions, ADR status, changelog header, ADR numbering, demo deliverable, doc-code sync, NV traceability)
     runs-on: ubuntu-latest
     # Chạy LUÔN trên mọi pull request (KHÔNG gate qua `changes`): guardrail tài
     # liệu cần nhất đúng lúc pull request chỉ sửa tài liệu (ADR-024).
@@ -120,6 +134,12 @@ jobs:
           bash .github/scripts/check-changelog-header.sh || rc=1
           bash .github/scripts/check-adr-numbering.sh || rc=1
           bash .github/scripts/check-demo-deliverable.sh || rc=1
+          bash .github/scripts/check-role-count.sh || rc=1
+          bash .github/scripts/check-schema-coverage.sh || rc=1
+          bash .github/scripts/check-cleanup-callbacks.sh || rc=1
+          bash .github/scripts/check-discarded-at-indexes.sh || rc=1
+          bash .github/scripts/check-nv-traceability.sh || rc=1
+          bash .github/scripts/check-jargon-per.sh || rc=1
           exit $rc
 
   i18n-view-guardrail:

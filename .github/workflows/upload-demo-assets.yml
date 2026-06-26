@@ -1,0 +1,95 @@
+name: upload-demo-assets
+
+# Issue #438: after release-please creates a GitHub Release (tag vX.Y.Z),
+# download the demo-bundle artifact from the release PR's CI run and upload
+# MP4s + manifest.md as Release assets. This replaces the manual step of
+# `gh run download` + `gh release upload`.
+#
+# Trigger: `release: published` fires after release-please merges its Release
+# PR and creates the tag + GitHub Release.
+#
+# The demo-bundle artifact was uploaded by the `demo-bundle` job in ci.yml
+# during the release/* → main PR. We match it by release branch name
+# (release/X.Y from tag vX.Y.Z) to avoid picking up artifacts from other releases.
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  upload-demo-assets:
+    name: Upload demo clips to GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Find demo-bundle artifact from the release PR
+        id: find
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          echo "Looking for demo-bundle artifact for tag ${TAG}..."
+
+          # Match artifact to THIS release: the demo-bundle job runs on PRs
+          # with base=main. Extract major.minor from the tag to match the
+          # release branch name. Hotfix PRs excluded — hotfixes are bug fixes,
+          # not customer-facing features, so they don't produce demo bundles.
+          version="${TAG#v}"          # "1.3.0" from "v1.3.0"
+          major_minor="${version%.*}" # "1.3"
+
+          # Find the most recent demo-bundle artifact from release/X.Y branch.
+          run_id=$(gh api "repos/${REPO}/actions/artifacts?per_page=50" \
+            --jq "[.artifacts[] | select(
+              .name == \"demo-bundle\" and
+              .expired == false and
+              (.workflow_run.head_branch | startswith(\"release/${major_minor}\"))
+            )] | sort_by(.created_at) | last | .workflow_run.id // empty")
+
+          if [[ -z "$run_id" ]]; then
+            echo "No demo-bundle artifact found for release ${major_minor}. Skipping upload."
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Found demo-bundle in run ${run_id} (matched release/${major_minor})"
+          echo "found=true" >> "$GITHUB_OUTPUT"
+          echo "run_id=${run_id}" >> "$GITHUB_OUTPUT"
+
+      - name: Download demo-bundle artifact
+        if: ${{ steps.find.outputs.found == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh run download ${{ steps.find.outputs.run_id }} \
+            -n demo-bundle \
+            -D demo-bundle
+
+          echo "Downloaded files:"
+          find demo-bundle -type f | sort
+
+      - name: Upload to GitHub Release
+        if: ${{ steps.find.outputs.found == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          files=$(find demo-bundle -type f \( -name '*.mp4' -o -name 'manifest.md' \))
+
+          if [[ -z "$files" ]]; then
+            echo "No MP4 or manifest.md files in demo-bundle. Skipping upload."
+            exit 0
+          fi
+
+          echo "Uploading to release ${TAG}:"
+          echo "$files"
+
+          # Upload each file; --clobber overwrites if re-run
+          echo "$files" | while IFS= read -r f; do
+            gh release upload "$TAG" "$f" --clobber
+            echo "  ✓ $(basename "$f")"
+          done
+
+          echo "✓ Demo assets uploaded to release ${TAG}."

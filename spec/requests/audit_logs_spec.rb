@@ -31,7 +31,7 @@ RSpec.describe "AuditLogs", type: :request do
   describe "T94: tạo / sửa / xóa Zone ghi version" do
     before { sign_in system_admin }
 
-    it "tạo Zone → có version event=create" do
+    it "NV-nhat-ky-he-thong: tạo Zone → có version event=create" do
       expect {
         post zones_path, params: {
           zone: { name: "Z Audit Create", main_meters_attributes: [{ name: "MM" }] }

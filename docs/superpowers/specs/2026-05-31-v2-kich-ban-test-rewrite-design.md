@@ -3,6 +3,8 @@
 > **Ngày:** 31/05/2026
 > **Tính chất:** Spec thiết kế (planning artifact) cho việc viết lại toàn bộ `docs/V2_KICH_BAN_TEST.md`. Không phải tài liệu nghiệp vụ — là kế hoạch cấu trúc + quy ước trước khi viết nội dung. Có thể giữ làm dấu vết hoặc bỏ sau khi merge.
 > **Nguồn quyết định:** Phiên brainstorming 31/05/2026 (5 quyết định chính + 3 tinh chỉnh, ghi ở mục 2).
+>
+> **Ghi chú (25/06/2026):** Spec viết khi hệ thống có 6 vai trò thực tế. Nay 7 vai trò (thêm Chỉ huy Sư đoàn `division_commander` — xem [ADR-061](2026-06-25-division-commander-role-design.md), Issue #419).
 
 ---
 

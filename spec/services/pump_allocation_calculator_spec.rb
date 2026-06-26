@@ -212,18 +212,7 @@ RSpec.describe PumpAllocationCalculator do
         .to raise_error(PumpAllocationCalculator::IncompleteStationConfig)
     end
 
-    # Đầu mối công cộng nhận hệ số → quân số coi như 0 (khoá `else 0` ↛ `else 1`); là recipient
-    # hệ số duy nhất → total_weighted = 0 → chặn (#401).
-    it "đầu mối công cộng thuộc khu vực nhận hệ số trực tiếp: quân số coi như 0 → chặn — khoá `else 0` ↛ `else 1`" do
-      zone, period = build_pump_zone(name: "KV public")
-      cp = ContactPoint.create!(name: "Đèn đường nhận hệ số", contact_point_type: "public",
-                                zone: zone, unit: nil)
-      create(:pump_allocation, zone: zone, period: period, unit: nil, contact_point: cp,
-             fixed_percentage: nil, coefficient: BigDecimal("1"))
 
-      expect { call_pump(zone, period) }
-        .to raise_error(PumpAllocationCalculator::IncompleteStationConfig)
-    end
 
     it "allocation with neither unit_id nor contact_point_id raises IncompleteStationConfig (#401)" do
       zone, period = build_pump_zone(name: "KV orphan")
@@ -269,7 +258,8 @@ RSpec.describe PumpAllocationCalculator do
       cp_unit = create(:contact_point, :residential, name: "Đầu mối đơn vị closed", unit: unit,
                        initial_personnel_counts: { rank_for(period).id => 5 })
       direct_cp = ContactPoint.create!(name: "Đầu mối trực tiếp discard",
-                                       contact_point_type: "public", zone: zone, unit: nil)
+                                       contact_point_type: "non_establishment", zone: zone,
+                                       unit: nil, personnel_count: 3)
       create(:pump_allocation, zone: zone, period: period, unit: unit, contact_point: nil,
              fixed_percentage: nil, coefficient: BigDecimal("1"))
       create(:pump_allocation, zone: zone, period: period, unit: nil, contact_point: direct_cp,

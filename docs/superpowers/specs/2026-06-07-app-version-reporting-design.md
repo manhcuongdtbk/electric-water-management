@@ -6,6 +6,7 @@ date: 2026-06-07
 
 # Tự báo cáo phiên bản
 
+> **Ghi chú (25/06/2026):** Spec viết khi hệ thống có 6 vai trò thực tế. Nay 7 vai trò (thêm Chỉ huy Sư đoàn `division_commander` — xem [ADR-061](2026-06-25-division-commander-role-design.md), Issue #419).
 Cho phép ứng dụng đang chạy **tự báo cáo phiên bản của chính nó**, để:
 
 - Người nghiệm thu / khách hàng biết đang xem **bản phát hành nào** — đặc biệt để phân biệt hai môi trường Railway gần như giống hệt nhau (**Nghiệm thu** và **Mốc**).

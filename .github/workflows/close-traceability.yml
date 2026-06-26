@@ -14,7 +14,7 @@ on:
 permissions:
   issues: write
   contents: read
-  pull-requests: read
+  pull-requests: write
 
 jobs:
   close-traceability:
@@ -34,3 +34,10 @@ jobs:
           MERGED_AT: ${{ github.event.pull_request.merged_at }}
           PR_MILESTONE: ${{ github.event.pull_request.milestone.title }}
         run: bash .github/scripts/post-close-traceability.sh
+      - name: Remind merge-back for release/hotfix → main (Issue #445)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: bash .github/scripts/remind-merge-back.sh

@@ -1,0 +1,101 @@
+name: release-notes-vi
+
+# ADR-066, Issue #446: auto-prepend Vietnamese release notes template when
+# release-please publishes a GitHub Release. The template provides the correct
+# format; the human (or Claude Code) fills in the content and reviews.
+#
+# Issue #455: auto-rename milestone to match the actual tag version. Prevents
+# divergence when release-please bumps differently than the pre-set milestone name.
+#
+# Trigger: `release: published` fires after release-please creates the tag +
+# GitHub Release. At that point the body is English-only CHANGELOG.
+#
+# No API key needed. No cost.
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  prepend-vi-template:
+    name: Prepend Vietnamese release notes template
+    runs-on: ubuntu-latest
+    # Skip if body already has Vietnamese (idempotent on re-run)
+    if: ${{ !contains(github.event.release.body, 'Phiên bản') }}
+    steps:
+      - name: Prepend Vietnamese template to release body
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name }}
+          RELEASE_BODY: ${{ github.event.release.body }}
+        run: |
+          version="${TAG#v}"
+          today="$(date +%d/%m/%Y)"
+
+          # Build new body: Vietnamese template + separator + original CHANGELOG
+          cat > /tmp/release-body.md <<TEMPLATE_END
+          # Phiên bản ${version} (${today})
+
+          ## Tóm tắt cho người dùng
+          (chưa soạn — vui lòng cập nhật bằng \`gh release edit ${TAG}\` hoặc sửa trực tiếp trên GitHub)
+
+          ## Chi tiết cho chủ dự án
+          (chưa soạn — vui lòng cập nhật)
+
+          ---
+
+          TEMPLATE_END
+
+          # Remove leading whitespace from heredoc (caused by YAML indentation)
+          sed -i 's/^          //' /tmp/release-body.md
+
+          # Append original CHANGELOG body
+          printf '%s' "$RELEASE_BODY" >> /tmp/release-body.md
+
+          gh release edit "$TAG" --notes-file /tmp/release-body.md
+          echo "✓ Vietnamese template prepended to release ${TAG}. Please fill in the content."
+
+  sync-milestone:
+    name: Sync milestone name with tag version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rename milestone to match tag version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          version="${TAG#v}"
+
+          # Check if a milestone with the exact version name already exists
+          exact=$(gh api "repos/${REPO}/milestones?state=all&per_page=100" \
+            --jq ".[] | select(.title == \"${version}\") | .number" 2>/dev/null || true)
+
+          if [[ -n "$exact" ]]; then
+            echo "✓ Milestone '${version}' already exists (#${exact}). No rename needed."
+            exit 0
+          fi
+
+          # Find the most recent open milestone — that's the one to rename
+          open_data=$(gh api "repos/${REPO}/milestones?state=open&sort=due_on&direction=desc&per_page=5" \
+            --jq '.[0] | "\(.number)\t\(.title)"' 2>/dev/null || true)
+
+          if [[ -z "$open_data" ]]; then
+            echo "::warning::No open milestone found. Create one named '${version}' manually if needed."
+            exit 0
+          fi
+
+          ms_number=$(printf '%s' "$open_data" | cut -f1)
+          ms_title=$(printf '%s' "$open_data" | cut -f2)
+
+          if [[ "$ms_title" == "$version" ]]; then
+            echo "✓ Open milestone already named '${version}'."
+            exit 0
+          fi
+
+          # Rename the milestone
+          gh api "repos/${REPO}/milestones/${ms_number}" -X PATCH -f title="${version}" --silent
+          echo "✓ Renamed milestone '${ms_title}' → '${version}' (matched tag ${TAG})."

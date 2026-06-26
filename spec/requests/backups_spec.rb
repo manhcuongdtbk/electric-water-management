@@ -39,7 +39,7 @@ RSpec.describe "Backups", type: :request do
   describe "POST /backups" do
     before { sign_in technician }
 
-    it "T96: success → flash notice + redirect" do
+    it "NV-sao-luu-phuc-hoi: T96: success → flash notice + redirect" do
       backup = create(:backup, filename: "backup_20260518_120000.dump")
       allow(BackupService).to receive(:create).with(user: technician)
         .and_return(BackupService::Result.new(backup: backup, warnings: []))
