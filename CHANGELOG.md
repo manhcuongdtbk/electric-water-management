@@ -1,5 +1,46 @@
 # Changelog
 
+## [1.2.1](https://github.com/manhcuongdtbk/electric-water-management/compare/v1.2.0...v1.2.1) (2026-06-26)
+
+
+### Bug Fixes
+
+* **ci:** exempt dependabot from issue-link guardrail ([#449](https://github.com/manhcuongdtbk/electric-water-management/issues/449)) ([891a2c8](https://github.com/manhcuongdtbk/electric-water-management/commit/891a2c83cbdf3708d7a08b34816256f1f9abd283))
+* **ci:** handle both bot author formats in issue-link guardrail ([#453](https://github.com/manhcuongdtbk/electric-water-management/issues/453)) ([e309053](https://github.com/manhcuongdtbk/electric-water-management/commit/e3090533978f831e8b693c809902127c0d278a82))
+* **ci:** read allowed abbreviations from THUAT_NGU.md to avoid commitlint false positives ([2e2e7a3](https://github.com/manhcuongdtbk/electric-water-management/commit/2e2e7a35cc4b7182ebce3666ee8ec1666c03ad71)), closes [#475](https://github.com/manhcuongdtbk/electric-water-management/issues/475)
+* **demo:** fix DC demo page order and narration, add page order to CONTRIBUTING ([#451](https://github.com/manhcuongdtbk/electric-water-management/issues/451)) ([a3212af](https://github.com/manhcuongdtbk/electric-water-management/commit/a3212af238b230e29159e6ea4865c1dbf0a48962))
+* **pump:** remove public CP from pump allocation recipient dropdown ([#459](https://github.com/manhcuongdtbk/electric-water-management/issues/459)) ([#461](https://github.com/manhcuongdtbk/electric-water-management/issues/461)) ([2d99fcc](https://github.com/manhcuongdtbk/electric-water-management/commit/2d99fccae6c2de33535cc4085c1d6af092566612))
+
+
+### Documentation
+
+* add spec for doc-code sync guardrails (ADR-062..064) ([#464](https://github.com/manhcuongdtbk/electric-water-management/issues/464)) ([#465](https://github.com/manhcuongdtbk/electric-water-management/issues/465)) ([8203d0a](https://github.com/manhcuongdtbk/electric-water-management/commit/8203d0ae670dd6ac73afb6ce98f5f424a9c89915))
+* ADR-061 retrospective for division_commander + footnote 7 specs ([#462](https://github.com/manhcuongdtbk/electric-water-management/issues/462)) ([#463](https://github.com/manhcuongdtbk/electric-water-management/issues/463)) ([f47a78c](https://github.com/manhcuongdtbk/electric-water-management/commit/f47a78cb4b7037e8bb5a10961f1c59166a9709ba))
+* audit cross-file fact duplication and add canonical pointers ([#432](https://github.com/manhcuongdtbk/electric-water-management/issues/432)) ([#471](https://github.com/manhcuongdtbk/electric-water-management/issues/471)) ([286584d](https://github.com/manhcuongdtbk/electric-water-management/commit/286584d9c5b0a4455da130eb46e0f5e16c630c62))
+* consolidate supplementary spec files into canonical with release traceability ([#439](https://github.com/manhcuongdtbk/electric-water-management/issues/439)) ([07dff16](https://github.com/manhcuongdtbk/electric-water-management/commit/07dff16a410a303c608be4d7ddb5ecbfb8128f78))
+* **docker:** add coverage subcommand and update seeds.rb output ([#447](https://github.com/manhcuongdtbk/electric-water-management/issues/447)) ([87a38cb](https://github.com/manhcuongdtbk/electric-water-management/commit/87a38cb30f79ba55f9434b6c41ed192bb8976d3d))
+* document Vietnamese release notes process in CONTRIBUTING.md ([#444](https://github.com/manhcuongdtbk/electric-water-management/issues/444)) ([e1e8997](https://github.com/manhcuongdtbk/electric-water-management/commit/e1e89972f56c4e44ce25995966ec3c900b8fbe08))
+* fix 2 drifts in V2_THIET_KE introduced by audit session ([#464](https://github.com/manhcuongdtbk/electric-water-management/issues/464)) ([#466](https://github.com/manhcuongdtbk/electric-water-management/issues/466)) ([1dff297](https://github.com/manhcuongdtbk/electric-water-management/commit/1dff2977e3f58d7383bd8e868af10644d1db5cda))
+* reconcile 3 code-vs-spec gaps — manual_usage, billing display, history range ([#457](https://github.com/manhcuongdtbk/electric-water-management/issues/457)) ([#460](https://github.com/manhcuongdtbk/electric-water-management/issues/460)) ([366d4b4](https://github.com/manhcuongdtbk/electric-water-management/commit/366d4b41e7c0355bfe29fac6d80cc6f034a37d8c))
+* sync 5 canonical docs with codebase — 9 stale facts ([#456](https://github.com/manhcuongdtbk/electric-water-management/issues/456)) ([#458](https://github.com/manhcuongdtbk/electric-water-management/issues/458)) ([41838d9](https://github.com/manhcuongdtbk/electric-water-management/commit/41838d974436f822b98b5b08e14bbd10e86913d4))
+
+
+### Continuous Integration
+
+* auto-prepend Vietnamese release notes template (ADR-066, [#446](https://github.com/manhcuongdtbk/electric-water-management/issues/446)) ([#469](https://github.com/manhcuongdtbk/electric-water-management/issues/469)) ([4220a08](https://github.com/manhcuongdtbk/electric-water-management/commit/4220a085174a4374b790779be5bd0509bcff62b3))
+* auto-remind merge-back to develop after release/hotfix merges to main ([#452](https://github.com/manhcuongdtbk/electric-water-management/issues/452)) ([a6e3b30](https://github.com/manhcuongdtbk/electric-water-management/commit/a6e3b3046125416f0a76fde6b736b54b4d5608d0))
+* auto-sync milestone name with tag version on release ([#455](https://github.com/manhcuongdtbk/electric-water-management/issues/455)) ([#470](https://github.com/manhcuongdtbk/electric-water-management/issues/470)) ([9b33e0a](https://github.com/manhcuongdtbk/electric-water-management/commit/9b33e0afeb6f7578d07300d6c5d46b3abf8aefad))
+* auto-upload demo-bundle to GitHub Release assets after tag ([#454](https://github.com/manhcuongdtbk/electric-water-management/issues/454)) ([66a2e59](https://github.com/manhcuongdtbk/electric-water-management/commit/66a2e595229b103e13e7d3281a953eebd3513953))
+* implement doc-code sync guardrails (ADR-062/063, [#464](https://github.com/manhcuongdtbk/electric-water-management/issues/464)) ([#467](https://github.com/manhcuongdtbk/electric-water-management/issues/467)) ([52d5526](https://github.com/manhcuongdtbk/electric-water-management/commit/52d5526bb0a282ea692802f001f5c212c65ebfcf))
+* implement NV traceability guardrail (ADR-065, [#441](https://github.com/manhcuongdtbk/electric-water-management/issues/441)) ([#468](https://github.com/manhcuongdtbk/electric-water-management/issues/468)) ([194e2ad](https://github.com/manhcuongdtbk/electric-water-management/commit/194e2ad7ce2dfd2eb0ee489f066c3ed70ff41083))
+* require every PR to reference a GitHub issue (ADR-015 revisit) ([#443](https://github.com/manhcuongdtbk/electric-water-management/issues/443)) ([1fb8ef2](https://github.com/manhcuongdtbk/electric-water-management/commit/1fb8ef2f98d3249f3318ed012ae0c14b3e89d653))
+
+
+### Miscellaneous Chores
+
+* add no-fact-duplication reminder to PR checklist + fix role count ([#450](https://github.com/manhcuongdtbk/electric-water-management/issues/450)) ([9c1aad9](https://github.com/manhcuongdtbk/electric-water-management/commit/9c1aad9017d129c938947c5bf4fb952536fe0ad0))
+* **deps:** Bump the ruby-minor-patch group with 3 updates ([#431](https://github.com/manhcuongdtbk/electric-water-management/issues/431)) ([eafa520](https://github.com/manhcuongdtbk/electric-water-management/commit/eafa5207719ce5b10f67c1c5be2bb1ba0bddfbdd))
+
 ## [1.2.0](https://github.com/manhcuongdtbk/electric-water-management/compare/v1.1.1...v1.2.0) (2026-06-22)
 
 
