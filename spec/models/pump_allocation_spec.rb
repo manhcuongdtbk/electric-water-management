@@ -284,14 +284,14 @@ RSpec.describe PumpAllocation do
       expect(dup.errors[:unit_id]).to be_present
     end
 
-    it "cùng đơn vị + cùng zone/kỳ nhưng KHÁC trạm → chặn (no-split)" do
+    it "cùng đơn vị + cùng zone/kỳ nhưng KHÁC trạm → chặn (chồng chéo, ADR-067)" do
       create(:pump_allocation, zone: zone, period: period, pump_contact_point: station_one,
              unit: unit, contact_point: nil, block: nil, group: nil, coefficient: 1)
       other = build(:pump_allocation, zone: zone, period: period, pump_contact_point: station_two,
                     unit: unit, contact_point: nil, block: nil, group: nil, coefficient: 1)
       expect(other).not_to be_valid
       expect(other.errors[:base]).to include(
-        I18n.t("activerecord.errors.models.pump_allocation.attributes.base.split_across_stations")
+        I18n.t("activerecord.errors.models.pump_allocation.attributes.base.overlapping_recipients")
       )
     end
   end
@@ -392,50 +392,48 @@ RSpec.describe PumpAllocation do
     end
   end
 
-  # CHIEU-phan-bo-tram-khong-chong-cheo (no-split)
-  describe "ràng buộc không chia cấp (no-split)" do
+  # CHIEU-phan-bo-tram-khong-chia-cap-da-bo (ADR-067)
+  describe "không chia cấp đã bỏ — khối cùng đơn vị có thể đi trạm khác nhau (ADR-067)" do
     let(:zone) { create(:zone) }
-    let(:unit) do
-      u = create(:unit, zone: zone)
-      create(:contact_point, :residential, unit: u, name: "ĐM no-split")
-      u
-    end
+    let(:unit) { create(:unit, zone: zone) }
     let(:period) { create(:period, pump_allocation_per_station: true) }
     let(:station_tay) { create(:contact_point, :water_pump, zone: zone, name: "Trạm Tây") }
     let(:station_dong) { create(:contact_point, :water_pump, zone: zone, name: "Trạm Đông") }
 
-    it "đối tượng cùng đơn vị ở 2 trạm khác nhau → chặn" do
+    it "khối cùng đơn vị ở 2 trạm khác nhau → cho phép" do
+      block_a = create(:block, unit: unit, name: "Khối A")
+      block_b = create(:block, unit: unit, name: "Khối B")
+      create(:contact_point, :residential, unit: unit, block: block_a, name: "ĐM khối A")
+      create(:contact_point, :residential, unit: unit, block: block_b, name: "ĐM khối B")
+      create(:pump_allocation, zone: zone, period: period, unit: nil, block: block_a,
+             pump_contact_point: station_tay, coefficient: 1)
+      ok = build(:pump_allocation, zone: zone, period: period, unit: nil, block: block_b,
+                 pump_contact_point: station_dong, coefficient: 1)
+      expect(ok).to be_valid
+    end
+
+    it "đầu mối cùng khối ở 2 trạm khác nhau → cho phép (không chồng chéo)" do
       block = create(:block, unit: unit)
-      create(:contact_point, :residential, unit: unit, name: "ĐM đơn vị")
+      cp1 = create(:contact_point, :residential, unit: unit, block: block, name: "ĐM 1")
+      cp2 = create(:contact_point, :residential, unit: unit, block: block, name: "ĐM 2")
+      create(:pump_allocation, zone: zone, period: period, unit: nil, contact_point: cp1,
+             pump_contact_point: station_tay, coefficient: 1)
+      ok = build(:pump_allocation, zone: zone, period: period, unit: nil, contact_point: cp2,
+                 pump_contact_point: station_dong, coefficient: 1)
+      expect(ok).to be_valid
+    end
+
+    it "đơn vị + khối trong đơn vị ở 2 trạm → chặn vì chồng chéo (không phải chia cấp)" do
+      block = create(:block, unit: unit)
       create(:contact_point, :residential, unit: unit, block: block, name: "ĐM khối")
       create(:pump_allocation, zone: zone, period: period, unit: unit,
              pump_contact_point: station_tay, coefficient: 1)
-      split = build(:pump_allocation, zone: zone, period: period, unit: nil, block: block,
-                    pump_contact_point: station_dong, coefficient: 1)
-      expect(split).not_to be_valid
-      expect(split.errors[:base]).to include(
-        I18n.t("activerecord.errors.models.pump_allocation.attributes.base.split_across_stations")
+      overlap = build(:pump_allocation, zone: zone, period: period, unit: nil, block: block,
+                      pump_contact_point: station_dong, coefficient: 1)
+      expect(overlap).not_to be_valid
+      expect(overlap.errors[:base]).to include(
+        I18n.t("activerecord.errors.models.pump_allocation.attributes.base.overlapping_recipients")
       )
-    end
-
-    it "hai đơn vị khác nhau cùng trạm → cho phép (no-split không chặn)" do
-      unit2 = create(:unit, zone: zone)
-      create(:contact_point, :residential, unit: unit, name: "ĐM đơn vị 1")
-      create(:contact_point, :residential, unit: unit2, name: "ĐM đơn vị 2")
-      create(:pump_allocation, zone: zone, period: period, unit: unit,
-             pump_contact_point: station_tay, coefficient: 1)
-      ok = build(:pump_allocation, zone: zone, period: period, unit: unit2,
-                 pump_contact_point: station_tay, coefficient: 1)
-      expect(ok).to be_valid
-    end
-
-    it "đầu mối thuộc khu vực (không có đơn vị) → không bị chặn no-split" do
-      zone_cp = create(:contact_point, :zone_residential, zone: zone, name: "ĐM khu vực")
-      create(:pump_allocation, zone: zone, period: period, unit: unit,
-             pump_contact_point: station_tay, coefficient: 1)
-      ok = build(:pump_allocation, zone: zone, period: period, unit: nil, contact_point: zone_cp,
-                 pump_contact_point: station_dong, coefficient: 1)
-      expect(ok).to be_valid
     end
   end
 

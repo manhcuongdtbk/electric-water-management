@@ -1,7 +1,7 @@
 # Hành vi hệ thống — Hệ thống quản lý điện nước nội bộ (Hệ thống v2)
 
-> **Phiên bản:** 1.5.7
-> **Ngày:** 25/06/2026
+> **Phiên bản:** 1.6.0
+> **Ngày:** 26/06/2026
 > **Tính chất:** Tài liệu mô tả hành vi thực tế của hệ thống đã được verify qua code và test. Bổ sung cho V2_XAC_NHAN_NGHIEP_VU (cái gì) và V2_THIET_KE_HE_THONG (làm thế nào) bằng cách trả lời "hệ thống hành xử ra sao" trong các kịch bản thực tế.
 > **Nguồn:** Kết quả audit toàn diện codebase, 14 đợt page-by-page, 781+ test cases.
 
@@ -373,7 +373,7 @@ Code từ session AI trước có thể thiếu suy nghĩ sâu về edge cases. 
 - Cờ `Period#pump_allocation_per_station` quyết định cơ chế **theo từng kỳ**: kỳ cũ (đã đóng) giữ gộp toàn khu vực; kỳ mới phân bổ theo trạm. Cùng codebase phục vụ cả hai khi xem kỳ cũ/mới.
 - Chuyển tiếp cũ → theo-trạm đầu tiên: bắt đầu trống, không kế thừa (cấu hình gộp cũ không ánh xạ được vào trạm). Các kỳ theo-trạm sau kế thừa cấu hình từng trạm.
 - Xem kỳ cũ có đối tượng nhận đã xóa: dùng `.with_discarded` (mục 7); trang cấu hình kỳ mở dùng `.kept`.
-- **Ràng buộc phân cấp** (toàn zone, xuyên trạm, validate khi cấu hình và khi di chuyển đầu mối): (1) không chồng chéo — tập đầu mối sinh hoạt phân giải từ mỗi recipient phải không giao nhau; (2) không chia cấp — toàn bộ đơn vị thuộc một trạm duy nhất.
+- **Ràng buộc xuyên trạm** (toàn zone, validate khi cấu hình và khi di chuyển đầu mối): **không chồng chéo** — tập đầu mối sinh hoạt phân giải từ mỗi recipient phải không giao nhau. Khối/nhóm/đầu mối cùng đơn vị có thể nằm ở trạm khác nhau — trạm bơm phục vụ vùng vật lý, không phụ thuộc cấp tổ chức (ADR-067).
 - **Xóa khối/nhóm đang là recipient** (kỳ đang mở): cleanup allocation + cảnh báo; đầu mối bên trong mất nguồn phân bổ bơm nước — quản trị viên cần cấu hình lại. Kỳ cũ đã đóng giữ nguyên.
 - **Di chuyển đầu mối** giữa khối/nhóm: có thể thay đổi nguồn phân bổ bơm nước. Validate ràng buộc phân cấp khi di chuyển.
 - **Recipient rỗng** (0 đầu mối sinh hoạt bên trong): chặn khi cấu hình; khi tính toán bỏ qua phân phối + cảnh báo.
@@ -387,6 +387,10 @@ Code từ session AI trước có thể thiếu suy nghĩ sâu về edge cases. 
 ---
 
 ## Lịch sử thay đổi
+
+### v1.6.0 (26/06/2026)
+
+- Mục 9 phân bổ bơm theo trạm: bỏ ràng buộc "không chia cấp" (ADR-067, Issue #481). Khối/nhóm/đầu mối cùng đơn vị có thể nằm ở trạm khác nhau — trạm bơm phục vụ vùng vật lý, không phụ thuộc cấp tổ chức. Giữ nguyên "không chồng chéo".
 
 ### v1.5.7 (25/06/2026)
 

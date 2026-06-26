@@ -207,7 +207,6 @@ vi:
               recipient_must_be_one: "Chỉ được chọn 1 đối tượng nhận phân bổ — đơn vị, khối, nhóm hoặc đầu mối."
               fixed_percentage_sum_exceeds_one_hundred: "Tổng phần trăm cố định của các phân bổ trong cùng trạm bơm không được vượt quá 100"
               overlapping_recipients: "Đối tượng nhận chồng chéo với phân bổ khác — các đầu mối sinh hoạt được phân bổ tới phải không trùng nhau."
-              split_across_stations: "Đối tượng thuộc cùng đơn vị phải nằm trong cùng một trạm bơm — không được chia ra nhiều trạm."
             unit_id:
               zone_mismatch: "phải thuộc cùng khu vực với phân bổ"
               no_residential_contact_points: "không có đầu mối sinh hoạt nào bên trong — không thể phân phối điện bơm nước."
