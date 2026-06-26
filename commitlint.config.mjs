@@ -1,23 +1,63 @@
 // Cấu hình Conventional Commits cho commitlint (ADR-011, ADR-008).
 // Mở rộng bộ luật chuẩn config-conventional. CI chạy qua `npx` nên KHÔNG cần
 // package.json / node_modules trong repo — chỉ file config nhỏ này.
+import { readFileSync } from 'node:fs';
+
+// Đọc danh sách viết tắt được phép từ nguồn duy nhất: docs/THUAT_NGU.md mục 1.
+// Chỉ parse bảng trong mục "## 1. Từ viết tắt được phép" (dừng ở heading ## tiếp theo).
+// Mỗi dòng `| ABBR |` hoặc `| A, B, C |` → trích cột đầu, chỉ giữ token toàn hoa
+// hoặc PascalCase (SemVer) — loại header bảng ("Viết tắt", "Từ", "Khái niệm").
+function loadAllowedAbbreviations() {
+  try {
+    const content = readFileSync('docs/THUAT_NGU.md', 'utf-8');
+    const lines = content.split('\n');
+    let inSection = false;
+    const abbreviations = new Set();
+    for (const line of lines) {
+      if (/^## 1\.\s/.test(line)) { inSection = true; continue; }
+      if (inSection && /^## /.test(line)) break;
+      if (!inSection) continue;
+      if (!/^\|[^|]+\|/.test(line)) continue;
+      if (/^[\s|]*-/.test(line)) continue;
+      const firstCell = line.split('|')[1]?.trim();
+      if (!firstCell) continue;
+      for (const part of firstCell.split(',')) {
+        const token = part.trim();
+        if (token && /^[A-Z][A-Z0-9a-z-]*$/.test(token)) abbreviations.add(token);
+      }
+    }
+    return abbreviations;
+  } catch {
+    return new Set();
+  }
+}
+
+const ALLOWED_ABBREVIATIONS = loadAllowedAbbreviations();
+
+// subject-case rule (config-conventional) cấm chữ đầu subject viết hoa.
+// Commit hợp lệ có viết tắt ở đầu subject bị bắt nhầm (vd "docs: ADR-061 ...").
+// Hàm này ignore commit khi từ đầu tiên của subject là viết tắt được phép.
+function subjectStartsWithAllowedAbbreviation(message) {
+  const firstLine = message.split('\n')[0];
+  const match = firstLine.match(/^[a-z]+(?:\([^)]*\))?!?:\s+(\S+)/);
+  if (!match) return false;
+  const firstWord = match[1].replace(/[-:,.!?#()0-9]+$/, '');
+  return ALLOWED_ABBREVIATIONS.has(firstWord);
+}
+
 export default {
   extends: ['@commitlint/config-conventional'],
-  // Bỏ qua MỌI merge commit. Mặc định của commitlint chỉ bỏ qua message merge
-  // chuẩn ("Merge branch ...", "Merge pull request ..."); message merge tự viết
-  // (vd khi sync base vào nhánh) sẽ bị lint như commit thường và báo đỏ. Merge
-  // commit không phải dòng changelog nên không cần đúng Conventional Commits.
   ignores: [
     (message) => message.startsWith('Merge '),
-    // Dependabot viết subject hoa ("Bump ...") → phạm subject-case. Bot commit
-    // không do người viết, và squash-merge dùng tiêu đề pull request — nên bỏ qua,
-    // giữ subject-case nghiêm cho commit của người.
     (message) => message.includes('Signed-off-by: dependabot[bot]'),
+    subjectStartsWithAllowedAbbreviation,
   ],
   rules: {
-    // Tắt giới hạn độ dài dòng body/footer để không báo sai với URL dài trong
-    // body hoặc trailer "Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>".
     'body-max-line-length': [0, 'always'],
     'footer-max-line-length': [0, 'always'],
+    'type-enum': [2, 'always', [
+      'build', 'chore', 'ci', 'docs', 'feat', 'fix',
+      'perf', 'refactor', 'release', 'revert', 'style', 'test',
+    ]],
   },
 };
