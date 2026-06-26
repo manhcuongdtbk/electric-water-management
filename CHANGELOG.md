@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/manhcuongdtbk/electric-water-management/compare/v1.2.1...v1.2.2) (2026-06-26)
+
+
+### Bug Fixes
+
+* **ci:** add 'release' to commitlint type-enum ([1c52eee](https://github.com/manhcuongdtbk/electric-water-management/commit/1c52eeead5f1ec8ddd855ac515d58a4e81b5dc3a)), closes [#475](https://github.com/manhcuongdtbk/electric-water-management/issues/475)
+
 ## [1.2.1](https://github.com/manhcuongdtbk/electric-water-management/compare/v1.2.0...v1.2.1) (2026-06-26)
 
 
