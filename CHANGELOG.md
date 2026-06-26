@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.3](https://github.com/manhcuongdtbk/electric-water-management/compare/v1.2.2...v1.2.3) (2026-06-26)
+
+
+### Bug Fixes
+
+* **pump:** remove no-split constraint (ADR-067, [#481](https://github.com/manhcuongdtbk/electric-water-management/issues/481)) ([#482](https://github.com/manhcuongdtbk/electric-water-management/issues/482)) ([c9e6a29](https://github.com/manhcuongdtbk/electric-water-management/commit/c9e6a29e40eb27dd264907012935cb6535373d84))
+
+
+### Documentation
+
+* **hdsd:** update pump allocation constraints — remove no-split (ADR-067) ([#484](https://github.com/manhcuongdtbk/electric-water-management/issues/484)) ([f468fe0](https://github.com/manhcuongdtbk/electric-water-management/commit/f468fe0c45ee32a8ba1e43d6218894ed9bc62142))
+
 ## [1.2.2](https://github.com/manhcuongdtbk/electric-water-management/compare/v1.2.1...v1.2.2) (2026-06-26)
 
 
