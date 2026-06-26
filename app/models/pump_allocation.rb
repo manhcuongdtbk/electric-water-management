@@ -26,7 +26,6 @@ class PumpAllocation < ApplicationRecord
   validate :validate_station_for_period_mode
   validate :validate_fixed_percentage_sum_within_limit
   validate :validate_no_overlap, if: -> { period&.pump_allocation_per_station }
-  validate :validate_no_split, if: -> { period&.pump_allocation_per_station }
   validate :validate_recipient_has_residential_contact_points
 
   protected
@@ -42,18 +41,6 @@ class PumpAllocation < ApplicationRecord
       [contact_point_id]
     else
       []
-    end
-  end
-
-  def owning_unit_id
-    if unit_id.present?
-      unit_id
-    elsif block_id.present?
-      block&.unit_id
-    elsif group_id.present?
-      group&.unit_id
-    elsif contact_point_id.present?
-      contact_point&.unit_id
     end
   end
 
@@ -136,26 +123,6 @@ class PumpAllocation < ApplicationRecord
       next if overlap.empty?
       errors.add(:base, :overlapping_recipients)
       break
-    end
-  end
-
-  def validate_no_split
-    return if zone_id.blank? || period_id.blank?
-    return unless pump_contact_point_id.present?
-
-    my_unit_id = owning_unit_id
-    return if my_unit_id.nil?
-
-    different_station = PumpAllocation
-      .where(zone_id: zone_id, period_id: period_id)
-      .where.not(pump_contact_point_id: pump_contact_point_id)
-    different_station = different_station.where.not(id: id) if persisted?
-
-    different_station.find_each do |other|
-      if other.owning_unit_id == my_unit_id
-        errors.add(:base, :split_across_stations)
-        break
-      end
     end
   end
 
